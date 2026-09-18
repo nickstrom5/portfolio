@@ -13,7 +13,7 @@ const projects = defineCollection({
     title: z.string(),
     client: z.string(),
     summary: z.string().max(200),
-    category: z.enum(['mobile', 'web', 'backend', 'automation', 'other']),
+    category: z.enum(['mobile', 'web', 'backend', 'automation', 'consulting', 'other']),
     platforms: z.array(z.string()).default([]),
     stack: z.array(z.string()).default([]),
     year: z.number().int().min(2000).max(2100),
