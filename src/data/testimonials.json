@@ -1,26 +1,52 @@
 [
   {
-    "quote": "Nick stepped into a messy program office and had it running in days, not weeks. Years later he is still the person we trust with anything that has a deadline.",
-    "author": "Program Director",
-    "company": "Research program",
+    "quote": "Nick is efficient, professional and easy to work with. He handled every task with ease and maintained good communication throughout the contract. Fast learner, accountable and organized. Highly recommended.",
+    "contract": "Executive Assistant to the CEO",
+    "period": "2026",
+    "rating": 5.0,
+    "hours": 100,
+    "endorsements": ["Collaborative", "Committed to Quality", "Clear Communicator"],
     "source": "Upwork",
-    "rating": 5,
-    "placeholder": true
+    "placeholder": false
   },
   {
-    "quote": "He built our entire CRM and follow-up system and then trained the team on it. Leads stopped falling through the cracks the week it went live.",
-    "author": "Founder",
-    "company": "Software startup",
+    "quote": "Nick was an excellent freelancer who demonstrated strong skills in managing various Zoho apps, where his understanding of our goals enhanced our processes and website. He delivered high-quality results consistently, and I highly recommend him for any project requiring a blend of technical proficiency, creativity, and strong communication skills.",
+    "contract": "Zoho One Admin with Social Media & Academy Support",
+    "period": "2024",
+    "rating": 5.0,
+    "hours": 24,
+    "endorsements": ["Collaborative", "Clear Communicator", "Committed to Quality"],
     "source": "Upwork",
-    "rating": 5,
-    "placeholder": true
+    "placeholder": false
   },
   {
-    "quote": "Responds within the hour, never misses a detail, and somehow makes a 200-person webinar look easy.",
-    "author": "Department Head",
-    "company": "Education company",
+    "quote": "Nicholas was a very effective and reliable VA who powered through all the jobs we had. We hired him during the pandemic and he kept things going for us while the sky fell.",
+    "contract": "Virtual assistant for a software trade association",
+    "period": "2020–2024",
+    "rating": 4.7,
+    "hours": 989,
+    "endorsements": ["Reliable"],
     "source": "Upwork",
-    "rating": 5,
-    "placeholder": true
+    "placeholder": false
+  },
+  {
+    "quote": "Nick is responsible and timely. He successfully completed tasks given to him and was a pleasure to work with.",
+    "contract": "Executive Assistant to the CEO",
+    "period": "2022–2023",
+    "rating": 5.0,
+    "hours": 692,
+    "endorsements": ["Accountable for Outcomes", "Reliable", "Collaborative"],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "Nicholas helped us evaluate candidates in a timely and helpful way. We're thankful for the help and would consider working together again.",
+    "contract": "Human Resource Work",
+    "period": "2025",
+    "rating": 5.0,
+    "hours": 1,
+    "endorsements": ["Reliable", "Solution Oriented", "Collaborative"],
+    "source": "Upwork",
+    "placeholder": false
   }
 ]

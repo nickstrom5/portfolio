@@ -109,7 +109,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Read all reviews on Upwork →</a>}
       </div>
       <div class="grid grid-3">
-        {testimonials.map((t) => <Testimonial {...t} />)}
+        {testimonials.slice(0, 3).map((t) => <Testimonial {...t} />)}
       </div>
     </div>
   </section>
