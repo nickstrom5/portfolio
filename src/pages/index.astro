@@ -39,7 +39,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <dl class="stats">
         {site.stats.map((s) => (
           <div>
-            <dt>{s.label}</dt>
+            <dt>{s.label}{'note' in s && s.note && <span class="note">{s.note}</span>}</dt>
             <dd>{s.value}</dd>
           </div>
         ))}
@@ -202,6 +202,12 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     font-size: 0.8rem;
     color: var(--text-muted);
     order: 2;
+    display: flex;
+    flex-direction: column;
+  }
+  .stats .note {
+    font-size: 0.72rem;
+    color: var(--text-faint);
   }
   .stats dd {
     margin: 0;
