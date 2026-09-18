@@ -1,5 +1,6 @@
 ---
 title: 'Project managing video production for hundreds of BARBRI courses'
+shortTitle: 'BARBRI video production PM'
 client: 'BARBRI'
 summary: 'Managed and tracked post-production on hundreds of video courses for the bar-exam prep company, owning timelines and coordinating professors and creative staff.'
 category: 'consulting'

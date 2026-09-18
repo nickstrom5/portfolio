@@ -4,7 +4,7 @@ import { site } from '@/data/site';
 import { url } from '@/lib/url';
 ---
 
-<Base title="Message sent" description="Thanks for getting in touch.">
+<Base title="Message sent" description="Thanks for getting in touch." noindex>
   <section class="section">
     <div class="container">
       <span class="eyebrow">Thanks</span>
@@ -21,6 +21,9 @@ import { url } from '@/lib/url';
 </Base>
 
 <style>
+  .lede a {
+    overflow-wrap: anywhere;
+  }
   .actions {
     display: flex;
     flex-wrap: wrap;

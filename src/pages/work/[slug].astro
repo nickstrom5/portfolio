@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
+import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
 export async function getStaticPaths() {
@@ -30,7 +31,25 @@ const links = [
 ].filter(Boolean) as { label: string; href: string }[];
 ---
 
-<Base title={d.title} description={d.summary}>
+<Base
+  title={d.shortTitle ?? d.title}
+  description={d.summary}
+  ogType="article"
+  jsonLd={[
+    {
+      '@type': 'Article',
+      '@id': `${new URL(Astro.url.pathname, Astro.site).href}#article`,
+      headline: d.title,
+      description: d.summary,
+      about: d.client,
+      keywords: d.stack.join(', '),
+      datePublished: `${d.year}-01-01`,
+      author: { '@id': `${site.url}/#person` },
+      publisher: { '@id': `${site.url}/#person` },
+      mainEntityOfPage: { '@id': `${new URL(Astro.url.pathname, Astro.site).href}#webpage` },
+    },
+  ]}
+>
   <article class="section">
     <div class="container">
       <a class="back" href={url('/work')}>← All work</a>

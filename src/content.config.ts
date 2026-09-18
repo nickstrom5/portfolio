@@ -11,6 +11,8 @@ const projects = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
   schema: z.object({
     title: z.string(),
+    /** Short version for the browser tab and search results (≤ 45 chars). */
+    shortTitle: z.string().max(45).optional(),
     client: z.string(),
     summary: z.string().max(200),
     category: z.enum(['mobile', 'web', 'backend', 'automation', 'consulting', 'other']),

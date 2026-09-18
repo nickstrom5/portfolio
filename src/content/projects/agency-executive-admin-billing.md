@@ -1,5 +1,6 @@
 ---
 title: 'Executive admin and billing support for a digital advertising agency'
+shortTitle: 'Ad agency admin & billing support'
 client: 'Digital advertising agency (geofencing & connected TV)'
 summary: 'Ongoing remote operations seat for a multi-market ad agency: vendor invoices into QuickBooks, client cancellations and campaign shut-offs, and weekly follow-through.'
 category: 'consulting'
