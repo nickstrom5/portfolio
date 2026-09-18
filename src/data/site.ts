@@ -14,7 +14,7 @@ export const site = {
   email: 'nicholas.soderstrom@insidesuccess.com',
   /** Replace with your real profile URLs. */
   links: {
-    upwork: 'https://www.upwork.com/freelancers/~REPLACE_WITH_YOUR_ID',
+    upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
     linkedin: 'https://www.linkedin.com/in/REPLACE_WITH_YOUR_HANDLE',
     github: '',
     appStoreDeveloper: '',
