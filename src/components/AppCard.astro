@@ -1,0 +1,114 @@
+---
+import { url } from '@/lib/url';
+
+interface App {
+  name: string;
+  tagline: string;
+  platforms: string[];
+  stack: string[];
+  client: string;
+  year: number;
+  appStore?: string;
+  playStore?: string;
+  website?: string;
+  status?: string;
+  projectSlug?: string;
+  icon: string;
+  placeholder?: boolean;
+}
+interface Props {
+  app: App;
+}
+const { app } = Astro.props;
+const showBadge = import.meta.env.DEV && app.placeholder;
+const hasStore = Boolean(app.appStore || app.playStore);
+const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
+---
+
+<article class="card app">
+  {showBadge && <span class="placeholder-badge">Sample</span>}
+  <div class="app-head">
+    <div class="icon" aria-hidden="true">{app.icon}</div>
+    <div>
+      <h3>{app.name}</h3>
+      <p class="muted small">{app.client} · {app.year}</p>
+    </div>
+  </div>
+  <p class="tagline">{app.tagline}</p>
+  <ul class="tags">
+    {app.platforms.map((p) => <li class="tag platform">{p}</li>)}
+    {app.stack.map((s) => <li class="tag">{s}</li>)}
+  </ul>
+  <div class="links">
+    {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
+    {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
+    {app.website && <a class="store" href={app.website} target="_blank" rel="noopener">{siteLabel}</a>}
+    {app.projectSlug && <a href={url(`/work/${app.projectSlug}`)}>Case study →</a>}
+    {!hasStore && app.status && <span class="muted small status">{app.status}</span>}
+    {!hasStore && !app.status && !app.projectSlug && <span class="muted small">Private / enterprise distribution</span>}
+  </div>
+</article>
+
+<style>
+  .app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .app-head {
+    display: flex;
+    gap: 0.9rem;
+    align-items: center;
+  }
+  .icon {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    box-shadow: var(--shadow);
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .small {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+  .tagline {
+    margin: 0;
+    flex: 1;
+  }
+  .platform {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    align-items: center;
+  }
+  .store {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .store:hover {
+    border-color: var(--text-faint);
+  }
+  .status {
+    font-weight: 500;
+  }
+</style>

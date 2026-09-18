@@ -1,0 +1,84 @@
+---
+/** CSS laptop frame around a desktop screenshot. */
+interface Props {
+  image: string;
+  alt?: string;
+}
+const { image, alt = '' } = Astro.props;
+---
+
+<div class="laptop" role="img" aria-label={alt}>
+  <div class="lid">
+    <div class="cam" aria-hidden="true"></div>
+    <div class="display">
+      <img src={image} alt="" loading="lazy" width="1440" height="900" />
+    </div>
+  </div>
+  <div class="base" aria-hidden="true"><span class="notch"></span></div>
+</div>
+
+<style>
+  .laptop {
+    width: 100%;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+  .lid {
+    position: relative;
+    background: #0d0d10;
+    border-radius: 18px 18px 6px 6px;
+    padding: 14px 14px 12px;
+    box-shadow:
+      0 0 0 1.5px #2a2a31,
+      0 40px 70px -30px rgb(0 0 0 / 0.6);
+  }
+  .cam {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1f2a3a;
+    transform: translateX(-50%);
+  }
+  .display {
+    border-radius: 6px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 16 / 10;
+  }
+  .display img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+  .base {
+    position: relative;
+    height: 14px;
+    margin: 0 -4%;
+    background: linear-gradient(#d9d9dd, #b9b9c0);
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 6px 12px -8px rgb(0 0 0 / 0.5);
+  }
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 14%;
+    height: 5px;
+    transform: translateX(-50%);
+    background: #a5a5ac;
+    border-radius: 0 0 6px 6px;
+  }
+  :global(:root[data-theme='dark']) .base {
+    background: linear-gradient(#3a3a42, #26262d);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .base {
+      background: linear-gradient(#3a3a42, #26262d);
+    }
+  }
+</style>

@@ -1,0 +1,244 @@
+---
+import Base from '@/layouts/Base.astro';
+import clients from '@/data/clients.json';
+import testimonials from '@/data/testimonials.json';
+import Testimonial from '@/components/Testimonial.astro';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+const featured = clients.filter((c) => c.featured);
+const others = clients.filter((c) => !c.featured);
+const upworkLive = !site.links.upwork.includes('REPLACE');
+const sectors = [
+  'Federal research institutions',
+  'Major universities',
+  'Large corporations',
+  'Startups',
+  'Nonprofits',
+  'Agencies',
+];
+---
+
+<Base title="Clients" description="Featured clients and the largest engagements from over 250 Upwork contracts.">
+  <section class="section">
+    <div class="container">
+      <span class="eyebrow">Clients</span>
+      <h1>Who I've worked with</h1>
+      <p class="lede">
+        A few of the companies I've spent the most time with. They're a small slice of the 257 contracts I've completed since 2015, across {sectors.slice(0, -1).join(', ').toLowerCase()} and {sectors.at(-1)!.toLowerCase()}.
+      </p>
+      <dl class="stats">
+        {site.stats.map((s) => (
+          <div>
+            <dd>{s.value}</dd>
+            <dt>{s.label}</dt>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Featured clients</h2>
+      </div>
+      <ul class="clients">
+        {featured.map((c) => (
+          <li class="card client" id={c.slug}>
+            <div class="mark" aria-hidden="true">{c.initials}</div>
+            <div class="body">
+              <h3>{c.name}</h3>
+              <p class="meta muted">{c.industry} · {c.period}</p>
+              <p class="role">{c.role}</p>
+              <p class="blurb muted">{c.blurb}</p>
+              <div class="foot">
+                <span class="tag scale">{c.scale}</span>
+                {c.slug && <a href={url(`/work/${c.slug}`)}>Case study →</a>}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Recent engagements</h2>
+        <a href={url('/work')}>All case studies →</a>
+      </div>
+      <ul class="clients">
+        {others.map((c) => (
+          <li class="card client" id={c.slug}>
+            <div class="mark alt" aria-hidden="true">{c.initials}</div>
+            <div class="body">
+              <h3>{c.name}</h3>
+              <p class="meta muted">{c.industry} · {c.period}</p>
+              <p class="role">{c.role}</p>
+              <p class="blurb muted">{c.blurb}</p>
+              <div class="foot">
+                <span class="tag scale">{c.scale}</span>
+                {c.slug && <a href={url(`/work/${c.slug}`)}>Case study →</a>}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Client feedback</h2>
+        {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">All reviews on Upwork →</a>}
+      </div>
+      <p class="lede">Verbatim from Upwork contracts. Upwork shows clients by first name only, so they're identified by the contract here.</p>
+      <div class="grid grid-3 feedback">
+        {testimonials.map((t) => <Testimonial {...t} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="container band-inner">
+      <div>
+        <h2>And 250 more.</h2>
+        <p class="muted">
+          Most engagements are shorter contracts under NDA: executive support, webinar production, CRM builds, HR projects and one-off operations work. The full list, with client feedback, lives on Upwork.
+        </p>
+      </div>
+      <div class="band-actions">
+        {upworkLive && <a class="btn btn-primary" href={site.links.upwork} target="_blank" rel="noopener">View Upwork profile</a>}
+        <a class={upworkLive ? 'btn btn-secondary' : 'btn btn-primary'} href={url('/work#contracts')}>Recent contract titles</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 1rem;
+    margin: 2rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .stats div {
+    display: flex;
+    flex-direction: column;
+  }
+  .stats dd {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .stats dt {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .clients {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 1.25rem;
+  }
+  .client {
+    display: flex;
+    gap: 1rem;
+    scroll-margin-top: 90px;
+  }
+  .mark {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  }
+  .mark.alt {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .meta,
+  .blurb {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .role {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .blurb {
+    flex: 1;
+    margin-top: 0.25rem;
+  }
+  .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .scale {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .feedback {
+    margin-top: 1.5rem;
+  }
+  .band {
+    background: var(--bg-muted);
+  }
+  .band-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) auto;
+    gap: 2rem;
+    align-items: center;
+  }
+  .band h2 {
+    margin-bottom: 0.4rem;
+  }
+  .band p {
+    margin: 0;
+    max-width: 60ch;
+  }
+  .band-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  @media (max-width: 760px) {
+    .band-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

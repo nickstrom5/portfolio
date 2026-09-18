@@ -1,0 +1,181 @@
+---
+import Base from '@/layouts/Base.astro';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+const hasEndpoint = Boolean(site.contactEndpoint);
+const upworkLive = !site.links.upwork.includes('REPLACE');
+const linkedinLive = !site.links.linkedin.includes('REPLACE');
+---
+
+<Base title="Contact" description={`Hire ${site.name} for your next web or mobile project.`}>
+  <section class="section">
+    <div class="container contact">
+      <div>
+        <span class="eyebrow">Contact</span>
+        <h1>Let's talk about your project</h1>
+        <p class="lede">
+          Send a few lines about what you're building, your timeline and rough budget. I reply within one business day.
+        </p>
+        <ul class="channels">
+          <li>
+            <span class="label">Email</span>
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+          </li>
+          {upworkLive && (
+            <li>
+              <span class="label">Upwork</span>
+              <a href={site.links.upwork} target="_blank" rel="noopener">Hire me through Upwork</a>
+              <span class="muted small">Best if you want escrow and platform protection.</span>
+            </li>
+          )}
+          {linkedinLive && (
+            <li>
+              <span class="label">LinkedIn</span>
+              <a href={site.links.linkedin} target="_blank" rel="noopener">Connect on LinkedIn</a>
+            </li>
+          )}
+          <li>
+            <span class="label">Location</span>
+            <span>{site.location}</span>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        class="card form"
+        method="POST"
+        action={hasEndpoint ? site.contactEndpoint : `mailto:${site.email}`}
+        enctype={hasEndpoint ? undefined : 'text/plain'}
+      >
+        <label>
+          <span>Name</span>
+          <input name="name" type="text" autocomplete="name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span>Project type</span>
+          <select name="type">
+            <option>Mobile app</option>
+            <option>Web application</option>
+            <option>Backend / API</option>
+            <option>Rescue an existing project</option>
+            <option>Not sure yet</option>
+          </select>
+        </label>
+        <label>
+          <span>Budget range</span>
+          <select name="budget">
+            <option>Under $5k</option>
+            <option>$5k – $15k</option>
+            <option>$15k – $50k</option>
+            <option>$50k+</option>
+            <option>Ongoing retainer</option>
+          </select>
+        </label>
+        <label class="wide">
+          <span>Tell me about it</span>
+          <textarea name="message" rows="6" required></textarea>
+        </label>
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+        {hasEndpoint && (
+          <>
+            <input type="hidden" name="_subject" value="New project inquiry from work-with-nick.com" />
+            <input type="hidden" name="_next" value={new URL(url('/thanks'), Astro.site).href} />
+          </>
+        )}
+        <button class="btn btn-primary wide" type="submit">Send message</button>
+        {!hasEndpoint && (
+          <p class="muted small wide">This opens your email client with the message pre-filled.</p>
+        )}
+      </form>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 1.1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+  .channels {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .channels li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+  .small {
+    font-size: 0.85rem;
+  }
+  .form {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+    font-weight: 400;
+    padding: 0.65rem 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+  }
+  textarea {
+    resize: vertical;
+  }
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  button.wide {
+    justify-content: center;
+  }
+  .form p {
+    margin: 0;
+  }
+  @media (max-width: 800px) {
+    .contact {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

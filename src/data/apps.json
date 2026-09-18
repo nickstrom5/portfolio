@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Clam",
+    "tagline": "Fold your phone shut, and your distracting apps stay shut. A one-tap focus blocker built on Apple's Screen Time API.",
+    "platforms": ["iOS"],
+    "stack": ["SwiftUI", "Screen Time API", "ActivityKit", "StoreKit 2"],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://getclam.app",
+    "status": "In development",
+    "projectSlug": "clam-focus-blocker",
+    "icon": "C",
+    "placeholder": false
+  },
+  {
+    "name": "Lume",
+    "tagline": "A daily glow coach. One photo, a glow score, and a sixty-second skincare ritual. Photos never leave the phone.",
+    "platforms": ["iOS"],
+    "stack": ["SwiftUI", "On-device photo analysis", "StoreKit 2"],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://lumenow.app",
+    "status": "In development",
+    "projectSlug": "lume-daily-glow-coach",
+    "icon": "L",
+    "placeholder": false
+  }
+]
