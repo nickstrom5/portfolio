@@ -156,9 +156,9 @@ if (await page.$('[data-filter="mobile"]')) {
 await page.goto(base + '/apps/', { waitUntil: 'load' });
 await page.tap('[data-project="lume"]');
 await page.waitForTimeout(400);
-if (!(await page.evaluate(() => !document.getElementById('story-lume').hidden && document.getElementById('story-clam').hidden && location.hash === '#lume'))) findings.push('apps tiles: switching to Lume failed');
+if (!(await page.evaluate(() => !document.getElementById('lume').hidden && document.getElementById('clam').hidden && location.hash === '#lume'))) findings.push('apps tiles: switching to Lume failed');
 await page.goto(base + '/apps/#site', { waitUntil: 'load' });
-if (!(await page.evaluate(() => !document.getElementById('story-site').hidden))) findings.push('apps deep link #site failed');
+if (!(await page.evaluate(() => !document.getElementById('site').hidden))) findings.push('apps deep link #site failed');
 await page.goto(base + '/contact/', { waitUntil: 'load' });
 const form = await page.evaluate(() => ({ action: document.querySelector('form').action, fields: [...document.querySelectorAll('form [name]')].map((e) => e.name) }));
 if (!/formspree|mailto:/.test(form.action)) findings.push('contact form action unexpected: ' + form.action);

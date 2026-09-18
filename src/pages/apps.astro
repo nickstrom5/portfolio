@@ -21,7 +21,7 @@ import { url } from '@/lib/url';
             class="tile"
             role="tab"
             id={`tab-${p.id}`}
-            aria-controls={`story-${p.id}`}
+            aria-controls={p.id}
             aria-selected={i === 0 ? 'true' : 'false'}
             data-project={p.id}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}`}
@@ -40,7 +40,7 @@ import { url } from '@/lib/url';
   {projects.map((p, i) => (
     <article
       class="story"
-      id={`story-${p.id}`}
+      id={p.id}
       role="tabpanel"
       aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
@@ -225,7 +225,7 @@ import { url } from '@/lib/url';
       if (on) arm(s);
     });
     if (scroll) {
-      const target = document.getElementById(`story-${id}`);
+      const target = document.getElementById(id);
       target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     }
   }
