@@ -13,13 +13,17 @@ links:
 placeholder: false
 ---
 
+## An AI experiment
+
+Lume is the second of two apps built to test how much of a product AI can produce when a human directs it. About 95 percent of the strategy, screens, Swift code and launch kit came from Claude and Grok; I set the constraints, tested on device and decided what shipped. The full process is on the [Apps page](/apps).
+
 ## The idea
 
 Skincare apps either try to be a dermatologist or a shop. Lume is neither. It's a coach with a camera: one photo, a score for glow, evenness, texture and calm, and a ritual short enough that you'll actually finish it. Rinse, press, seal, SPF. Morning and evening, sixty seconds each.
 
 On the iPhone Duo the face stays on one screen and the ritual on the other, like a book. On a regular iPhone the photo sits above the scores.
 
-## What I built
+## What got built
 
 - The SwiftUI app with a guided same-window, same-hour capture flow, an on-device scoring pass, a fourteen-day trend view and share cards for the days that look different.
 - A privacy model that keeps the product honest: the picture is never uploaded, and any coaching copy is generated from scores and tapped answers rather than from stored images.

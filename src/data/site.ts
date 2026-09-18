@@ -25,10 +25,12 @@ export const site = {
     { value: '257', label: 'Upwork contracts' },
     { value: '17,800+', label: 'Hours billed' },
     { value: '100%', label: 'Job success score' },
-    { value: 'Top 1%', label: 'Top Rated Plus' },
+    { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
   badges: ['Top Rated Plus', '100% Job Success', 'Freelancing since 2015', 'Responds within 0–4 hours'],
   availability: 'Open for work',
+  /** Path under /public. */
+  photo: '/nick.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
   resumePdf: '/Nick-Soderstrom-Resume.pdf',
   /**

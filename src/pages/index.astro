@@ -22,7 +22,10 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 <Base>
   <section class="hero">
     <div class="container">
-      <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
+      <div class="who">
+        <img class="portrait" src={url(site.photo)} alt="" width="56" height="56" loading="eager" />
+        <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
+      </div>
       <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
       <p class="lede">{site.tagline} Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork.</p>
       <ul class="badges" aria-label="Credentials">
@@ -132,6 +135,20 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       radial-gradient(60% 50% at 80% 0%, var(--accent-soft) 0%, transparent 70%),
       var(--bg);
   }
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .portrait {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--bg-elev);
+    box-shadow: var(--shadow);
+  }
   .avail {
     display: inline-flex;
     align-items: center;
@@ -139,7 +156,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--success);
-    margin-bottom: 1.25rem;
+    margin: 0;
   }
   .dot {
     width: 8px;
