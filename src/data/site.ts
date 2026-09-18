@@ -15,7 +15,7 @@ export const site = {
   /** Replace with your real profile URLs. */
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
-    linkedin: 'https://www.linkedin.com/in/REPLACE_WITH_YOUR_HANDLE',
+    linkedin: 'https://www.linkedin.com/in/nick-s-0a0a29bb',
     github: '',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
