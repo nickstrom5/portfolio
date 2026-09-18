@@ -1,27 +1,37 @@
 ---
 interface Props {
   quote: string;
-  author: string;
-  company: string;
-  source: string;
+  contract: string;
+  period: string;
   rating: number;
+  hours?: number;
+  endorsements?: string[];
+  source: string;
   placeholder?: boolean;
 }
-const { quote, author, company, source, rating, placeholder } = Astro.props;
+const { quote, contract, period, rating, hours, endorsements = [], source, placeholder } = Astro.props;
 const showBadge = import.meta.env.DEV && placeholder;
+const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
 ---
 
 <figure class="card quote">
   {showBadge && <span class="placeholder-badge">Sample</span>}
-  <div class="stars" aria-label={`${rating} out of 5 stars`}>
-    {Array.from({ length: 5 }, (_, i) => (
-      <span class:list={['star', { on: i < rating }]} aria-hidden="true">★</span>
-    ))}
+  <div class="head">
+    <span class="rating" aria-label={`Rated ${rating} out of 5`}>
+      <span class="star" aria-hidden="true">★</span>
+      {rating.toFixed(1)}
+    </span>
+    {hoursLabel && <span class="muted small">{hoursLabel}</span>}
   </div>
   <blockquote>“{quote}”</blockquote>
   <figcaption>
-    <strong>{author}</strong>, {company}
-    <span class="muted"> · via {source}</span>
+    <strong>{contract}</strong>
+    <span class="muted"> · {period} · via {source}</span>
+    {endorsements.length > 0 && (
+      <ul class="tags">
+        {endorsements.map((e) => <li class="tag">{e}</li>)}
+      </ul>
+    )}
   </figcaption>
 </figure>
 
@@ -33,12 +43,24 @@ const showBadge = import.meta.env.DEV && placeholder;
     flex-direction: column;
     gap: 0.75rem;
   }
-  .stars {
-    color: var(--border);
-    letter-spacing: 0.1em;
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .star.on {
+  .rating {
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .star {
     color: #f5b301;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .small {
+    font-size: 0.85rem;
   }
   blockquote {
     margin: 0;
@@ -47,5 +69,14 @@ const showBadge = import.meta.env.DEV && placeholder;
   }
   figcaption {
     font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  figcaption strong {
+    color: var(--text);
+  }
+  .tags {
+    margin-top: 0.1rem;
   }
 </style>

@@ -15,7 +15,7 @@ placeholder: false
 
 ## The engagement
 
-BARBRI produces a large library of video courses taught by law professors. Between March 2023 and April 2024 I was the project manager for video production, responsible for the post-production pipeline behind hundreds of those courses.
+BARBRI produces a large library of video courses taught by law professors. I worked with the team through Upwork from late 2020 to 2024, more than 1,000 hours in total, and from March 2023 served as project manager for video production, responsible for the post-production pipeline behind hundreds of those courses.
 
 ## What I did
 
