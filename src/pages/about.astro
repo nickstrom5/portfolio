@@ -28,8 +28,8 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 const connect = [
   { label: 'Email', value: site.email, href: `mailto:${site.email}`, mark: '@' },
   upworkLive && { label: 'Upwork', value: 'Top Rated Plus · 257 contracts', href: site.links.upwork, mark: 'Up' },
-  linkedinLive && { label: 'LinkedIn', value: 'nick-s-0a0a29bb', href: site.links.linkedin, mark: 'in' },
-  site.links.github && { label: 'GitHub', value: 'nickstrom5', href: site.links.github, mark: '{}' },
+  linkedinLive && { label: 'LinkedIn', value: 'Connect with me', href: site.links.linkedin, mark: 'in' },
+  site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
 ---

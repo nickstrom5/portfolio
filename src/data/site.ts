@@ -11,7 +11,7 @@ export const site = {
   /** Canonical URL. Update once the domain is registered and DNS is live. */
   url: 'https://work-with-nick.com',
   location: 'Chicago, IL · Remote worldwide',
-  email: 'nicholas.soderstrom@insidesuccess.com',
+  email: 'hello@work-with-nick.com',
   /** Replace with your real profile URLs. */
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
