@@ -18,7 +18,7 @@ interface Props {
 
 const {
   title,
-  description = `${site.role} in Chicago. 300+ contracts since 2015, Top Rated Plus on Upwork, 100% Job Success. Systems, CRM and automation.`,
+  description = `${site.name}, freelance ${site.role.toLowerCase()} in Chicago. 300+ contracts since 2015, Top Rated Plus on Upwork, 100% Job Success.`,
   image = '/og.png',
   noindex = false,
   jsonLd = [],
@@ -45,7 +45,10 @@ const graph = [
     '@type': 'Person',
     '@id': `${site.url}/#person`,
     name: site.name,
-    jobTitle: site.role,
+    alternateName: ['Nicholas Soderstrom', 'Nick S.'],
+    givenName: 'Nick',
+    familyName: 'Soderstrom',
+    jobTitle: `Freelance ${site.role.toLowerCase()}`,
     description: site.tagline,
     url: `${site.url}/`,
     email: `mailto:${site.email}`,
