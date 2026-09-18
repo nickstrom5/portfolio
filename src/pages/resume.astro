@@ -17,7 +17,9 @@ const domain = site.url.replace(/^https?:\/\//, '');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <title>{site.name} · Résumé</title>
     <style>
       :root {

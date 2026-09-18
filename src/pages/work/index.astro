@@ -28,7 +28,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <div class="grid grid-3" data-project-grid>
         {projects.map((p) => (
           <div data-category={p.data.category}>
-            <ProjectCard project={p} />
+            <ProjectCard project={p} level={2} />
           </div>
         ))}
       </div>

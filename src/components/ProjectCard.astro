@@ -4,10 +4,13 @@ import { url } from '@/lib/url';
 
 interface Props {
   project: CollectionEntry<'projects'>;
+  /** Heading level so the card fits the page outline (2 on index pages, 3 under a section heading). */
+  level?: 2 | 3;
 }
-const { project } = Astro.props;
+const { project, level = 3 } = Astro.props;
 const { title, client, summary, stack, year, category, platforms, placeholder } = project.data;
 const showBadge = import.meta.env.DEV && placeholder;
+const Heading = `h${level}` as 'h2' | 'h3';
 ---
 
 <article class="card project">
@@ -16,7 +19,7 @@ const showBadge = import.meta.env.DEV && placeholder;
     <span class="tag">{category}</span>
     <span class="muted">{year}</span>
   </div>
-  <h3><a href={url(`/work/${project.id}`)}>{title}</a></h3>
+  <Heading class="title"><a href={url(`/work/${project.id}`)}>{title}</a></Heading>
   <p class="muted client">{client}{platforms.length ? ` · ${platforms.join(' / ')}` : ''}</p>
   <p class="summary">{summary}</p>
   <ul class="tags">
@@ -38,18 +41,19 @@ const showBadge = import.meta.env.DEV && placeholder;
     align-items: center;
     font-size: 0.85rem;
   }
-  h3 {
+  .title {
     margin: 0.25rem 0 0;
+    font-size: 1.25rem;
   }
-  h3 a {
+  .title a {
     color: var(--text);
   }
-  h3 a::after {
+  .title a::after {
     content: '';
     position: absolute;
     inset: 0;
   }
-  h3 a:hover {
+  .title a:hover {
     color: var(--accent);
   }
   .client {
