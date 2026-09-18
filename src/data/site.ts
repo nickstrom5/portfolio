@@ -27,7 +27,7 @@ export const site = {
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
-  badges: ['Top Rated Plus', '100% Job Success', 'Freelancing since 2015'],
+  badges: ['Top Rated Plus', '100% Job Success', 'Freelance since 2015'],
   availability: 'Open for work',
   /** Path under /public. */
   photo: '/nick.jpg',
