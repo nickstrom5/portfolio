@@ -36,9 +36,9 @@ export const services: Service[] = [
     bullets: ['Zoom, OBS and livestream production', 'Premiere Pro, After Effects, Final Cut', 'Photoshop, Illustrator, InDesign'],
   },
   {
-    title: 'Web, e-commerce & apps',
+    title: 'AI-directed builds, web & apps',
     description:
-      'Content and updates on WordPress, Wix and Shopify, plus mobile and web apps when a client needs something built.',
-    bullets: ['WordPress, Wix, Shopify', 'Landing pages and storefront updates', 'Mobile and web app builds'],
+      'Websites, tools and iPhone apps built by directing Claude and Grok from a clear brief, plus content and updates on WordPress, Wix and Shopify.',
+    bullets: ['Claude Code & Grok, prompt to production', 'Astro sites, SwiftUI apps, GitHub Pages', 'WordPress, Wix, Shopify updates'],
   },
 ];
