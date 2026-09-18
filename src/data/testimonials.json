@@ -1,8 +1,8 @@
 [
   {
-    "quote": "Nick stepped into a messy program office and had it running in days, not weeks. Three years later he is still the person we trust with anything that has a deadline.",
+    "quote": "Nick stepped into a messy program office and had it running in days, not weeks. Years later he is still the person we trust with anything that has a deadline.",
     "author": "Program Director",
-    "company": "Federal research institution",
+    "company": "Research program",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true
@@ -10,7 +10,7 @@
   {
     "quote": "He built our entire CRM and follow-up system and then trained the team on it. Leads stopped falling through the cracks the week it went live.",
     "author": "Founder",
-    "company": "Online coaching startup",
+    "company": "Software startup",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true
@@ -18,7 +18,7 @@
   {
     "quote": "Responds within the hour, never misses a detail, and somehow makes a 200-person webinar look easy.",
     "author": "Department Head",
-    "company": "University continuing education",
+    "company": "Education company",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true

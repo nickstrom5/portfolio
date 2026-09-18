@@ -27,7 +27,7 @@ export const site = {
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus' },
   ],
-  badges: ['Top Rated Plus', '100% Job Success', '10+ years', 'Responds within 0–4 hours'],
+  badges: ['Top Rated Plus', '100% Job Success', 'Freelancing since 2015', 'Responds within 0–4 hours'],
   availability: 'Open for work',
   /**
    * Contact form endpoint (e.g. a Formspree or Basin URL). Leave empty to
