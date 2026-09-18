@@ -2,7 +2,7 @@
 title: 'Digital Coordinator for the SPARC Portal'
 shortTitle: 'SPARC Portal digital coordination'
 client: 'SPARC.science'
-summary: 'Four years and 3,700+ hours of coordination, administration and communications for the SPARC Portal, an open neuroscience and systems physiology platform funded by federal research.'
+summary: 'Four years and 3,700+ hours of coordination, administration and communications for the SPARC Portal, a federally funded open neuroscience platform.'
 category: 'consulting'
 platforms: ['Remote']
 stack: ['Office administration', 'Social media communications', 'Project coordination', 'Content operations']

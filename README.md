@@ -107,3 +107,15 @@ proxied if you want Cloudflare's caching in front of the site.
 If you would rather use Cloudflare Pages, Netlify or Vercel, connect the repo,
 set the build command to `npm run build` and the output directory to `dist`;
 each of them handles the domain and certificate from their dashboard.
+
+## QA and SEO audit
+
+`npm run build && npm run qa` checks every built page at phone, tablet and
+desktop widths in both themes: JavaScript errors, horizontal overflow,
+heading outline, alt text, form labels, tap targets, tiny text, internal
+links and anchors, plus an SEO audit (title and description length,
+canonical, robots, Open Graph image, JSON-LD validity, sitemap coverage) and
+the interactive flows (menu, theme toggle, work filters, Apps tiles, contact
+form). It exits non-zero with a findings list. Needs Playwright with
+Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
+A weekly routine runs this and reports.
