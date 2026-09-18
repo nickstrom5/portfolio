@@ -1,0 +1,48 @@
+---
+import clients from '@/data/clients.json';
+const showBadge = import.meta.env.DEV && clients.some((c) => c.placeholder);
+---
+
+<div class="strip-wrap">
+  {showBadge && <span class="placeholder-badge">Sample</span>}
+  <ul class="strip" aria-label="Clients">
+    {clients.map((c) => (
+      <li>
+        <span class="name">{c.name}</span>
+        <span class="industry muted">{c.industry}</span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .strip-wrap {
+    position: relative;
+  }
+  .strip {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 0.75rem;
+  }
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem 0.75rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elev);
+  }
+  .name {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .industry {
+    font-size: 0.78rem;
+  }
+</style>

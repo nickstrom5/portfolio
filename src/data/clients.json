@@ -1,0 +1,10 @@
+[
+  { "name": "Acme Logistics", "industry": "Logistics", "placeholder": true },
+  { "name": "Brightside Health", "industry": "Healthcare", "placeholder": true },
+  { "name": "Northwind Retail", "industry": "E-commerce", "placeholder": true },
+  { "name": "Lakeshore Fitness", "industry": "Fitness", "placeholder": true },
+  { "name": "Cedar & Co.", "industry": "Hospitality", "placeholder": true },
+  { "name": "Summit Real Estate", "industry": "Real estate", "placeholder": true },
+  { "name": "Pioneer Education", "industry": "EdTech", "placeholder": true },
+  { "name": "Harbor Finance", "industry": "Fintech", "placeholder": true }
+]

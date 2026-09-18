@@ -1,0 +1,91 @@
+---
+import Base from '@/layouts/Base.astro';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+const skills = {
+  Mobile: ['React Native', 'Flutter', 'Swift / SwiftUI', 'Kotlin', 'Expo', 'App Store & Play Console'],
+  Web: ['React', 'Next.js', 'Astro', 'TypeScript', 'Tailwind CSS', 'Accessibility (WCAG)'],
+  Backend: ['Node.js', 'Python / FastAPI', 'PostgreSQL', 'Firebase', 'Supabase', 'REST & GraphQL'],
+  Tooling: ['Git & CI/CD', 'AWS / Vercel', 'Stripe', 'Twilio', 'HubSpot & CRM APIs', 'Analytics'],
+};
+const linkedinLive = !site.links.linkedin.includes('REPLACE');
+const upworkLive = !site.links.upwork.includes('REPLACE');
+---
+
+<Base title="About" description={`About ${site.name}, ${site.role.toLowerCase()} based in the ${site.location}.`}>
+  <section class="section">
+    <div class="container about">
+      <div class="prose">
+        <span class="eyebrow">About</span>
+        <h1>Hi, I'm {site.firstName}.</h1>
+        <p class="lede">
+          I'm a freelance developer who has spent years building products for clients on Upwork and beyond: mobile apps, web platforms and the backends that power them.
+        </p>
+        <p>
+          Most of my clients are founders and small teams who need someone who can own a whole feature or product, not just a slice of it. I write the scope, build it, ship it to the stores or to production, and stick around after launch.
+        </p>
+        <p>
+          I care about clear communication, honest estimates and code the next developer can read. Repeat clients and referrals make up most of my work, which I take as the best measure of whether that approach is working.
+        </p>
+        <p>
+          Based in the {site.location.split(' · ')[0]}, working with clients across North America, Europe and Australia.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href={url('/contact')}>Work with me</a>
+          {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork</a>}
+          {linkedinLive && <a class="btn btn-secondary" href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>}
+        </div>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h2 class="h3">Skills</h2>
+          {Object.entries(skills).map(([group, items]) => (
+            <div class="skill-group">
+              <h3>{group}</h3>
+              <ul class="tags">
+                {items.map((s) => <li class="tag">{s}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .skill-group {
+    margin-bottom: 1.1rem;
+  }
+  .skill-group h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 0.5rem;
+  }
+  @media (max-width: 800px) {
+    .about {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+</style>

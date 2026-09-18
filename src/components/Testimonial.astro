@@ -1,0 +1,51 @@
+---
+interface Props {
+  quote: string;
+  author: string;
+  company: string;
+  source: string;
+  rating: number;
+  placeholder?: boolean;
+}
+const { quote, author, company, source, rating, placeholder } = Astro.props;
+const showBadge = import.meta.env.DEV && placeholder;
+---
+
+<figure class="card quote">
+  {showBadge && <span class="placeholder-badge">Sample</span>}
+  <div class="stars" aria-label={`${rating} out of 5 stars`}>
+    {Array.from({ length: 5 }, (_, i) => (
+      <span class:list={['star', { on: i < rating }]} aria-hidden="true">★</span>
+    ))}
+  </div>
+  <blockquote>“{quote}”</blockquote>
+  <figcaption>
+    <strong>{author}</strong>, {company}
+    <span class="muted"> · via {source}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .quote {
+    position: relative;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .stars {
+    color: var(--border);
+    letter-spacing: 0.1em;
+  }
+  .star.on {
+    color: #f5b301;
+  }
+  blockquote {
+    margin: 0;
+    flex: 1;
+    font-size: 1.02rem;
+  }
+  figcaption {
+    font-size: 0.9rem;
+  }
+</style>

@@ -1,0 +1,63 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { url } from '@/lib/url';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { title, client, summary, stack, year, category, platforms, placeholder } = project.data;
+const showBadge = import.meta.env.DEV && placeholder;
+---
+
+<article class="card project">
+  {showBadge && <span class="placeholder-badge">Sample</span>}
+  <div class="meta">
+    <span class="tag">{category}</span>
+    <span class="muted">{year}</span>
+  </div>
+  <h3><a href={url(`/work/${project.id}`)}>{title}</a></h3>
+  <p class="muted client">{client}{platforms.length ? ` · ${platforms.join(' / ')}` : ''}</p>
+  <p class="summary">{summary}</p>
+  <ul class="tags">
+    {stack.slice(0, 5).map((s) => <li class="tag">{s}</li>)}
+  </ul>
+</article>
+
+<style>
+  .project {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  h3 {
+    margin: 0.25rem 0 0;
+  }
+  h3 a {
+    color: var(--text);
+  }
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  h3 a:hover {
+    color: var(--accent);
+  }
+  .client {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  .summary {
+    flex: 1;
+    margin: 0.25rem 0 0.5rem;
+  }
+</style>

@@ -1,0 +1,54 @@
+[
+  {
+    "name": "RouteRunner",
+    "tagline": "Driver dispatch and proof-of-delivery for regional fleets.",
+    "platforms": ["iOS", "Android"],
+    "stack": ["React Native", "Node.js", "Postgres"],
+    "client": "Acme Logistics",
+    "year": 2025,
+    "appStore": "",
+    "playStore": "",
+    "projectSlug": "routerunner-delivery-app",
+    "icon": "RR",
+    "placeholder": true
+  },
+  {
+    "name": "Brightside Care",
+    "tagline": "Appointment booking and secure messaging for a telehealth clinic.",
+    "platforms": ["iOS", "Android"],
+    "stack": ["Flutter", "Firebase"],
+    "client": "Brightside Health",
+    "year": 2024,
+    "appStore": "",
+    "playStore": "",
+    "projectSlug": "brightside-telehealth-app",
+    "icon": "BC",
+    "placeholder": true
+  },
+  {
+    "name": "Lakeshore Fit",
+    "tagline": "Class schedules, check-ins and memberships for a gym chain.",
+    "platforms": ["iOS", "Android"],
+    "stack": ["Swift", "Kotlin", "Stripe"],
+    "client": "Lakeshore Fitness",
+    "year": 2023,
+    "appStore": "",
+    "playStore": "",
+    "projectSlug": "",
+    "icon": "LF",
+    "placeholder": true
+  },
+  {
+    "name": "Cedar Orders",
+    "tagline": "Table-side ordering and kitchen display for restaurants.",
+    "platforms": ["iOS"],
+    "stack": ["SwiftUI", "Supabase"],
+    "client": "Cedar & Co.",
+    "year": 2023,
+    "appStore": "",
+    "playStore": "",
+    "projectSlug": "",
+    "icon": "CO",
+    "placeholder": true
+  }
+]

@@ -1,0 +1,146 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { url } from '@/lib/url';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+
+const related = (await getCollection('projects'))
+  .filter((p) => p.id !== project.id && p.data.category === d.category)
+  .slice(0, 2);
+
+const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
+const links = [
+  d.links.live && { label: 'Live site', href: d.links.live },
+  d.links.appStore && { label: 'App Store', href: d.links.appStore },
+  d.links.playStore && { label: 'Google Play', href: d.links.playStore },
+  d.links.repo && { label: 'Source', href: d.links.repo },
+].filter(Boolean) as { label: string; href: string }[];
+---
+
+<Base title={d.title} description={d.summary}>
+  <article class="section">
+    <div class="container">
+      <a class="back" href={url('/work')}>← All work</a>
+      <span class="eyebrow">{d.category} · {d.year}</span>
+      <h1>{d.title}</h1>
+      <p class="lede">{d.summary}</p>
+
+      <div class="layout">
+        <div class="prose">
+          <Content />
+        </div>
+        <aside class="facts card">
+          <dl>
+            <dt>Client</dt>
+            <dd>{d.client}</dd>
+            <dt>Engagement</dt>
+            <dd>{sourceLabel}</dd>
+            {d.platforms.length > 0 && (
+              <>
+                <dt>Platforms</dt>
+                <dd>{d.platforms.join(', ')}</dd>
+              </>
+            )}
+            <dt>Stack</dt>
+            <dd>
+              <ul class="tags">
+                {d.stack.map((s) => <li class="tag">{s}</li>)}
+              </ul>
+            </dd>
+            {links.length > 0 && (
+              <>
+                <dt>Links</dt>
+                <dd class="links">
+                  {links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+                </dd>
+              </>
+            )}
+          </dl>
+          <a class="btn btn-primary full" href={url('/contact')}>Build something similar</a>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  {related.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>More {d.category} work</h2>
+        </div>
+        <div class="grid grid-2">
+          {related.map((p) => <ProjectCard project={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .back {
+    display: block;
+    width: fit-content;
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 3rem;
+    margin-top: 2.5rem;
+    align-items: start;
+  }
+  .facts {
+    position: sticky;
+    top: 88px;
+  }
+  dl {
+    margin: 0 0 1.25rem;
+  }
+  dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    font-weight: 600;
+    margin-top: 1rem;
+  }
+  dt:first-child {
+    margin-top: 0;
+  }
+  dd {
+    margin: 0.2rem 0 0;
+  }
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .full {
+    width: 100%;
+    justify-content: center;
+  }
+  @media (max-width: 860px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .facts {
+      position: static;
+    }
+  }
+</style>

@@ -1,0 +1,26 @@
+[
+  {
+    "quote": "Nick took a half-finished app from a previous developer, stabilized it, and got it into both stores in three weeks. Communication was excellent throughout.",
+    "author": "Operations Director",
+    "company": "Acme Logistics",
+    "source": "Upwork",
+    "rating": 5,
+    "placeholder": true
+  },
+  {
+    "quote": "Delivered exactly what we scoped, flagged the risks early, and stuck around for the launch. We have hired him for three more contracts since.",
+    "author": "Founder",
+    "company": "Brightside Health",
+    "source": "Upwork",
+    "rating": 5,
+    "placeholder": true
+  },
+  {
+    "quote": "Clear estimates, clean code, and a handoff our in-house team could actually work with.",
+    "author": "CTO",
+    "company": "Northwind Retail",
+    "source": "Upwork",
+    "rating": 5,
+    "placeholder": true
+  }
+]
