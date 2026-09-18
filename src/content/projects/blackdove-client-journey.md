@@ -1,5 +1,6 @@
 ---
 title: 'Guiding clients through the customer journey at Blackdove Art'
+shortTitle: 'Blackdove Art client journey'
 client: 'Blackdove Art'
 summary: 'Three years as junior marketing manager for a digital art platform, guiding clients from first touch through the sales and onboarding journey.'
 category: 'other'

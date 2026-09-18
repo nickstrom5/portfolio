@@ -9,12 +9,70 @@ interface Props {
   description?: string;
   /** Path under /public used for social previews. */
   image?: string;
+  /** Keep the page out of search results (thank-you pages, print views). */
+  noindex?: boolean;
+  /** Extra JSON-LD objects merged into the page graph. */
+  jsonLd?: Record<string, unknown>[];
+  ogType?: 'website' | 'article' | 'profile';
 }
 
-const { title, description = site.tagline, image = '/og.png' } = Astro.props;
+const {
+  title,
+  description = `${site.role} in Chicago. Top Rated Plus on Upwork with 257 contracts and a 100% Job Success Score. Project management, systems, CRM and automation, executive support.`,
+  image = '/og.png',
+  noindex = false,
+  jsonLd = [],
+  ogType = 'website',
+} = Astro.props;
+
 const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.role}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const sameAs = Object.values(site.links).filter((l) => l && !l.includes('REPLACE'));
+
+const graph = [
+  {
+    '@type': 'WebSite',
+    '@id': `${site.url}/#website`,
+    url: `${site.url}/`,
+    name: site.name,
+    description: site.tagline,
+    inLanguage: 'en-US',
+    publisher: { '@id': `${site.url}/#person` },
+  },
+  {
+    '@type': 'Person',
+    '@id': `${site.url}/#person`,
+    name: site.name,
+    jobTitle: site.role,
+    description: site.tagline,
+    url: `${site.url}/`,
+    email: `mailto:${site.email}`,
+    image: new URL(site.photo, Astro.site).href,
+    address: { '@type': 'PostalAddress', addressLocality: 'Chicago', addressRegion: 'IL', addressCountry: 'US' },
+    sameAs,
+    knowsAbout: [
+      'Project management',
+      'Operations management',
+      'Microsoft 365',
+      'CRM automation',
+      'Executive support',
+      'Webinar production',
+    ],
+  },
+  {
+    '@type': 'WebPage',
+    '@id': `${canonical.href}#webpage`,
+    url: canonical.href,
+    name: fullTitle,
+    description,
+    isPartOf: { '@id': `${site.url}/#website` },
+    about: { '@id': `${site.url}/#person` },
+    inLanguage: 'en-US',
+  },
+  ...jsonLd,
+];
 ---
 
 <!doctype html>
@@ -24,21 +82,30 @@ const ogImage = new URL(image, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="author" content={site.name} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/favicon.svg`} type="image/svg+xml" />
-    <link rel="sitemap" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/sitemap-index.xml`} />
+    {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
+    <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
     <meta name="generator" content={Astro.generator} />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${site.name}, ${site.role}`} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={`${site.name}, ${site.role}`} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,15 +124,7 @@ const ogImage = new URL(image, Astro.site);
       } catch {}
     </script>
 
-    <script type="application/ld+json" set:html={JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: site.name,
-      jobTitle: site.role,
-      url: site.url,
-      email: `mailto:${site.email}`,
-      sameAs: Object.values(site.links).filter(Boolean),
-    })} />
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
