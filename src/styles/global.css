@@ -282,6 +282,21 @@ p {
   outline-offset: 3px;
 }
 
+/* Comfortable tap targets on touch screens for text links that sit alone. */
+@media (pointer: coarse) {
+  .section-head a,
+  .back,
+  .channels a,
+  .more a,
+  .detail,
+  .edu a,
+  .devlinks a,
+  .follow .inline {
+    display: inline-block;
+    padding-block: 0.55rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
