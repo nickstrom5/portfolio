@@ -25,7 +25,7 @@ export const experience: Role[] = [
     start: '2022',
     end: '2026',
     location: 'Bethesda, MD · Remote',
-    summary: 'Four years supporting the SPARC Portal, an open neuroscience and systems physiology platform.',
+    summary: 'Four years and 3,700+ hours supporting the SPARC Portal, an open neuroscience research platform.',
     slug: 'sparc-portal-digital-coordinator',
   },
   {
