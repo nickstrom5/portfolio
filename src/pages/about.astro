@@ -2,6 +2,7 @@
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
+import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
 
 const skills = {
@@ -13,6 +14,13 @@ const skills = {
 };
 const linkedinLive = !site.links.linkedin.includes('REPLACE');
 const upworkLive = !site.links.upwork.includes('REPLACE');
+const connect = [
+  { label: 'Email', value: site.email, href: `mailto:${site.email}`, mark: '@' },
+  upworkLive && { label: 'Upwork', value: 'Top Rated Plus · 257 contracts', href: site.links.upwork, mark: 'Up' },
+  linkedinLive && { label: 'LinkedIn', value: 'nick-s-0a0a29bb', href: site.links.linkedin, mark: 'in' },
+  site.links.github && { label: 'GitHub', value: 'nickstrom5', href: site.links.github, mark: '{}' },
+].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
+const photos = personal.photos as { src: string; alt: string; caption?: string }[];
 ---
 
 <Base title="About" description={`About ${site.name}, ${site.role.toLowerCase()} based in Chicago.`}>
@@ -43,7 +51,24 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       </div>
 
       <aside>
-        <div class="card">
+        <div class="card connect">
+          <h2 class="h3">Connect</h2>
+          <ul>
+            {connect.map((c) => (
+              <li>
+                <a href={c.href} target={c.href.startsWith('mailto:') ? undefined : '_blank'} rel={c.href.startsWith('mailto:') ? undefined : 'me noopener'}>
+                  <span class="mark" aria-hidden="true">{c.mark}</span>
+                  <span class="text">
+                    <strong>{c.label}</strong>
+                    <span class="muted">{c.value}</span>
+                  </span>
+                  <span class="arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="card skills">
           <h2 class="h3">Skills</h2>
           {Object.entries(skills).map(([group, items]) => (
             <div class="skill-group">
@@ -85,6 +110,28 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       </p>
     </div>
   </section>
+
+  {photos.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <span class="eyebrow">Personal</span>
+        <div class="section-head">
+          <h2>{personal.title}</h2>
+        </div>
+        <p class="lede">{personal.intro}</p>
+        <ul class="gallery">
+          {photos.map((p) => (
+            <li>
+              <figure>
+                <img src={url(p.src)} alt={p.alt} loading="lazy" width="800" height="600" />
+                {p.caption && <figcaption class="muted">{p.caption}</figcaption>}
+              </figure>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
 </Base>
 
 <style>
@@ -111,6 +158,78 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;
+  }
+  .connect ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .connect a {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    color: var(--text);
+    min-height: 44px;
+    transition: border-color 0.15s ease;
+  }
+  .connect a:hover {
+    border-color: var(--text-faint);
+  }
+  .connect .mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+  .connect .text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+  }
+  .connect .text .muted {
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+  .connect .arrow {
+    color: var(--text-faint);
+  }
+  .skills {
+    margin-top: 1.25rem;
+  }
+  .gallery {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1rem;
+  }
+  .gallery figure {
+    margin: 0;
+  }
+  .gallery img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .gallery figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
   }
   .skill-group {
     margin-bottom: 1.1rem;
