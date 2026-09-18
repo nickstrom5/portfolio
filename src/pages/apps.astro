@@ -24,7 +24,7 @@ import { url } from '@/lib/url';
             aria-controls={p.id}
             aria-selected={i === 0 ? 'true' : 'false'}
             data-project={p.id}
-            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}`}
+            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
             type="button"
           >
             <span class="t-kicker">{p.kicker}</span>
@@ -45,7 +45,7 @@ import { url } from '@/lib/url';
       aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
       hidden={i !== 0}
-      style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}`}
+      style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}; --story-bg-dark: ${p.bgDark ?? p.bg}; --story-fg-dark: ${p.fgDark ?? p.fg}`}
     >
       <section class="hero">
         <div class:list={['container', 'hero-inner', { wide: p.hero.frame === 'laptop' }]}>
@@ -285,7 +285,7 @@ import { url } from '@/lib/url';
     padding: 1.25rem 1.25rem 1.1rem;
     border-radius: var(--radius);
     border: 2px solid transparent;
-    background: var(--tile-bg);
+    background: var(--tile-bg-use);
     color: #fff;
     cursor: pointer;
     font: inherit;
@@ -296,25 +296,29 @@ import { url } from '@/lib/url';
     overflow: hidden;
   }
   .tile[data-project='site'] {
-    color: var(--text);
-  }
-  :global(:root[data-theme='dark']) .tile[data-project='site'],
-  .tile[data-project='site'] {
     color: #17181a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .tile[data-project='site'] {
+      color: #eef0f2;
+    }
+  }
+  :global(:root[data-theme='dark']) .tile[data-project='site'] {
+    color: #eef0f2;
   }
   .tile:hover {
     transform: translateY(-2px);
   }
   .tile.active,
   .tile[aria-selected='true'] {
-    border-color: var(--tile-fg);
+    border-color: var(--tile-fg-use);
   }
   .t-kicker {
     font-size: 0.72rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--tile-fg);
+    color: var(--tile-fg-use);
   }
   .t-name {
     font-size: 1.6rem;
@@ -330,7 +334,7 @@ import { url } from '@/lib/url';
   .t-cta {
     font-weight: 700;
     font-size: 0.9rem;
-    color: var(--tile-fg);
+    color: var(--tile-fg-use);
     margin-top: 0.5rem;
   }
   @media (max-width: 760px) {
@@ -346,7 +350,7 @@ import { url } from '@/lib/url';
     scroll-margin-top: 64px;
   }
   .hero {
-    background: var(--story-bg);
+    background: var(--story-bg-use);
     color: #fff;
     padding-block: clamp(3rem, 8vw, 6rem);
     overflow: hidden;
@@ -366,7 +370,7 @@ import { url } from '@/lib/url';
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--story-fg);
+    color: var(--story-fg-use);
     margin-bottom: 0.9rem;
   }
   .hero h2 {
@@ -413,7 +417,7 @@ import { url } from '@/lib/url';
     border-color: rgb(255 255 255 / 0.3);
   }
   .story:not([data-story='site']) .hero .btn-primary {
-    background: var(--story-fg);
+    background: var(--story-fg-use);
     color: #121217;
   }
   @media (max-width: 860px) {
@@ -721,5 +725,29 @@ import { url } from '@/lib/url';
   :global(html.reveal-js) [data-reveal]:not(.in) {
     opacity: 0;
     transform: translateY(20px);
+  }
+  .tile,
+  .story {
+    --tile-bg-use: var(--tile-bg);
+    --tile-fg-use: var(--tile-fg);
+    --story-bg-use: var(--story-bg);
+    --story-fg-use: var(--story-fg);
+  }
+  /* Dark theme: use the per-project dark variants so the light tile does not glare. */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .tile,
+    :global(:root:not([data-theme='light'])) .story {
+      --tile-bg-use: var(--tile-bg-dark);
+      --tile-fg-use: var(--tile-fg-dark);
+      --story-bg-use: var(--story-bg-dark);
+      --story-fg-use: var(--story-fg-dark);
+    }
+  }
+  :global(:root[data-theme='dark']) .tile,
+  :global(:root[data-theme='dark']) .story {
+    --tile-bg-use: var(--tile-bg-dark);
+    --tile-fg-use: var(--tile-fg-dark);
+    --story-bg-use: var(--story-bg-dark);
+    --story-fg-use: var(--story-fg-dark);
   }
 </style>
