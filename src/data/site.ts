@@ -29,6 +29,8 @@ export const site = {
   ],
   badges: ['Top Rated Plus', '100% Job Success', 'Freelancing since 2015', 'Responds within 0–4 hours'],
   availability: 'Open for work',
+  /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
+  resumePdf: '/Nick-Soderstrom-Resume.pdf',
   /**
    * Contact form endpoint (e.g. a Formspree or Basin URL). Leave empty to
    * fall back to a plain email link. Nothing is posted anywhere until you set it.
@@ -38,6 +40,7 @@ export const site = {
 
 export const nav = [
   { href: '/work', label: 'Work' },
+  { href: '/clients', label: 'Clients' },
   { href: '/apps', label: 'Apps' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },

@@ -1,10 +1,90 @@
 [
-  { "name": "SPARC.science", "industry": "Federal research · 4 years", "placeholder": false },
-  { "name": "Symplicity", "industry": "Higher-ed software · 4 years", "placeholder": false },
-  { "name": "BARBRI", "industry": "Legal education", "placeholder": false },
-  { "name": "Rippling", "industry": "HR & IT platform", "placeholder": false },
-  { "name": "Blackdove Art", "industry": "Digital art · 3 years", "placeholder": false },
-  { "name": "OFFX", "industry": "Office experience", "placeholder": false },
-  { "name": "Agriculture & land development co.", "industry": "Central California", "placeholder": false },
-  { "name": "250+ more on Upwork", "industry": "Startups, nonprofits, corporations", "placeholder": false }
+  {
+    "name": "SPARC.science",
+    "initials": "SP",
+    "industry": "Federal research program",
+    "role": "Digital Coordinator",
+    "period": "2022–2026",
+    "scale": "4-year engagement",
+    "blurb": "Coordination, administration and communications for the SPARC Portal, an open neuroscience and systems physiology platform.",
+    "slug": "sparc-portal-digital-coordinator",
+    "featured": true
+  },
+  {
+    "name": "Symplicity",
+    "initials": "SY",
+    "industry": "Higher-education software",
+    "role": "Project Manager",
+    "period": "2018–2022",
+    "scale": "Nearly 4 years",
+    "blurb": "Kept design projects on track across internal teams and many college clients.",
+    "slug": "symplicity-design-projects",
+    "featured": true
+  },
+  {
+    "name": "BARBRI",
+    "initials": "BB",
+    "industry": "Legal education",
+    "role": "Project Manager, Video Production",
+    "period": "2023–2024",
+    "scale": "Hundreds of courses",
+    "blurb": "Owned the post-production pipeline and timelines for a large library of video courses taught by law professors.",
+    "slug": "barbri-video-production",
+    "featured": true
+  },
+  {
+    "name": "Rippling",
+    "initials": "RP",
+    "industry": "HR & IT platform",
+    "role": "Executive Assistant",
+    "period": "2019–2020",
+    "scale": "Multiple executives",
+    "blurb": "Scheduling and project coordination for several leaders at a fast-growing company.",
+    "slug": "rippling-executive-support",
+    "featured": true
+  },
+  {
+    "name": "Blackdove Art",
+    "initials": "BD",
+    "industry": "Digital art platform",
+    "role": "Jr. Marketing Manager",
+    "period": "2022–2024",
+    "scale": "3-year engagement",
+    "blurb": "Guided clients from first contact through the sales and onboarding journey.",
+    "slug": "blackdove-client-journey",
+    "featured": true
+  },
+  {
+    "name": "OFFX",
+    "initials": "OX",
+    "industry": "Office experience company",
+    "role": "Account Manager",
+    "period": "2024–2025",
+    "scale": "Client accounts end to end",
+    "blurb": "Managed client relationships and kept orders on track from placement through delivery.",
+    "slug": "offx-account-management",
+    "featured": true
+  },
+  {
+    "name": "Agriculture & land development co.",
+    "initials": "AG",
+    "industry": "Family-owned, Central California",
+    "role": "Microsoft 365 systems consultant",
+    "period": "2026",
+    "scale": "17-person rollout",
+    "blurb": "Replaced Trello and email with a structured Planner, Teams and SharePoint system, delivered async in two-week phases.",
+    "slug": "planner-rollout-central-california",
+    "featured": false
+  },
+  {
+    "name": "Digital advertising agency",
+    "initials": "AD",
+    "industry": "Geofencing & connected TV",
+    "role": "Executive admin & billing support",
+    "period": "2025–present",
+    "scale": "Ongoing",
+    "blurb": "Vendor invoices, client cancellations and the weekly follow-through that keeps a multi-market agency running.",
+    "slug": "agency-executive-admin-billing",
+    "featured": false
+  }
 ]

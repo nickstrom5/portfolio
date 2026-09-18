@@ -83,4 +83,13 @@ export const experience: Role[] = [
   },
 ];
 
+/** Roles other than the umbrella freelance entry, newest end date first. */
+export const roles: Role[] = experience
+  .filter((r) => r.company !== 'Freelance')
+  .sort((a, b) => {
+    const endA = a.end === 'Present' ? 9999 : Number(a.end);
+    const endB = b.end === 'Present' ? 9999 : Number(b.end);
+    return endB - endA || Number(b.start) - Number(a.start);
+  });
+
 export const education = [{ school: 'DePaul University', location: 'Chicago, IL' }];
