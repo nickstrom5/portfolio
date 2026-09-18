@@ -1,10 +1,10 @@
 [
-  { "name": "Agriculture & land development co.", "industry": "Central California · Upwork", "placeholder": false },
-  { "name": "Federal research institution", "industry": "Research", "placeholder": true },
-  { "name": "Major university", "industry": "Higher education", "placeholder": true },
-  { "name": "Online coaching startup", "industry": "Coaching", "placeholder": true },
-  { "name": "Digital marketing agency", "industry": "Agency", "placeholder": true },
-  { "name": "Specialty retail brand", "industry": "E-commerce", "placeholder": true },
-  { "name": "Nonprofit foundation", "industry": "Nonprofit", "placeholder": true },
-  { "name": "Enterprise software company", "industry": "Corporate", "placeholder": true }
+  { "name": "SPARC.science", "industry": "Federal research · 4 years", "placeholder": false },
+  { "name": "Symplicity", "industry": "Higher-ed software · 4 years", "placeholder": false },
+  { "name": "BARBRI", "industry": "Legal education", "placeholder": false },
+  { "name": "Rippling", "industry": "HR & IT platform", "placeholder": false },
+  { "name": "Blackdove Art", "industry": "Digital art · 3 years", "placeholder": false },
+  { "name": "OFFX", "industry": "Office experience", "placeholder": false },
+  { "name": "Agriculture & land development co.", "industry": "Central California", "placeholder": false },
+  { "name": "250+ more on Upwork", "industry": "Startups, nonprofits, corporations", "placeholder": false }
 ]

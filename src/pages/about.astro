@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
+import { experience, education } from '@/data/experience';
 import { url } from '@/lib/url';
 
 const skills = {
@@ -41,6 +42,22 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 
       <aside>
         <div class="card">
+          <h2 class="h3">Experience</h2>
+          <ol class="timeline">
+            {experience.map((r) => (
+              <li>
+                <span class="dates">{r.start}–{r.end}</span>
+                <div>
+                  <strong>{r.title}</strong>
+                  <span class="muted"> · {r.company}</span>
+                  <p class="muted small">{r.summary}{r.slug && <> <a href={url(`/work/${r.slug}`)}>Details →</a></>}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="muted small edu">Education: {education.map((e) => `${e.school}, ${e.location}`).join('; ')}</p>
+        </div>
+        <div class="card skills">
           <h2 class="h3">Skills</h2>
           {Object.entries(skills).map(([group, items]) => (
             <div class="skill-group">
@@ -72,6 +89,36 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .h3 {
     font-size: 1.25rem;
     margin-bottom: 1rem;
+  }
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .timeline li {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+  }
+  .dates {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-faint);
+    padding-top: 0.15rem;
+    white-space: nowrap;
+  }
+  .small {
+    font-size: 0.88rem;
+    margin: 0.15rem 0 0;
+  }
+  .edu {
+    margin-top: 1.25rem;
+  }
+  .skills {
+    margin-top: 1.25rem;
   }
   .skill-group {
     margin-bottom: 1.1rem;
