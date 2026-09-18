@@ -66,17 +66,6 @@
     "featured": true
   },
   {
-    "name": "Agriculture & land development co.",
-    "initials": "AG",
-    "industry": "Family-owned, Central California",
-    "role": "Microsoft 365 systems consultant",
-    "period": "2026",
-    "scale": "17-person team",
-    "blurb": "Replaced Trello and email with a structured Planner, Teams and SharePoint system, delivered async in two-week phases.",
-    "slug": "planner-rollout-central-california",
-    "featured": false
-  },
-  {
     "name": "Digital advertising agency",
     "initials": "AD",
     "industry": "Geofencing & connected TV",
