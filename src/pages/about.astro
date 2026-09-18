@@ -1,0 +1,178 @@
+---
+import Base from '@/layouts/Base.astro';
+import { site } from '@/data/site';
+import { roles, education } from '@/data/experience';
+import { url } from '@/lib/url';
+
+const skills = {
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence'],
+  'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
+  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho', 'Zapier', 'AI workflows'],
+  'Events & media': ['Zoom Webinars', 'OBS', 'Premiere Pro', 'After Effects', 'Final Cut', 'Photoshop', 'Illustrator', 'InDesign'],
+  'Web & apps': ['WordPress', 'Wix', 'Shopify', 'React', 'React Native', 'Flutter'],
+};
+const linkedinLive = !site.links.linkedin.includes('REPLACE');
+const upworkLive = !site.links.upwork.includes('REPLACE');
+---
+
+<Base title="About" description={`About ${site.name}, ${site.role.toLowerCase()} based in Chicago.`}>
+  <section class="section">
+    <div class="container about">
+      <div class="prose">
+        <img class="portrait" src={url(site.photo)} alt={`${site.name}`} width="128" height="128" loading="eager" />
+        <span class="eyebrow">About</span>
+        <h1>Hi, I'm {site.firstName}.</h1>
+        <p class="lede">
+          I'm a senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
+        </p>
+        <p>
+          That range means I've seen how organizations of every size actually operate. I can step into your team, learn your systems and start moving things forward in days, not weeks.
+        </p>
+        <p>
+          What I do best is take ownership of the moving parts, the projects, timelines, tools, people and processes, so you can stay focused on growth. Clients keep me around for years, with my longest engagements running past 3,000 hours, because I'm consistent, detail-oriented and easy to work with.
+        </p>
+        <p>
+          I respond within a few hours and flex my schedule around your time zone. Based in {site.location.split(' · ')[0]}, working with clients across North America, Europe and Australia.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href={url('/contact')}>Work with me</a>
+          <a class="btn btn-secondary" href={url(site.resumePdf)} download>Download résumé (PDF)</a>
+          {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork</a>}
+          {linkedinLive && <a class="btn btn-secondary" href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>}
+        </div>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h2 class="h3">Skills</h2>
+          {Object.entries(skills).map(([group, items]) => (
+            <div class="skill-group">
+              <h3>{group}</h3>
+              <ul class="tags">
+                {items.map((s) => <li class="tag">{s}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <span class="eyebrow">Experience</span>
+      <div class="section-head">
+        <h2>Selected roles</h2>
+        <a href={url('/clients')}>Featured clients →</a>
+      </div>
+      <p class="lede">
+        Freelancing full-time since 2015. These are the longest-running roles from 257 contracts; the rest ranged from a week to a year.
+      </p>
+      <ol class="roles">
+        {roles.map((r) => (
+          <li>
+            <span class="years">{r.start}–{r.end}</span>
+            <span class="what">
+              <strong>{r.title}</strong>
+              <span class="company">{r.company}</span>
+            </span>
+            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>Details →</a> : <span />}
+          </li>
+        ))}
+      </ol>
+      <p class="edu muted">
+        Education: {education.map((e) => `${e.school}, ${e.location}`).join('; ')} · Full history in the <a href={url(site.resumePdf)} download>résumé</a>{upworkLive && <> or on <a href={site.links.upwork} target="_blank" rel="noopener">Upwork</a></>}.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+  .portrait {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.25rem;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .skill-group {
+    margin-bottom: 1.1rem;
+  }
+  .skill-group h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 0.5rem;
+  }
+  .roles {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .roles li {
+    display: grid;
+    grid-template-columns: 7rem 1fr auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .years {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .what {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+  }
+  .what strong {
+    font-size: 1.05rem;
+  }
+  .company {
+    color: var(--text-muted);
+  }
+  .detail {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .edu {
+    margin: 1.25rem 0 0;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 800px) {
+    .about {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .roles li {
+      grid-template-columns: 1fr auto;
+    }
+    .years {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

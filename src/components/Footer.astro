@@ -1,0 +1,85 @@
+---
+import { site, nav } from '@/data/site';
+import { url } from '@/lib/url';
+
+const year = new Date().getFullYear();
+const social = [
+  { label: 'Upwork', href: site.links.upwork },
+  { label: 'LinkedIn', href: site.links.linkedin },
+  { label: 'GitHub', href: site.links.github },
+].filter((s) => s.href && !s.href.includes('REPLACE'));
+---
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <p class="footer-name">{site.name}</p>
+      <p class="muted footer-role">{site.role}</p>
+      <a class="footer-mail" href={`mailto:${site.email}`}>{site.email}</a>
+    </div>
+    <nav aria-label="Footer">
+      <ul>
+        {nav.map((item) => (
+          <li><a href={url(item.href)}>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    {social.length > 0 && (
+      <nav aria-label="Social">
+        <ul>
+          {social.map((s) => (
+            <li><a href={s.href} rel="me noopener" target="_blank">{s.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </div>
+  <div class="container copy muted">© {year} {site.name}. All rights reserved.</div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    padding-block: 2.5rem 1.5rem;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+  }
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 2rem;
+  }
+  .footer-name {
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+  .footer-role {
+    margin-bottom: 0.5rem;
+  }
+  .footer-mail {
+    word-break: break-all;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+  li a {
+    color: var(--text-muted);
+  }
+  li a:hover {
+    color: var(--text);
+  }
+  .copy {
+    margin-top: 2rem;
+    font-size: 0.85rem;
+  }
+  @media (max-width: 640px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,231 @@
+---
+/**
+ * Print-optimized résumé. Not linked in the nav; used to generate the PDF
+ * in /public via `npm run resume:pdf`, and reachable at /resume for a web copy.
+ */
+import { site } from '@/data/site';
+import { roles, education } from '@/data/experience';
+import { services } from '@/data/services';
+const summary =
+  'Senior project manager and operations lead with 10+ years running projects for federal research institutions, major universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Top Rated Plus on Upwork with a 100% Job Success Score across 257 contracts and 17,800+ billed hours; longest engagements exceed 3,000 hours.';
+const skillLines = services.map((s) => ({ label: s.title, items: s.bullets.join(' · ') }));
+const domain = site.url.replace(/^https?:\/\//, '');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{site.name} · Résumé</title>
+    <style>
+      :root {
+        --ink: #17181a;
+        --muted: #5b5f66;
+        --faint: #8a8f97;
+        --rule: #dfdfd9;
+        --accent: #1f5fd0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+        color: var(--ink);
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 9.6pt;
+        line-height: 1.35;
+      }
+      .page {
+        max-width: 8.5in;
+        margin: 0 auto;
+        padding: 0.5in 0.65in;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1rem;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 0.4rem;
+        margin-bottom: 0.5rem;
+      }
+      h1 {
+        font-size: 22pt;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+      .role {
+        margin: 0.15rem 0 0;
+        font-size: 11pt;
+        color: var(--muted);
+      }
+      .contact {
+        text-align: right;
+        font-size: 9.5pt;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .contact a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+      h2 {
+        font-size: 8.5pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0.85rem 0 0.35rem;
+      }
+      p {
+        margin: 0 0 0.5rem;
+      }
+      .highlights {
+        display: flex;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        margin: 0.2rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 9pt;
+      }
+      .highlights li strong {
+        display: block;
+        font-size: 12pt;
+        letter-spacing: -0.02em;
+      }
+      .highlights li span {
+        color: var(--muted);
+      }
+      .job {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.1rem 1rem;
+        padding: 0.28rem 0;
+        border-bottom: 1px solid var(--rule);
+        break-inside: avoid;
+      }
+      .job:last-child {
+        border-bottom: 0;
+      }
+      .job strong {
+        font-size: 10.5pt;
+      }
+      .job .co {
+        color: var(--muted);
+      }
+      .job .when {
+        color: var(--faint);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: right;
+        font-size: 9.5pt;
+      }
+      .job .sum {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 9.8pt;
+      }
+      .skills {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.35rem 1.5rem;
+        font-size: 9.6pt;
+      }
+      .skills div strong {
+        display: block;
+      }
+      .skills div span {
+        color: var(--muted);
+      }
+      .foot {
+        margin-top: 1rem;
+        font-size: 9pt;
+        color: var(--faint);
+      }
+      @media (max-width: 600px) {
+        .page {
+          padding: 1.25rem 1rem;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .contact {
+          text-align: left;
+        }
+        .skills {
+          grid-template-columns: 1fr;
+        }
+        .job {
+          grid-template-columns: 1fr;
+        }
+        .job .when {
+          text-align: left;
+        }
+      }
+      @page {
+        size: Letter;
+        margin: 0;
+      }
+      @media print {
+        .page {
+          padding: 0.3in 0.6in;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div>
+          <h1>{site.name}</h1>
+          <p class="role">{site.role}</p>
+        </div>
+        <div class="contact">
+          <a href={`mailto:${site.email}`}>{site.email}</a><br />
+          <a href={site.url}>{domain}</a><br />
+          {site.location}
+        </div>
+      </header>
+
+      <h2>Summary</h2>
+      <p>{summary}</p>
+      <ul class="highlights">
+        {site.stats.map((s) => (
+          <li><strong>{s.value}</strong><span>{s.label}</span></li>
+        ))}
+        <li><strong>Since 2015</strong><span>Full-time freelance</span></li>
+      </ul>
+
+      <h2>Experience</h2>
+      <div class="job">
+        <div><strong>Operations & Project Manager · Chief of Staff</strong> <span class="co">· Freelance, Upwork</span></div>
+        <div class="when">2015 – Present</div>
+        <div class="sum">257 completed contracts spanning project management, systems and CRM setup, executive support, events and media, and web and app builds. Longest-running roles below.</div>
+      </div>
+      {roles.map((r) => (
+        <div class="job">
+          <div><strong>{r.title}</strong> <span class="co">· {r.company}</span></div>
+          <div class="when">{r.start} – {r.end}</div>
+          <div class="sum">{r.summary}</div>
+        </div>
+      ))}
+
+      <h2>Skills & tools</h2>
+      <div class="skills">
+        {skillLines.map((s) => (
+          <div><strong>{s.label}</strong><span>{s.items}</span></div>
+        ))}
+      </div>
+
+      <h2>Education</h2>
+      <p>{education.map((e) => `${e.school}, ${e.location}`).join('; ')}</p>
+
+      <p class="foot">Full contract history and client feedback available on Upwork. References on request.</p>
+    </div>
+  </body>
+</html>

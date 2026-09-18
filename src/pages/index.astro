@@ -1,0 +1,247 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import AppCard from '@/components/AppCard.astro';
+import Testimonial from '@/components/Testimonial.astro';
+import ClientStrip from '@/components/ClientStrip.astro';
+import { site } from '@/data/site';
+import { services } from '@/data/services';
+import apps from '@/data/apps.json';
+import testimonials from '@/data/testimonials.json';
+import { url } from '@/lib/url';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.year - a.data.year)
+  .slice(0, 3);
+const featuredApps = apps.slice(0, 3);
+const upworkLive = !site.links.upwork.includes('REPLACE');
+---
+
+<Base>
+  <section class="hero">
+    <div class="container">
+      <div class="who">
+        <img class="portrait" src={url(site.photo)} alt="" width="56" height="56" loading="eager" />
+        <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
+      </div>
+      <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
+      <p class="lede">{site.tagline} Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork.</p>
+      <ul class="badges" aria-label="Credentials">
+        {site.badges.map((b) => <li class="tag">{b}</li>)}
+      </ul>
+      <div class="cta">
+        <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
+        <a class="btn btn-secondary" href={url('/work')}>See my work</a>
+        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile</a>}
+      </div>
+      <dl class="stats">
+        {site.stats.map((s) => (
+          <div>
+            <dt>{s.label}</dt>
+            <dd>{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" id="services">
+    <div class="container">
+      <span class="eyebrow">What I do</span>
+      <div class="section-head">
+        <h2>Systems, tools and the details, handled</h2>
+      </div>
+      <div class="grid services">
+        {services.map((s) => (
+          <article class="card service">
+            <h3>{s.title}</h3>
+            <p class="muted">{s.description}</p>
+            <ul>
+              {s.bullets.map((b) => <li>{b}</li>)}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="work">
+    <div class="container">
+      <span class="eyebrow">Selected work</span>
+      <div class="section-head">
+        <h2>Recent client projects</h2>
+        <a href={url('/work')}>All projects →</a>
+      </div>
+      <div class="grid grid-3">
+        {projects.map((p) => <ProjectCard project={p} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="apps">
+    <div class="container">
+      <span class="eyebrow">Builds</span>
+      <div class="section-head">
+        <h2>Apps I've built</h2>
+        <a href={url("/apps")}>Apps/AI →</a>
+      </div>
+      <div class="grid grid-3">
+        {featuredApps.map((a) => <AppCard app={a} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="clients">
+    <div class="container">
+      <span class="eyebrow">Clients</span>
+      <div class="section-head">
+        <h2>Who I've worked with</h2>
+        <a href={url('/clients')}>Featured clients →</a>
+      </div>
+      <ClientStrip />
+    </div>
+  </section>
+
+  <section class="section" id="testimonials">
+    <div class="container">
+      <span class="eyebrow">Feedback</span>
+      <div class="section-head">
+        <h2>What clients say</h2>
+        {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Read all reviews on Upwork →</a>}
+      </div>
+      <div class="grid grid-3">
+        {testimonials.slice(0, 3).map((t) => <Testimonial {...t} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-band">
+    <div class="container cta-inner">
+      <div>
+        <h2>Have a project in mind?</h2>
+        <p class="muted">Tell me what needs to run better and I'll reply within a few hours with next steps.</p>
+      </div>
+      <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(3.5rem, 10vw, 7rem) clamp(3rem, 7vw, 5rem);
+    background:
+      radial-gradient(60% 50% at 80% 0%, var(--accent-soft) 0%, transparent 70%),
+      var(--bg);
+  }
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .portrait {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: var(--shadow);
+  }
+  .avail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--success);
+    margin: 0;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 20%, transparent);
+  }
+  h1 {
+    max-width: 18ch;
+  }
+  .accent {
+    color: var(--accent);
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+  }
+  .badges .tag {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1.75rem 0 2.5rem;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--border);
+  }
+  .stats dt {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    order: 2;
+  }
+  .stats dd {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .stats div {
+    display: flex;
+    flex-direction: column;
+  }
+  .services {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  }
+  @media (min-width: 700px) {
+    .services {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .service ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  .cta-band {
+    background: var(--bg-muted);
+  }
+  .cta-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .cta-inner h2 {
+    margin-bottom: 0.25rem;
+  }
+  .cta-inner p {
+    margin: 0;
+  }
+</style>

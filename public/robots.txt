@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://work-with-nick.com/sitemap-index.xml

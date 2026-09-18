@@ -1,0 +1,211 @@
+---
+import { site, nav } from '@/data/site';
+import { url } from '@/lib/url';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => current === url(href).replace(/\/$/, '') || current.startsWith(url(href) + '/');
+---
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href={url('/')} aria-label={`${site.name} home`}>
+      <span class="brand-mark" aria-hidden="true">{site.firstName.charAt(0)}</span>
+      <span class="brand-name">{site.name}</span>
+    </a>
+
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+      <span class="sr-only">Toggle menu</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path class="ico-open" d="M4 7h16M4 12h16M4 17h16" />
+        <path class="ico-close" d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+
+    <nav id="site-menu" class="menu" aria-label="Primary">
+      <ul>
+        {nav.map((item) => (
+          <li>
+            <a href={url(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+      <div class="menu-actions">
+        <button class="theme-btn" data-theme-toggle aria-label="Toggle color theme" title="Toggle theme">
+          <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+          </svg>
+          <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+          </svg>
+        </button>
+        <a class="btn btn-primary" href={url('/contact')}>Hire me</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.getElementById('site-menu');
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    menu?.classList.toggle('open', !open);
+  });
+
+  document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const currentIsDark = root.dataset.theme ? root.dataset.theme === 'dark' : prefersDark;
+    const next = currentIsDark ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+  });
+</script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: saturate(160%) blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 64px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+  }
+  .menu-btn {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem;
+    cursor: pointer;
+  }
+  .ico-close {
+    display: none;
+  }
+  .menu-btn[aria-expanded='true'] .ico-open {
+    display: none;
+  }
+  .menu-btn[aria-expanded='true'] .ico-close {
+    display: block;
+  }
+  .menu {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .menu ul {
+    display: flex;
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .menu li a {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .menu li a:hover,
+  .menu li a[aria-current='page'] {
+    color: var(--text);
+  }
+  .menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .theme-btn {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .theme-btn:hover {
+    color: var(--text);
+  }
+  .moon {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .sun {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .moon {
+    display: block;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .sun {
+      display: none;
+    }
+    :global(:root:not([data-theme='light'])) .moon {
+      display: block;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .menu-btn {
+      display: inline-flex;
+    }
+    .menu {
+      display: none;
+      position: absolute;
+      inset: 64px 0 auto 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+      padding: 1rem var(--gutter) 1.25rem;
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .menu.open {
+      display: flex;
+    }
+    .menu ul {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .menu li a {
+      display: block;
+      padding: 0.6rem 0;
+      font-size: 1.05rem;
+    }
+    .menu-actions {
+      justify-content: space-between;
+    }
+  }
+</style>

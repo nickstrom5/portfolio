@@ -1,0 +1,70 @@
+---
+import clients from '@/data/clients.json';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+const featured = clients.filter((c) => c.featured).slice(0, 6);
+const upworkLive = !site.links.upwork.includes('REPLACE');
+---
+
+<div class="strip-wrap">
+  <ul class="strip" aria-label="Selected clients">
+    {featured.map((c) => (
+      <li>
+        <a href={url(`/clients#${c.slug}`)}>
+          <span class="name">{c.name}</span>
+          <span class="role muted">{c.role}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="more muted">
+    Selected from <strong>257 contracts</strong> and <strong>17,800+ hours</strong> on Upwork since 2015.
+    <a href={url('/clients')}>See featured clients →</a>
+    {upworkLive && <span> · <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork</a></span>}
+  </p>
+</div>
+
+<style>
+  .strip {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    gap: 0.75rem;
+  }
+  li a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.2rem;
+    min-height: 92px;
+    padding: 1rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elev);
+    color: var(--text);
+    transition: border-color 0.15s ease;
+  }
+  li a:hover {
+    border-color: var(--text-faint);
+  }
+  .name {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    font-size: 1.05rem;
+  }
+  .role {
+    font-size: 0.78rem;
+  }
+  .more {
+    margin: 1.25rem 0 0;
+    font-size: 0.95rem;
+  }
+  .more strong {
+    color: var(--text);
+  }
+</style>
