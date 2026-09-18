@@ -38,6 +38,9 @@ export interface Project {
   /** Tile / hero gradient. */
   bg: string;
   fg: string;
+  /** Optional dark-theme overrides so a light tile does not glare on the dark page. */
+  bgDark?: string;
+  fgDark?: string;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
@@ -164,6 +167,8 @@ export const projects: Project[] = [
     tileBlurb: 'A few dozen short messages and some screenshots. Claude Code wrote everything else.',
     bg: 'linear-gradient(135deg, #e7eefc 0%, #fbfbf9 55%, #dfe8fb 100%)',
     fg: '#1f5fd0',
+    bgDark: 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%)',
+    fgDark: '#8fb2ff',
     hero: {
       title: 'The site you’re reading was built the same way.',
       sub: 'No designer, no developer, no template. I described what I wanted in plain English, sent screenshots of my Upwork and LinkedIn profiles, and Claude Code wrote the pages, read my inboxes for real client history, cropped my photo, generated the résumé PDF and pushed every commit.',

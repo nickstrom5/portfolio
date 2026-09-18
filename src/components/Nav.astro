@@ -9,7 +9,7 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
 <header class="nav">
   <div class="container nav-inner">
     <a class="brand" href={url('/')} aria-label={`${site.name} home`}>
-      <span class="brand-mark" aria-hidden="true">{site.firstName.charAt(0)}</span>
+      <span class="brand-mark" aria-hidden="true"></span>
       <span class="brand-name">{site.name}</span>
     </a>
 
@@ -90,15 +90,11 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     letter-spacing: -0.01em;
   }
   .brand-mark {
-    display: grid;
-    place-items: center;
+    display: block;
     width: 32px;
     height: 32px;
-    border-radius: 9px;
+    border-radius: 50%;
     background: var(--accent);
-    color: #fff;
-    font-weight: 800;
-    font-size: 0.95rem;
   }
   .menu-btn {
     display: none;

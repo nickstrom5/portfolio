@@ -3,7 +3,7 @@ title: 'Executive support at Rippling'
 shortTitle: 'Executive support at Rippling'
 client: 'Rippling'
 summary: 'A year of scheduling and project coordination for multiple executives at the HR and IT platform company.'
-category: 'consulting'
+category: 'admin'
 platforms: ['Remote']
 stack: ['Executive support', 'Scheduling', 'Project coordination', 'Administration']
 year: 2020

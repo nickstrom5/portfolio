@@ -8,7 +8,8 @@ import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
-const categories = ['all', ...new Set(projects.map((p) => p.data.category))];
+const order = ['consulting', 'operations', 'admin', 'video', 'development', 'mobile', 'web', 'backend', 'automation', 'other'];
+const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
@@ -19,12 +20,17 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <h1>Client projects</h1>
       <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements.</p>
 
-      <div class="filters" role="group" aria-label="Filter by category">
-        {categories.map((c) => (
-          <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
-            {c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1)}
-          </button>
-        ))}
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filter by category">
+          {categories.map((c) => (
+            <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
+              {c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div class="tools">
+          <a class="btn btn-secondary" href="#roles">Featured roles ↓</a>
+        </div>
       </div>
 
       <div class="grid grid-3" data-project-grid>
@@ -38,7 +44,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="roles">
     <div class="container">
       <span class="eyebrow">Experience</span>
       <div class="section-head">
@@ -159,11 +165,30 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       grid-column: 1 / -1;
     }
   }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+  }
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin: 1.5rem 0 2rem;
+  }
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tools .btn {
+    padding: 0.45rem 0.95rem;
+    font-size: 0.9rem;
+  }
+  #roles {
+    scroll-margin-top: 80px;
   }
   .chip {
     padding: 0.4rem 0.9rem;
