@@ -238,10 +238,13 @@ import { url } from '@/lib/url';
     });
   });
 
-  const initial = location.hash.replace('#', '');
-  const valid = [...tiles].some((t) => t.dataset.project === initial);
-  show(valid ? initial : tiles[0]?.dataset.project || 'clam', false);
-  tiles.forEach((t) => t.classList.toggle('active', t.getAttribute('aria-selected') === 'true'));
+  function fromHash(scroll: boolean) {
+    const id = location.hash.replace('#', '');
+    const valid = [...tiles].some((t) => t.dataset.project === id);
+    show(valid ? id : tiles[0]?.dataset.project || 'clam', scroll && valid);
+  }
+  window.addEventListener('hashchange', () => fromHash(true));
+  fromHash(false);
 </script>
 
 <style>
