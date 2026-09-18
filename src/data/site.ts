@@ -37,7 +37,7 @@ export const site = {
    * Contact form endpoint (e.g. a Formspree or Basin URL). Leave empty to
    * fall back to a plain email link. Nothing is posted anywhere until you set it.
    */
-  contactEndpoint: '',
+  contactEndpoint: 'https://formspree.io/f/xvkggbvq',
 } as const;
 
 export const nav = [

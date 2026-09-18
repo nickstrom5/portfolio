@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
+import { url } from '@/lib/url';
 
 const hasEndpoint = Boolean(site.contactEndpoint);
 const upworkLive = !site.links.upwork.includes('REPLACE');
@@ -80,6 +81,12 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           <textarea name="message" rows="6" required></textarea>
         </label>
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+        {hasEndpoint && (
+          <>
+            <input type="hidden" name="_subject" value="New project inquiry from work-with-nick.com" />
+            <input type="hidden" name="_next" value={new URL(url('/thanks'), Astro.site).href} />
+          </>
+        )}
         <button class="btn btn-primary wide" type="submit">Send message</button>
         {!hasEndpoint && (
           <p class="muted small wide">This opens your email client with the message pre-filled.</p>
