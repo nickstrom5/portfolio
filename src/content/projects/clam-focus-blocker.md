@@ -3,7 +3,7 @@ title: 'Clam: a fold-to-focus app blocker for iPhone'
 shortTitle: 'Clam: fold-to-focus app blocker'
 client: 'Own product · getclam.app'
 summary: "One-tap screen-time blocker built on Apple's Screen Time API, with a Live Activity countdown, a branded block screen and streaks. No account, no backend."
-category: 'mobile'
+category: 'development'
 platforms: ['iOS', 'iPhone Duo']
 stack: ['SwiftUI', 'FamilyControls', 'ManagedSettings', 'DeviceActivity', 'ActivityKit', 'StoreKit 2', 'App Intents']
 year: 2026
