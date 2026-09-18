@@ -19,19 +19,19 @@ const sectors = [
 ];
 ---
 
-<Base title="Clients" description="Featured clients and the largest engagements from over 250 Upwork contracts.">
+<Base title="Clients" description="Featured clients and the largest engagements from 300+ contracts, 257 of them on Upwork.">
   <section class="section">
     <div class="container">
       <span class="eyebrow">Clients</span>
       <h1>Who I've worked with</h1>
       <p class="lede">
-        A few of the companies I've spent the most time with. They're a small slice of the 257 contracts I've completed since 2015, across {sectors.slice(0, -1).join(', ').toLowerCase()} and {sectors.at(-1)!.toLowerCase()}.
+        A few of the companies I've spent the most time with. They're a small slice of the 300+ contracts I've completed since 2015, 257 of them on Upwork, across {sectors.slice(0, -1).join(', ').toLowerCase()} and {sectors.at(-1)!.toLowerCase()}.
       </p>
       <dl class="stats">
         {site.stats.map((s) => (
           <div>
             <dd>{s.value}</dd>
-            <dt>{s.label}</dt>
+            <dt>{s.label}{'note' in s && s.note && <span class="note"> · {s.note}</span>}</dt>
           </div>
         ))}
       </dl>
@@ -105,7 +105,7 @@ const sectors = [
   <section class="section band">
     <div class="container band-inner">
       <div>
-        <h2>And 250 more.</h2>
+        <h2>And 290 more.</h2>
         <p class="muted">
           Most engagements are shorter contracts under NDA: executive support, webinar production, CRM builds, HR projects and one-off operations work. The full list, with client feedback, lives on Upwork.
         </p>
@@ -141,6 +141,9 @@ const sectors = [
   .stats dt {
     font-size: 0.8rem;
     color: var(--text-muted);
+  }
+  .stats .note {
+    color: var(--text-faint);
   }
   .clients {
     list-style: none;
