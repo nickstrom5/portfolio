@@ -24,7 +24,7 @@ const related = (await getCollection('projects'))
 
 const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
 const links = [
-  d.links.live && { label: 'Live site', href: d.links.live },
+  d.links.live && { label: d.source === 'personal' ? 'Live site' : 'Client website', href: d.links.live },
   d.links.appStore && { label: 'App Store', href: d.links.appStore },
   d.links.playStore && { label: 'Google Play', href: d.links.playStore },
   d.links.repo && { label: 'Source', href: d.links.repo },
@@ -64,7 +64,13 @@ const links = [
         <aside class="facts card">
           <dl>
             <dt>Client</dt>
-            <dd>{d.client}</dd>
+            <dd>
+              {d.links.live && d.source !== 'personal' ? (
+                <a class="client-link" href={d.links.live} target="_blank" rel="noopener">{d.client} <span aria-hidden="true">↗</span></a>
+              ) : (
+                d.client
+              )}
+            </dd>
             <dt>Engagement</dt>
             <dd>{sourceLabel}</dd>
             {d.platforms.length > 0 && (
@@ -161,5 +167,11 @@ const links = [
     .facts {
       position: static;
     }
+  }
+  .client-link {
+    display: inline-block;
+    font-weight: 600;
+    padding: 0.6rem 0;
+    margin: -0.6rem 0;
   }
 </style>
