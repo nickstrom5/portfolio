@@ -43,7 +43,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <h2>Recent contracts</h2>
         {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork →</a>}
       </div>
-      <p class="lede">A sample of contract titles from the last two years, out of 257 completed. Client names are kept private.</p>
+      <p class="lede">A sample of contract titles from the last two years, out of 257 completed on Upwork and 300+ overall. Client names are kept private.</p>
       <ul class="contracts">
         {contracts.map((c) => (
           <li>
