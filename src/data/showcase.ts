@@ -26,6 +26,8 @@ export interface Feature {
 export interface Prompt {
   said: string;
   did: string;
+  /** Shown as an example before the full list is expanded. */
+  pick?: boolean;
 }
 
 export interface Project {
@@ -42,6 +44,7 @@ export interface Project {
   split: { ai: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
   steps: { title: string; ai: string; me: string }[];
   prompts?: Prompt[];
+  promptStats?: { value: string; label: string }[];
   links: { label: string; href: string; primary?: boolean }[];
   status: string;
   caseStudy?: string;
@@ -158,7 +161,7 @@ export const projects: Project[] = [
     id: 'site',
     name: 'This website',
     kicker: 'work-with-nick.com · built from prompts',
-    tileBlurb: 'Fourteen messages and a few screenshots. Claude Code wrote everything else.',
+    tileBlurb: 'A few dozen short messages and some screenshots. Claude Code wrote everything else.',
     bg: 'linear-gradient(135deg, #e7eefc 0%, #fbfbf9 55%, #dfe8fb 100%)',
     fg: '#1f5fd0',
     hero: {
@@ -198,7 +201,7 @@ export const projects: Project[] = [
       aiLabel: 'Claude Code',
       meLabel: 'Nick',
       aiDid: 'Site architecture, every page and component, content schema, case studies, Clients page, résumé PDF generator, social preview image, photo crop, DNS instructions, deploy workflow, and this page.',
-      meDid: 'Fourteen short messages, screenshots of Upwork and LinkedIn, the domain purchase, and taste: “easier on the eyes”, “like an Apple product page”.',
+      meDid: 'A few dozen short messages, screenshots of Upwork and LinkedIn, the domain purchase, and taste: “easier on the eyes”, “like an Apple product page”.',
     },
     steps: [
       { title: 'Describe the outcome', ai: 'Scaffolded the site, sample content and a deploy pipeline in one pass.', me: '“Build me a portfolio website. I freelance and have had countless clients.”' },
@@ -207,15 +210,35 @@ export const projects: Project[] = [
       { title: 'Ship', ai: 'Committed, pushed, generated the PDF and this showcase.', me: 'Bought work-with-nick.com.' },
     ],
     prompts: [
-      { said: 'Build me a portfolio website. I freelance and have had countless clients. We can feature clients, work, projects and the mobile apps I’ve developed. We need a domain too.', did: 'Scaffolded an Astro site with a data-driven content model, six pages, light and dark themes, a GitHub Pages workflow and a domain shortlist.' },
+      { pick: true, said: 'Build me a portfolio website. I freelance and have had countless clients. We can feature clients, work, projects and the mobile apps I’ve developed. We need a domain too.', did: 'Scaffolded an Astro site with a data-driven content model, six pages, light and dark themes, a GitHub Pages workflow and a domain shortlist.' },
       { said: 'Upwork emails are in nickstrom5 inbox.', did: 'Searched the connected mailboxes, found a live Upwork engagement in an Outlook thread and wrote it up under NDA-safe wording.' },
-      { said: '(three screenshots of the Upwork profile)', did: 'Rewrote the positioning from developer to senior project manager and operations lead, with the real 257 contracts, 17,851 hours and Top Rated Plus.' },
+      { pick: true, said: '(three screenshots of the Upwork profile)', did: 'Rewrote the positioning from developer to senior project manager and operations lead, with the real 257 contracts, 17,800+ hours and Top Rated Plus.' },
       { said: 'Apps built getclam.app and lume.', did: 'Cloned both public repos, read the strategy and listing docs, and wrote accurate case studies and app cards.' },
       { said: '(four screenshots of LinkedIn experience)', did: 'Replaced every sample case study with SPARC, BARBRI, Symplicity, Rippling, OFFX and Blackdove, and built the experience timeline.' },
-      { said: 'work-with-nick.com purchased. Mobile apps are in development.', did: 'Pointed the site at the domain, added the CNAME, documented the Cloudflare DNS records and updated the app status.' },
-      { said: 'Add a tab for clients. The resume on the front page should be easier on the eyes. Not sure if keeping or include a resume PDF instead.', did: 'Built the Clients page, simplified the experience list and generated a one-page PDF from the same data.' },
+      { said: 'work-with-nick.com purchased. Mobile apps are in development.', did: 'Pointed the site at the domain, added the CNAME, wrote out the Cloudflare DNS records and updated the app status.' },
+      { pick: true, said: 'Add a tab for clients. The resume on the front page should be easier on the eyes. Not sure if keeping or include a resume PDF instead.', did: 'Built the Clients page, simplified the experience list and generated a one-page PDF from the same data.' },
       { said: '(five screenshots of Upwork reviews)', did: 'Transcribed five verbatim reviews with ratings, hours and endorsements. No sample content remained.' },
-      { said: 'Include photos of the app’s websites and renders of the apps on phones. Like an Apple product page.', did: 'Rendered the app sites locally, built CSS phone mockups of the real screens, and produced this page.' },
+      { said: 'Under Top 1% indicate that’s on Upwork. You can include my LinkedIn profile photo. App section: go over how these are made via Grok and Claude as AI experiments.', did: 'Cropped the portrait out of a LinkedIn screenshot, added it to the home and About pages, and drafted the first version of the Apps/AI story.' },
+      { said: 'The circle in a circle looks weird, like an egg.', did: 'Measured the face in the source image, re-cropped it to a true circle in code and dropped the extra CSS ring.' },
+      { pick: true, said: 'Include photos of the app’s websites and renders of the apps on phones. Like an Apple product page. Click which item you want to see, one at a time. The third can be this website itself.', did: 'Rendered the app sites locally, built CSS phone mockups of the real screens, and produced this page with its three tiles.' },
+      { said: 'Don’t show phones, maybe a laptop on the website project.', did: 'Added a CSS laptop frame and switched the website story to desktop screenshots.' },
+      { said: 'Formspree, what to do?', did: 'Explained the two-minute setup, then wired the form to the endpoint with a spam honeypot and a thank-you page.' },
+      { said: 'SEO on the site should be pristine.', did: 'Added JSON-LD for the site, person and every case study, canonical URLs, Open Graph and Twitter tags, a sitemap and a generated social image.' },
+      { pick: true, said: 'Let’s QA the site extensively after it’s live, and make sure the mobile version is also smooth.', did: 'Wrote a Playwright audit that checks every page at three widths in both themes, then fixed the tap targets, heading order and overflow it found.' },
+      { said: 'About me page should have the photo, link to my LinkedIn, Upwork, etc.', did: 'Added the Connect card and rewrote the skills to include the AI-directed development work.' },
+      { said: 'Google Search Console needed?', did: 'Yes. Walked through domain verification on Cloudflare and submitted the sitemap.' },
+      { said: 'SEO check every week so we can keep it up to date, and QA the site.', did: 'Scheduled a weekly routine that re-runs the audit against the live site and opens a pull request if anything drifts.' },
+      { said: 'The text in the blue circles looks off. The 1,000+ hours one looks best.', did: 'Shortened every client badge to a few characters so none wraps.' },
+      { said: 'Actually let’s make it hello@work-with-nick.', did: 'Changed the site email everywhere it appears: About, Contact, footer, résumé and structured data.' },
+      { said: 'Move featured roles from About to the Work tab.', did: 'Moved the section and its styles across, and rewrote the Work page description to match.' },
+      { said: 'The résumé PDF design needs to be cleaner, less crowded.', did: 'Redesigned the print page with a stats strip, more whitespace and a three-column skills grid, still one page.' },
+      { said: 'We will need to update the part of the site with the prompts to be accurate too. If it’s too many we can have them collapse.', did: 'Rewrote this list from the session history, kept five examples up front and put the full list behind a “show all” toggle.' },
+    ],
+    promptStats: [
+      { value: '~60', label: 'Messages from Nick' },
+      { value: '18', label: 'Screenshots' },
+      { value: '30', label: 'Commits' },
+      { value: '97%', label: 'Written by Claude Code' },
     ],
     links: [
       { label: 'You’re on it', href: '/', primary: true },
