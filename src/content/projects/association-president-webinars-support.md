@@ -2,7 +2,7 @@
 title: 'Webinar production and executive support for an association president'
 shortTitle: 'Webinars and support for a president'
 client: 'Professional association (president)'
-summary: 'Started as Zoom webinar coordination for a professional association in spring 2026, then grew into an ongoing assistant-to-the-president role covering scheduling, members and events.'
+summary: 'Zoom webinar coordination for a professional association in spring 2026 that grew into an ongoing assistant-to-the-president role covering scheduling and events.'
 category: 'video'
 platforms: ['Remote']
 stack: ['Zoom Webinars', 'Registration & reminders', 'Run-of-show', 'Calendar management', 'Member communication']

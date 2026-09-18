@@ -2,7 +2,7 @@
 title: 'Executive assistant and operations for an AI productivity startup'
 shortTitle: 'EA for an AI productivity startup'
 client: 'AI productivity startup (San Francisco Bay Area)'
-summary: 'Operations and admin for the founder of an AI document-tools startup since October 2024: content upkeep on the Ghost blog, research and the recurring admin that keeps a small team moving.'
+summary: 'Operations and admin for the founder of an AI document-tools startup since October 2024: blog upkeep on Ghost, research and recurring admin.'
 category: 'admin'
 platforms: ['Remote']
 stack: ['Ghost', 'Email', 'Proofreading', 'Research', 'Recurring admin']
