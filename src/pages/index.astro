@@ -27,7 +27,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
-      <p class="lede">{site.tagline} Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork.</p>
+      <p class="lede">I'm {site.name}, a freelance {site.role.toLowerCase()} in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork. {site.tagline}</p>
       <ul class="badges" aria-label="Credentials">
         {site.badges.map((b) => <li class="tag">{b}</li>)}
       </ul>
