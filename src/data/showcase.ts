@@ -17,7 +17,9 @@ export interface Feature {
   body: string;
   screen: Screen;
   image?: string;
-  /** Put the phone on the left instead of the right. */
+  /** 'phone' (default) or 'laptop'. */
+  frame?: 'phone' | 'laptop';
+  /** Put the device on the left instead of the right. */
   flip?: boolean;
 }
 
@@ -34,7 +36,7 @@ export interface Project {
   /** Tile / hero gradient. */
   bg: string;
   fg: string;
-  hero: { title: string; sub: string; screen: Screen; image?: string };
+  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
   split: { ai: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
@@ -163,7 +165,8 @@ export const projects: Project[] = [
       title: 'The site you’re reading was built the same way.',
       sub: 'No designer, no developer, no template. I described what I wanted in plain English, sent screenshots of my Upwork and LinkedIn profiles, and Claude Code wrote the pages, read my inboxes for real client history, cropped my photo, generated the résumé PDF and pushed every commit.',
       screen: 'image',
-      image: '/showcase/site-home-mobile.jpg',
+      image: '/showcase/site-home.jpg',
+      frame: 'laptop',
     },
     siteShot: {
       desktop: '/showcase/site-home.jpg',
@@ -177,14 +180,16 @@ export const projects: Project[] = [
         title: 'It read my inbox so I didn’t have to.',
         body: 'With Gmail connected, it found the Upwork contract notifications, pulled contract titles, spotted my longest engagement and wrote the case studies. When a review only arrived as a screenshot, it transcribed it.',
         screen: 'image',
-        image: '/showcase/site-clients-mobile.jpg',
+        image: '/showcase/site-clients.jpg',
+        frame: 'laptop',
       },
       {
         eyebrow: 'Taste, applied',
         title: '“Easier on the eyes.”',
         body: 'Feedback went in as three words. The dense sidebar résumé came out as a clean role list, a downloadable one-page PDF generated from the same data, and a photo cropped from a LinkedIn screenshot.',
         screen: 'image',
-        image: '/showcase/site-about-mobile.jpg',
+        image: '/showcase/site-about.jpg',
+        frame: 'laptop',
         flip: true,
       },
     ],

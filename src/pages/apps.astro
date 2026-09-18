@@ -1,6 +1,7 @@
 ---
 import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
+import Laptop from '@/components/showcase/Laptop.astro';
 import { projects } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
@@ -47,7 +48,7 @@ import { url } from '@/lib/url';
       style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}`}
     >
       <section class="hero">
-        <div class="container hero-inner">
+        <div class:list={['container', 'hero-inner', { wide: p.hero.frame === 'laptop' }]}>
           <div class="hero-copy" data-reveal>
             <span class="kicker">{p.kicker}</span>
             <h2>{p.hero.title}</h2>
@@ -61,7 +62,11 @@ import { url } from '@/lib/url';
             <p class="status muted">{p.status}</p>
           </div>
           <div class="hero-art" data-reveal>
-            <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
+            {p.hero.frame === 'laptop' && p.hero.image ? (
+              <Laptop image={url(p.hero.image)} alt={`${p.name} on a laptop`} />
+            ) : (
+              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
+            )}
           </div>
         </div>
       </section>
@@ -87,7 +92,11 @@ import { url } from '@/lib/url';
               <p>{f.body}</p>
             </div>
             <div class="feature-art" data-reveal>
-              <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
+              {f.frame === 'laptop' && f.image ? (
+                <Laptop image={url(f.image)} alt={`${p.name}: ${f.title}`} />
+              ) : (
+                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
+              )}
             </div>
           </div>
         </section>
@@ -368,6 +377,9 @@ import { url } from '@/lib/url';
   .hero-art {
     display: flex;
     justify-content: center;
+  }
+  .hero-inner.wide {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   }
   .actions {
     display: flex;
