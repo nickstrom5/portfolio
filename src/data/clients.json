@@ -1,11 +1,10 @@
 [
   { "name": "Agriculture & land development co.", "industry": "Central California · Upwork", "placeholder": false },
-  { "name": "Acme Logistics", "industry": "Logistics", "placeholder": true },
-  { "name": "Brightside Health", "industry": "Healthcare", "placeholder": true },
-  { "name": "Northwind Retail", "industry": "E-commerce", "placeholder": true },
-  { "name": "Lakeshore Fitness", "industry": "Fitness", "placeholder": true },
-  { "name": "Cedar & Co.", "industry": "Hospitality", "placeholder": true },
-  { "name": "Summit Real Estate", "industry": "Real estate", "placeholder": true },
-  { "name": "Pioneer Education", "industry": "EdTech", "placeholder": true },
-  { "name": "Harbor Finance", "industry": "Fintech", "placeholder": true }
+  { "name": "Federal research institution", "industry": "Research", "placeholder": true },
+  { "name": "Major university", "industry": "Higher education", "placeholder": true },
+  { "name": "Online coaching startup", "industry": "Coaching", "placeholder": true },
+  { "name": "Digital marketing agency", "industry": "Agency", "placeholder": true },
+  { "name": "Specialty retail brand", "industry": "E-commerce", "placeholder": true },
+  { "name": "Nonprofit foundation", "industry": "Nonprofit", "placeholder": true },
+  { "name": "Enterprise software company", "industry": "Corporate", "placeholder": true }
 ]

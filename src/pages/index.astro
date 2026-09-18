@@ -23,8 +23,11 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   <section class="hero">
     <div class="container">
       <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
-      <h1>{site.role}<br /><span class="accent">for clients who need it shipped.</span></h1>
-      <p class="lede">{site.tagline} Most of my work comes through Upwork, where repeat clients make up the majority of my contracts.</p>
+      <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
+      <p class="lede">{site.tagline} Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork.</p>
+      <ul class="badges" aria-label="Credentials">
+        {site.badges.map((b) => <li class="tag">{b}</li>)}
+      </ul>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/work')}>See my work</a>
@@ -45,7 +48,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">What I do</span>
       <div class="section-head">
-        <h2>Full-stack delivery, one point of contact</h2>
+        <h2>Systems, tools and the details, handled</h2>
       </div>
       <div class="grid services">
         {services.map((s) => (
@@ -76,9 +79,9 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 
   <section class="section" id="apps">
     <div class="container">
-      <span class="eyebrow">Mobile</span>
+      <span class="eyebrow">Builds</span>
       <div class="section-head">
-        <h2>Apps I've shipped</h2>
+        <h2>Apps I've built</h2>
         <a href={url('/apps')}>All apps →</a>
       </div>
       <div class="grid grid-3">
@@ -114,7 +117,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container cta-inner">
       <div>
         <h2>Have a project in mind?</h2>
-        <p class="muted">Tell me what you're building and I'll reply within one business day with next steps.</p>
+        <p class="muted">Tell me what needs to run better and I'll reply within a few hours with next steps.</p>
       </div>
       <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
     </div>
@@ -149,6 +152,20 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   }
   .accent {
     color: var(--accent);
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+  }
+  .badges .tag {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+    font-weight: 600;
   }
   .cta {
     display: flex;

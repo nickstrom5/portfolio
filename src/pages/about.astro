@@ -4,11 +4,11 @@ import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
 const skills = {
-  Mobile: ['React Native', 'Flutter', 'Swift / SwiftUI', 'Kotlin', 'Expo', 'App Store & Play Console'],
-  Web: ['React', 'Next.js', 'Astro', 'TypeScript', 'Tailwind CSS', 'Accessibility (WCAG)'],
-  Backend: ['Node.js', 'Python / FastAPI', 'PostgreSQL', 'Firebase', 'Supabase', 'REST & GraphQL'],
-  'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms', 'Tenant setup'],
-  Tooling: ['Git & CI/CD', 'AWS / Vercel', 'Stripe', 'Twilio', 'HubSpot & CRM APIs', 'Analytics'],
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence'],
+  'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
+  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho', 'Zapier', 'AI workflows'],
+  'Events & media': ['Zoom Webinars', 'OBS', 'Premiere Pro', 'After Effects', 'Final Cut', 'Photoshop', 'Illustrator', 'InDesign'],
+  'Web & apps': ['WordPress', 'Wix', 'Shopify', 'React', 'React Native', 'Flutter'],
 };
 const linkedinLive = !site.links.linkedin.includes('REPLACE');
 const upworkLive = !site.links.upwork.includes('REPLACE');
@@ -21,16 +21,16 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <span class="eyebrow">About</span>
         <h1>Hi, I'm {site.firstName}.</h1>
         <p class="lede">
-          I'm a freelance developer who has spent years building products for clients on Upwork and beyond: mobile apps, web platforms and the backends that power them.
+          I'm a senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
         </p>
         <p>
-          Most of my clients are founders and small teams who need someone who can own a whole feature or product, not just a slice of it. I write the scope, build it, ship it to the stores or to production, and stick around after launch.
+          That range means I've seen how organizations of every size actually operate. I can step into your team, learn your systems and start moving things forward in days, not weeks.
         </p>
         <p>
-          I care about clear communication, honest estimates and code the next developer can read. Repeat clients and referrals make up most of my work, which I take as the best measure of whether that approach is working.
+          What I do best is take ownership of the moving parts, the projects, timelines, tools, people and processes, so you can stay focused on growth. Clients keep me around for years, with my longest engagements running past 3,000 hours, because I'm consistent, detail-oriented and easy to work with.
         </p>
         <p>
-          Based in the {site.location.split(' · ')[0]}, working with clients across North America, Europe and Australia.
+          I respond within a few hours and flex my schedule around your time zone. Based in {site.location.split(' · ')[0]}, working with clients across North America, Europe and Australia.
         </p>
         <div class="cta">
           <a class="btn btn-primary" href={url('/contact')}>Work with me</a>
