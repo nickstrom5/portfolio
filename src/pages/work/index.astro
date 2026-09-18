@@ -2,9 +2,12 @@
 import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
+import contracts from '@/data/contracts.json';
+import { site } from '@/data/site';
 
 const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
 const categories = ['all', ...new Set(projects.map((p) => p.data.category))];
+const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
 <Base title="Work" description="Case studies from freelance web, mobile and backend projects, mostly delivered through Upwork.">
@@ -30,6 +33,25 @@ const categories = ['all', ...new Set(projects.map((p) => p.data.category))];
         ))}
       </div>
       <p class="empty muted" data-empty hidden>No projects in this category yet.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <span class="eyebrow">Upwork</span>
+      <div class="section-head">
+        <h2>Recent contracts</h2>
+        {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork →</a>}
+      </div>
+      <p class="lede">A sample of contract titles from the last two years, out of 257 completed. Client names are kept private.</p>
+      <ul class="contracts">
+        {contracts.map((c) => (
+          <li>
+            <span class="c-title">{c.title}</span>
+            <span class="c-meta muted">{c.type} · {c.year}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 </Base>
@@ -82,5 +104,25 @@ const categories = ['all', ...new Set(projects.map((p) => p.data.category))];
   }
   .empty {
     margin-top: 1.5rem;
+  }
+  .contracts {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 0.5rem 2rem;
+  }
+  .contracts li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .c-meta {
+    font-size: 0.82rem;
+    white-space: nowrap;
   }
 </style>

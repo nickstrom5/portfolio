@@ -83,19 +83,26 @@ to GitHub Pages on every push to `main`.
 
 ## Custom domain
 
-The site is configured for `https://nicksoderstrom.com` in `src/data/site.ts`
-and `public/robots.txt`. Change both if you register a different name.
+The site is configured for `https://work-with-nick.com`, registered with
+Cloudflare Registrar. `src/data/site.ts`, `public/robots.txt` and
+`public/CNAME` all carry the domain; change all three if it ever moves.
 
-1. Register the domain. Cloudflare Registrar and Porkbun sell `.com` at cost
-   (roughly $10–11/yr); Namecheap and Google-successor Squarespace are fine too.
-2. Add a `public/CNAME` file containing just the domain, e.g.
-   `nicksoderstrom.com`, and commit it.
-3. At the registrar, add DNS records:
-   - `A` records for `@` → `185.199.108.153`, `185.199.109.153`,
-     `185.199.110.153`, `185.199.111.153`
-   - `CNAME` for `www` → `<user>.github.io`
-4. In **Settings → Pages**, enter the domain, wait for the DNS check, then tick
-   **Enforce HTTPS**.
+DNS lives in the Cloudflare dashboard (**work-with-nick.com → DNS → Records**).
+Add these, with the proxy toggle set to **DNS only** (grey cloud) so GitHub can
+issue the certificate:
+
+| Type  | Name | Content              |
+| ----- | ---- | -------------------- |
+| A     | @    | 185.199.108.153      |
+| A     | @    | 185.199.109.153      |
+| A     | @    | 185.199.110.153      |
+| A     | @    | 185.199.111.153      |
+| CNAME | www  | nickstrom5.github.io |
+
+Then in the repo: **Settings → Pages → Custom domain**, enter
+`work-with-nick.com`, wait for the DNS check to pass, and tick
+**Enforce HTTPS**. Once HTTPS is enforced you can switch the records back to
+proxied if you want Cloudflare's caching in front of the site.
 
 If you would rather use Cloudflare Pages, Netlify or Vercel, connect the repo,
 set the build command to `npm run build` and the output directory to `dist`;

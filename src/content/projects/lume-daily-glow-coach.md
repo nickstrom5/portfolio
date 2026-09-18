@@ -28,4 +28,4 @@ On the iPhone Duo the face stays on one screen and the ritual on the other, like
 
 ## Status
 
-Pre-launch. The landing page collects early-access requests and switches to the App Store button the moment the listing goes live.
+In development. The landing page collects early-access requests and switches to the App Store button the moment the listing goes live.

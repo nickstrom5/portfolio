@@ -29,4 +29,4 @@ It's designed around the iPhone Duo, where the countdown sits on the outer displ
 
 ## Status
 
-Built and in review for the Family Controls entitlement, with the App Store launch timed to the iPhone Duo release. Free for seven days, then a yearly, monthly or lifetime purchase.
+In development. The core loop, extensions and launch kit are built; the App Store launch is planned around the Family Controls entitlement and the iPhone Duo release. Free for seven days, then a yearly, monthly or lifetime purchase.

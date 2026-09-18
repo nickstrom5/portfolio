@@ -9,7 +9,7 @@ export const site = {
   tagline:
     'I take ownership of the moving parts, projects, timelines, tools, people and processes, so you can stay focused on growth.',
   /** Canonical URL. Update once the domain is registered and DNS is live. */
-  url: 'https://nicksoderstrom.com',
+  url: 'https://work-with-nick.com',
   location: 'Chicago, IL · Remote worldwide',
   email: 'nicholas.soderstrom@insidesuccess.com',
   /** Replace with your real profile URLs. */
