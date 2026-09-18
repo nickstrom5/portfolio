@@ -12,6 +12,6 @@ export default defineConfig({
   site: siteUrl,
   base,
   trailingSlash: 'ignore',
-  integrations: [sitemap({ filter: (page) => !page.includes('/resume') })],
+  integrations: [sitemap({ filter: (page) => !page.includes('/resume') && !page.includes('/thanks') })],
   build: { format: 'directory' },
 });
