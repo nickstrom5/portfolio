@@ -1,174 +1,470 @@
 ---
 import Base from '@/layouts/Base.astro';
-import AppCard from '@/components/AppCard.astro';
-import apps from '@/data/apps.json';
-import { site } from '@/data/site';
+import Phone from '@/components/showcase/Phone.astro';
+import { projects } from '@/data/showcase';
 import { url } from '@/lib/url';
-
-const sorted = [...apps].sort((a, b) => b.year - a.year);
-
-const steps = [
-  {
-    n: '01',
-    title: 'Start with one sentence and a proven market',
-    ai: 'Claude and Grok researched the category, pulled apart the incumbents, and drafted a strategy document: positioning, pricing, targets, risks and a 30-day plan.',
-    me: 'I picked the ideas, set the constraint that nothing leaves the phone, and killed the versions that needed a backend.',
-  },
-  {
-    n: '02',
-    title: 'Write the product before the code',
-    ai: 'Every onboarding screen, the belief each one has to move, the paywall copy, the naming shortlist and the rejected names all came out of long working sessions with the models.',
-    me: 'I read every screen as the user, sent back what felt like a pitch instead of a product, and approved the final flow.',
-  },
-  {
-    n: '03',
-    title: 'Generate the app',
-    ai: 'The SwiftUI app, the Screen Time and Live Activity extensions, the StoreKit 2 paywall, the widgets, the unit tests and the Xcode project definition were written by the models, file by file, from those documents.',
-    me: 'I ran the builds, reported what broke on a real iPhone, and pasted the errors back. That loop, not typing code, is where my hours went.',
-  },
-  {
-    n: '04',
-    title: 'Ship the launch kit at the same time',
-    ai: 'App Store listing, screenshot plan, entitlement request answers, privacy and terms pages, the landing site, a social kit and a creator outreach brief were drafted alongside the code so launch is a checklist, not a project.',
-    me: 'I registered the domains, set up GitHub Pages and the developer account, and decided what goes live when.',
-  },
-  {
-    n: '05',
-    title: 'Let the data decide what comes next',
-    ai: 'Roadmaps are written to a rule: ship the core loop, then let reviews, cancellations and the funnel choose the next feature. The models keep a list of what waits for evidence.',
-    me: 'I own the metric each release has to move, and I say no to everything else.',
-  },
-];
 ---
 
-<Base title="Apps" description="Clam and Lume: two iPhone apps built as AI experiments, 95% or more written by Claude and Grok.">
-  <section class="section">
+<Base title="Apps / AI" description="Clam, Lume and this website: three projects built by directing AI, shown as scroll-through stories.">
+  <section class="intro">
     <div class="container">
-      <span class="eyebrow">Apps</span>
-      <h1>Two iPhone apps, built as an AI experiment</h1>
+      <span class="eyebrow">Apps / AI</span>
+      <h1>Built with AI. Directed by me.</h1>
       <p class="lede">
-        I'm not a career iOS developer. Clam and Lume exist to answer one question: how much of a real, App Store-ready product can be built by directing AI models instead of writing the code yourself? The answer so far is about 95 percent.
+        Three projects that answer the same question: how much of a real product can you ship by describing it well and directing the models? Pick one to walk through it.
       </p>
-      <div class="grid apps-grid">
-        {sorted.map((a) => <AppCard app={a} />)}
-      </div>
-    </div>
-  </section>
 
-  <section class="section split-section">
-    <div class="container">
-      <div class="section-head">
-        <h2>Who did what</h2>
-      </div>
-      <div class="split" role="img" aria-label="About 95 percent of the work was done by AI models and about 5 percent by me">
-        <div class="bar">
-          <span class="ai" style="width: 95%">AI · Claude &amp; Grok · ~95%</span>
-          <span class="me" style="width: 5%"><span class="sr-only">Me · ~5%</span></span>
-        </div>
-        <div class="legend">
-          <div>
-            <strong>Claude and Grok wrote</strong>
-            <span class="muted">strategy, onboarding copy, Swift code, extensions, tests, store listings, legal pages, landing sites, social kits.</span>
-          </div>
-          <div>
-            <strong>I did</strong>
-            <span class="muted">the idea, the constraints, every product decision, testing on device, accounts, domains and the go/no-go calls.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <span class="eyebrow">The process</span>
-      <div class="section-head">
-        <h2>How each app gets made</h2>
-      </div>
-      <ol class="steps">
-        {steps.map((s) => (
-          <li class="step" data-reveal>
-            <div class="num" aria-hidden="true">{s.n}</div>
-            <div class="body">
-              <h3>{s.title}</h3>
-              <div class="cols">
-                <div class="col">
-                  <span class="label ai-label">AI</span>
-                  <p>{s.ai}</p>
-                </div>
-                <div class="col">
-                  <span class="label me-label">Me</span>
-                  <p>{s.me}</p>
-                </div>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <h2>Follow the apps</h2>
-      </div>
-      <div class="grid apps-grid">
-        {sorted.map((a) => (
-          <div class="card follow">
-            <h3>{a.name}</h3>
-            <p class="muted">{a.tagline}</p>
-            <div class="links">
-              {a.website && <a class="btn btn-secondary" href={a.website} target="_blank" rel="noopener">{a.website.replace(/^https?:\/\//, '')}</a>}
-              {a.appStore ? (
-                <a class="btn btn-primary" href={a.appStore} target="_blank" rel="noopener">App Store</a>
-              ) : (
-                <span class="btn btn-secondary disabled" aria-disabled="true">App Store · {a.status ?? 'soon'}</span>
-              )}
-              {a.projectSlug && <a class="inline" href={url(`/work/${a.projectSlug}`)}>Case study →</a>}
-            </div>
-          </div>
+      <div class="tiles" role="tablist" aria-label="Projects">
+        {projects.map((p, i) => (
+          <button
+            class="tile"
+            role="tab"
+            id={`tab-${p.id}`}
+            aria-controls={`story-${p.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            data-project={p.id}
+            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}`}
+            type="button"
+          >
+            <span class="t-kicker">{p.kicker}</span>
+            <span class="t-name">{p.name}</span>
+            <span class="t-blurb">{p.tileBlurb}</span>
+            <span class="t-cta">View story →</span>
+          </button>
         ))}
       </div>
-      <p class="muted note">
-        Store links switch on the day each listing goes live. Both apps are built for the iPhone Duo and work on every iPhone. Want the same experiment run on your idea? <a href={url('/contact')}>Get in touch</a>.
-      </p>
     </div>
   </section>
+
+  {projects.map((p, i) => (
+    <article
+      class="story"
+      id={`story-${p.id}`}
+      role="tabpanel"
+      aria-labelledby={`tab-${p.id}`}
+      data-story={p.id}
+      hidden={i !== 0}
+      style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}`}
+    >
+      <section class="hero">
+        <div class="container hero-inner">
+          <div class="hero-copy" data-reveal>
+            <span class="kicker">{p.kicker}</span>
+            <h2>{p.hero.title}</h2>
+            <p>{p.hero.sub}</p>
+            <div class="actions">
+              {p.links.map((l) => (
+                <a class={l.primary ? 'btn btn-primary' : 'btn btn-secondary'} href={l.href.startsWith('/') ? url(l.href) : l.href} target={l.href.startsWith('/') ? undefined : '_blank'} rel={l.href.startsWith('/') ? undefined : 'noopener'}>{l.label}</a>
+              ))}
+              {p.caseStudy && <a class="btn btn-secondary" href={url(`/work/${p.caseStudy}`)}>Case study</a>}
+            </div>
+            <p class="status muted">{p.status}</p>
+          </div>
+          <div class="hero-art" data-reveal>
+            <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
+          </div>
+        </div>
+      </section>
+
+      <section class="section shot">
+        <div class="container">
+          <div class="browser" data-reveal>
+            <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
+            <a href={p.siteShot.url} target="_blank" rel="noopener">
+              <img src={url(p.siteShot.desktop)} alt={`${p.name} website`} loading="lazy" width="1440" height="900" />
+            </a>
+          </div>
+          <p class="caption muted">{p.siteShot.caption}</p>
+        </div>
+      </section>
+
+      {p.features.map((f) => (
+        <section class="section feature">
+          <div class:list={['container', 'feature-inner', { flip: f.flip }]}>
+            <div class="feature-copy" data-reveal>
+              <span class="eyebrow">{f.eyebrow}</span>
+              <h2>{f.title}</h2>
+              <p>{f.body}</p>
+            </div>
+            <div class="feature-art" data-reveal>
+              <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
+            </div>
+          </div>
+        </section>
+      ))}
+
+      <section class="section split-section">
+        <div class="container">
+          <div class="section-head">
+            <h2>Who did what</h2>
+          </div>
+          <div data-reveal>
+            <div class="bar" role="img" aria-label={`About ${p.split.ai} percent by ${p.split.aiLabel}, ${100 - p.split.ai} percent by ${p.split.meLabel}`}>
+              <span class="ai" style={`width: ${p.split.ai}%`}>{p.split.aiLabel} · ~{p.split.ai}%</span>
+              <span class="me" style={`width: ${100 - p.split.ai}%`}></span>
+            </div>
+            <div class="legend">
+              <div><strong>{p.split.aiLabel} wrote</strong><span class="muted">{p.split.aiDid}</span></div>
+              <div><strong>{p.split.meLabel} did</strong><span class="muted">{p.split.meDid}</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <span class="eyebrow">The process</span>
+          <div class="section-head">
+            <h2>How it got made</h2>
+          </div>
+          <ol class="steps">
+            {p.steps.map((s, n) => (
+              <li class="step" data-reveal>
+                <div class="num" aria-hidden="true">{String(n + 1).padStart(2, '0')}</div>
+                <div class="body">
+                  <h3>{s.title}</h3>
+                  <div class="cols">
+                    <div><span class="label ai-label">AI</span><p>{s.ai}</p></div>
+                    <div><span class="label me-label">Me</span><p>{s.me}</p></div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {p.prompts && (
+        <section class="section prompts-section">
+          <div class="container">
+            <span class="eyebrow">The prompts</span>
+            <div class="section-head">
+              <h2>What I actually typed</h2>
+            </div>
+            <p class="lede">Lightly trimmed, in order. Each one is followed by what happened next.</p>
+            <ol class="prompts">
+              {p.prompts.map((pr) => (
+                <li data-reveal>
+                  <div class="said"><span class="who">Nick</span><p>“{pr.said}”</p></div>
+                  <div class="did"><span class="who ai">Claude Code</span><p>{pr.did}</p></div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
+      <section class="section closing">
+        <div class="container closing-inner">
+          <div>
+            <h2>{p.id === 'site' ? 'Want a site like this?' : `Follow ${p.name}`}</h2>
+            <p class="muted">{p.id === 'site' ? 'The same process works for a client site, an internal tool or a product. Start with one sentence.' : p.status}</p>
+          </div>
+          <div class="actions">
+            {p.id === 'site' ? (
+              <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+            ) : (
+              p.links.map((l) => (
+                <a class={l.primary ? 'btn btn-primary' : 'btn btn-secondary'} href={l.href} target="_blank" rel="noopener">{l.label}</a>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+    </article>
+  ))}
 </Base>
 
 <script>
-  const items = document.querySelectorAll<HTMLElement>('[data-reveal]');
+  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile');
+  const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce || !('IntersectionObserver' in window)) {
-    items.forEach((el) => el.classList.add('in'));
-  } else {
-    document.documentElement.classList.add('reveal-js');
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('in');
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.15 },
-    );
-    items.forEach((el) => io.observe(el));
+  const canObserve = 'IntersectionObserver' in window && !reduce;
+  if (canObserve) document.documentElement.classList.add('reveal-js');
+
+  const io = canObserve
+    ? new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('in');
+              io!.unobserve(e.target);
+            }
+          });
+        },
+        { rootMargin: '0px 0px -10% 0px', threshold: 0.12 },
+      )
+    : null;
+
+  function arm(story: HTMLElement) {
+    story.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
+      el.classList.remove('in');
+      if (io) io.observe(el);
+      else el.classList.add('in');
+    });
   }
+
+  function show(id: string, scroll: boolean) {
+    tiles.forEach((t) => {
+      const on = t.dataset.project === id;
+      t.setAttribute('aria-selected', String(on));
+      t.classList.toggle('active', on);
+    });
+    stories.forEach((s) => {
+      const on = s.dataset.story === id;
+      s.hidden = !on;
+      if (on) arm(s);
+    });
+    if (scroll) {
+      const target = document.getElementById(`story-${id}`);
+      target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+  }
+
+  tiles.forEach((t) => {
+    t.addEventListener('click', () => {
+      const id = t.dataset.project!;
+      history.replaceState(null, '', `#${id}`);
+      show(id, true);
+    });
+  });
+
+  const initial = location.hash.replace('#', '');
+  const valid = [...tiles].some((t) => t.dataset.project === initial);
+  show(valid ? initial : tiles[0]?.dataset.project || 'clam', false);
+  tiles.forEach((t) => t.classList.toggle('active', t.getAttribute('aria-selected') === 'true'));
 </script>
 
 <style>
-  .apps-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  .intro {
+    padding-block: clamp(3rem, 8vw, 5.5rem) 2rem;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
     margin-top: 2rem;
   }
-  @media (min-width: 700px) {
-    .apps-grid {
-      grid-template-columns: repeat(2, 1fr);
+  .tile {
+    position: relative;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 190px;
+    padding: 1.25rem 1.25rem 1.1rem;
+    border-radius: var(--radius);
+    border: 2px solid transparent;
+    background: var(--tile-bg);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    box-shadow: var(--shadow);
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease;
+    overflow: hidden;
+  }
+  .tile[data-project='site'] {
+    color: var(--text);
+  }
+  :global(:root[data-theme='dark']) .tile[data-project='site'],
+  .tile[data-project='site'] {
+    color: #17181a;
+  }
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+  .tile.active,
+  .tile[aria-selected='true'] {
+    border-color: var(--tile-fg);
+  }
+  .t-kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--tile-fg);
+  }
+  .t-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .t-blurb {
+    opacity: 0.8;
+    font-size: 0.95rem;
+    flex: 1;
+  }
+  .t-cta {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--tile-fg);
+    margin-top: 0.5rem;
+  }
+  @media (max-width: 760px) {
+    .tiles {
+      grid-template-columns: 1fr;
+    }
+    .tile {
+      min-height: 0;
     }
   }
+
+  .story {
+    scroll-margin-top: 64px;
+  }
+  .hero {
+    background: var(--story-bg);
+    color: #fff;
+    padding-block: clamp(3rem, 8vw, 6rem);
+    overflow: hidden;
+  }
+  .story[data-story='site'] .hero {
+    color: var(--text);
+  }
+  .hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 3rem;
+    align-items: center;
+  }
+  .kicker {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--story-fg);
+    margin-bottom: 0.9rem;
+  }
+  .hero h2 {
+    font-size: clamp(2rem, 4.6vw, 3.4rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+  .hero p {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    max-width: 52ch;
+  }
+  .hero .status {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    color: inherit;
+    opacity: 0.65;
+  }
+  :global(:root[data-theme='dark']) .story[data-story='site'] .hero {
+    background: linear-gradient(135deg, #1a2740 0%, #0f1114 60%, #16213a 100%);
+    color: #eef0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .story[data-story='site'] .hero {
+      background: linear-gradient(135deg, #1a2740 0%, #0f1114 60%, #16213a 100%);
+      color: #eef0f2;
+    }
+  }
+  .hero-art {
+    display: flex;
+    justify-content: center;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .story:not([data-story='site']) .hero .btn-secondary {
+    color: #fff;
+    border-color: rgb(255 255 255 / 0.3);
+  }
+  .story:not([data-story='site']) .hero .btn-primary {
+    background: var(--story-fg);
+    color: #121217;
+  }
+  @media (max-width: 860px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+  }
+
+  .shot .browser {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background: var(--bg-elev);
+  }
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-muted);
+  }
+  .chrome span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .chrome em {
+    margin-left: 0.75rem;
+    font-style: normal;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.2rem 0.75rem;
+    border-radius: 6px;
+    background: var(--bg-elev);
+    flex: 1;
+    text-align: center;
+  }
+  .browser img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .caption {
+    margin: 1rem 0 0;
+    font-size: 0.92rem;
+    max-width: 70ch;
+  }
+
+  .feature-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: center;
+  }
+  .feature-inner.flip .feature-copy {
+    order: 2;
+  }
+  .feature-copy h2 {
+    font-size: clamp(1.7rem, 3.6vw, 2.5rem);
+  }
+  .feature-copy p {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    max-width: 48ch;
+  }
+  .feature-art {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+  }
+  @media (max-width: 760px) {
+    .feature-inner {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .feature-inner.flip .feature-copy {
+      order: 0;
+    }
+  }
+
   .split-section {
     background: var(--bg-muted);
   }
@@ -210,26 +506,18 @@ const steps = [
       grid-template-columns: 1fr;
     }
   }
+
   .steps {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: 0;
   }
   .step {
     display: grid;
     grid-template-columns: 5rem 1fr;
     gap: 1.5rem;
-    padding: 2.25rem 0;
+    padding: 2rem 0;
     border-top: 1px solid var(--border);
-    transition:
-      opacity 0.5s ease,
-      transform 0.5s ease;
-  }
-  :global(html.reveal-js) .step:not(.in) {
-    opacity: 0;
-    transform: translateY(18px);
   }
   .num {
     font-size: 2.6rem;
@@ -240,15 +528,15 @@ const steps = [
     font-variant-numeric: tabular-nums;
   }
   .step h3 {
-    font-size: 1.35rem;
-    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    margin-bottom: 0.9rem;
   }
   .cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
   }
-  .col p {
+  .cols p {
     margin: 0.4rem 0 0;
     color: var(--text-muted);
   }
@@ -278,26 +566,82 @@ const steps = [
       grid-template-columns: 1fr;
     }
   }
-  .follow h3 {
+
+  .prompts {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .prompts li {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .said,
+  .did {
+    padding: 1rem 1.1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+  }
+  .said {
+    background: var(--bg-muted);
+  }
+  .who {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+  }
+  .who.ai {
+    color: var(--accent);
+  }
+  .said p,
+  .did p {
+    margin: 0;
+    font-size: 0.97rem;
+  }
+  .said p {
+    font-style: italic;
+  }
+  @media (max-width: 700px) {
+    .prompts li {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .closing {
+    background: var(--bg-muted);
+  }
+  .closing-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .closing h2 {
     margin-bottom: 0.25rem;
   }
-  .follow .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    align-items: center;
-    margin-top: 0.75rem;
+  .closing p {
+    margin: 0;
   }
-  .follow .inline {
-    font-weight: 600;
-    font-size: 0.9rem;
+  .closing .actions {
+    margin-top: 0;
   }
-  .btn.disabled {
-    opacity: 0.6;
-    cursor: default;
+
+  [data-reveal] {
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
   }
-  .note {
-    margin-top: 1.5rem;
-    font-size: 0.95rem;
+  :global(html.reveal-js) [data-reveal]:not(.in) {
+    opacity: 0;
+    transform: translateY(20px);
   }
 </style>

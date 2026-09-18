@@ -1,0 +1,458 @@
+---
+/**
+ * CSS iPhone frame with hand-built screen mockups. Screens are concept
+ * renders of the real app flows, not screenshots of the shipped builds.
+ */
+interface Props {
+  screen:
+    | 'clam-home'
+    | 'clam-block'
+    | 'clam-live'
+    | 'lume-scan'
+    | 'lume-score'
+    | 'lume-ritual'
+    | 'image';
+  image?: string;
+  alt?: string;
+  size?: 'sm' | 'md' | 'lg';
+  tilt?: boolean;
+}
+const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
+---
+
+<div class:list={['phone', size, { tilt }]} role="img" aria-label={alt || `${screen} screen mockup`}>
+  <div class="island" aria-hidden="true"></div>
+  <div class:list={['screen', screen.split('-')[0]]}>
+    {screen === 'image' && image && <img src={image} alt="" loading="lazy" />}
+
+    {screen === 'clam-home' && (
+      <div class="ui clam-ui">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="row top"><span class="brand">🐚 Clam</span><span class="streak">🔥 12</span></div>
+        <div class="center">
+          <div class="badge ok">✓</div>
+          <h4>Clammed up for 2h 14m.</h4>
+          <p>12-day streak. 30h 30m clammed up total.</p>
+        </div>
+        <div class="chips"><span>25 min</span><span class="on">50 min</span><span>90 min</span></div>
+        <button class="big" type="button" tabindex="-1">Clam up</button>
+        <p class="hint">Fold or lock your phone. That's it.</p>
+      </div>
+    )}
+
+    {screen === 'clam-block' && (
+      <div class="ui clam-ui block">
+        <div class="status"><span>9:41</span><span>●●●</span></div>
+        <div class="center tall">
+          <div class="shell">🐚</div>
+          <h4>Instagram is clammed up</h4>
+          <p class="big-num">23 min left</p>
+          <p>Not a feed in sight. Unfolding to scroll means seeing this screen.</p>
+        </div>
+        <button class="big ghost" type="button" tabindex="-1">Back to focus</button>
+        <p class="hint">Hold 10s to quit early. Resets your streak.</p>
+      </div>
+    )}
+
+    {screen === 'clam-live' && (
+      <div class="ui lock">
+        <div class="status"><span>●●●</span><span>🔒</span></div>
+        <div class="clock"><span class="date">Friday, October 3</span><span class="time">9:41</span></div>
+        <div class="activity">
+          <div class="ring"><span>23:14</span></div>
+          <div>
+            <strong>Clam</strong>
+            <span>Instagram, TikTok, X locked</span>
+            <em>50-minute session · 12-day streak</em>
+          </div>
+        </div>
+        <p class="hint">Live Activity on the lock screen, Dynamic Island and the iPhone Duo outer display.</p>
+      </div>
+    )}
+
+    {screen === 'lume-scan' && (
+      <div class="ui lume-ui">
+        <div class="status"><span>7:02</span><span>●●●</span></div>
+        <p class="eyebrow">Same window · same hour</p>
+        <div class="viewfinder"><div class="oval"></div><span>Line up your face</span></div>
+        <button class="big light" type="button" tabindex="-1">Take photo</button>
+        <p class="hint">The picture stays on this device.</p>
+      </div>
+    )}
+
+    {screen === 'lume-score' && (
+      <div class="ui lume-ui">
+        <div class="status"><span>7:03</span><span>●●●</span></div>
+        <p class="eyebrow">Today</p>
+        <div class="score"><span class="n">78</span><span class="l">Glow score. Not a diagnosis.</span></div>
+        <ul class="bars">
+          <li><span>Glow</span><i style="--v: 82%"></i><b>82</b></li>
+          <li><span>Evenness</span><i style="--v: 74%"></i><b>74</b></li>
+          <li><span>Texture</span><i style="--v: 79%"></i><b>79</b></li>
+          <li><span>Calm</span><i style="--v: 77%"></i><b>77</b></li>
+        </ul>
+        <p class="hint">14-day trend · +3 this week</p>
+      </div>
+    )}
+
+    {screen === 'lume-ritual' && (
+      <div class="ui lume-ui">
+        <div class="status"><span>7:04</span><span>●●●</span></div>
+        <p class="eyebrow">Morning ritual</p>
+        <div class="timer"><span>0:60</span></div>
+        <ol class="ritual">
+          <li class="done"><span>Rinse</span><b>15s</b></li>
+          <li class="now"><span>Press</span><b>15s</b></li>
+          <li><span>Seal</span><b>15s</b></li>
+          <li><span>SPF</span><b>15s</b></li>
+        </ol>
+        <p class="hint">Sixty seconds. Then you're done.</p>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .phone {
+    --w: 280px;
+    position: relative;
+    width: var(--w);
+    aspect-ratio: 9 / 19.3;
+    border-radius: calc(var(--w) * 0.16);
+    background: #0b0b0e;
+    padding: calc(var(--w) * 0.035);
+    box-shadow:
+      0 0 0 2px #2a2a31,
+      0 30px 60px -25px rgb(0 0 0 / 0.6),
+      inset 0 0 0 1px rgb(255 255 255 / 0.06);
+    flex: none;
+  }
+  .phone.sm {
+    --w: 220px;
+  }
+  .phone.lg {
+    --w: 320px;
+  }
+  .phone.tilt {
+    transform: rotate(-4deg);
+  }
+  .island {
+    position: absolute;
+    top: calc(var(--w) * 0.055);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(var(--w) * 0.32);
+    height: calc(var(--w) * 0.085);
+    border-radius: 999px;
+    background: #000;
+    z-index: 2;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    border-radius: calc(var(--w) * 0.125);
+    overflow: hidden;
+    background: #121217;
+    color: #fff;
+    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    font-size: calc(var(--w) * 0.045);
+    line-height: 1.3;
+  }
+  .screen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+  }
+  .screen.lume {
+    background: #0e0e0c;
+    color: #f3f1ec;
+  }
+  .ui {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--w) * 0.06) calc(var(--w) * 0.07);
+    gap: calc(var(--w) * 0.035);
+  }
+  .status {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    font-weight: 600;
+    opacity: 0.9;
+    padding: 0 0.2em;
+  }
+  .row.top {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-top: calc(var(--w) * 0.05);
+  }
+  .streak {
+    color: #fad159;
+  }
+  .center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.35em;
+  }
+  .center h4 {
+    margin: 0;
+    font-size: 1.25em;
+    letter-spacing: -0.02em;
+  }
+  .center p {
+    margin: 0;
+    opacity: 0.7;
+    font-size: 0.9em;
+  }
+  .badge {
+    width: 2.6em;
+    height: 2.6em;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #73dc94;
+    color: #0b3a1c;
+    font-weight: 800;
+    font-size: 1.2em;
+    margin-bottom: 0.4em;
+  }
+  .shell {
+    font-size: 2.4em;
+  }
+  .big-num {
+    font-size: 1.6em !important;
+    font-weight: 800;
+    color: #fad159;
+    opacity: 1 !important;
+  }
+  .chips {
+    display: flex;
+    gap: 0.4em;
+    justify-content: center;
+  }
+  .chips span {
+    padding: 0.35em 0.7em;
+    border-radius: 999px;
+    background: #1f1f26;
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+  .chips .on {
+    background: #fad159;
+    color: #121217;
+  }
+  .big {
+    width: 100%;
+    padding: 0.9em;
+    border-radius: 1em;
+    border: 0;
+    background: #fad159;
+    color: #121217;
+    font: inherit;
+    font-weight: 800;
+    font-size: 1.05em;
+  }
+  .big.ghost {
+    background: #2b2b35;
+    color: #fff;
+  }
+  .big.light {
+    background: #e8e4db;
+    color: #0e0e0c;
+  }
+  .hint {
+    margin: 0;
+    text-align: center;
+    font-size: 0.72em;
+    opacity: 0.55;
+  }
+  .block {
+    background: linear-gradient(180deg, #1a1a22, #121217);
+  }
+  .lock {
+    background: linear-gradient(180deg, #2b2f4a, #0f1120);
+    justify-content: flex-start;
+  }
+  .clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: calc(var(--w) * 0.08);
+  }
+  .clock .date {
+    font-size: 0.9em;
+    opacity: 0.8;
+  }
+  .clock .time {
+    font-size: 3.2em;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .activity {
+    margin-top: calc(var(--w) * 0.12);
+    display: flex;
+    gap: 0.7em;
+    align-items: center;
+    background: rgb(0 0 0 / 0.45);
+    border-radius: 1.1em;
+    padding: 0.8em;
+    backdrop-filter: blur(10px);
+  }
+  .activity div {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.82em;
+    gap: 0.1em;
+  }
+  .activity em {
+    font-style: normal;
+    opacity: 0.6;
+  }
+  .ring {
+    flex: none;
+    width: 3.2em;
+    height: 3.2em;
+    border-radius: 50%;
+    background: conic-gradient(#fad159 0 46%, #3a3a44 46% 100%);
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .ring::before {
+    content: '';
+    position: absolute;
+    inset: 0.35em;
+    border-radius: 50%;
+    background: #15161f;
+  }
+  .ring span {
+    position: relative;
+    font-size: 0.72em;
+    font-weight: 700;
+  }
+  .lume-ui .eyebrow {
+    margin: calc(var(--w) * 0.04) 0 0;
+    font-size: 0.7em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9c9890;
+  }
+  .viewfinder {
+    flex: 1;
+    border-radius: 1em;
+    background: radial-gradient(circle at 50% 40%, #3a3631, #171714 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6em;
+    color: #9c9890;
+    font-size: 0.8em;
+  }
+  .oval {
+    width: 55%;
+    aspect-ratio: 3 / 4;
+    border: 2px dashed #e8e4db;
+    border-radius: 50%;
+    opacity: 0.8;
+  }
+  .score {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.4em;
+  }
+  .score .n {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 4.2em;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .score .l {
+    color: #9c9890;
+    font-size: 0.85em;
+  }
+  .bars {
+    list-style: none;
+    margin: 0.6em 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55em;
+    flex: 1;
+  }
+  .bars li {
+    display: grid;
+    grid-template-columns: 4.5em 1fr 2em;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.85em;
+  }
+  .bars i {
+    display: block;
+    height: 0.5em;
+    border-radius: 999px;
+    background: #2a2925;
+    position: relative;
+    overflow: hidden;
+  }
+  .bars i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: var(--v);
+    background: #e8e4db;
+    border-radius: inherit;
+  }
+  .bars b {
+    text-align: right;
+    font-weight: 600;
+  }
+  .timer {
+    align-self: center;
+    width: 5.5em;
+    height: 5.5em;
+    border-radius: 50%;
+    border: 0.35em solid #2a2925;
+    border-top-color: #e8e4db;
+    border-right-color: #e8e4db;
+    display: grid;
+    place-items: center;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 0.4em 0;
+  }
+  .ritual {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45em;
+    flex: 1;
+  }
+  .ritual li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6em 0.8em;
+    border-radius: 0.8em;
+    background: #171714;
+    border: 1px solid #2a2925;
+    font-size: 0.9em;
+  }
+  .ritual .done {
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+  .ritual .now {
+    background: #e8e4db;
+    color: #0e0e0c;
+    font-weight: 700;
+  }
+</style>
