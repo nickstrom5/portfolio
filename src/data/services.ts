@@ -24,9 +24,9 @@ export const services: Service[] = [
     bullets: ['Node.js, Python', 'Postgres, Firebase, Supabase', 'Stripe, Twilio, third-party APIs'],
   },
   {
-    title: 'Rescue & maintenance',
+    title: 'Operations & workflow systems',
     description:
-      'Inherited a codebase from another freelancer? I stabilize, document, and get releases moving again.',
-    bullets: ['Code audits', 'Store compliance fixes', 'Ongoing retainers'],
+      'Turning scattered email, spreadsheets and Trello boards into one system your team will actually use, mostly on Microsoft 365.',
+    bullets: ['Planner, Teams & SharePoint setup', 'Power Automate workflows', 'Task standards, training and async rollouts'],
   },
 ];
