@@ -143,6 +143,7 @@ const steps = [
   if (reduce || !('IntersectionObserver' in window)) {
     items.forEach((el) => el.classList.add('in'));
   } else {
+    document.documentElement.classList.add('reveal-js');
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -194,7 +195,7 @@ const steps = [
   }
   .legend {
     display: grid;
-    grid-template-columns: 19fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     margin-top: 1rem;
     font-size: 0.95rem;
@@ -203,9 +204,6 @@ const steps = [
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-  }
-  .legend div:last-child {
-    min-width: 220px;
   }
   @media (max-width: 760px) {
     .legend {
@@ -225,15 +223,13 @@ const steps = [
     gap: 1.5rem;
     padding: 2.25rem 0;
     border-top: 1px solid var(--border);
-    opacity: 0;
-    transform: translateY(18px);
     transition:
       opacity 0.5s ease,
       transform 0.5s ease;
   }
-  .step.in {
-    opacity: 1;
-    transform: none;
+  :global(html.reveal-js) .step:not(.in) {
+    opacity: 0;
+    transform: translateY(18px);
   }
   .num {
     font-size: 2.6rem;
