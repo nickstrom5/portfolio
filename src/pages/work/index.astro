@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
+const categories = ['all', ...new Set(projects.map((p) => p.data.category))];
+---
+
+<Base title="Work" description="Case studies from freelance web, mobile and backend projects, mostly delivered through Upwork.">
+  <section class="section">
+    <div class="container">
+      <span class="eyebrow">Work</span>
+      <h1>Client projects</h1>
+      <p class="lede">A selection of contracts I can talk about publicly. Many engagements are under NDA; ask and I'll share what I can on a call.</p>
+
+      <div class="filters" role="group" aria-label="Filter by category">
+        {categories.map((c) => (
+          <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
+            {c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <div class="grid grid-3" data-project-grid>
+        {projects.map((p) => (
+          <div data-category={p.data.category}>
+            <ProjectCard project={p} />
+          </div>
+        ))}
+      </div>
+      <p class="empty muted" data-empty hidden>No projects in this category yet.</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const items = document.querySelectorAll<HTMLElement>('[data-project-grid] > [data-category]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      buttons.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      let visible = 0;
+      items.forEach((el) => {
+        const show = filter === 'all' || el.dataset.category === filter;
+        el.hidden = !show;
+        if (show) visible++;
+      });
+      if (empty) empty.hidden = visible > 0;
+    });
+  });
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.5rem 0 2rem;
+  }
+  .chip {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .chip.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .empty {
+    margin-top: 1.5rem;
+  }
+</style>

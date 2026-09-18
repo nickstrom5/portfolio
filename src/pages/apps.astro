@@ -1,0 +1,74 @@
+---
+import Base from '@/layouts/Base.astro';
+import AppCard from '@/components/AppCard.astro';
+import apps from '@/data/apps.json';
+import { site } from '@/data/site';
+
+const sorted = [...apps].sort((a, b) => b.year - a.year);
+const devLinks = [
+  { label: 'App Store developer page', href: site.links.appStoreDeveloper },
+  { label: 'Google Play developer page', href: site.links.playStoreDeveloper },
+].filter((l) => l.href);
+---
+
+<Base title="Mobile apps" description="iOS and Android apps built and shipped for freelance clients.">
+  <section class="section">
+    <div class="container">
+      <span class="eyebrow">Mobile</span>
+      <h1>Apps I've built</h1>
+      <p class="lede">
+        Every app here went from scope to store listing with me as the developer. Some are public, some ship privately to a client's staff through enterprise or TestFlight distribution.
+      </p>
+      {devLinks.length > 0 && (
+        <p class="devlinks">
+          {devLinks.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label} →</a>)}
+        </p>
+      )}
+      <div class="grid apps-grid">
+        {sorted.map((a) => <AppCard app={a} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>How I ship mobile</h2>
+      </div>
+      <ol class="process grid grid-4">
+        <li class="card"><strong>1. Scope</strong><span class="muted">A short discovery call, then a written scope with milestones you can hold me to.</span></li>
+        <li class="card"><strong>2. Build</strong><span class="muted">Weekly TestFlight and internal-track builds so you see progress on a real device.</span></li>
+        <li class="card"><strong>3. Launch</strong><span class="muted">Store listings, screenshots, privacy disclosures and review back-and-forth handled.</span></li>
+        <li class="card"><strong>4. Support</strong><span class="muted">OS updates, store policy changes and new features on a retainer or per-milestone.</span></li>
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .apps-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  }
+  @media (min-width: 700px) {
+    .apps-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .devlinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    font-weight: 600;
+  }
+  .process {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .process li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+</style>
