@@ -16,7 +16,7 @@ export const site = {
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
     linkedin: 'https://www.linkedin.com/in/nick-s-0a0a29bb',
-    github: '',
+    github: 'https://github.com/nickstrom5',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
   },
