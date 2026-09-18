@@ -1,24 +1,112 @@
 [
-  { "title": "Client Onboarding Specialist", "year": 2026, "type": "Operations" },
-  { "title": "Project and Task Management (Microsoft 365 rollout)", "year": 2026, "type": "Systems" },
-  { "title": "Webinar and Technical Consultant", "year": 2026, "type": "Events" },
-  { "title": "Executive Assistant to the CEO", "year": 2026, "type": "Executive support" },
-  { "title": "Assistant to President", "year": 2026, "type": "Executive support" },
-  { "title": "Marketing PM & Client Deliverables Lead for a new agency", "year": 2026, "type": "Project management" },
-  { "title": "Senior Zapier Developer for a 100-rep sales organization", "year": 2026, "type": "Automation" },
-  { "title": "Event Coordinator", "year": 2026, "type": "Events" },
-  { "title": "Virtual Assistant for Website Management", "year": 2026, "type": "Web" },
-  { "title": "Zoom Webinar Coordination", "year": 2026, "type": "Events" },
-  { "title": "Executive Assistant / Project Manager for a multi-venture entrepreneur", "year": 2026, "type": "Executive support" },
-  { "title": "Complex Google Sheets operations with AI", "year": 2026, "type": "Automation" },
-  { "title": "Remote Executive Admin & Billing Support", "year": 2025, "type": "Operations" },
-  { "title": "GoHighLevel + Zapier + Slack Automations", "year": 2025, "type": "Automation" },
-  { "title": "Technical Project Management", "year": 2025, "type": "Project management" },
-  { "title": "Human Resource Work", "year": 2025, "type": "Operations" },
-  { "title": "Social Media Management", "year": 2025, "type": "Marketing" },
-  { "title": "Zoho One Admin with Social Media & Academy Support", "year": 2024, "type": "Systems" },
-  { "title": "Project Management and Invoice Assistance", "year": 2024, "type": "Operations" },
-  { "title": "Virtual Assistant for a Software Trade Association", "year": 2024, "type": "Executive support" },
-  { "title": "Graphic Design, Social Media Outreach, Executive Assistant", "year": 2024, "type": "Media" },
-  { "title": "Content Bank Creation for a Non-Profit", "year": 2024, "type": "Media" }
+  {
+    "title": "Client Onboarding Specialist",
+    "year": 2026,
+    "type": "Operations"
+  },
+  {
+    "title": "Project and Task Management",
+    "year": 2026,
+    "type": "Systems"
+  },
+  {
+    "title": "Webinar and Technical Consultant",
+    "year": 2026,
+    "type": "Events"
+  },
+  {
+    "title": "Executive Assistant to the CEO",
+    "year": 2026,
+    "type": "Executive support"
+  },
+  {
+    "title": "Assistant to President",
+    "year": 2026,
+    "type": "Executive support"
+  },
+  {
+    "title": "Marketing PM & Client Deliverables Lead for a new agency",
+    "year": 2026,
+    "type": "Project management"
+  },
+  {
+    "title": "Senior Zapier Developer for a 100-rep sales organization",
+    "year": 2026,
+    "type": "Automation"
+  },
+  {
+    "title": "Event Coordinator",
+    "year": 2026,
+    "type": "Events"
+  },
+  {
+    "title": "Virtual Assistant for Website Management",
+    "year": 2026,
+    "type": "Web"
+  },
+  {
+    "title": "Zoom Webinar Coordination",
+    "year": 2026,
+    "type": "Events"
+  },
+  {
+    "title": "Executive Assistant / Project Manager for a multi-venture entrepreneur",
+    "year": 2026,
+    "type": "Executive support"
+  },
+  {
+    "title": "Complex Google Sheets operations with AI",
+    "year": 2026,
+    "type": "Automation"
+  },
+  {
+    "title": "Remote Executive Admin & Billing Support",
+    "year": 2025,
+    "type": "Operations"
+  },
+  {
+    "title": "GoHighLevel + Zapier + Slack Automations",
+    "year": 2025,
+    "type": "Automation"
+  },
+  {
+    "title": "Technical Project Management",
+    "year": 2025,
+    "type": "Project management"
+  },
+  {
+    "title": "Human Resource Work",
+    "year": 2025,
+    "type": "Operations"
+  },
+  {
+    "title": "Social Media Management",
+    "year": 2025,
+    "type": "Marketing"
+  },
+  {
+    "title": "Zoho One Admin with Social Media & Academy Support",
+    "year": 2024,
+    "type": "Systems"
+  },
+  {
+    "title": "Project Management and Invoice Assistance",
+    "year": 2024,
+    "type": "Operations"
+  },
+  {
+    "title": "Virtual Assistant for a Software Trade Association",
+    "year": 2024,
+    "type": "Executive support"
+  },
+  {
+    "title": "Graphic Design, Social Media Outreach, Executive Assistant",
+    "year": 2024,
+    "type": "Media"
+  },
+  {
+    "title": "Content Bank Creation for a Non-Profit",
+    "year": 2024,
+    "type": "Media"
+  }
 ]
