@@ -1,24 +1,24 @@
 [
   {
-    "quote": "Nick took a half-finished app from a previous developer, stabilized it, and got it into both stores in three weeks. Communication was excellent throughout.",
-    "author": "Operations Director",
-    "company": "Acme Logistics",
+    "quote": "Nick stepped into a messy program office and had it running in days, not weeks. Three years later he is still the person we trust with anything that has a deadline.",
+    "author": "Program Director",
+    "company": "Federal research institution",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true
   },
   {
-    "quote": "Delivered exactly what we scoped, flagged the risks early, and stuck around for the launch. We have hired him for three more contracts since.",
+    "quote": "He built our entire CRM and follow-up system and then trained the team on it. Leads stopped falling through the cracks the week it went live.",
     "author": "Founder",
-    "company": "Brightside Health",
+    "company": "Online coaching startup",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true
   },
   {
-    "quote": "Clear estimates, clean code, and a handoff our in-house team could actually work with.",
-    "author": "CTO",
-    "company": "Northwind Retail",
+    "quote": "Responds within the hour, never misses a detail, and somehow makes a 200-person webinar look easy.",
+    "author": "Department Head",
+    "company": "University continuing education",
     "source": "Upwork",
     "rating": 5,
     "placeholder": true

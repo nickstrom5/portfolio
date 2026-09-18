@@ -5,11 +5,12 @@
 export const site = {
   name: 'Nick Soderstrom',
   firstName: 'Nick',
-  role: 'Freelance software & mobile app developer',
-  tagline: 'I ship web and mobile products for clients who need them done right, on time.',
+  role: 'Senior project manager & operations lead',
+  tagline:
+    'I take ownership of the moving parts, projects, timelines, tools, people and processes, so you can stay focused on growth.',
   /** Canonical URL. Update once the domain is registered and DNS is live. */
   url: 'https://nicksoderstrom.com',
-  location: 'Greater Chicago Area · Remote worldwide',
+  location: 'Chicago, IL · Remote worldwide',
   email: 'nicholas.soderstrom@insidesuccess.com',
   /** Replace with your real profile URLs. */
   links: {
@@ -19,14 +20,15 @@ export const site = {
     appStoreDeveloper: '',
     playStoreDeveloper: '',
   },
-  /** Headline numbers shown in the hero. Pull the real figures from your Upwork profile. */
+  /** Headline numbers shown in the hero. Taken from the Upwork profile, September 2026. */
   stats: [
-    { value: '8+', label: 'Years freelancing' },
-    { value: '100+', label: 'Client projects' },
-    { value: '20+', label: 'Mobile apps shipped' },
-    { value: '100%', label: 'Job success on Upwork' },
+    { value: '257', label: 'Upwork contracts' },
+    { value: '17,800+', label: 'Hours billed' },
+    { value: '100%', label: 'Job success score' },
+    { value: 'Top 1%', label: 'Top Rated Plus' },
   ],
-  availability: 'Available for new projects',
+  badges: ['Top Rated Plus', '100% Job Success', '10+ years', 'Responds within 0–4 hours'],
+  availability: 'Open for work',
   /**
    * Contact form endpoint (e.g. a Formspree or Basin URL). Leave empty to
    * fall back to a plain email link. Nothing is posted anywhere until you set it.

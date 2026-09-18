@@ -6,27 +6,39 @@ export interface Service {
 
 export const services: Service[] = [
   {
-    title: 'Mobile apps',
+    title: 'Project & operations management',
     description:
-      'Native and cross-platform apps for iOS and Android, from first wireframe to store listing and post-launch updates.',
-    bullets: ['React Native & Flutter', 'Swift / Kotlin when native matters', 'App Store & Play Store submission'],
+      'Planning, tracking, delegation and reporting across teams of any size, from a single executive to a full department.',
+    bullets: ['Scoping, timelines and milestones', 'Weekly reporting and async updates', 'Process design and documentation'],
   },
   {
-    title: 'Web applications',
+    title: 'Systems & tools',
     description:
-      'Fast, accessible web apps and marketing sites that are easy for your team to maintain after handoff.',
-    bullets: ['React, Next.js, Astro', 'Design-system driven UI', 'SEO and performance budgets'],
+      'I have worked in almost every major platform. Whatever your stack is, I already know it or will master it fast.',
+    bullets: ['Asana, ClickUp, Monday, Jira, Trello', 'Notion, Airtable, Confluence', 'Microsoft 365: Planner, Teams, SharePoint'],
   },
   {
-    title: 'Backends & APIs',
+    title: 'CRM & automation',
     description:
-      'The services behind the screens: auth, payments, notifications, and integrations with the tools you already use.',
-    bullets: ['Node.js, Python', 'Postgres, Firebase, Supabase', 'Stripe, Twilio, third-party APIs'],
+      'Lead tracking, funnels and workflow automation that remove the manual steps between a lead arriving and a deal closing.',
+    bullets: ['GoHighLevel, HubSpot, Salesforce, Zoho', 'Zapier and Power Automate', 'AI-assisted workflows and reporting'],
   },
   {
-    title: 'Operations & workflow systems',
+    title: 'Executive support',
     description:
-      'Turning scattered email, spreadsheets and Trello boards into one system your team will actually use, mostly on Microsoft 365.',
-    bullets: ['Planner, Teams & SharePoint setup', 'Power Automate workflows', 'Task standards, training and async rollouts'],
+      'Calendar, inbox, expense reporting, research, hiring support and customer service, handled so you never think about them.',
+    bullets: ['Inbox and calendar ownership', 'Hiring pipelines and onboarding', 'Vendor and customer follow-up'],
+  },
+  {
+    title: 'Events & media',
+    description:
+      'Zoom webinars for 200+ attendees, livestream production and the video and design work that goes with them.',
+    bullets: ['Zoom, OBS and livestream production', 'Premiere Pro, After Effects, Final Cut', 'Photoshop, Illustrator, InDesign'],
+  },
+  {
+    title: 'Web, e-commerce & apps',
+    description:
+      'Content and updates on WordPress, Wix and Shopify, plus mobile and web apps when a client needs something built.',
+    bullets: ['WordPress, Wix, Shopify', 'Landing pages and storefront updates', 'Mobile and web app builds'],
   },
 ];
