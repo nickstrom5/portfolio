@@ -1,7 +1,6 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
-import { roles, education } from '@/data/experience';
 import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
 
@@ -28,8 +27,8 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 const connect = [
   { label: 'Email', value: site.email, href: `mailto:${site.email}`, mark: '@' },
   upworkLive && { label: 'Upwork', value: 'Top Rated Plus · 257 contracts', href: site.links.upwork, mark: 'Up' },
-  linkedinLive && { label: 'LinkedIn', value: 'nick-s-0a0a29bb', href: site.links.linkedin, mark: 'in' },
-  site.links.github && { label: 'GitHub', value: 'nickstrom5', href: site.links.github, mark: '{}' },
+  linkedinLive && { label: 'LinkedIn', value: 'Connect with me', href: site.links.linkedin, mark: 'in' },
+  site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
 ---
@@ -91,34 +90,6 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
           ))}
         </div>
       </aside>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <span class="eyebrow">Experience</span>
-      <div class="section-head">
-        <h2>Featured roles</h2>
-        <a href={url('/clients')}>Featured clients →</a>
-      </div>
-      <p class="lede">
-        Freelancing full-time since 2015. These are the longest-running roles from 300+ contracts, 257 of them on Upwork; the rest ranged from a week to a year.
-      </p>
-      <ol class="roles">
-        {roles.map((r) => (
-          <li>
-            <span class="years">{r.start}–{r.end}</span>
-            <span class="what">
-              <strong>{r.title}</strong>
-              <span class="company">{r.company}</span>
-            </span>
-            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>Details →</a> : <span />}
-          </li>
-        ))}
-      </ol>
-      <p class="edu muted">
-        Education: {education.map((e) => `${e.school}, ${e.location}`).join('; ')} · Full history in the <a href={url(site.resumePdf)} download>résumé</a>{upworkLive && <> or on <a href={site.links.upwork} target="_blank" rel="noopener">Upwork</a></>}.
-      </p>
     </div>
   </section>
 
@@ -252,57 +223,10 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
     color: var(--text-faint);
     margin-bottom: 0.5rem;
   }
-  .roles {
-    list-style: none;
-    margin: 1.5rem 0 0;
-    padding: 0;
-    border-top: 1px solid var(--border);
-  }
-  .roles li {
-    display: grid;
-    grid-template-columns: 7rem 1fr auto;
-    gap: 1rem;
-    align-items: baseline;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .years {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-faint);
-    font-variant-numeric: tabular-nums;
-  }
-  .what {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.75rem;
-    align-items: baseline;
-  }
-  .what strong {
-    font-size: 1.05rem;
-  }
-  .company {
-    color: var(--text-muted);
-  }
-  .detail {
-    font-size: 0.9rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .edu {
-    margin: 1.25rem 0 0;
-    font-size: 0.9rem;
-  }
   @media (max-width: 800px) {
     .about {
       grid-template-columns: 1fr;
       gap: 2rem;
-    }
-    .roles li {
-      grid-template-columns: 1fr auto;
-    }
-    .years {
-      grid-column: 1 / -1;
     }
   }
 </style>

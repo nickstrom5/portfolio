@@ -2,7 +2,7 @@
 title: 'Lume: a sixty-second daily glow coach'
 shortTitle: 'Lume: sixty-second glow coach'
 client: 'Own product · lumenow.app'
-summary: 'Take one photo in the same light each morning, get a glow score across four measures, and do a sixty-second morning and evening ritual. Photos are processed on the phone and never uploaded.'
+summary: 'One photo in the same light each morning, a glow score across four measures, and a sixty-second ritual. Photos are processed on the phone and never uploaded.'
 category: 'mobile'
 platforms: ['iOS', 'iPhone Duo']
 stack: ['SwiftUI', 'Camera', 'On-device image analysis', 'StoreKit 2']
@@ -16,7 +16,7 @@ placeholder: false
 
 ## An AI experiment
 
-Lume is the second of two apps built to test how much of a product AI can produce when a human directs it. About 95 percent of the strategy, screens, Swift code and launch kit came from Claude and Grok; I set the constraints, tested on device and decided what shipped. The full process is on the [Apps page](/apps).
+Lume is the second of two apps built to test how much of a product AI can produce when a human directs it. About 95 percent of the strategy, screens, Swift code and launch kit came from Claude and Grok; I set the constraints, tested on device and decided what shipped. The full process is on the [Apps page](/apps/#lume).
 
 ## The idea
 

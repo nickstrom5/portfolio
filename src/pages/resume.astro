@@ -7,9 +7,10 @@ import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
 const summary =
-  'Senior project manager and operations lead with 10+ years running projects for federal research institutions, major universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Top Rated Plus on Upwork with a 100% Job Success Score across 257 contracts and 17,800+ billed hours, 300+ contracts overall; longest engagement exceeds 3,700 hours. Currently shipping iPhone apps and websites by directing AI models (Claude, Grok) from brief to production.';
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production.';
 const skillLines = services.map((s) => ({ label: s.title, items: s.bullets.join(' · ') }));
 const domain = site.url.replace(/^https?:\/\//, '');
+const highlights = [...site.stats.map((s) => ({ value: s.value, label: s.label.replace(' on Upwork', '') })), { value: 'Since 2015', label: 'Full-time freelance' }];
 ---
 
 <!doctype html>
@@ -26,7 +27,7 @@ const domain = site.url.replace(/^https?:\/\//, '');
         --ink: #17181a;
         --muted: #5b5f66;
         --faint: #8a8f97;
-        --rule: #dfdfd9;
+        --rule: #e4e4df;
         --accent: #1f5fd0;
       }
       * {
@@ -38,83 +39,89 @@ const domain = site.url.replace(/^https?:\/\//, '');
         background: #fff;
         color: var(--ink);
         font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-        font-size: 9.6pt;
-        line-height: 1.35;
+        font-size: 9.5pt;
+        line-height: 1.4;
       }
       .page {
         max-width: 8.5in;
         margin: 0 auto;
-        padding: 0.5in 0.65in;
+        padding: 0.6in 0.75in;
       }
       header {
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
         gap: 1rem;
-        border-bottom: 2px solid var(--ink);
-        padding-bottom: 0.4rem;
-        margin-bottom: 0.5rem;
+        padding-bottom: 0.7rem;
+        border-bottom: 1px solid var(--ink);
       }
       h1 {
-        font-size: 22pt;
+        font-size: 24pt;
         margin: 0;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
+        line-height: 1.1;
       }
       .role {
-        margin: 0.15rem 0 0;
-        font-size: 11pt;
+        margin: 0.3rem 0 0;
+        font-size: 10.5pt;
         color: var(--muted);
       }
       .contact {
         text-align: right;
-        font-size: 9.5pt;
+        font-size: 9pt;
         color: var(--muted);
-        line-height: 1.5;
+        line-height: 1.6;
       }
       .contact a {
         color: var(--ink);
         text-decoration: none;
       }
-      h2 {
-        font-size: 8.5pt;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin: 0.85rem 0 0.35rem;
-      }
-      p {
-        margin: 0 0 0.5rem;
-      }
       .highlights {
-        display: flex;
-        gap: 1.25rem;
-        flex-wrap: wrap;
-        margin: 0.2rem 0 0;
-        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin: 0;
+        padding: 0.8rem 0;
         list-style: none;
-        font-size: 9pt;
+        border-bottom: 1px solid var(--rule);
       }
       .highlights li strong {
         display: block;
-        font-size: 12pt;
+        font-size: 13pt;
         letter-spacing: -0.02em;
+        line-height: 1.2;
       }
       .highlights li span {
         color: var(--muted);
+        font-size: 8.5pt;
+      }
+      h2 {
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 1rem 0 0.45rem;
+      }
+      p {
+        margin: 0;
+      }
+      .summary {
+        max-width: 82ch;
+        color: var(--ink);
+      }
+      .jobs {
+        display: grid;
+        gap: 0.45rem;
       }
       .job {
         display: grid;
         grid-template-columns: 1fr auto;
-        gap: 0.1rem 1rem;
-        padding: 0.28rem 0;
-        border-bottom: 1px solid var(--rule);
+        gap: 0.05rem 1.5rem;
         break-inside: avoid;
       }
-      .job:last-child {
-        border-bottom: 0;
-      }
       .job strong {
-        font-size: 10.5pt;
+        font-size: 10pt;
       }
       .job .co {
         color: var(--muted);
@@ -124,29 +131,47 @@ const domain = site.url.replace(/^https?:\/\//, '');
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         text-align: right;
-        font-size: 9.5pt;
+        font-size: 9pt;
+        padding-top: 0.1rem;
       }
       .job .sum {
         grid-column: 1 / -1;
         color: var(--muted);
-        font-size: 9.8pt;
+        max-width: 78ch;
       }
       .skills {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.35rem 1.5rem;
-        font-size: 9.6pt;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.6rem 1.5rem;
+        font-size: 9pt;
       }
       .skills div strong {
         display: block;
+        font-size: 9.25pt;
+        margin-bottom: 0.1rem;
       }
       .skills div span {
         color: var(--muted);
       }
       .foot {
-        margin-top: 1rem;
-        font-size: 9pt;
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-top: 1.1rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid var(--rule);
+        font-size: 8.5pt;
         color: var(--faint);
+      }
+      .foot span:first-child {
+        white-space: nowrap;
+      }
+      .foot span:last-child {
+        text-align: right;
+      }
+      .foot strong {
+        color: var(--muted);
+        font-weight: 600;
       }
       @media (max-width: 600px) {
         .page {
@@ -159,8 +184,21 @@ const domain = site.url.replace(/^https?:\/\//, '');
         .contact {
           text-align: left;
         }
+        .highlights {
+          grid-template-columns: 1fr 1fr;
+        }
         .skills {
           grid-template-columns: 1fr;
+        }
+        .foot {
+          flex-direction: column;
+          gap: 0.3rem;
+        }
+        .foot span:first-child {
+          white-space: normal;
+        }
+        .foot span:last-child {
+          text-align: left;
         }
         .job {
           grid-template-columns: 1fr;
@@ -175,7 +213,7 @@ const domain = site.url.replace(/^https?:\/\//, '');
       }
       @media print {
         .page {
-          padding: 0.3in 0.6in;
+          padding: 0.45in 0.7in;
         }
       }
     </style>
@@ -194,28 +232,30 @@ const domain = site.url.replace(/^https?:\/\//, '');
         </div>
       </header>
 
-      <h2>Summary</h2>
-      <p>{summary}</p>
       <ul class="highlights">
-        {site.stats.map((s) => (
+        {highlights.map((s) => (
           <li><strong>{s.value}</strong><span>{s.label}</span></li>
         ))}
-        <li><strong>Since 2015</strong><span>Full-time freelance</span></li>
       </ul>
 
+      <h2>Summary</h2>
+      <p class="summary">{summary}</p>
+
       <h2>Experience</h2>
-      <div class="job">
-        <div><strong>Operations & Project Manager · Chief of Staff</strong> <span class="co">· Freelance, Upwork</span></div>
-        <div class="when">2015 – Present</div>
-        <div class="sum">300+ completed contracts (257 on Upwork) spanning project management, systems and CRM setup, executive support, events and media, and web and app builds. Longest-running roles below.</div>
-      </div>
-      {roles.map((r) => (
+      <div class="jobs">
         <div class="job">
-          <div><strong>{r.title}</strong> <span class="co">· {r.company}</span></div>
-          <div class="when">{r.start} – {r.end}</div>
-          <div class="sum">{r.summary}</div>
+          <div><strong>Operations & Project Manager · Chief of Staff</strong> <span class="co">· Freelance, mostly via Upwork</span></div>
+          <div class="when">2015 – Present</div>
+          <div class="sum">300+ completed contracts across project management, systems and CRM setup, executive support, events and media, and web and app builds. Longest-running roles below.</div>
         </div>
-      ))}
+        {roles.map((r) => (
+          <div class="job">
+            <div><strong>{r.title}</strong> <span class="co">· {r.company}</span></div>
+            <div class="when">{r.start} – {r.end}</div>
+            <div class="sum">{r.summary}</div>
+          </div>
+        ))}
+      </div>
 
       <h2>Skills & tools</h2>
       <div class="skills">
@@ -224,10 +264,10 @@ const domain = site.url.replace(/^https?:\/\//, '');
         ))}
       </div>
 
-      <h2>Education</h2>
-      <p>{education.map((e) => `${e.school}, ${e.location}`).join('; ')}</p>
-
-      <p class="foot">Full contract history and client feedback available on Upwork. References on request.</p>
+      <p class="foot">
+        <span><strong>Education</strong> · {education.map((e) => `${e.school}, ${e.location}`).join('; ')}</span>
+        <span>Full contract history and client feedback on Upwork. References on request.</span>
+      </p>
     </div>
   </body>
 </html>

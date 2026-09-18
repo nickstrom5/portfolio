@@ -21,7 +21,7 @@ import { url } from '@/lib/url';
             class="tile"
             role="tab"
             id={`tab-${p.id}`}
-            aria-controls={`story-${p.id}`}
+            aria-controls={p.id}
             aria-selected={i === 0 ? 'true' : 'false'}
             data-project={p.id}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}`}
@@ -40,7 +40,7 @@ import { url } from '@/lib/url';
   {projects.map((p, i) => (
     <article
       class="story"
-      id={`story-${p.id}`}
+      id={p.id}
       role="tabpanel"
       aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
@@ -150,15 +150,33 @@ import { url } from '@/lib/url';
             <div class="section-head">
               <h2>What I actually typed</h2>
             </div>
-            <p class="lede">Lightly trimmed, in order. Each one is followed by what happened next.</p>
+            <p class="lede">A few examples, lightly trimmed. Each one is followed by what happened next; the full list is below.</p>
+            {p.promptStats && (
+              <dl class="prompt-stats">
+                {p.promptStats.map((s) => (
+                  <div><dd>{s.value}</dd><dt>{s.label}</dt></div>
+                ))}
+              </dl>
+            )}
             <ol class="prompts">
-              {p.prompts.map((pr) => (
+              {p.prompts.filter((pr) => pr.pick).map((pr) => (
                 <li data-reveal>
                   <div class="said"><span class="who">Nick</span><p>“{pr.said}”</p></div>
                   <div class="did"><span class="who ai">Claude Code</span><p>{pr.did}</p></div>
                 </li>
               ))}
             </ol>
+            <details class="more-prompts">
+              <summary><span class="btn btn-secondary">Show all {p.prompts.length} prompts</span></summary>
+              <ol class="prompts">
+                {p.prompts.map((pr) => (
+                  <li>
+                    <div class="said"><span class="who">Nick</span><p>“{pr.said}”</p></div>
+                    <div class="did"><span class="who ai">Claude Code</span><p>{pr.did}</p></div>
+                  </li>
+                ))}
+              </ol>
+            </details>
           </div>
         </section>
       )}
@@ -225,7 +243,7 @@ import { url } from '@/lib/url';
       if (on) arm(s);
     });
     if (scroll) {
-      const target = document.getElementById(`story-${id}`);
+      const target = document.getElementById(id);
       target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     }
   }
@@ -593,6 +611,51 @@ import { url } from '@/lib/url';
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+  }
+  .prompt-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 0;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .prompt-stats div {
+    display: flex;
+    flex-direction: column;
+  }
+  .prompt-stats dd {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .prompt-stats dt {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .more-prompts {
+    margin-top: 1.5rem;
+  }
+  .more-prompts summary {
+    list-style: none;
+    cursor: pointer;
+    width: max-content;
+  }
+  .more-prompts summary::-webkit-details-marker {
+    display: none;
+  }
+  .more-prompts summary:focus-visible .btn {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .more-prompts[open] summary {
+    display: none;
+  }
+  .more-prompts[open] .prompts {
+    margin-top: 0;
   }
   .said,
   .did {
