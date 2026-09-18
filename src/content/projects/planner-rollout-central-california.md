@@ -1,5 +1,6 @@
 ---
 title: 'Microsoft 365 task system rollout for a 17-person operations team'
+shortTitle: 'Microsoft 365 task system rollout'
 client: 'Family-owned agriculture & land development company, Central California'
 summary: 'Replaced a scattered Trello and email setup with a structured Planner, Teams and SharePoint system, delivered fully async in two-week phases with weekly Loom updates.'
 category: 'consulting'

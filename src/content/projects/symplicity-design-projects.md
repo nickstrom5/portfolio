@@ -1,5 +1,6 @@
 ---
 title: 'Keeping design projects on track at Symplicity for nearly four years'
+shortTitle: 'Symplicity project management'
 client: 'Symplicity'
 summary: 'Project manager coordinating with internal groups and many college clients to keep design projects moving for a higher-education software company.'
 category: 'consulting'

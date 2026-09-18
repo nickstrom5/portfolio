@@ -23,7 +23,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
 <div class:list={['phone', size, { tilt }]} role="img" aria-label={alt || `${screen} screen mockup`}>
   <div class="island" aria-hidden="true"></div>
   <div class:list={['screen', screen.split('-')[0]]}>
-    {screen === 'image' && image && <img src={image} alt="" loading="lazy" />}
+    {screen === 'image' && image && <img src={image} alt="" loading="lazy" width="390" height="844" />}
 
     {screen === 'clam-home' && (
       <div class="ui clam-ui">

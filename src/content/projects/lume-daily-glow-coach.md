@@ -1,5 +1,6 @@
 ---
 title: 'Lume: a sixty-second daily glow coach'
+shortTitle: 'Lume: sixty-second glow coach'
 client: 'Own product · lumenow.app'
 summary: 'Take one photo in the same light each morning, get a glow score across four measures, and do a sixty-second morning and evening ritual. Photos are processed on the phone and never uploaded.'
 category: 'mobile'

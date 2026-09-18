@@ -11,7 +11,7 @@ const base = process.env.BASE_PATH || '/';
 export default defineConfig({
   site: siteUrl,
   base,
-  trailingSlash: 'ignore',
+  trailingSlash: 'always',
   integrations: [sitemap({ filter: (page) => !page.includes('/resume') && !page.includes('/thanks') })],
   build: { format: 'directory' },
 });

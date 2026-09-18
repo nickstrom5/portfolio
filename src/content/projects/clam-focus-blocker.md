@@ -1,5 +1,6 @@
 ---
 title: 'Clam: a fold-to-focus app blocker for iPhone'
+shortTitle: 'Clam: fold-to-focus app blocker'
 client: 'Own product · getclam.app'
 summary: "One-tap screen-time blocker built on Apple's Screen Time API, with a Live Activity countdown, a branded block screen, streaks and a hard paywall. No account, no backend, nothing leaves the phone."
 category: 'mobile'
