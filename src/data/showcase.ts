@@ -1,5 +1,5 @@
 /**
- * The three AI-built projects on the Apps/AI page. Each renders as a
+ * The AI-built projects on the AI/Projects page. Each renders as a
  * scroll-through story; the tiles at the top switch between them.
  */
 export type Screen =
@@ -31,7 +31,7 @@ export interface Prompt {
 }
 
 export interface Project {
-  id: 'clam' | 'lume' | 'site';
+  id: 'clam' | 'lume' | 'launchneat' | 'site';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -41,6 +41,8 @@ export interface Project {
   /** Optional dark-theme overrides so a light tile does not glare on the dark page. */
   bgDark?: string;
   fgDark?: string;
+  /** 'light' tiles and heroes use dark text on a light background. */
+  tone?: 'light' | 'dark';
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
@@ -161,6 +163,68 @@ export const projects: Project[] = [
     caseStudy: 'lume-daily-glow-coach',
   },
   {
+    id: 'launchneat',
+    name: 'LaunchNeat',
+    kicker: 'Small business · websites for local shops',
+    tileBlurb: 'A $99 website business, its fifteen demo sites and its own marketing site, built in one evening.',
+    bg: 'linear-gradient(135deg, #e3f1ec 0%, #f8f8f0 55%, #d6ebe3 100%)',
+    fg: '#146e60',
+    bgDark: 'linear-gradient(135deg, #11302a 0%, #12161f 55%, #143a32 100%)',
+    fgDark: '#5cc9ae',
+    tone: 'light',
+    hero: {
+      title: 'A real website for your business. $99 the first year.',
+      sub: 'LaunchNeat is a small business I started: clean templated websites for local shops and solo operators, with the domain and a year of care included, then $50 a year after that. The offer, the price points and the niche list are mine. Claude Code built everything you can see.',
+      screen: 'image',
+      image: '/showcase/launchneat-site.jpg',
+      frame: 'laptop',
+    },
+    siteShot: {
+      desktop: '/showcase/launchneat-site.jpg',
+      mobile: '/showcase/launchneat-site-mobile.jpg',
+      caption: 'launchneat.com. Five marketing pages and fifteen demo sites, a static Astro build of about 540 KB in total, no backend and no tracking.',
+      url: 'https://launchneat.com',
+    },
+    features: [
+      {
+        eyebrow: 'Fifteen businesses that don’t exist',
+        title: 'Show, don’t describe.',
+        body: 'Instead of a features list, the site shows the thing you would get: fifteen fictional local businesses, from a salon and a food truck to a plumber and a tutor, each with its own copy, hours, prices and photos, all rendered through one template.',
+        screen: 'image',
+        image: '/showcase/launchneat-examples.jpg',
+        frame: 'laptop',
+      },
+      {
+        eyebrow: 'One template, fifteen personalities',
+        title: 'Every demo gets its own palette and type.',
+        body: 'The bakery is warm serif and butter tones; the detailer is dark and sharp. Each demo carries its own colors and font pairing in a single data file, so a new niche is a data entry, not a new design.',
+        screen: 'image',
+        image: '/showcase/launchneat-demo.jpg',
+        frame: 'laptop',
+        flip: true,
+      },
+    ],
+    split: {
+      ai: 96,
+      aiLabel: 'Claude Code',
+      meLabel: 'Nick',
+      aiDid: 'Brand, marketing pages, pricing layout, the fifteen demo sites and their copy, the demo template, photo sourcing script, SEO pass and static deploy setup.',
+      meDid: 'The business idea, the $99 and $50 price points, the list of niches, the domain, and the calls on what to cut.',
+    },
+    steps: [
+      { title: 'Name the offer', ai: 'Wrote the positioning, the two-price model and the scope page in one pass.', me: '“Real websites for local businesses. $99 the first year, $50 after that.”' },
+      { title: 'Generate the examples', ai: 'Created fifteen fictional businesses with copy, hours, prices, palettes and fonts.', me: 'Picked the niches: salon, food truck, contractor, bakery, plumber and ten more.' },
+      { title: 'Rebuild lean', ai: 'Moved the site from an app scaffold to a plain static build with no backend.', me: '“Keep it simple. No logins, no database.”' },
+      { title: 'Launch', ai: 'Hardened the SEO and set up the static deploy.', me: 'Bought launchneat.com and pointed it.' },
+    ],
+    links: [
+      { label: 'Visit launchneat.com', href: 'https://launchneat.com', primary: true },
+      { label: 'See the example sites', href: 'https://launchneat.com/examples/' },
+    ],
+    status: 'Live · launchneat.com',
+    caseStudy: 'launchneat-local-business-websites',
+  },
+  {
     id: 'site',
     name: 'This website',
     kicker: 'work-with-nick.com · built from prompts',
@@ -169,6 +233,7 @@ export const projects: Project[] = [
     fg: '#1f5fd0',
     bgDark: 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%)',
     fgDark: '#8fb2ff',
+    tone: 'light',
     hero: {
       title: 'The site you’re reading was built the same way.',
       sub: 'No designer, no developer, no template. I described what I wanted in plain English, sent screenshots of my Upwork and LinkedIn profiles, and Claude Code wrote the pages, read my inboxes for real client history, cropped my photo, generated the résumé PDF and pushed every commit.',
@@ -238,11 +303,14 @@ export const projects: Project[] = [
       { said: 'Move featured roles from About to the Work tab.', did: 'Moved the section and its styles across, and rewrote the Work page description to match.' },
       { said: 'The résumé PDF design needs to be cleaner, less crowded.', did: 'Redesigned the print page with a stats strip, more whitespace and a three-column skills grid, still one page.' },
       { said: 'We will need to update the part of the site with the prompts to be accurate too. If it’s too many we can have them collapse.', did: 'Rewrote this list from the session history, kept five examples up front and put the full list behind a “show all” toggle.' },
+      { said: 'Remove the grill brush hanging behind me in the profile pic.', did: 'Masked the brush and its shadow, filled the gap with brick cloned from the wall beside it, and refreshed the social image.' },
+      { said: 'Can we add LaunchNeat to my AI/Apps section? Small business I’ve created.', did: 'Cloned the LaunchNeat repos, rendered its home, examples and a demo site for the laptop frames, and wrote the fourth story.' },
+      { said: 'AI/Projects instead of AI/Apps.', did: 'Renamed the tab, the page and every link to it.' },
     ],
     promptStats: [
-      { value: '~60', label: 'Messages from Nick' },
-      { value: '18', label: 'Screenshots' },
-      { value: '30', label: 'Commits' },
+      { value: '~75', label: 'Messages from Nick' },
+      { value: '21', label: 'Screenshots' },
+      { value: '41', label: 'Commits' },
       { value: '97%', label: 'Written by Claude Code' },
     ],
     links: [

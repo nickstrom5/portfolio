@@ -6,13 +6,13 @@ import { projects } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="Apps / AI" description="Clam, Lume and this website: three projects built by directing AI, shown as scroll-through stories.">
+<Base title="AI / Projects" description="Clam, Lume, LaunchNeat and this website: four projects built by directing AI, shown as scroll-through stories.">
   <section class="intro">
     <div class="container">
-      <span class="eyebrow">Apps / AI</span>
+      <span class="eyebrow">AI / Projects</span>
       <h1>Built with AI. Directed by me.</h1>
       <p class="lede">
-        Three projects that answer the same question: how much of a real product can you ship by describing it well and directing the models? Pick one to walk through it.
+        Four projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
       </p>
 
       <div class="tiles" role="tablist" aria-label="Projects">
@@ -24,6 +24,7 @@ import { url } from '@/lib/url';
             aria-controls={p.id}
             aria-selected={i === 0 ? 'true' : 'false'}
             data-project={p.id}
+            data-tone={p.tone ?? 'dark'}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
             type="button"
           >
@@ -44,6 +45,7 @@ import { url } from '@/lib/url';
       role="tabpanel"
       aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
+      data-tone={p.tone ?? 'dark'}
       hidden={i !== 0}
       style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}; --story-bg-dark: ${p.bgDark ?? p.bg}; --story-fg-dark: ${p.fgDark ?? p.fg}`}
     >
@@ -271,7 +273,7 @@ import { url } from '@/lib/url';
   }
   .tiles {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     margin-top: 2rem;
   }
@@ -295,15 +297,15 @@ import { url } from '@/lib/url';
       border-color 0.2s ease;
     overflow: hidden;
   }
-  .tile[data-project='site'] {
+  .tile[data-tone='light'] {
     color: #17181a;
   }
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme='light'])) .tile[data-project='site'] {
+    :global(:root:not([data-theme='light'])) .tile[data-tone='light'] {
       color: #eef0f2;
     }
   }
-  :global(:root[data-theme='dark']) .tile[data-project='site'] {
+  :global(:root[data-theme='dark']) .tile[data-tone='light'] {
     color: #eef0f2;
   }
   .tile:hover {
@@ -337,7 +339,12 @@ import { url } from '@/lib/url';
     color: var(--tile-fg-use);
     margin-top: 0.5rem;
   }
-  @media (max-width: 760px) {
+  @media (max-width: 1000px) {
+    .tiles {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 640px) {
     .tiles {
       grid-template-columns: 1fr;
     }
@@ -355,7 +362,7 @@ import { url } from '@/lib/url';
     padding-block: clamp(3rem, 8vw, 6rem);
     overflow: hidden;
   }
-  .story[data-story='site'] .hero {
+  .story[data-tone='light'] .hero {
     color: var(--text);
   }
   .hero-inner {
@@ -389,13 +396,13 @@ import { url } from '@/lib/url';
     color: inherit;
     opacity: 0.65;
   }
-  :global(:root[data-theme='dark']) .story[data-story='site'] .hero {
-    background: linear-gradient(135deg, #1a2740 0%, #0f1114 60%, #16213a 100%);
+  :global(:root[data-theme='dark']) .story[data-tone='light'] .hero {
+    background: var(--story-bg-use);
     color: #eef0f2;
   }
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme='light'])) .story[data-story='site'] .hero {
-      background: linear-gradient(135deg, #1a2740 0%, #0f1114 60%, #16213a 100%);
+    :global(:root:not([data-theme='light'])) .story[data-tone='light'] .hero {
+      background: var(--story-bg-use);
       color: #eef0f2;
     }
   }
@@ -412,11 +419,11 @@ import { url } from '@/lib/url';
     gap: 0.75rem;
     margin-top: 1.5rem;
   }
-  .story:not([data-story='site']) .hero .btn-secondary {
+  .story:not([data-tone='light']) .hero .btn-secondary {
     color: #fff;
     border-color: rgb(255 255 255 / 0.3);
   }
-  .story:not([data-story='site']) .hero .btn-primary {
+  .story:not([data-tone='light']) .hero .btn-primary {
     background: var(--story-fg-use);
     color: #121217;
   }

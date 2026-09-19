@@ -2,8 +2,15 @@
   {
     "name": "Clam",
     "tagline": "Fold your phone shut, and your distracting apps stay shut. A one-tap focus blocker built on Apple's Screen Time API.",
-    "platforms": ["iOS"],
-    "stack": ["SwiftUI", "Screen Time API", "ActivityKit", "StoreKit 2"],
+    "platforms": [
+      "iOS"
+    ],
+    "stack": [
+      "SwiftUI",
+      "Screen Time API",
+      "ActivityKit",
+      "StoreKit 2"
+    ],
     "client": "Own product",
     "year": 2026,
     "appStore": "",
@@ -17,8 +24,14 @@
   {
     "name": "Lume",
     "tagline": "A daily glow coach. One photo, a glow score, and a sixty-second skincare ritual. Photos never leave the phone.",
-    "platforms": ["iOS"],
-    "stack": ["SwiftUI", "On-device photo analysis", "StoreKit 2"],
+    "platforms": [
+      "iOS"
+    ],
+    "stack": [
+      "SwiftUI",
+      "On-device photo analysis",
+      "StoreKit 2"
+    ],
     "client": "Own product",
     "year": 2026,
     "appStore": "",
@@ -27,6 +40,27 @@
     "status": "In development",
     "projectSlug": "lume-daily-glow-coach",
     "icon": "L",
+    "placeholder": false
+  },
+  {
+    "name": "LaunchNeat",
+    "tagline": "A small business: real websites for local shops. $99 the first year, $50 after that, domain and a year of care included.",
+    "platforms": [
+      "Web"
+    ],
+    "stack": [
+      "Astro",
+      "Static site",
+      "15 demo sites"
+    ],
+    "client": "Own business",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://launchneat.com",
+    "status": "Live",
+    "projectSlug": "launchneat-local-business-websites",
+    "icon": "LN",
     "placeholder": false
   }
 ]
