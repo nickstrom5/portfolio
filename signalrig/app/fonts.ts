@@ -1,6 +1,5 @@
 import localFont from "next/font/local";
 import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 
 /**
  * Display face. Bricolage Grotesque ships with the @fontsource package so the
@@ -14,4 +13,17 @@ export const display = localFont({
 });
 
 export const sans = GeistSans;
-export const mono = GeistMono;
+
+/**
+ * Mono is used for small labels and logs only, so it is not preloaded; that
+ * keeps ~70 KB off the critical path before the hero text paints.
+ */
+export const mono = localFont({
+  src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+});

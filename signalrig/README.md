@@ -95,6 +95,17 @@ samples with real client data, remove the `demo-tag` badges in
 `components/ui/DemoFrame.tsx` and the disclaimer in `components/site/Footer.tsx`
 only once you have permission to show it.
 
+## Search engines
+
+- `data/site.json` → `seo.googleSiteVerification`: paste the token from
+  Google Search Console's "HTML tag" method (only the content value, not the
+  whole tag) and redeploy. Leave it empty to render no tag.
+- `seo.updated` is the sitemap's `lastmod`; bump it when the content changes.
+- Structured data (WebSite, WebPage, SoftwareSourceCode, Person) is rendered
+  by `components/site/StructuredData.tsx` from `site.json`.
+- Canonical URL, Open Graph image, robots, sitemap, manifest and Apple icon
+  are all generated from `app/` route files and `site.json`.
+
 ## Accessibility and motion
 
 - All interactive demo controls are native buttons, inputs and switches with

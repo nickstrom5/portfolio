@@ -35,7 +35,13 @@ const contacts = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content={`${site.name} · Résumé`} />
+    <meta property="og:description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />

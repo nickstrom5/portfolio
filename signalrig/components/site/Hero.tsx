@@ -18,7 +18,7 @@ export function Hero() {
           GTM systems that <span className="text-accent-ink">compound.</span>
         </h1>
         <p className="mt-6 max-w-2xl text-[1.1rem] leading-relaxed text-ink-2 md:text-[1.25rem]">
-          We build the pipeline that replaces manual SDR and RevOps volume: enrichment, scoring, routing, outbound, signals and reporting, wired together and
+          GTM engineering, delivered as working systems. We build the pipeline that replaces manual SDR and RevOps volume: enrichment, scoring, routing, outbound, signals and reporting, wired together and
           measurable. Every system below is a working demo, not a slide.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
