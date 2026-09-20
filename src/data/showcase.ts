@@ -9,6 +9,8 @@ export type Screen =
   | 'lume-scan'
   | 'lume-score'
   | 'lume-ritual'
+  | 'goodwalk-home'
+  | 'goodwalk-reminder'
   | 'image';
 
 export interface Feature {
@@ -31,7 +33,7 @@ export interface Prompt {
 }
 
 export interface Project {
-  id: 'clam' | 'lume' | 'launchneat' | 'site';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -43,6 +45,8 @@ export interface Project {
   fgDark?: string;
   /** 'light' tiles and heroes use dark text on a light background. */
   tone?: 'light' | 'dark';
+  /** Shown as a non-clickable “Coming soon” tile with no story. */
+  comingSoon?: boolean;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
@@ -110,57 +114,58 @@ export const projects: Project[] = [
     caseStudy: 'clam-focus-blocker',
   },
   {
-    id: 'lume',
-    name: 'Lume',
-    kicker: 'iPhone app · daily glow coach',
-    tileBlurb: 'One photo. A glow score. Sixty seconds.',
-    bg: 'linear-gradient(135deg, #1a1916 0%, #0e0e0c 60%, #2a2620 100%)',
-    fg: '#e8e4db',
+    id: 'goodwalk',
+    name: 'Good Walk',
+    kicker: 'iPhone app · dog walk tracker',
+    tileBlurb: 'Your dog needs a walk every day. Good Walk makes it a streak.',
+    bg: 'linear-gradient(135deg, #fbeadb 0%, #faf6ee 55%, #f6dfc8 100%)',
+    fg: '#c2410c',
+    bgDark: 'linear-gradient(135deg, #3a1f0e 0%, #12161f 55%, #35200f 100%)',
+    fgDark: '#f3a05f',
+    tone: 'light',
     hero: {
-      title: 'The camera already knows. You just haven’t asked it.',
-      sub: 'Take one photo in the same light each morning, get a score for glow, evenness, texture and calm, and do a sixty-second ritual. The picture is processed on the phone and never uploaded.',
-      screen: 'lume-score',
+      title: 'Every dog deserves a good walk.',
+      sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. Launching on the App Store for Walk Your Dog Week, 1 to 7 October.',
+      screen: 'goodwalk-home',
     },
     siteShot: {
-      desktop: '/showcase/lume-site.jpg',
-      mobile: '/showcase/lume-site-mobile.jpg',
-      caption: 'lumenow.app. The serif headline, the pricing and the “not a medical device” framing all came out of the same working sessions.',
-      url: 'https://lumenow.app',
+      desktop: '/showcase/goodwalk-site-mobile.jpg',
+      mobile: '/showcase/goodwalk-site-mobile.jpg',
+      caption: 'getgoodwalk.app, previewed before launch: a landing page with how it works, pricing and an FAQ, three dog-walking guides, and privacy and terms pages.',
+      url: 'https://getgoodwalk.app',
     },
     features: [
       {
-        eyebrow: 'The scan',
-        title: 'Same window. Same hour.',
-        body: 'Consistency beats precision. Lume guides you to the same light every morning so the trend line means something, and it reads the photo on device.',
-        screen: 'lume-scan',
+        eyebrow: 'One tap from the reminder',
+        title: 'Answer from the lock screen.',
+        body: 'The whole app is one question a day: has your dog had a walk? A reminder lands at the time you pick and “Walked” is right there on the notification. Tap it and the streak carries on. Miss it and the app says so, kindly.',
+        screen: 'goodwalk-reminder',
       },
       {
-        eyebrow: 'The ritual',
-        title: 'Rinse. Press. Seal. SPF.',
-        body: 'Four steps, fifteen seconds each, morning and evening. On iPhone Duo the face stays on one screen and the ritual on the other, like a book.',
-        screen: 'lume-ritual',
+        eyebrow: 'The website',
+        title: 'Guides that earn the install.',
+        body: 'The landing site was built alongside the app: how it works, pricing, an FAQ, and three guides on how long and how often to walk a dog. They exist so the app is found by people searching for the answer, not the app.',
+        screen: 'image',
+        image: '/showcase/goodwalk-site-mobile.jpg',
         flip: true,
       },
     ],
     split: {
       ai: 95,
-      aiLabel: 'Claude & Grok',
+      aiLabel: 'Claude Code',
       meLabel: 'Nick',
-      aiDid: 'Positioning against the skincare and glow-up apps, the scoring model, capture flow, trend view, share cards, StoreKit 2 trial, marketing site, App Store listing and social kit.',
-      meDid: 'The constraint that photos never leave the phone, the sixty-second limit, the Duo layout call, device testing and the decision to launch after Clam.',
+      aiDid: 'App concept write-up, screens, streak and reminder logic, the landing site with its guides, FAQ, privacy and terms pages, and a local preview server to review it all.',
+      meDid: 'The idea, the “no collar, no map, no account” rule, the launch date tied to Walk Your Dog Week, the domain, and every yes or no along the way.',
     },
     steps: [
-      { title: 'Find the gap', ai: 'Mapped the category: diagnosis apps on one side, shops on the other.', me: 'Picked “coach with a camera” and said no to anything medical.' },
-      { title: 'Write the product', ai: 'Screens, copy, pricing and the not-a-medical-device language.', me: 'Approved the flow and the sixty-second ceiling.' },
-      { title: 'Generate the app', ai: 'SwiftUI capture, on-device scoring, ritual timer, StoreKit 2.', me: 'Tested scans on a real phone in real light.' },
-      { title: 'Prepare the launch', ai: 'Listing, keywords, promo text, landing page, social handles plan.', me: 'Registered lumenow.app and lined up the accounts.' },
+      { title: 'Pick the idea', ai: 'Turned one sentence into a concept: a daily walk streak for your dog, nothing else.', me: '“A dog walk tracker. Keep it simple.”' },
+      { title: 'Design the loop', ai: 'Worked out the reminder, the one-tap answer and what the streak screen shows.', me: 'Insisted on no collar, no map and no account.' },
+      { title: 'Build the site first', ai: 'Wrote the landing page, three guides, FAQ, privacy and terms, then served a preview from the Mac.', me: 'Reviewed it in the browser pane and bought getgoodwalk.app.' },
+      { title: 'Ship for the week', ai: 'Prepares the App Store listing and the launch checklist.', me: 'Launch target: Walk Your Dog Week, 1 to 7 October.' },
     ],
-    links: [
-      { label: 'lumenow.app', href: 'https://lumenow.app', primary: true },
-      { label: 'Site source on GitHub', href: 'https://github.com/nickstrom5/lume' },
-    ],
-    status: 'In development · App Store link goes live with the listing',
-    caseStudy: 'lume-daily-glow-coach',
+    links: [],
+    status: 'In development · App Store launch planned for 1 to 7 October 2026',
+    caseStudy: 'goodwalk-dog-walk-tracker',
   },
   {
     id: 'launchneat',
@@ -306,16 +311,71 @@ export const projects: Project[] = [
       { said: 'Remove the grill brush hanging behind me in the profile pic.', did: 'Masked the brush and its shadow, filled the gap with brick cloned from the wall beside it, and refreshed the social image.' },
       { said: 'Can we add LaunchNeat to my AI/Apps section? Small business I’ve created.', did: 'Cloned the LaunchNeat repos, rendered its home, examples and a demo site for the laptop frames, and wrote the fourth story.' },
       { said: 'AI/Projects instead of AI/Apps.', did: 'Renamed the tab, the page and every link to it.' },
+      { said: 'Can we add the Good Walk app to the AI/Projects tab? Lume can say coming soon and not link out.', did: 'Built two phone mockups for Good Walk, wrote its story from the preview site, and turned Lume into a quiet “coming soon” tile on the second row.' },
     ],
     promptStats: [
-      { value: '~75', label: 'Messages from Nick' },
-      { value: '21', label: 'Screenshots' },
-      { value: '41', label: 'Commits' },
+      { value: '~80', label: 'Messages from Nick' },
+      { value: '22', label: 'Screenshots' },
+      { value: '43', label: 'Commits' },
       { value: '97%', label: 'Written by Claude Code' },
     ],
     links: [
       { label: 'You’re on it', href: '/', primary: true },
     ],
     status: 'Live · updated by prompt',
+  },
+  {
+    id: 'lume',
+    name: 'Lume',
+    comingSoon: true,
+    kicker: 'iPhone app · daily glow coach',
+    tileBlurb: 'One photo. A glow score. Sixty seconds.',
+    bg: 'linear-gradient(135deg, #1a1916 0%, #0e0e0c 60%, #2a2620 100%)',
+    fg: '#e8e4db',
+    hero: {
+      title: 'The camera already knows. You just haven’t asked it.',
+      sub: 'Take one photo in the same light each morning, get a score for glow, evenness, texture and calm, and do a sixty-second ritual. The picture is processed on the phone and never uploaded.',
+      screen: 'lume-score',
+    },
+    siteShot: {
+      desktop: '/showcase/lume-site.jpg',
+      mobile: '/showcase/lume-site-mobile.jpg',
+      caption: 'lumenow.app. The serif headline, the pricing and the “not a medical device” framing all came out of the same working sessions.',
+      url: 'https://lumenow.app',
+    },
+    features: [
+      {
+        eyebrow: 'The scan',
+        title: 'Same window. Same hour.',
+        body: 'Consistency beats precision. Lume guides you to the same light every morning so the trend line means something, and it reads the photo on device.',
+        screen: 'lume-scan',
+      },
+      {
+        eyebrow: 'The ritual',
+        title: 'Rinse. Press. Seal. SPF.',
+        body: 'Four steps, fifteen seconds each, morning and evening. On iPhone Duo the face stays on one screen and the ritual on the other, like a book.',
+        screen: 'lume-ritual',
+        flip: true,
+      },
+    ],
+    split: {
+      ai: 95,
+      aiLabel: 'Claude & Grok',
+      meLabel: 'Nick',
+      aiDid: 'Positioning against the skincare and glow-up apps, the scoring model, capture flow, trend view, share cards, StoreKit 2 trial, marketing site, App Store listing and social kit.',
+      meDid: 'The constraint that photos never leave the phone, the sixty-second limit, the Duo layout call, device testing and the decision to launch after Clam.',
+    },
+    steps: [
+      { title: 'Find the gap', ai: 'Mapped the category: diagnosis apps on one side, shops on the other.', me: 'Picked “coach with a camera” and said no to anything medical.' },
+      { title: 'Write the product', ai: 'Screens, copy, pricing and the not-a-medical-device language.', me: 'Approved the flow and the sixty-second ceiling.' },
+      { title: 'Generate the app', ai: 'SwiftUI capture, on-device scoring, ritual timer, StoreKit 2.', me: 'Tested scans on a real phone in real light.' },
+      { title: 'Prepare the launch', ai: 'Listing, keywords, promo text, landing page, social handles plan.', me: 'Registered lumenow.app and lined up the accounts.' },
+    ],
+    links: [
+      { label: 'lumenow.app', href: 'https://lumenow.app', primary: true },
+      { label: 'Site source on GitHub', href: 'https://github.com/nickstrom5/lume' },
+    ],
+    status: 'In development · App Store link goes live with the listing',
+    caseStudy: 'lume-daily-glow-coach',
   },
 ];

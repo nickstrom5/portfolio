@@ -12,6 +12,8 @@ interface Props {
     | 'lume-scan'
     | 'lume-score'
     | 'lume-ritual'
+    | 'goodwalk-home'
+    | 'goodwalk-reminder'
     | 'image';
   image?: string;
   alt?: string;
@@ -108,6 +110,35 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
           <li><span>SPF</span><b>15s</b></li>
         </ol>
         <p class="hint">Sixty seconds. Then you're done.</p>
+      </div>
+    )}
+
+    {screen === 'goodwalk-home' && (
+      <div class="ui gw-ui">
+        <div class="status"><span>5:31</span><span>●●●</span></div>
+        <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
+        <div class="center">
+          <div class="dog" aria-hidden="true">🐕</div>
+          <div class="h4">Rex walked today.</div>
+          <p>14-day streak. 2 walks this week so far.</p>
+        </div>
+        <div class="chips gw-chips"><span>Mon ✓</span><span>Tue ✓</span><span class="on">Wed ✓</span><span>Thu</span></div>
+        <button class="big gw-big" type="button" tabindex="-1">Log a walk</button>
+        <p class="hint gw-hint">One walk a day keeps the streak.</p>
+      </div>
+    )}
+
+    {screen === 'goodwalk-reminder' && (
+      <div class="ui lock gw-lock">
+        <div class="status"><span>●●●</span><span>🔒</span></div>
+        <div class="clock"><span class="date">Sunday, October 4</span><span class="time">5:30</span></div>
+        <div class="notif">
+          <div class="notif-head"><span>🐾 Good Walk</span><span>now</span></div>
+          <strong>Has Rex had a walk today?</strong>
+          <span>One tap keeps the streak.</span>
+          <button class="walked" type="button" tabindex="-1">Walked ✓</button>
+        </div>
+        <p class="hint">A reminder at the time you pick, answered from the lock screen.</p>
       </div>
     )}
   </div>
@@ -470,5 +501,79 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     height: 3.4em;
     display: block;
     margin: 0 auto;
+  }
+  .screen.goodwalk {
+    background: #faf6ee;
+    color: #1f1a14;
+  }
+  .gw-brand {
+    color: #1f1a14;
+  }
+  .gw-streak {
+    color: #c2410c;
+  }
+  .dog {
+    width: 3.4em;
+    height: 3.4em;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.6em;
+    background: #f5dcc4;
+    margin-bottom: 0.3em;
+  }
+  .gw-chips span {
+    background: #f1e9db;
+    color: #5a4a3a;
+  }
+  .gw-chips .on {
+    background: #c2410c;
+    color: #fff;
+  }
+  .gw-big {
+    background: #c2410c;
+    color: #fff;
+  }
+  .gw-hint {
+    opacity: 0.55;
+  }
+  .gw-lock {
+    background: linear-gradient(180deg, #3b2a1e, #15100c);
+    color: #fff;
+  }
+  .notif {
+    margin-top: calc(var(--w) * 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+    background: rgb(255 255 255 / 0.92);
+    color: #1f1a14;
+    border-radius: 1.1em;
+    padding: 0.85em;
+    font-size: 0.9em;
+  }
+  .notif-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95em;
+    opacity: 0.7;
+    margin-bottom: 0.2em;
+  }
+  .notif strong {
+    font-size: 1.05em;
+  }
+  .notif > span {
+    opacity: 0.75;
+  }
+  .walked {
+    margin-top: 0.5em;
+    align-self: flex-end;
+    padding: 0.5em 0.9em;
+    border: 0;
+    border-radius: 999px;
+    background: #c2410c;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
   }
 </style>

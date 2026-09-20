@@ -16,7 +16,7 @@ placeholder: false
 
 ## An AI experiment
 
-Lume is the second of two apps built to test how much of a product AI can produce when a human directs it. About 95 percent of the strategy, screens, Swift code and launch kit came from Claude and Grok; I set the constraints, tested on device and decided what shipped. The full process is on the [Apps page](/apps/#lume).
+Lume is the second of two apps built to test how much of a product AI can produce when a human directs it. About 95 percent of the strategy, screens, Swift code and launch kit came from Claude and Grok; I set the constraints, tested on device and decided what shipped. Lume is coming soon; the process is on the [AI/Projects page](/apps/).
 
 ## The idea
 
