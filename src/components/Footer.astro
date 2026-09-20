@@ -1,5 +1,5 @@
 ---
-import { site, nav } from '@/data/site';
+import { site, footerNav } from '@/data/site';
 import { url } from '@/lib/url';
 
 const year = new Date().getFullYear();
@@ -19,7 +19,7 @@ const social = [
     </div>
     <nav aria-label="Footer">
       <ul>
-        {nav.map((item) => (
+        {footerNav.map((item) => (
           <li><a href={url(item.href)}>{item.label}</a></li>
         ))}
       </ul>
