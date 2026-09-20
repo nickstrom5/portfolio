@@ -37,15 +37,15 @@ const contacts = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="profile" />
-    <meta property="og:title" content={`${site.name} · Résumé`} />
-    <meta property="og:description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
+    <meta property="og:title" content={`${site.name} · Resume`} />
+    <meta property="og:description" content={`Resume of ${site.name}, ${site.role.toLowerCase()}.`} />
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
+    <meta name="description" content={`Resume of ${site.name}, ${site.role.toLowerCase()}.`} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
-    <title>{site.name} · Résumé</title>
+    <title>{site.name} · Resume</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -576,7 +576,7 @@ const contacts = [
     </style>
   </head>
   <body>
-    <a class="skip web-only" href="#resume">Skip to résumé</a>
+    <a class="skip web-only" href="#resume">Skip to resume</a>
     <div class="chrome web-only">
       <a class="back" href={url('/')}>Back to site</a>
       <a class="btn" href={url(site.resumePdf)} download>Download PDF</a>

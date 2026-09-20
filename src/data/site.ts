@@ -15,7 +15,7 @@ export const site = {
   /** Replace with your real profile URLs. */
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
-    linkedin: 'https://www.linkedin.com/in/nick-s-0a0a29bb',
+    linkedin: 'http://linkedin.com/in/nick-soderstrom',
     github: 'https://github.com/nickstrom5',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
@@ -40,10 +40,13 @@ export const site = {
   contactEndpoint: 'https://formspree.io/f/xvkggbvq',
 } as const;
 
-export const nav = [
+export const footerNav = [
   { href: '/work', label: 'Work' },
   { href: '/clients', label: 'Clients' },
   { href: '/apps', label: 'AI/Projects' },
-  { href: '/resume', label: 'Résumé' },
+  { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;
+
+/** Header/nav only. Resume stays in the footer, not the top nav. */
+export const nav = footerNav.filter((item) => item.href !== '/resume');
