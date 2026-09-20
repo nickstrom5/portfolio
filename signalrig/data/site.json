@@ -1,14 +1,20 @@
 {
   "name": "SignalRig",
   "tagline": "GTM systems that compound.",
-  "description": "SignalRig builds GTM engineering systems for B2B companies: enrichment, scoring, routing, outbound, signal detection and reporting that replace manual SDR and RevOps volume.",
+  "description": "GTM engineering for B2B teams: enrichment, scoring, reply routing, signal detection and reporting, shown as working demos. Built by Nick Soderstrom.",
   "url": "https://signalrig.dev",
   "owner": {
     "name": "Nick Soderstrom",
     "location": "Chicago",
     "site": "https://work-with-nick.com",
     "siteLabel": "work-with-nick.com",
-    "email": "hello@work-with-nick.com"
+    "email": "hello@work-with-nick.com",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/nick-s-0a0a29bb",
+      "github": "https://github.com/nickstrom5",
+      "upwork": "https://www.upwork.com/freelancers/~01f494a703078d9515"
+    },
+    "jobTitle": "GTM engineer and operations lead"
   },
   "cta": {
     "primary": {
@@ -45,5 +51,10 @@
       "id": "about",
       "label": "About this site"
     }
-  ]
+  ],
+  "seo": {
+    "updated": "2026-09-20",
+    "googleSiteVerification": "",
+    "sourceUrl": "https://github.com/nickstrom5/portfolio/tree/main/signalrig"
+  }
 }
