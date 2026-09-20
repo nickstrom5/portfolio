@@ -122,7 +122,8 @@ export function SignalsDemo() {
               </button>
             )}
           </div>
-          <ul className="p-5 md:p-6" role="tabpanel" aria-label={`${activeFeed.label} items`}>
+          <div role="tabpanel" aria-label={`${activeFeed.label} items`}>
+          <ul className="p-5 md:p-6">
             {scanning
               ? Array.from({ length: 4 }).map((_, i) => (
                   <li key={i} className="mb-2 flex items-center gap-3 rounded-[8px] border border-line p-3">
@@ -154,6 +155,7 @@ export function SignalsDemo() {
                 ))}
             {!scanning && visible.length === 0 && <li className="text-[0.8rem] text-ink-3">Nothing from {selectedAccount} in this feed.</li>}
           </ul>
+          </div>
         </div>
 
         <div className="p-5 md:p-6">

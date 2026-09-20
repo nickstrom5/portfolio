@@ -105,7 +105,7 @@ export function ReportingDemo() {
           <div className="border-b border-line p-5 md:p-6 lg:border-r lg:border-b-0">
             <h4 className="mb-1 text-[0.8rem] font-medium uppercase tracking-[0.1em] text-ink-3">Segment × persona</h4>
             <p className="mb-4 text-[0.8rem] text-ink-2">{METRICS.find((m) => m.id === metric)?.label}. Darker is lower; the two bright cells are the whole program.</p>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} aria-label="Segment by persona table, scrolls horizontally on small screens">
               <table className="w-full min-w-[420px] border-separate border-spacing-[2px] text-[0.78rem]">
                 <caption className="sr-only">
                   {METRICS.find((m) => m.id === metric)?.label} by segment and persona
