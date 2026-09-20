@@ -14,6 +14,7 @@ interface Props {
     | 'lume-ritual'
     | 'goodwalk-home'
     | 'goodwalk-reminder'
+    | 'goodwalk-photo'
     | 'image';
   image?: string;
   alt?: string;
@@ -118,7 +119,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <div class="dog" aria-hidden="true">🐕</div>
+          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
@@ -139,6 +140,28 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
           <button class="walked" type="button" tabindex="-1">Walked ✓</button>
         </div>
         <p class="hint">A reminder at the time you pick, answered from the lock screen.</p>
+      </div>
+    )}
+
+    {screen === 'goodwalk-photo' && (
+      <div class="ui gw-ui">
+        <div class="status"><span>5:32</span><span>●●●</span></div>
+        <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
+        <div class="gw-card">
+          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" />
+          <div class="gw-card-body">
+            <strong>Rex</strong>
+            <span>14 days in a row · 41 walks total</span>
+          </div>
+        </div>
+        <div class="gw-month">
+          <div class="gw-month-head"><span>October</span><span>12 / 14 days</span></div>
+          <div class="gw-grid" aria-hidden="true">
+            {[1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0].map((d, i) => <span class:list={[{ on: d === 1 && i < 14, miss: d === 0 && i < 14 }]} />)}
+          </div>
+        </div>
+        <button class="big gw-big" type="button" tabindex="-1">Share this week</button>
+        <p class="hint gw-hint">Your dog’s face on every screen, card and share.</p>
       </div>
     )}
   </div>
@@ -575,5 +598,74 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     color: #fff;
     font: inherit;
     font-weight: 700;
+  }
+  .screen .ui .dog {
+    width: 3.6em;
+    height: 3.6em;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 0.18em #f5dcc4;
+    margin-bottom: 0.4em;
+    display: block;
+  }
+  .gw-card {
+    flex: none;
+    margin-top: calc(var(--w) * 0.03);
+    border-radius: 1.1em;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 6px 20px -12px rgb(0 0 0 / 0.35);
+  }
+  .screen .ui .gw-photo {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 0.72;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    border-radius: 0;
+  }
+  .gw-card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0.7em 0.9em 0.8em;
+    gap: 0.1em;
+  }
+  .gw-card-body strong {
+    font-size: 1.15em;
+  }
+  .gw-card-body span {
+    font-size: 0.85em;
+    opacity: 0.65;
+  }
+  .gw-month {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    justify-content: center;
+  }
+  .gw-month-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    font-weight: 700;
+    opacity: 0.8;
+  }
+  .gw-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.35em;
+  }
+  .gw-grid span {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #f1e9db;
+  }
+  .gw-grid span.on {
+    background: #c2410c;
+  }
+  .gw-grid span.miss {
+    background: #e6d3c2;
   }
 </style>

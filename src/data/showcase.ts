@@ -11,6 +11,7 @@ export type Screen =
   | 'lume-ritual'
   | 'goodwalk-home'
   | 'goodwalk-reminder'
+  | 'goodwalk-photo'
   | 'image';
 
 export interface Feature {
@@ -145,7 +146,7 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/goodwalk-site.jpg',
-      mobile: '/showcase/goodwalk-site-mobile.jpg',
+      mobile: '/showcase/goodwalk-site.jpg',
       caption: 'getgoodwalk.app, live: a landing page with how it works, pricing and an FAQ, three dog-walking guides, a support page, and privacy and terms. Served from GitHub Pages.',
       url: 'https://getgoodwalk.app',
     },
@@ -157,11 +158,10 @@ export const projects: Project[] = [
         screen: 'goodwalk-reminder',
       },
       {
-        eyebrow: 'The website',
-        title: 'Guides that earn the install.',
-        body: 'The landing site was built alongside the app: how it works, pricing, an FAQ, and three guides on how long and how often to walk a dog. They exist so the app is found by people searching for the answer, not the app.',
-        screen: 'image',
-        image: '/showcase/goodwalk-site-mobile.jpg',
+        eyebrow: 'Their photo on everything',
+        title: 'Your dog is the whole interface.',
+        body: 'You add one photo when you set up the app. From then on it is on the home screen, the streak cards, the month view and anything you share. No collar, no map, no account. Just your dog and the days you walked.',
+        screen: 'goodwalk-photo',
         flip: true,
       },
     ],
