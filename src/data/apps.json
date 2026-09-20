@@ -83,5 +83,27 @@
     "projectSlug": "lume-daily-glow-coach",
     "icon": "L",
     "placeholder": false
+  },
+  {
+    "name": "SignalRig",
+    "tagline": "A GTM engineering showcase: five working demos of enrichment, scoring, routing, signal detection and reporting, plus a prompt lab.",
+    "platforms": [
+      "Web"
+    ],
+    "stack": [
+      "Next.js 16",
+      "TypeScript",
+      "Tailwind v4",
+      "Vercel"
+    ],
+    "client": "Own showcase",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://signalrig.dev",
+    "status": "Live",
+    "projectSlug": "signalrig-gtm-engineering-showcase",
+    "icon": "SR",
+    "placeholder": false
   }
 ]
