@@ -1,0 +1,33 @@
+---
+import Layout from '@/layouts/Base.astro';
+import GlobeStage from '@/components/GlobeStage.astro';
+import { url } from '@/lib/url';
+import { shows, nextShow, shortPlace, longDate } from '@/data/tour';
+---
+
+<Layout
+  title="Page Not Found"
+  description="That page is not part of this archive. Here is the way back to all twenty dates of the 2026 Ye Live Concert Tour."
+>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"><GlobeStage lines={12} speed={34} rig={false} uid="nf" /></div>
+    <div class="hero-fade" aria-hidden="true"></div>
+    <div class="wrap hero-in">
+      <p class="eyebrow">404 {'·'} Off the itinerary</p>
+      <h1 class="wordmark" style="font-size:clamp(70px,22vw,240px)">
+        404
+        <small>THIS DATE IS NOT ON THE TOUR</small>
+      </h1>
+      <p class="hero-sub">
+        Nothing lives at that address. All {shows.length} announced dates are one click away, and the
+        archive is the same as it ever was.
+      </p>
+      <div class="hero-cta">
+        <a class="btn-ye solid" href={url('/')}>All dates</a>
+        {nextShow && <a class="btn-ye" href={url(`/shows/${nextShow.slug}/`)}>Next show {'—'} {shortPlace(nextShow)}</a>}
+        <a class="btn-ye" href={url('/globe/')}>The globe</a>
+      </div>
+      {nextShow && <p class="eyebrow" style="margin-top:26px">Next up {'·'} {longDate(nextShow.date).toUpperCase()}</p>}
+    </div>
+  </section>
+</Layout>

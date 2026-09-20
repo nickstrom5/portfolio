@@ -1,0 +1,229 @@
+---
+import Layout from '@/layouts/Base.astro';
+import { url } from '@/lib/url';
+import { andre, andreTimeline, lineage, talkBox, andreSources } from '@/data/andre';
+import { shows, song } from '@/data/tour';
+
+const withAndre = shows.filter((s) => s.guests.includes('André Troutman'));
+const allTheLove = song('all-the-love');
+
+const jsonLd = [
+  {
+    '@type': 'Person',
+    name: 'André Troutman',
+    jobTitle: andre.role,
+    homeLocation: { '@type': 'Place', name: andre.base },
+    knowsAbout: ['Talk box', 'Funk', 'Music direction'],
+    relatedTo: { '@type': 'Person', name: 'Roger Troutman', sameAs: 'https://en.wikipedia.org/wiki/Roger_Troutman' },
+    sameAs: ['https://en.wikipedia.org/wiki/Andr%C3%A9_Troutman'],
+  },
+];
+---
+
+<Layout
+  title="André Troutman"
+  description="The talk box at the front of Ye's 2026 stadium tour: André Troutman, music director, BULLY collaborator, and the Troutman family's next keeper of Roger's instrument."
+  accent="#f0821e"
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <section class="show-hero">
+    <div class="wrap show-hero-in">
+      <div>
+        <div class="show-crumb">
+          <a href={url('/')}>All dates</a>
+          <span aria-hidden="true">/</span>
+          <span>The band</span>
+        </div>
+        <h1 class="show-title" style="font-size:clamp(44px,9.5vw,104px)">
+          André Troutman
+          <span>MUSIC DIRECTOR {'·'} TALK BOX {'·'} BULLY</span>
+        </h1>
+        <p class="show-headline">
+          A funk instrument from 1973, a family name from Hamilton, Ohio, and the one sound on the 2026
+          stage that a 50-foot screen cannot produce.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">The short version</div>
+        <dl style="display:grid;gap:14px;margin:0">
+          <div><dt style="font-family:var(--ye-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ye-dust)">Role</dt><dd style="margin:5px 0 0;font-size:15px">{andre.role}</dd></div>
+          <div><dt style="font-family:var(--ye-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ye-dust)">Based</dt><dd style="margin:5px 0 0;font-size:15px">{andre.base}</dd></div>
+          <div><dt style="font-family:var(--ye-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ye-dust)">Joined Ye</dt><dd style="margin:5px 0 0;font-size:15px">{andre.joined}</dd></div>
+          <div><dt style="font-family:var(--ye-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ye-dust)">Live debut</dt><dd style="margin:5px 0 0;font-size:15px">{andre.debut}</dd></div>
+          <div><dt style="font-family:var(--ye-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ye-dust)">Family</dt><dd style="margin:5px 0 0;font-size:15px">{andre.relation}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">01 {'—'} The instrument</span>
+          <h2>What a talk box actually is</h2>
+        </div>
+        <p>
+          People call it a vocoder and people call it Auto-Tune. It is neither, and the difference is the
+          whole reason it still works in a stadium in 2026.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <ul class="bullets">
+            {
+              talkBox.map((f) => (
+                <li style="padding:16px 0 16px 26px">
+                  <strong style="display:block;font-family:var(--ye-display);font-size:17px;color:var(--ye-bone);margin-bottom:6px">{f.term}</strong>
+                  {f.body}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div style="display:grid;gap:18px;align-content:start">
+          <figure class="plate" style="margin:0">
+            <svg viewBox="0 0 400 300" role="img" aria-label="Diagram of a talk box: an amplifier drives a speaker in a sealed box, the sound travels up a plastic tube into the player's mouth, and a microphone picks up the shaped result.">
+              <rect width="400" height="300" fill="#0a0b0d" />
+              <g fill="none" stroke="var(--ye-accent)" stroke-width="1.4">
+                <rect x="28" y="196" width="96" height="62" stroke-opacity="0.85" />
+                <circle cx="76" cy="227" r="20" stroke-opacity="0.6" />
+                <circle cx="76" cy="227" r="9" stroke-opacity="0.4" />
+                <path d="M124 214 C 190 214, 214 150, 228 108" stroke-opacity="0.9" stroke-width="3" />
+                <path d="M132 224 C 196 224, 220 156, 234 114" stroke-opacity="0.3" />
+                <circle cx="256" cy="96" r="38" stroke-opacity="0.75" />
+                <path d="M232 104 q24 16 48 0" stroke-opacity="0.7" />
+                <path d="M318 96 v-28 m0 28 v28" stroke-opacity="0.5" />
+                <circle cx="318" cy="96" r="13" stroke-opacity="0.85" />
+                <path d="M318 109 v52 h-24" stroke-opacity="0.5" />
+              </g>
+              <g font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="1.6" fill="#8d949c">
+                <text x="28" y="282">1 DRIVER</text>
+                <text x="148" y="186">2 TUBE</text>
+                <text x="206" y="162">3 MOUTH</text>
+                <text x="288" y="196">4 MIC</text>
+              </g>
+            </svg>
+            <figcaption>Signal path · drawn, not photographed</figcaption>
+          </figure>
+          <div class="notice">
+            <div>
+              <b>Why it is always live</b>
+              The filtering happens inside a human mouth. There is no plug-in for it, no way to print it
+              convincingly in advance, and no way to fake it onstage. If you hear it, someone is doing it.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">02 {'—'} The family</span>
+          <h2>Hamilton, Ohio</h2>
+        </div>
+        <p>You do not get to André without Roger, and you do not get modern rap without Roger either.</p>
+      </div>
+      <div class="date-grid">
+        {
+          lineage.map((a) => (
+            <article class="box reveal" style="min-height:0">
+              <div class="box-top"><span>{a.life}</span></div>
+              <h3 style="margin-top:16px;font-size:clamp(24px,3vw,30px)">{a.name}</h3>
+              <p class="box-venue" style="margin-top:14px">{a.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">03 {'—'} The route in</span>
+          <h2>Reunion to stadium in a year</h2>
+        </div>
+        <p>From a Sunday service at a family reunion to music director of the biggest tour of 2026.</p>
+      </div>
+      <ul class="bullets">
+        {
+          andreTimeline.map((b) => (
+            <li style="padding:18px 0 18px 26px">
+              <span style="display:block;font-family:var(--ye-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ye-accent);margin-bottom:7px">{b.when}</span>
+              <strong style="display:block;font-family:var(--ye-display);font-size:18px;color:var(--ye-bone);margin-bottom:6px">{b.title}</strong>
+              {b.body}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap two-col">
+      <div>
+        <span class="rule-num">04 {'—'} On the record</span>
+        <h2 style="font-size:clamp(28px,4.4vw,46px)">"{allTheLove.title}"</h2>
+        <div class="prose" style="margin-top:20px">
+          <p>
+            The BULLY track credited to Ye and André Troutman, and the one the talk box exists on the tour
+            to play. It has turned up on nearly every date of 2026, and it is the reason his name appears
+            in the guest list of shows where no other guest is named at all.
+          </p>
+          <p>
+            There is a neatness to it that is hard to miss. Roger Troutman's voice reached most people
+            through a sample. His cousin's reaches 118,000 people at a time, in the room, through a tube.
+          </p>
+        </div>
+        <div class="hero-cta" style="justify-content:flex-start;margin-top:26px">
+          <a class="btn-ye" href={url('/bully/')}>BULLY</a>
+          <a class="btn-ye" href={url('/globe/')}>The globe</a>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Dates where he is named in the guest list {'·'} {withAndre.length}</div>
+        <ul class="bullets">
+          {
+            withAndre.map((s) => (
+              <li>
+                <a href={url(`/shows/${s.slug}/`)} style="color:var(--ye-bone)">{s.city} {'—'} {s.venue}</a>
+              </li>
+            ))
+          }
+        </ul>
+        <p style="margin:16px 0 0;font-size:13px;color:var(--ye-dust);line-height:1.6">
+          He has played far more than three. These are the nights where reporting names him specifically.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">05 {'—'} Provenance</span>
+          <h2>Sources</h2>
+        </div>
+        <p>Every claim on this page traces back to one of these.</p>
+      </div>
+      <ul class="srcs">
+        {andreSources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/globe/')}><span>{'←'} Back</span><b>The globe</b><i>The stage he stands in front of</i></a>
+    <a class="next" href={url('/donda/')}><span>Next {'→'}</span><b>Donda</b><i>The professor everything is named for</i></a>
+  </nav>
+</Layout>

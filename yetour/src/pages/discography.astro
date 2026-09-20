@@ -1,0 +1,558 @@
+---
+import Layout from '@/layouts/Base.astro';
+import AlbumMark from '@/components/AlbumMark.astro';
+import { url } from '@/lib/url';
+import { records, defaultRecord, spotifyEmbed, spotifySearch, type Record_ } from '@/data/discography';
+import { referenceSet, song, songLedger } from '@/data/tour';
+
+/** Songs from this record that the 2026 show is known to touch. */
+const inReference = new Set(referenceSet.flatMap((a) => a.songs));
+const reportedIds = new Set(songLedger().map((l) => l.song.id));
+const liveSongs = (r: Record_) =>
+  r.setKey
+    ? [...new Set([...inReference, ...reportedIds])]
+        .map((id) => song(id))
+        .filter((t) => t.album === r.setKey)
+        .map((t) => t.title)
+    : [];
+
+const solo = records.filter((r) => r.kind === 'solo');
+const collab = records.filter((r) => r.kind === 'collab');
+const playable = records.filter((r) => r.spotifyId).length;
+
+const jsonLd = [
+  {
+    '@type': 'ItemList',
+    name: 'Ye — studio discography',
+    numberOfItems: records.length,
+    itemListElement: records.map((r, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'MusicAlbum',
+        name: r.title,
+        byArtist: { '@type': 'MusicGroup', name: r.billed ?? 'Ye' },
+        datePublished: String(r.year),
+        numTracks: r.tracks,
+        recordLabel: { '@type': 'Organization', name: r.label },
+        ...(r.spotifyId ? { sameAs: [`https://open.spotify.com/album/${r.spotifyId}`] } : {}),
+      },
+    })),
+  },
+];
+
+const paletteAttrs = (r: Record_) => ({
+  'data-record': r.id,
+  'data-accent': r.palette.accent,
+  'data-bg': r.palette.bg,
+  'data-panel': r.palette.panel,
+  'data-line': r.palette.line,
+  'data-wash': r.palette.wash,
+  'data-uri': r.spotifyId ? `spotify:album:${r.spotifyId}` : '',
+  'data-embed': spotifyEmbed(r) ?? '',
+  'data-title': r.title,
+});
+---
+
+<Layout
+  title="Discography"
+  description="Every Ye studio album as a square: click one and it starts playing, and the whole page turns to match the record — from The College Dropout in 2004 to BULLY."
+  accent={defaultRecord.palette.accent}
+  jsonLd={jsonLd}
+>
+  <div class="disc-wash" aria-hidden="true" style={`--disc-wash:${defaultRecord.palette.wash}`}></div>
+
+  <section class="sec" style="padding-bottom:clamp(30px,4vw,48px)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">Twenty-two years {'—'} {records.length} records</span>
+          <h1 style="font-size:clamp(44px,8vw,96px)">Discography</h1>
+        </div>
+        <p>
+          Click a square. It starts playing, and the page turns to match the record. {playable} of
+          {records.length} play here through Spotify; the rest open where they live.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="player" data-player>
+    <div class="wrap player-in">
+      <div class="player-mark" data-player-mark>
+        {
+          records.map((r) => (
+            <div class="pm" data-pm={r.id} hidden={r.id !== defaultRecord.id}>
+              <AlbumMark record={r} />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="player-meta">
+        <span class="player-eyebrow" data-nowplaying>Now playing</span>
+        {
+          records.map((r) => (
+            <div class="pmeta" data-pmeta={r.id} hidden={r.id !== defaultRecord.id}>
+              <h2 class="player-title">{r.title}</h2>
+              <p class="player-line">
+                {r.billed ?? 'Ye'} {'·'} {r.released} {'·'} {r.tracks} tracks
+                {r.runtime ? ` · ${r.runtime}` : ''}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="player-frame">
+        <div id="spotify-host" data-spotify-host></div>
+        <noscript>
+          <iframe
+            title={`Spotify player for ${defaultRecord.title}`}
+            src={spotifyEmbed(defaultRecord)}
+            width="100%"
+            height="152"
+            style="border:0"
+            loading="lazy"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        </noscript>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec" style="padding-top:clamp(24px,3vw,36px)" id="wall">
+    <div class="wrap">
+      <div class="act-head">
+        <h2>Solo albums</h2>
+        <span>{solo.length} records, 2004 {'—'} 2026</span>
+      </div>
+      <div class="disc-grid">
+        {
+          solo.map((r) => (
+            <button class="sq reveal" type="button" {...paletteAttrs(r)} aria-pressed={r.id === defaultRecord.id}>
+              <span class="sq-art"><AlbumMark record={r} /></span>
+              <span class="sq-meta">
+                <span class="sq-title">{r.title}</span>
+                <span class="sq-year">{r.year} {'·'} {r.tracks} tracks</span>
+              </span>
+              <span class="sq-cue" aria-hidden="true">{r.spotifyId ? 'PLAY' : 'INFO'}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="act-head" style="margin-top:52px">
+        <h2>Collaborative albums</h2>
+        <span>{collab.length} records</span>
+      </div>
+      <div class="disc-grid">
+        {
+          collab.map((r) => (
+            <button class="sq reveal" type="button" {...paletteAttrs(r)} aria-pressed="false">
+              <span class="sq-art"><AlbumMark record={r} /></span>
+              <span class="sq-meta">
+                <span class="sq-title">{r.title}</span>
+                <span class="sq-year">{r.year} {'·'} {r.billed}</span>
+              </span>
+              <span class="sq-cue" aria-hidden="true">{r.spotifyId ? 'PLAY' : 'INFO'}</span>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      {
+        records.map((r) => {
+          const live = liveSongs(r);
+          return (
+            <div class="pnote" data-pnote={r.id} hidden={r.id !== defaultRecord.id}>
+              <div class="two-col">
+                <div>
+                  <span class="rule-num">{r.released} {'·'} {r.label}</span>
+                  <p class="prose" style="margin-top:14px">{r.note}</p>
+                  <div class="hero-cta" style="justify-content:flex-start;margin-top:22px">
+                    <a class="btn-ye" href={spotifySearch(r)} rel="noopener nofollow">Open in Spotify</a>
+                    {live.length > 0 && <a class="btn-ye" href={url('/setlists/')}>In the 2026 set</a>}
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-title">
+                    {live.length > 0 ? `On the 2026 tour · ${live.length}` : 'Not in the 2026 set'}
+                  </div>
+                  {live.length > 0 ? (
+                    <ul class="pills">{live.map((t) => <li>{t}</li>)}</ul>
+                  ) : (
+                    <p style="margin:0;font-size:14px;color:var(--ye-ash);line-height:1.6">
+                      No song from this record has been reported at a 2026 date. That is what the sources
+                      say, not a claim that it was never played.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="notice">
+        <div>
+          <b>About the squares</b>
+          These are not the album sleeves. Cover art belongs to the people who made it, so every square
+          here is an original generated figure drawn from that record's palette — the same rule the rest of
+          this archive follows. Playback is Spotify's own embedded player; nothing is hosted here.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/bully/')}><span>{'←'} Back</span><b>BULLY</b><i>The record the tour is carrying</i></a>
+    <a class="next" href={url('/')}><span>Next {'→'}</span><b>All dates</b><i>The 2026 itinerary</i></a>
+  </nav>
+</Layout>
+
+<style>
+  .disc-wash {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.45s ease;
+    background:
+      radial-gradient(ellipse 80% 55% at 12% 0%, var(--disc-wash), transparent 62%),
+      radial-gradient(ellipse 70% 50% at 92% 18%, var(--disc-wash), transparent 60%);
+  }
+
+  .disc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+    gap: 14px;
+  }
+
+  .sq {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--ye-line);
+    background: var(--ye-slab);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    font: inherit;
+  }
+
+  .sq:hover,
+  .sq:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--ye-line-hot);
+    box-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.9);
+  }
+
+  .sq[aria-pressed='true'] {
+    border-color: var(--ye-accent);
+    box-shadow: 0 0 0 1px var(--ye-accent);
+  }
+
+  .sq-art {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  .sq-meta {
+    display: block;
+    padding: 12px 13px 14px;
+    border-top: 1px solid var(--ye-line);
+  }
+
+  .sq-title {
+    display: block;
+    font-family: var(--ye-display);
+    font-weight: 800;
+    font-size: 14.5px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    color: var(--ye-bone);
+  }
+
+  .sq-year {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--ye-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ye-dust);
+  }
+
+  .sq-cue {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    background: rgb(0 0 0 / 0.55);
+    backdrop-filter: blur(4px);
+    font-family: var(--ye-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.22s, transform 0.22s;
+  }
+
+  .sq:hover .sq-cue,
+  .sq:focus-visible .sq-cue,
+  .sq[aria-pressed='true'] .sq-cue {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ------------------------------------------------------------- player */
+
+  .player {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 36;
+    background: color-mix(in srgb, var(--ye-pit) 94%, transparent);
+    backdrop-filter: blur(16px) saturate(140%);
+    border-top: 1px solid var(--ye-line);
+  }
+
+  .player-in {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-areas: 'mark meta' 'frame frame';
+    align-items: center;
+    gap: 10px 14px;
+    padding-block: 10px 6px;
+  }
+
+  .player-mark {
+    grid-area: mark;
+    width: 52px;
+    border: 1px solid var(--ye-line);
+  }
+
+  .player-meta {
+    grid-area: meta;
+    min-width: 0;
+  }
+
+  .player-frame {
+    grid-area: frame;
+    min-width: 0;
+  }
+
+  .player-eyebrow {
+    display: block;
+    font-family: var(--ye-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ye-dust);
+  }
+
+  .player-title {
+    font-size: 19px;
+    margin-top: 4px;
+    color: var(--ye-bone);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .player-line {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--ye-dust);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .player-frame :global(iframe) {
+    display: block;
+    width: 100%;
+    height: 80px;
+    border: 0;
+    border-radius: 10px;
+  }
+
+  /* Below this the square mark costs more room than it earns. */
+  @media (max-width: 519px) {
+    .player-mark {
+      display: none;
+    }
+    .player-in {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'meta' 'frame';
+      gap: 8px;
+      padding-block: 9px 7px;
+    }
+    .player-title {
+      font-size: 17px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .player-in {
+      grid-template-columns: 78px minmax(0, 260px) minmax(0, 1fr);
+      grid-template-areas: 'mark meta frame';
+      gap: 18px;
+      padding-block: 12px;
+    }
+    .player-mark {
+      width: 78px;
+    }
+    .player-frame :global(iframe) {
+      height: 152px;
+    }
+  }
+
+  .pnote {
+    padding-top: 10px;
+  }
+</style>
+
+<script>
+  const player = document.querySelector<HTMLElement>('[data-player]');
+  const wash = document.querySelector<HTMLElement>('.disc-wash');
+  const host = document.querySelector<HTMLElement>('[data-spotify-host]');
+  const squares = [...document.querySelectorAll<HTMLButtonElement>('.sq[data-record]')];
+  const nowPlaying = document.querySelector<HTMLElement>('[data-nowplaying]');
+
+  if (player && squares.length) {
+    // Keep the fixed player from covering the end of the page.
+    // The bar grows when the Spotify embed lands, so watch it rather than
+    // measuring once and trusting the number.
+    const pad = () => {
+      document.body.style.paddingBottom = `${player.offsetHeight + 8}px`;
+    };
+    pad();
+    window.addEventListener('resize', pad);
+    if ('ResizeObserver' in window) new ResizeObserver(pad).observe(player);
+
+    let controller: { loadUri: (u: string) => void; play: () => void } | null = null;
+
+    /** Plain-iframe fallback when the Spotify iframe API cannot load. */
+    const fallback = (embed: string, title: string) => {
+      if (!host || !embed) return;
+      let frame = host.querySelector('iframe');
+      if (!frame) {
+        frame = document.createElement('iframe');
+        frame.setAttribute('width', '100%');
+        frame.setAttribute('height', '152');
+        frame.setAttribute('loading', 'lazy');
+        frame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+        host.replaceChildren(frame);
+      }
+      frame.setAttribute('title', `Spotify player for ${title}`);
+      if (frame.getAttribute('src') !== embed) frame.setAttribute('src', embed);
+    };
+
+    const show = (attr: string, id: string) => {
+      for (const el of document.querySelectorAll<HTMLElement>(`[${attr}]`)) {
+        el.hidden = el.getAttribute(attr) !== id;
+      }
+    };
+
+    const select = (btn: HTMLButtonElement, play: boolean) => {
+      const d = btn.dataset;
+      const id = d.record!;
+
+      for (const other of squares) other.setAttribute('aria-pressed', String(other === btn));
+      show('data-pm', id);
+      show('data-pmeta', id);
+      show('data-pnote', id);
+
+      const root = document.documentElement;
+      root.style.setProperty('--ye-accent', d.accent!);
+      root.style.setProperty('--ye-void', d.bg!);
+      root.style.setProperty('--ye-pit', d.panel!);
+      root.style.setProperty('--ye-slab', d.panel!);
+      root.style.setProperty('--ye-line', d.line!);
+
+      if (wash) {
+        wash.style.opacity = '0';
+        window.setTimeout(() => {
+          wash.style.setProperty('--disc-wash', d.wash!);
+          wash.style.opacity = '1';
+        }, 220);
+      }
+
+      if (nowPlaying) nowPlaying.textContent = d.uri ? 'Now playing' : 'Not on streaming';
+
+      if (d.uri) {
+        if (controller) {
+          try {
+            controller.loadUri(d.uri);
+            if (play) window.setTimeout(() => controller?.play(), 450);
+          } catch {
+            fallback(d.embed!, d.title!);
+          }
+        } else {
+          fallback(d.embed!, d.title!);
+        }
+      }
+
+      try {
+        history.replaceState(null, '', `#${id}`);
+      } catch {}
+    };
+
+    for (const btn of squares) {
+      btn.addEventListener('click', () => select(btn, true));
+    }
+
+    // Spotify's iframe API is what actually makes a click start playback.
+    // Define the callback before the script is appended, and fall back to a
+    // plain embed if it never arrives.
+    const first = squares.find((b) => b.getAttribute('aria-pressed') === 'true') ?? squares[0]!;
+    const initialUri = first.dataset.uri || '';
+
+    (window as unknown as Record<string, unknown>).onSpotifyIframeApiReady = (api: {
+      createController: (el: Element, opts: Record<string, unknown>, cb: (c: never) => void) => void;
+    }) => {
+      if (!host) return;
+      try {
+        api.createController(host, { uri: initialUri, width: '100%', height: 152 }, (c) => {
+          controller = c as unknown as typeof controller;
+        });
+      } catch {
+        fallback(first.dataset.embed || '', first.dataset.title || '');
+      }
+    };
+
+    const api = document.createElement('script');
+    api.src = 'https://open.spotify.com/embed/iframe-api/v1';
+    api.async = true;
+    document.head.appendChild(api);
+
+    // If the API has not produced a controller, show a plain embed instead.
+    window.setTimeout(() => {
+      if (!controller) fallback(first.dataset.embed || '', first.dataset.title || '');
+      pad();
+    }, 2500);
+
+    // Deep link: /discography/#yeezus
+    const hash = location.hash.slice(1);
+    if (hash) {
+      const target = squares.find((b) => b.dataset.record === hash);
+      if (target) select(target, false);
+    }
+  }
+</script>

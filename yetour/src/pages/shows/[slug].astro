@@ -1,0 +1,363 @@
+---
+import Layout from '@/layouts/Base.astro';
+import Poster from '@/components/Poster.astro';
+import Plates from '@/components/Plates.astro';
+import { url } from '@/lib/url';
+import {
+  shows, legsById, neighbours, referenceSet, song, albums, longDate, parts, placeLine, shortPlace,
+  type Show,
+} from '@/data/tour';
+
+export function getStaticPaths() {
+  return shows.map((show) => ({ params: { slug: show.slug }, props: { show } }));
+}
+
+interface Props {
+  show: Show;
+}
+
+const { show } = Astro.props;
+const leg = legsById[show.leg]!;
+const accent = leg.color;
+const p = parts(show.date);
+const { prev, next } = neighbours(show.slug);
+
+/** Meta descriptions have to land between 50 and 165 characters. */
+function clamp(text: string, max = 162): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  return cut.slice(0, cut.lastIndexOf(' ')) + '…';
+}
+const description = clamp(`${longDate(show.date)}: Ye at ${show.venue}, ${placeLine(show)}. ${show.headline}`);
+
+const statusCopy = {
+  played: 'Played',
+  upcoming: 'Upcoming',
+  cancelled: 'Cancelled',
+} as const;
+
+const facts: { term: string; value: string }[] = [
+  { term: 'Date', value: longDate(show.date) },
+  { term: 'Venue', value: show.venue },
+  { term: 'City', value: placeLine(show) },
+  { term: 'Leg', value: `${leg.n} — ${leg.name}` },
+  { term: 'Show', value: `${show.n} of ${shows.length}` },
+  { term: 'Status', value: statusCopy[show.status] },
+];
+if (show.capacity) facts.push({ term: 'Capacity', value: show.capacity.toLocaleString('en-US') });
+if (show.attendance) facts.push({ term: 'Attendance', value: show.attendance.toLocaleString('en-US') });
+if (show.gross) facts.push({ term: 'Box office', value: show.gross });
+if (show.doors) facts.push({ term: 'Doors', value: show.doors });
+if (show.onstage) facts.push({ term: 'Onstage', value: show.onstage });
+if (show.runtime) facts.push({ term: 'Set length', value: show.runtime });
+
+const setlistLabel = {
+  reported: 'Reported setlist',
+  partial: 'Confirmed at this show',
+  reference: 'No published setlist',
+} as const;
+
+const setlistBlurb = {
+  reported: 'Documented in full by setlist.fm and contemporaneous reporting, in running order.',
+  partial: 'These songs are confirmed for this date. The rest of the night is not documented, so the tour reference set is printed below it.',
+  reference: 'No song-by-song account of this date has been published. What follows is the tour’s recurring spine, assembled only from songs reported elsewhere in 2026 — a guide, not a record.',
+} as const;
+
+const ics = [
+  'BEGIN:VCALENDAR',
+  'VERSION:2.0',
+  'PRODID:-//YE LIVE 2026 archive//EN',
+  'BEGIN:VEVENT',
+  `UID:${show.slug}@ye-live-2026`,
+  `DTSTART;VALUE=DATE:${show.date.replace(/-/g, '')}`,
+  `SUMMARY:YE — Live Concert Tour 2026, ${show.city}`,
+  `LOCATION:${show.venue}, ${placeLine(show)}`,
+  'END:VEVENT',
+  'END:VCALENDAR',
+].join('\n');
+
+const jsonLd = [
+  {
+    '@type': 'MusicEvent',
+    name: `Ye — Live Concert Tour 2026, ${show.city}`,
+    startDate: show.date,
+    eventStatus:
+      show.status === 'cancelled' ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    description: show.headline,
+    performer: { '@type': 'MusicGroup', name: 'Ye', alternateName: 'Kanye West' },
+    location: {
+      '@type': 'Place',
+      name: show.venue,
+      address: { '@type': 'PostalAddress', addressLocality: show.city, addressCountry: show.countryCode },
+      geo: { '@type': 'GeoCoordinates', latitude: show.coords[0], longitude: show.coords[1] },
+    },
+    superEvent: { '@type': 'MusicEvent', name: 'Ye Live Concert Tour' },
+  },
+];
+---
+
+<Layout title={`${show.city} · ${p.dd} ${p.month} ${p.y}`} description={description} accent={accent} jsonLd={jsonLd}>
+  <article>
+    <header class="show-hero">
+      <div class="wrap show-hero-in">
+        <div>
+          <div class="show-crumb">
+            <a href={url('/')}>All dates</a>
+            <span aria-hidden="true">/</span>
+            <span>Leg {leg.n} — {leg.name}</span>
+            <span aria-hidden="true">/</span>
+            <span class:list={['tag', show.status]}><i class="dot" aria-hidden="true"></i>{statusCopy[show.status]}</span>
+          </div>
+
+          <h1 class="show-title">
+            {show.city}
+            <span>{longDate(show.date).toUpperCase()} {'·'} {show.venue.toUpperCase()}</span>
+          </h1>
+
+          <p class="show-headline">{show.headline}</p>
+
+          <div class="hero-cta" style="justify-content:flex-start;margin-top:28px">
+            <a class="btn-ye" href="#setlist">Setlist</a>
+            {show.sources.length > 0 && <a class="btn-ye" href="#sources">Sources</a>}
+            {
+              show.status === 'upcoming' && (
+                <a
+                  class="btn-ye solid"
+                  href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`}
+                  download={`ye-${show.slug}.ics`}
+                >
+                  Add to calendar
+                </a>
+              )
+            }
+          </div>
+        </div>
+
+        <div class="poster-frame"><Poster show={show} accent={accent} /></div>
+      </div>
+    </header>
+
+    <section class="sec" style="padding-block:clamp(36px,5vw,60px)">
+      <div class="wrap">
+        <dl class="facts">
+          {facts.map((f) => <div class="fact"><dt>{f.term}</dt><dd>{f.value}</dd></div>)}
+        </dl>
+
+        {
+          show.statusNote && (
+            <div class="notice warn" style="margin-top:22px">
+              <div><b>Why this date is not on the itinerary</b>{show.statusNote}</div>
+            </div>
+          )
+        }
+        {
+          show.originalDate && (
+            <div class="notice" style="margin-top:22px">
+              <div>
+                <b>Rescheduled</b>
+                Originally advertised for {longDate(show.originalDate)} and moved to {longDate(show.date)}.
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section class="sec" style="padding-top:0">
+      <div class="wrap two-col">
+        <div>
+          <span class="rule-num">01 {'—'} The night</span>
+          <h2 style="font-size:clamp(28px,4.4vw,46px)">
+            {show.status === 'upcoming' ? 'What is coming' : show.status === 'cancelled' ? 'What was lost' : 'What happened'}
+          </h2>
+          <div class="prose" style="margin-top:22px">
+            {show.story.map((para) => <p>{para}</p>)}
+          </div>
+        </div>
+
+        <div style="display:grid;gap:18px;align-content:start">
+          {
+            show.guests.length > 0 && (
+              <div class="panel">
+                <div class="panel-title">Onstage guests {'·'} {show.guests.length}</div>
+                <ul class="pills">
+                  {show.guests.map((g, i) => <li class:list={{ star: i === 0 }}>{g}</li>)}
+                </ul>
+              </div>
+            )
+          }
+          {
+            show.facts && show.facts.length > 0 && (
+              <div class="panel">
+                <div class="panel-title">On the record</div>
+                <ul class="bullets">{show.facts.map((f) => <li>{f}</li>)}</ul>
+              </div>
+            )
+          }
+          <div class="panel">
+            <div class="panel-title">Coordinates</div>
+            <ul class="bullets">
+              <li>{show.coords[0].toFixed(4)}° {show.coords[0] >= 0 ? 'N' : 'S'}, {Math.abs(show.coords[1]).toFixed(4)}° {show.coords[1] >= 0 ? 'E' : 'W'}</li>
+              <li>{show.continent} · {show.country}</li>
+              <li><a href={url('/route/')} style="color:var(--ye-accent)">See it on the route map →</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="setlist" style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div>
+            <span class="rule-num">02 {'—'} {setlistLabel[show.setlistSource]}</span>
+            <h2>Setlist</h2>
+          </div>
+          <p>{setlistBlurb[show.setlistSource]}</p>
+        </div>
+
+        {
+          show.reported.length > 0 && (
+            <div class="panel" style="margin-bottom:26px">
+              <div class="panel-title">
+                {show.setlistSource === 'reported' ? 'In running order' : 'Confirmed songs'} {'·'} {show.reported.length}
+              </div>
+              <ol class="setlist" style="list-style:none;margin:0;padding:0">
+                {
+                  show.reported.map((id) => {
+                    const t = song(id);
+                    const a = albums[t.album];
+                    return (
+                      <li class="song">
+                        <span class="song-n" aria-hidden="true" />
+                        <span class="song-body">
+                          <span class="song-title">{t.title}</span>
+                          <span class="song-meta">
+                            <span class="album-chip" style={`--chip:${a.color}`}>
+                              <i aria-hidden="true" />{a.title}{a.year ? ` (${a.year})` : ''}
+                            </span>
+                            {t.with ? ` · with ${t.with}` : ''}
+                          </span>
+                          {t.note && <span class="song-note">{t.note}</span>}
+                        </span>
+                      </li>
+                    );
+                  })
+                }
+              </ol>
+            </div>
+          )
+        }
+
+        {
+          show.setlistSource !== 'reported' && (
+            <div class="panel">
+              <div class="panel-title">Tour reference set {'·'} not a record of this night</div>
+              {
+                referenceSet.map((act) => (
+                  <div class="act setlist">
+                    <div class="act-head">
+                      <h3>{act.title}</h3>
+                      <span>{act.subtitle}</span>
+                    </div>
+                    {
+                      act.songs.map((id) => {
+                        const t = song(id);
+                        const a = albums[t.album];
+                        return (
+                          <div class="song">
+                            <span class="song-n" aria-hidden="true" />
+                            <span class="song-body">
+                              <span class="song-title">{t.title}</span>
+                              <span class="song-meta">
+                                <span class="album-chip" style={`--chip:${a.color}`}>
+                                  <i aria-hidden="true" />{a.title}{a.year ? ` (${a.year})` : ''}
+                                </span>
+                                {t.with ? ` · with ${t.with}` : ''}
+                              </span>
+                            </span>
+                          </div>
+                        );
+                      })
+                    }
+                  </div>
+                ))
+              }
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section class="sec" style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div>
+            <span class="rule-num">03 {'—'} Plates</span>
+            <h2>The room</h2>
+          </div>
+          <p>
+            Original drawings, not photographs: the globe centred in the room, the rig in section, and a
+            crowd field drawn to this venue's reported scale.
+          </p>
+        </div>
+        <Plates show={show} accent={accent} />
+      </div>
+    </section>
+
+    {
+      show.sources.length > 0 && (
+        <section class="sec" id="sources" style="padding-top:0">
+          <div class="wrap">
+            <div class="sec-head">
+              <div>
+                <span class="rule-num">04 {'—'} Provenance</span>
+                <h2>Sources</h2>
+              </div>
+              <p>Every claim on this page traces back to one of these.</p>
+            </div>
+            <ul class="srcs">
+              {show.sources.map((s) => (
+                <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    <nav class="pager" aria-label="Other dates">
+      {
+        prev ? (
+          <a href={url(`/shows/${prev.slug}/`)}>
+            <span>{'←'} Previous date</span>
+            <b>{prev.city}</b>
+            <i>{longDate(prev.date)} · {shortPlace(prev)}</i>
+          </a>
+        ) : (
+          <a href={url('/')}>
+            <span>{'←'} Back</span>
+            <b>All dates</b>
+            <i>The full 2026 itinerary</i>
+          </a>
+        )
+      }
+      {
+        next ? (
+          <a class="next" href={url(`/shows/${next.slug}/`)}>
+            <span>Next date {'→'}</span>
+            <b>{next.city}</b>
+            <i>{longDate(next.date)} · {shortPlace(next)}</i>
+          </a>
+        ) : (
+          <a class="next" href={url('/route/')}>
+            <span>End of the tour {'→'}</span>
+            <b>The route</b>
+            <i>Eight legs, four continents</i>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</Layout>

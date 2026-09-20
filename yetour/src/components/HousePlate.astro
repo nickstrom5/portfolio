@@ -1,0 +1,82 @@
+---
+/**
+ * A measured-style elevation of the house at 7815 S. South Shore Drive.
+ *
+ * A drawing, not a photograph: proportions follow the published description —
+ * an early-1900s Chicago cottage of about 1,600 square feet — rather than any
+ * copyrighted image of the building. The "DH" gate is the detail reported
+ * after the restoration.
+ */
+interface Props {
+  accent?: string;
+}
+
+const { accent = '#d9a441' } = Astro.props;
+const MONO = "'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace";
+
+const courses = Array.from({ length: 13 }, (_, i) => 196 + i * 14);
+---
+
+<svg viewBox="0 0 640 400" role="img" aria-label="A measured-style drawing of the Chicago cottage at 7815 South Shore Drive, with the DH gate. Not a photograph.">
+  <rect width="640" height="400" fill="#0a0b0d" />
+
+  <!-- ground -->
+  <path d="M0 352 H640" stroke="#2b3138" stroke-width="2" />
+  {Array.from({ length: 32 }, (_, i) => <path d={`M${i * 20} 352 l-10 12`} stroke="#1b2026" />)}
+
+  <g fill="none" stroke={accent}>
+    <!-- gable -->
+    <path d="M150 190 L320 86 L490 190" stroke-opacity="0.9" stroke-width="2" />
+    <path d="M150 190 H490" stroke-opacity="0.9" stroke-width="2" />
+    <path d="M168 200 L320 106 L472 200" stroke-opacity="0.25" />
+    <path d="M320 106 V190" stroke-opacity="0.2" />
+    <!-- attic window -->
+    <rect x="300" y="140" width="40" height="34" stroke-opacity="0.75" />
+    <path d="M320 140 V174 M300 157 H340" stroke-opacity="0.35" />
+
+    <!-- body -->
+    <rect x="166" y="190" width="308" height="162" stroke-opacity="0.9" stroke-width="2" />
+    {courses.map((y) => <path d={`M166 ${y} H474`} stroke-opacity="0.13" />)}
+
+    <!-- ground floor windows -->
+    <rect x="196" y="216" width="58" height="82" stroke-opacity="0.8" />
+    <path d="M196 208 H254" stroke-opacity="0.55" stroke-width="3" />
+    <path d="M225 216 V298 M196 257 H254" stroke-opacity="0.3" />
+    <rect x="386" y="216" width="58" height="82" stroke-opacity="0.8" />
+    <path d="M386 208 H444" stroke-opacity="0.55" stroke-width="3" />
+    <path d="M415 216 V298 M386 257 H444" stroke-opacity="0.3" />
+
+    <!-- door and stoop -->
+    <rect x="292" y="226" width="56" height="102" stroke-opacity="0.85" />
+    <path d="M292 218 H348" stroke-opacity="0.55" stroke-width="3" />
+    <circle cx="338" cy="278" r="3" stroke-opacity="0.8" />
+    <path d="M276 328 H364 M270 340 H370 M264 352 H376" stroke-opacity="0.6" stroke-width="2" />
+
+    <!-- gate -->
+    <path d="M96 300 V352 M136 300 V352" stroke-opacity="0.75" stroke-width="2" />
+    <rect x="96" y="300" width="40" height="52" stroke-opacity="0.4" />
+    {Array.from({ length: 5 }, (_, i) => <path d={`M${102 + i * 8} 306 V346`} stroke-opacity="0.3" />)}
+    <path d="M544 300 V352 M504 300 V352" stroke-opacity="0.75" stroke-width="2" />
+    <rect x="504" y="300" width="40" height="52" stroke-opacity="0.4" />
+  </g>
+
+  <text x="116" y="290" text-anchor="middle" font-family={MONO} font-size="14" letter-spacing="2" fill={accent}>DH</text>
+
+  <!-- dimension line -->
+  <g stroke="#3a424a">
+    <path d="M166 376 H474" />
+    <path d="M166 370 v12 M474 370 v12" />
+  </g>
+  <text x="320" y="394" text-anchor="middle" font-family={MONO} font-size="11" letter-spacing="2.4" fill="#767d85">
+    7815 S. SOUTH SHORE DRIVE {'·'} C. 1905 {'·'} {'≈'}1,600 SQ FT
+  </text>
+  <text x="18" y="28" font-family={MONO} font-size="11" letter-spacing="2.4" fill="#5d646b">ELEVATION {'—'} DRAWN, NOT PHOTOGRAPHED</text>
+</svg>
+
+<style>
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>

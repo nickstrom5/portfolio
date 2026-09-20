@@ -1,0 +1,151 @@
+---
+/**
+ * A click-to-load YouTube facade. Nothing from youtube.com is requested until
+ * the visitor asks for it, which keeps the page fast, keeps third-party
+ * cookies off it, and means a blocked network never breaks the layout.
+ */
+interface Props {
+  videoId: string;
+  title: string;
+  where: string;
+  note: string;
+  accent?: string;
+}
+
+const { videoId, title, where, note, accent = '#ff3b2a' } = Astro.props;
+const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+const watch = `https://www.youtube.com/watch?v=${videoId}`;
+---
+
+<figure class="vid" style={`--ye-accent:${accent}`}>
+  <button class="vid-btn" type="button" data-video={src} data-label={title}>
+    <span class="vid-art" aria-hidden="true">
+      <svg viewBox="0 0 480 270" role="presentation" focusable="false">
+        <rect width="480" height="270" fill="#0a0c0e" />
+        <circle cx="240" cy="126" r="72" fill="none" stroke={accent} stroke-opacity="0.55" stroke-width="1.6" />
+        <ellipse cx="240" cy="126" rx="72" ry="16" fill="none" stroke={accent} stroke-opacity="0.3" />
+        <ellipse cx="240" cy="126" rx="24" ry="72" fill="none" stroke={accent} stroke-opacity="0.3" />
+        <ellipse cx="240" cy="126" rx="50" ry="72" fill="none" stroke={accent} stroke-opacity="0.2" />
+        <circle cx="240" cy="126" r="96" fill="none" stroke={accent} stroke-opacity="0.14" stroke-dasharray="3 12" />
+        <path d="M40 240 H440" stroke="#2b3138" stroke-width="2" />
+        <path d="M228 114 l26 14 -26 14 z" fill={accent} />
+      </svg>
+    </span>
+    <span class="vid-play">
+      <span class="vid-cue">Play</span>
+      <span class="vid-title">{title}</span>
+      <span class="vid-where">{where}</span>
+    </span>
+  </button>
+  <figcaption>
+    {note} <a href={watch} rel="noopener nofollow">Watch on YouTube</a>
+  </figcaption>
+</figure>
+
+<style>
+  .vid {
+    margin: 0;
+    border: 1px solid var(--ye-line);
+    background: var(--ye-pit);
+  }
+
+  .vid-btn {
+    display: block;
+    position: relative;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: #0a0c0e;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .vid-art svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.4s;
+  }
+
+  .vid-btn:hover .vid-art svg,
+  .vid-btn:focus-visible .vid-art svg {
+    transform: scale(1.04);
+    opacity: 0.8;
+  }
+
+  .vid-play {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: block;
+    padding: 18px 16px 15px;
+    background: linear-gradient(to top, rgb(5 6 7 / 0.95), transparent);
+  }
+
+  .vid-cue {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-bottom: 9px;
+    background: var(--ye-accent);
+    color: #08090a;
+    font-family: var(--ye-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .vid-title {
+    display: block;
+    font-family: var(--ye-display);
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 1.25;
+    color: var(--ye-bone);
+  }
+
+  .vid-where {
+    display: block;
+    margin-top: 5px;
+    font-family: var(--ye-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    color: var(--ye-dust);
+  }
+
+  .vid :global(iframe) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border: 0;
+  }
+
+  figcaption {
+    padding: 14px 16px;
+    border-top: 1px solid var(--ye-line);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ye-ash);
+  }
+
+  figcaption a {
+    display: inline-block;
+    padding-block: 6px;
+    color: var(--ye-bone);
+  }
+</style>
+
+<script>
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-video]')) {
+    btn.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.setAttribute('src', btn.dataset.video!);
+      frame.setAttribute('title', btn.dataset.label!);
+      frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      frame.setAttribute('allowfullscreen', '');
+      btn.replaceWith(frame);
+    });
+  }
+</script>

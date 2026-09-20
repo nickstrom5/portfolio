@@ -1,0 +1,229 @@
+---
+import Layout from '@/layouts/Base.astro';
+import { url } from '@/lib/url';
+import { features, produced, ventures, creditSources } from '@/data/credits';
+
+const byDecade = (year: number) => `${Math.floor(year / 10) * 10}s`;
+const decades = [...new Set(features.map((f) => byDecade(f.year)))];
+const categories = [...new Set(ventures.map((v) => v.category))];
+const albumsProduced = produced.filter((p) => p.scope === 'album');
+const songsProduced = produced.filter((p) => p.scope === 'song');
+const bothRoles = features.filter((f) => f.produced).length;
+
+const jsonLd = [
+  {
+    '@type': 'ItemList',
+    name: 'Ye — selected guest appearances',
+    numberOfItems: features.length,
+    itemListElement: features.map((f, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'MusicRecording',
+        name: f.song,
+        byArtist: { '@type': 'MusicGroup', name: f.artist },
+        datePublished: String(f.year),
+        contributor: { '@type': 'MusicGroup', name: 'Ye', alternateName: 'Kanye West' },
+      },
+    })),
+  },
+];
+---
+
+<Layout
+  title="Features & Credits"
+  description="The work outside his own albums: guest verses, production and co-writing for other artists, and the footwear, film and hardware credits that carry his name."
+  accent="#cfa94a"
+  jsonLd={jsonLd}
+>
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">Outside the discography</span>
+          <h1 style="font-size:clamp(40px,7.5vw,88px)">Features &amp; credits</h1>
+        </div>
+        <p>
+          He was a producer for four years before anyone would let him rap, and he has been a brand for
+          longer than he has been a touring act. This is the work with somebody else's name on the cover.
+        </p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat"><b>{features.length}</b><span>Guest verses</span><i>Selected, 2003 — 2022</i></div>
+        <div class="stat"><b>{produced.length}</b><span>Produced for others</span><i>{albumsProduced.length} full albums</i></div>
+        <div class="stat"><b>{bothRoles}</b><span>Both at once</span><i>Produced it and rapped on it</i></div>
+        <div class="stat"><b>{ventures.length}</b><span>Beyond music</span><i>{categories.length} categories</i></div>
+        <div class="stat"><b>24</b><span>Grammy Awards</span><i>Reported total, level with JAY-Z</i></div>
+      </div>
+
+      <div class="notice" style="margin-top:26px">
+        <div>
+          <b>Selected, not exhaustive</b>
+          The full production discography runs to several hundred entries and is maintained better
+          elsewhere. What follows is a curated set of the widely documented placements — the ones that
+          moved his career, or that turn up again in the 2026 live set.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="features" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">01 {'—'} As a featured artist</span>
+          <h2>Guest verses</h2>
+        </div>
+        <p>
+          Sixteen bars on someone else's record, across {decades.length} decades. Marked entries are ones
+          he produced as well.
+        </p>
+      </div>
+
+      <div class="table-scroll">
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th scope="col">Year</th>
+              <th scope="col">Artist</th>
+              <th scope="col">Song</th>
+              <th scope="col">Also credited</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              features.map((f) => (
+                <tr>
+                  <td style="font-family:var(--ye-mono);white-space:nowrap">{f.year}</td>
+                  <td><strong style="font-family:var(--ye-display);font-size:16px">{f.artist}</strong></td>
+                  <td>
+                    {f.song}
+                    {f.note && <div style="margin-top:6px;font-size:13px;color:var(--ye-ash);line-height:1.55;max-width:46ch">{f.note}</div>}
+                  </td>
+                  <td>
+                    {f.with && <div style="font-size:13px;color:var(--ye-ash)">{f.with}</div>}
+                    {f.produced && <div style="margin-top:4px;font-family:var(--ye-mono);font-size:11px;letter-spacing:.12em;color:var(--ye-accent)">PRODUCED IT TOO</div>}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="production" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">02 {'—'} Production &amp; writing</span>
+          <h2>Records he built for other people</h2>
+        </div>
+        <p>
+          Roc-A-Fella beats before The College Dropout, then twenty years of other artists' best-known
+          songs — ending with five albums shipped from Wyoming in five weeks.
+        </p>
+      </div>
+
+      <div class="act-head">
+        <h3>Albums produced end to end</h3>
+        <span>{albumsProduced.length} records</span>
+      </div>
+      <div class="date-grid" style="margin-bottom:44px">
+        {
+          albumsProduced.map((p) => (
+            <article class="box reveal" style="min-height:0">
+              <div class="box-top"><span>{p.year}</span><span>ALBUM</span></div>
+              <h3 style="margin-top:16px;font-size:clamp(22px,2.6vw,28px)">{p.work}</h3>
+              <div class="box-date" style="margin-top:8px">{p.artist}</div>
+              {p.note && <p class="box-venue" style="margin-top:12px">{p.note}</p>}
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="act-head">
+        <h3>Singles and album cuts</h3>
+        <span>{songsProduced.length} selected</span>
+      </div>
+      <div class="table-scroll">
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th scope="col">Year</th>
+              <th scope="col">Artist</th>
+              <th scope="col">Song</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              songsProduced.map((p) => (
+                <tr>
+                  <td style="font-family:var(--ye-mono);white-space:nowrap">{p.year}</td>
+                  <td><strong style="font-family:var(--ye-display);font-size:16px">{p.artist}</strong></td>
+                  <td>
+                    {p.work}
+                    {p.note && <div style="margin-top:6px;font-size:13px;color:var(--ye-ash);line-height:1.55;max-width:52ch">{p.note}</div>}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="ventures" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">03 {'—'} Everything else</span>
+          <h2>Projects &amp; products</h2>
+        </div>
+        <p>
+          Shoes, clothes, a piece of hardware, three films, a school and some unbuilt architecture. The
+          credits that are not on a record sleeve.
+        </p>
+      </div>
+
+      <div class="date-grid">
+        {
+          ventures.map((v) => (
+            <article class="box reveal" style="min-height:0">
+              <div class="box-top">
+                <span>{v.category.toUpperCase()}</span>
+                <span>{v.years}</span>
+              </div>
+              <h3 style="margin-top:16px;font-size:clamp(21px,2.5vw,27px)">{v.name}</h3>
+              {v.partner && <div class="box-date" style="margin-top:8px">with {v.partner}</div>}
+              <p class="box-venue" style="margin-top:12px">{v.note}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">04 {'—'} Provenance</span>
+          <h2>Sources</h2>
+        </div>
+        <p>Start here if you want the exhaustive version.</p>
+      </div>
+      <ul class="srcs">
+        {creditSources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/discography/')}><span>{'←'} Back</span><b>Discography</b><i>His own albums, playable</i></a>
+    <a class="next" href={url('/donda/')}><span>Next {'→'}</span><b>Donda</b><i>The professor everything is named for</i></a>
+  </nav>
+</Layout>

@@ -1,0 +1,145 @@
+---
+import '@/styles/site.css';
+import SiteNav from '@/components/SiteNav.astro';
+import SiteFooter from '@/components/SiteFooter.astro';
+
+import { url } from '@/lib/url';
+import { site } from '@/data/site';
+
+interface Props {
+  /** Appended with " · YE TOUR 2026". Keep under ~45 chars. */
+  title: string;
+  /** 50–165 characters — the QA audit enforces this. */
+  description: string;
+  /** Leg or show accent colour for this page. */
+  accent?: string;
+  /** Pages that are a single piece of writing rather than an index. */
+  ogType?: 'website' | 'article';
+  /** Extra JSON-LD nodes merged into the page graph. */
+  jsonLd?: Record<string, unknown>[];
+}
+
+const { title, description, accent = '#efece4', ogType = 'website', jsonLd = [] } = Astro.props;
+
+const fullTitle = `${title} · ${site.name} 2026`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const hub = new URL(url('/'), Astro.site).href;
+const isHub = canonical.href === hub;
+
+/**
+ * One graph per page: the archive itself, this page, a breadcrumb back to the
+ * hub, and whatever the page adds. Search engines get the same structure a
+ * reader gets from the nav.
+ */
+const graph: Record<string, unknown>[] = [
+  {
+    '@type': 'WebSite',
+    '@id': `${hub}#archive`,
+    url: hub,
+    name: site.title,
+    description: `${site.tagline} Setlists, venues, guests and original artwork for all twenty dates.`,
+    inLanguage: 'en-US',
+    publisher: { '@type': 'Person', name: site.author, url: site.authorUrl },
+  },
+  {
+    '@type': 'WebPage',
+    '@id': `${canonical.href}#webpage`,
+    url: canonical.href,
+    name: fullTitle,
+    description,
+    isPartOf: { '@id': `${hub}#archive` },
+    inLanguage: 'en-US',
+    primaryImageOfPage: { '@type': 'ImageObject', url: ogImage.href },
+    breadcrumb: { '@id': `${canonical.href}#crumbs` },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${canonical.href}#crumbs`,
+    itemListElement: isHub
+      ? [{ '@type': 'ListItem', position: 1, name: site.title, item: hub }]
+      : [
+          { '@type': 'ListItem', position: 1, name: site.title, item: hub },
+          { '@type': 'ListItem', position: 2, name: title, item: canonical.href },
+        ],
+  },
+  ...jsonLd,
+];
+---
+
+<!doctype html>
+<html lang="en" class="ye" style={`--ye-accent:${accent}`}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.author} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
+    <meta name="theme-color" content="#08090a" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={site.title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={site.title} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..110,400..900&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })}
+    />
+  </head>
+  <body>
+    <a class="skip-ye" href="#main">Skip to content</a>
+    <SiteNav />
+    <main id="main">
+      <slot />
+    </main>
+    <SiteFooter />
+
+    <script>
+      // Progressive reveal. Everything is visible without JS; this only adds motion.
+      const targets = document.querySelectorAll('.reveal');
+      if (targets.length) {
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) {
+                if (e.isIntersecting) {
+                  e.target.classList.add('in');
+                  io.unobserve(e.target);
+                }
+              }
+            },
+            { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+          );
+          targets.forEach((t) => io.observe(t));
+        } else {
+          targets.forEach((t) => t.classList.add('in'));
+        }
+      }
+    </script>
+  </body>
+</html>

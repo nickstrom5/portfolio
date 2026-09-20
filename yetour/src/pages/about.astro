@@ -1,0 +1,175 @@
+---
+import Layout from '@/layouts/Base.astro';
+import { url } from '@/lib/url';
+import { shows, played, upcoming, cancelled, tour } from '@/data/tour';
+
+/** Every source cited anywhere on the site, de-duplicated by URL. */
+const seen = new Set<string>();
+const sources = shows
+  .flatMap((s) => s.sources.map((src) => ({ ...src, show: s })))
+  .filter((s) => (seen.has(s.url) ? false : (seen.add(s.url), true)));
+
+const tiers = [
+  {
+    key: 'Reported',
+    count: shows.filter((s) => s.setlistSource === 'reported').length,
+    text: 'A published, song-by-song running order exists for this date. The page prints it in order and says so.',
+  },
+  {
+    key: 'Partial',
+    count: shows.filter((s) => s.setlistSource === 'partial').length,
+    text: 'Some songs are confirmed at this date by reporting, but not the whole night. Confirmed songs are listed first, separately, above the reference set.',
+  },
+  {
+    key: 'Reference',
+    count: shows.filter((s) => s.setlistSource === 'reference').length,
+    text: 'No setlist for this date has been published. The page shows the tour’s recurring spine — built only from songs reported elsewhere in 2026 — and labels it as a guide rather than a record.',
+  },
+];
+---
+
+<Layout
+  title="Sources & Method"
+  description="How this unofficial Ye Live Concert Tour 2026 archive was built: what is sourced, what is editorial, why there are no photographs, and every citation in one list."
+  accent="#d9a441"
+>
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">Colophon</span>
+          <h1 style="font-size:clamp(44px,8vw,96px)">Sources &amp; method</h1>
+        </div>
+        <p>
+          An archive about a touring artist is only worth the sourcing behind it. Here is exactly what this
+          one knows, how it knows it, and where it stops.
+        </p>
+      </div>
+
+      <div class="notice warn">
+        <div>
+          <b>Unofficial</b>
+          This is a fan project. It is not affiliated with Ye, YZY, Gamma, Live Nation or any venue or
+          promoter, and it does not sell tickets. For official information, including on-sales, see
+          <a href={tour.officialSite} rel="noopener nofollow" style="color:var(--ye-bone)">tour.yeezy.com</a>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap two-col">
+      <div>
+        <span class="rule-num">01 {'—'} What is here</span>
+        <h2 style="font-size:clamp(28px,4.4vw,46px)">Twenty dates, no padding</h2>
+        <div class="prose" style="margin-top:22px">
+          <p>
+            The {tour.name} is Ye's {tour.ordinal.toLowerCase()}, in support of BULLY, and his first tour
+            since the {tour.previousTour}. It opened at SoFi Stadium on 1 April 2026 and is scheduled to
+            close at State Farm Stadium on 21 November.
+          </p>
+          <p>
+            This archive carries all {shows.length} announced dates: {played.length} played,
+            {upcoming.length} still scheduled, and {cancelled.length} cancelled by government decision
+            rather than by a promoter. Cancelled dates keep their pages, because they were announced,
+            ticketed and then taken away, and that is part of what this tour was.
+          </p>
+          <p>
+            Dates that were reported in passing but never given a venue, an on-sale or a confirmed date —
+            including the postponed French show and cancelled shows in Russia and Poland — are mentioned in
+            context but are not given their own pages. Inventing a venue to fill a grid would defeat the
+            point.
+          </p>
+          <p>
+            The same goes for the one-off shows he played before the tour proper — the Mexico City dates in
+            January 2026, where André Troutman first appeared with him on the talk box, among others. They
+            happened, they are referenced where relevant, and they are not listed as tour dates because
+            they were not.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:18px;align-content:start">
+        <div class="panel">
+          <div class="panel-title">Setlist confidence</div>
+          <div style="display:grid;gap:18px">
+            {
+              tiers.map((t) => (
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                    <strong style="font-family:var(--ye-display);font-size:17px">{t.key}</strong>
+                    <span style="font-family:var(--ye-mono);font-size:12px;color:var(--ye-dust)">{t.count} dates</span>
+                  </div>
+                  <p style="margin:7px 0 0;font-size:14px;line-height:1.6;color:var(--ye-ash)">{t.text}</p>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Why there are no photographs</div>
+          <p style="margin:0;font-size:14px;line-height:1.65;color:var(--ye-ash)">
+            Concert photography from this tour belongs to the photographers and agencies who shot it, and
+            reproducing it here without a licence would be theft dressed up as fandom. So every image on
+            this site is original vector work generated from the show data itself: the globe motif, the
+            plate for each date, the stage plots, and the crowd fields drawn to each venue's reported
+            scale. Nothing here is a photograph, and nothing here pretends to be one.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">What is editorial</div>
+          <p style="margin:0;font-size:14px;line-height:1.65;color:var(--ye-ash)">
+            The narrative paragraphs on each show page are written by hand and are opinionated. Numbers,
+            dates, venues, guests, times and attendances are not: those come from the sources below, and
+            where sources disagree — as they do on the Chicago attendance record — the page says so
+            instead of picking a winner.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">02 {'—'} Citations</span>
+          <h2>Every source</h2>
+        </div>
+        <p>{sources.length} sources across {shows.length} date pages, in itinerary order.</p>
+      </div>
+      <ul class="srcs">
+        {
+          sources.map((s) => (
+            <li>
+              <a href={s.url} rel="noopener nofollow">
+                {s.label}
+                <span style="color:var(--ye-dust)"> — cited on {s.show.city}, {s.show.date}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="notice">
+        <div>
+          <b>Corrections</b>
+          Tour data moves. If a date here is wrong, a setlist has since been published, or a source has
+          been retracted, the fix belongs in the data file this site is generated from — one record per
+          show, sources included — rather than in the page itself.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/bully/')}><span>{'←'} Back</span><b>BULLY</b><i>The album behind the tour</i></a>
+    <a class="next" href={url('/')}><span>Start again {'→'}</span><b>All dates</b><i>{shows.length} boxes, one per night</i></a>
+  </nav>
+</Layout>
