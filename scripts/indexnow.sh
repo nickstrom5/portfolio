@@ -6,7 +6,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOST="${HOST:-$(cat "$ROOT/docs/CNAME" 2>/dev/null || cat "$ROOT/public/CNAME")}"
-KEYFILE="$(ls "$ROOT"/docs/*.txt "$ROOT"/public/*.txt 2>/dev/null | grep -E '/[0-9a-f]{32}\.txt$' | head -1)"
+KEYFILE="$(find "$ROOT/docs" "$ROOT/public" -maxdepth 1 -name '*.txt' 2>/dev/null | grep -E '/[0-9a-f]{32}\.txt$' | head -1 || true)"
+[ -n "$KEYFILE" ] || { echo "No IndexNow key file found in docs/ or public/."; exit 1; }
 KEY="$(basename "$KEYFILE" .txt)"
 if [ $# -gt 0 ]; then URLS=("$@"); else
   SM="https://$HOST/sitemap.xml"; curl -fsS -o /dev/null "$SM" 2>/dev/null || SM="https://$HOST/sitemap-0.xml"
