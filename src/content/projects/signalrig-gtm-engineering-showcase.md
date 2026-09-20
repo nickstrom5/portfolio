@@ -20,7 +20,7 @@ Go-to-market engineering is the discipline of building the automated systems tha
 
 ## What I did
 
-- Wrote the brief: a client-facing proof artifact, not a résumé site, with five interactive systems, a prompt lab and the commercial foundation behind them.
+- Wrote the brief: a client-facing proof artifact, not a resume site, with five interactive systems, a prompt lab and the commercial foundation behind them.
 - Directed Claude Code through the build in one working session: Next.js 16 with the App Router, TypeScript and Tailwind v4, 58 source files and about 4,500 lines including the sample data.
 - Reviewed every demo, merged the pull request, deployed to Vercel and pointed signalrig.dev at it.
 

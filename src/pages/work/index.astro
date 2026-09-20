@@ -68,7 +68,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         ))}
       </ol>
       <p class="edu muted">
-        Education: {education.map((e) => `${e.school}, ${e.location}`).join('; ')} · Full history in the <a href={url('/resume')}>résumé</a>{upworkLive && <> or on <a href={site.links.upwork} target="_blank" rel="noopener">Upwork</a></>}.
+        Education: {education.map((e) => `${e.school}, ${e.location}`).join('; ')} · Full history in the <a href={url('/resume')}>resume</a>{upworkLive && <> or on <a href={site.links.upwork} target="_blank" rel="noopener">Upwork</a></>}.
       </p>
     </div>
   </section>
