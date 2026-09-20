@@ -22,24 +22,24 @@
     "placeholder": false
   },
   {
-    "name": "Lume",
-    "tagline": "A daily glow coach. One photo, a glow score, and a sixty-second skincare ritual. Photos never leave the phone.",
+    "name": "Good Walk",
+    "tagline": "A dog walk tracker with a daily streak. One tap from the reminder, your dog's photo on everything. No collar, no map, no account.",
     "platforms": [
       "iOS"
     ],
     "stack": [
       "SwiftUI",
-      "On-device photo analysis",
-      "StoreKit 2"
+      "Notifications",
+      "Streaks"
     ],
     "client": "Own product",
     "year": 2026,
     "appStore": "",
     "playStore": "",
-    "website": "https://lumenow.app",
-    "status": "In development",
-    "projectSlug": "lume-daily-glow-coach",
-    "icon": "L",
+    "website": "",
+    "status": "In development · App Store launch 1–7 October",
+    "projectSlug": "goodwalk-dog-walk-tracker",
+    "icon": "GW",
     "placeholder": false
   },
   {
@@ -61,6 +61,27 @@
     "status": "Live",
     "projectSlug": "launchneat-local-business-websites",
     "icon": "LN",
+    "placeholder": false
+  },
+  {
+    "name": "Lume",
+    "tagline": "A daily glow coach. One photo, a glow score, and a sixty-second skincare ritual. Photos never leave the phone.",
+    "platforms": [
+      "iOS"
+    ],
+    "stack": [
+      "SwiftUI",
+      "On-device photo analysis",
+      "StoreKit 2"
+    ],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "",
+    "status": "Coming soon",
+    "projectSlug": "lume-daily-glow-coach",
+    "icon": "L",
     "placeholder": false
   }
 ]
