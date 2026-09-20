@@ -33,7 +33,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalforge';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -349,8 +349,8 @@ export const projects: Project[] = [
     comingSoon: true,
   },
   {
-    id: 'signalforge',
-    name: 'Signalforge',
+    id: 'signalrig',
+    name: 'SignalRig',
     kicker: 'GTM engineering · demo site',
     tileBlurb: 'Five working go-to-market demos: enrichment, scoring, routing, signals and reporting. Built in one session on Next.js.',
     bg: 'linear-gradient(135deg, #1e1410 0%, #121217 60%, #2c1a0e 100%)',
