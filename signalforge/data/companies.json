@@ -1,0 +1,258 @@
+{
+  "asOf": "2026-09-01",
+  "creditModel": {
+    "note": "Illustrative credit prices. Swap for your provider's rate card.",
+    "sourceLookup": 0.02,
+    "scrapeAndClassify": 0.06,
+    "waterfallAverage": 2.3,
+    "defaultBatch": 1000,
+    "defaultQualifyRate": 0.22
+  },
+  "companies": [
+    {
+      "domain": "kestrelhq.com",
+      "name": "Kestrel",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Denver, CO",
+        "employees": 210,
+        "founded": 2019,
+        "industry": "Software · Revenue operations",
+        "lastRound": "Series B · $34M · Feb 2026"
+      },
+      "scrape": {
+        "pages": ["/", "/pricing", "/careers", "/customers"],
+        "summary": "Pricing page shows three tiers ending in 'Talk to sales'. Careers lists 4 open SDR roles and 2 Enterprise AE roles in Denver and London. Customers page names mid-market logos in fintech and logistics. Tech detection finds HubSpot and Outreach scripts."
+      },
+      "description": "Kestrel sells a quota-planning and territory-design platform to mid-market sales organisations. Revenue is sales-led with an outbound SDR team feeding enterprise AEs.",
+      "icp": {
+        "score": 88,
+        "verdict": "qualify",
+        "reason": "Sales-led pricing ('Talk to sales' on all tiers) and 4 open SDR postings show an outbound motion; 210 employees with a Feb 2026 Series B match stage; HubSpot detected on the site.",
+        "tests": [
+          { "id": "b2b_software", "pass": true, "evidence": "Product page describes software for sales teams." },
+          { "id": "stage", "pass": true, "evidence": "Series B, 210 employees." },
+          { "id": "sales_team", "pass": true, "evidence": "4 SDR + 2 AE openings on /careers." },
+          { "id": "buyer", "pass": true, "evidence": "Enterprise tier, mid-market logos on /customers." },
+          { "id": "crm", "pass": true, "evidence": "HubSpot tracking script detected." },
+          { "id": "geo", "pass": true, "evidence": "HQ Denver, CO." },
+          { "id": "outbound_motion", "pass": true, "evidence": "Outreach script detected; SDR roles open." }
+        ],
+        "disqualifiers": []
+      },
+      "waterfall": [
+        { "provider": "Provider A", "result": "miss", "latencyMs": 420 },
+        { "provider": "Provider B", "result": "hit", "confidence": 0.97, "latencyMs": 610 }
+      ],
+      "contact": {
+        "name": "Dana Whitfield",
+        "title": "VP Sales",
+        "email": "d.whitfield@kestrelhq.com",
+        "verified": true,
+        "persona": "VP Sales"
+      }
+    },
+    {
+      "domain": "orbitfleet.io",
+      "name": "OrbitFleet",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Austin, TX",
+        "employees": 140,
+        "founded": 2020,
+        "industry": "Software · Logistics",
+        "lastRound": "Series B · $22M · Nov 2025"
+      },
+      "scrape": {
+        "pages": ["/", "/pricing", "/careers", "/integrations"],
+        "summary": "Pricing is per-vehicle with a 'Contact sales' enterprise tier. Careers lists 2 AE roles and 1 SDR role. Integrations page lists Salesforce and Samsara. No self-serve signup found."
+      },
+      "description": "OrbitFleet provides fleet-routing software to regional logistics carriers with 50 to 2,000 vehicles. Sales are led by a small AE team supported by one SDR.",
+      "icp": {
+        "score": 74,
+        "verdict": "qualify",
+        "reason": "Sales-led with 'Contact sales' enterprise tier and 3 open sales roles; Series B and 140 employees fit stage; Salesforce integration listed. Sales team is at the minimum size, which limits the score.",
+        "tests": [
+          { "id": "b2b_software", "pass": true, "evidence": "Routing software sold to carriers." },
+          { "id": "stage", "pass": true, "evidence": "Series B, 140 employees." },
+          { "id": "sales_team", "pass": true, "evidence": "2 AE + 1 SDR openings; at minimum." },
+          { "id": "buyer", "pass": true, "evidence": "Per-vehicle pricing at fleet scale implies ACV above $15k." },
+          { "id": "crm", "pass": true, "evidence": "Salesforce listed on /integrations." },
+          { "id": "geo", "pass": true, "evidence": "HQ Austin, TX." },
+          { "id": "outbound_motion", "pass": false, "evidence": "No sequencing tool detected; unknown." }
+        ],
+        "disqualifiers": []
+      },
+      "waterfall": [
+        { "provider": "Provider A", "result": "hit", "confidence": 0.93, "latencyMs": 380 }
+      ],
+      "contact": {
+        "name": "Marcus Oyelaran",
+        "title": "Head of Revenue Operations",
+        "email": "marcus@orbitfleet.io",
+        "verified": true,
+        "persona": "Head of RevOps"
+      }
+    },
+    {
+      "domain": "marrowbio.com",
+      "name": "Marrow Bio",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Cambridge, MA",
+        "employees": 320,
+        "founded": 2016,
+        "industry": "Biotechnology",
+        "lastRound": "Series C · $90M · Jan 2026"
+      },
+      "scrape": {
+        "pages": ["/", "/pipeline", "/careers", "/science"],
+        "summary": "Site describes clinical-stage cell therapy programmes. Careers lists research scientists and a clinical operations lead. No pricing page. No sales roles."
+      },
+      "description": "Marrow Bio is a clinical-stage biotechnology company developing cell therapies. It has no commercial product and no sales organisation.",
+      "icp": {
+        "score": 12,
+        "verdict": "disqualify",
+        "reason": "Regulated life sciences with no commercial product and no sales roles on /careers; fails the core B2B software test.",
+        "tests": [
+          { "id": "b2b_software", "pass": false, "evidence": "Clinical-stage therapeutics, not software." },
+          { "id": "stage", "pass": true, "evidence": "Series C, 320 employees." },
+          { "id": "sales_team", "pass": false, "evidence": "No sales roles found." },
+          { "id": "buyer", "pass": false, "evidence": "No product for sale." },
+          { "id": "crm", "pass": false, "evidence": "None detected." },
+          { "id": "geo", "pass": true, "evidence": "HQ Cambridge, MA." },
+          { "id": "outbound_motion", "pass": false, "evidence": "None." }
+        ],
+        "disqualifiers": ["Regulated life sciences or clinical healthcare", "No sales function (pure self-serve)"]
+      },
+      "waterfall": [],
+      "contact": null
+    },
+    {
+      "domain": "brickandbolt.co",
+      "name": "Brick & Bolt Studio",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Portland, OR",
+        "employees": 28,
+        "founded": 2017,
+        "industry": "Marketing services",
+        "lastRound": "Bootstrapped"
+      },
+      "scrape": {
+        "pages": ["/", "/services", "/work", "/contact"],
+        "summary": "Site lists branding, web design and paid media services with case studies for local retailers. No product, no pricing tiers, 'Get a quote' form."
+      },
+      "description": "Brick & Bolt is a 28-person creative agency offering branding and paid media to small businesses in the Pacific Northwest.",
+      "icp": {
+        "score": 9,
+        "verdict": "disqualify",
+        "reason": "Agency business model ('/services', 'Get a quote') and 28 employees trip two disqualifiers.",
+        "tests": [
+          { "id": "b2b_software", "pass": false, "evidence": "Services, not software." },
+          { "id": "stage", "pass": false, "evidence": "28 employees, bootstrapped." },
+          { "id": "sales_team", "pass": false, "evidence": "Unknown; no careers page." },
+          { "id": "buyer", "pass": false, "evidence": "Small local businesses." },
+          { "id": "crm", "pass": false, "evidence": "None detected." },
+          { "id": "geo", "pass": true, "evidence": "HQ Portland, OR." },
+          { "id": "outbound_motion", "pass": false, "evidence": "None." }
+        ],
+        "disqualifiers": ["Agency, consultancy or staffing business", "Fewer than 40 employees"]
+      },
+      "waterfall": [],
+      "contact": null
+    },
+    {
+      "domain": "plumbline.dev",
+      "name": "Plumbline",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Berlin, DE",
+        "employees": 95,
+        "founded": 2021,
+        "industry": "Software · Developer tools",
+        "lastRound": "Series A · $14M · Jun 2025"
+      },
+      "scrape": {
+        "pages": ["/", "/pricing", "/docs", "/careers"],
+        "summary": "Pricing page has a free tier, usage-based Team tier with credit-card signup, and an Enterprise tier with 'Contact us'. Careers shows 1 Account Executive role and 6 engineering roles. HubSpot detected."
+      },
+      "description": "Plumbline is a developer-tools company selling an observability product, mostly through product-led signup with an emerging enterprise sales motion.",
+      "icp": {
+        "score": 58,
+        "verdict": "disqualify",
+        "reason": "Product-led with only one AE opening; fails the sales-team test. Stage (Series A, 95 employees) is below the target band. Enterprise tier suggests outbound may start within a year, so it is worth re-checking.",
+        "tests": [
+          { "id": "b2b_software", "pass": true, "evidence": "Observability software for engineering teams." },
+          { "id": "stage", "pass": false, "evidence": "Series A, 95 employees." },
+          { "id": "sales_team", "pass": false, "evidence": "1 AE role, no SDRs." },
+          { "id": "buyer", "pass": true, "evidence": "Enterprise tier with 'Contact us'." },
+          { "id": "crm", "pass": true, "evidence": "HubSpot detected." },
+          { "id": "geo", "pass": true, "evidence": "HQ Berlin, DE." },
+          { "id": "outbound_motion", "pass": false, "evidence": "Self-serve dominant." }
+        ],
+        "disqualifiers": []
+      },
+      "waterfall": [],
+      "contact": null
+    },
+    {
+      "domain": "harborstack.com",
+      "name": "Harborstack",
+      "source": {
+        "provider": "Firmographic index",
+        "hq": "Toronto, CA",
+        "employees": 410,
+        "founded": 2015,
+        "industry": "Software · Supply chain",
+        "lastRound": "Series C · $60M · Sep 2023"
+      },
+      "scrape": {
+        "pages": ["/", "/pricing", "/careers", "/customers"],
+        "summary": "Enterprise-only pricing ('Request a demo'). Careers lists 3 SDR roles, 3 AE roles and a Sales Enablement Manager. Customers page shows enterprise manufacturing logos. Salesforce and Salesloft detected."
+      },
+      "description": "Harborstack sells supply-chain visibility software to enterprise manufacturers. It runs a mature outbound team across North America.",
+      "icp": {
+        "score": 93,
+        "verdict": "qualify",
+        "reason": "Every test passes with direct evidence: 6 open sales roles, enterprise-only pricing, Salesforce and Salesloft on the site, 410 employees post-Series C.",
+        "tests": [
+          { "id": "b2b_software", "pass": true, "evidence": "Supply-chain software." },
+          { "id": "stage", "pass": true, "evidence": "Series C, 410 employees." },
+          { "id": "sales_team", "pass": true, "evidence": "3 SDR + 3 AE openings." },
+          { "id": "buyer", "pass": true, "evidence": "Enterprise manufacturers." },
+          { "id": "crm", "pass": true, "evidence": "Salesforce detected." },
+          { "id": "geo", "pass": true, "evidence": "HQ Toronto, CA." },
+          { "id": "outbound_motion", "pass": true, "evidence": "Salesloft detected." }
+        ],
+        "disqualifiers": []
+      },
+      "waterfall": [
+        { "provider": "Provider A", "result": "miss", "latencyMs": 450 },
+        { "provider": "Provider B", "result": "miss", "latencyMs": 590 },
+        { "provider": "Provider C", "result": "hit", "confidence": 0.91, "latencyMs": 820 }
+      ],
+      "contact": {
+        "name": "Priya Raman",
+        "title": "Chief Revenue Officer",
+        "email": "praman@harborstack.com",
+        "verified": true,
+        "persona": "CRO"
+      }
+    }
+  ],
+  "unknown": {
+    "source": { "provider": "Firmographic index", "hq": "Unknown", "employees": null, "founded": null, "industry": "Unknown", "lastRound": "Unknown" },
+    "scrape": { "pages": ["/"], "summary": "Demo mode: this domain is not in the sample set, so the scraper returns no verifiable evidence." },
+    "description": "No description can be written without source material. The model is forbidden from inventing one.",
+    "icp": {
+      "score": 0,
+      "verdict": "disqualify",
+      "reason": "Every test is unknown. Per the ICP rules, unknown scores zero and nothing is invented. Record is parked for a manual look, not enriched.",
+      "tests": [],
+      "disqualifiers": []
+    },
+    "waterfall": [],
+    "contact": null
+  }
+}

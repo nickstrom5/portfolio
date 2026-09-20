@@ -1,0 +1,28 @@
+{
+  "icpLayers": [
+    { "layer": "Firmographic", "examples": "Industry, size band, stage, geography", "depth": "Table stakes. Every vendor filters on this. It removes nothing your competitors keep." },
+    { "layer": "Technographic", "examples": "CRM, sequencing tool, data warehouse, ATS", "depth": "Says whether integration is easy and whether the buyer has already bought the category." },
+    { "layer": "Situational", "examples": "Hiring, funding, exec change, expansion, contract renewals", "depth": "Timing. This is where reply rates come from." },
+    { "layer": "Disqualifiers", "examples": "Agencies, regulated verticals, sub-40 headcount, no sales team", "depth": "The cheapest lever. A written disqualifier list removes 40 to 60 percent of most bought lists." }
+  ],
+  "funnel": {
+    "note": "Defaults are mid-range for cold outbound to a well-defined ICP. Replace with your numbers.",
+    "sendsPerRepPerMonth": 1500,
+    "replyRate": 0.045,
+    "positiveShare": 0.28,
+    "meetingFromPositive": 0.7,
+    "oppFromMeeting": 0.45,
+    "closeFromOpp": 0.22,
+    "acv": 38000
+  },
+  "deliverability": [
+    { "id": "spf", "label": "SPF record", "detail": "One record per domain, under 10 DNS lookups, ends in -all.", "critical": true },
+    { "id": "dkim", "label": "DKIM signing", "detail": "2048-bit keys, rotated, one selector per sending platform.", "critical": true },
+    { "id": "dmarc", "label": "DMARC policy", "detail": "Start at p=none with rua reports, move to p=quarantine once alignment is clean.", "critical": true },
+    { "id": "secondary", "label": "Secondary sending domains", "detail": "Never send cold from the primary domain. Use lookalikes that redirect to the main site.", "critical": true },
+    { "id": "warmup", "label": "Warm-up", "detail": "New mailboxes ramp from 5 to 30 sends a day over 3 weeks before any campaign.", "critical": false },
+    { "id": "caps", "label": "Volume caps", "detail": "30 to 50 cold sends per mailbox per day. Volume comes from mailbox count, not per-box volume.", "critical": false },
+    { "id": "validation", "label": "Address validation", "detail": "Bounce rate under 2 percent. Drop catch-all addresses unless verified.", "critical": false },
+    { "id": "monitoring", "label": "Monitoring", "detail": "Daily inbox placement test and blacklist check. Pause a domain automatically on a failure.", "critical": false }
+  ]
+}

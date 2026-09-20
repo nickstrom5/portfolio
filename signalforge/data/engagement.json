@@ -1,0 +1,50 @@
+{
+  "options": [
+    {
+      "id": "teardown",
+      "name": "Systems teardown",
+      "duration": "45 minutes",
+      "format": "Live call",
+      "who": "Heads of Growth, Sales or RevOps who suspect the machine is leaking.",
+      "get": [
+        "Walk through your current stack from list to meeting",
+        "Find where credits, replies and hours are lost",
+        "Leave with a build order and the one fix to make this week"
+      ],
+      "cta": "primary"
+    },
+    {
+      "id": "project",
+      "name": "Project build",
+      "duration": "4 to 8 weeks",
+      "format": "Fixed scope",
+      "who": "Teams that need one of the five systems shipped and handed over.",
+      "get": [
+        "One system, built in your tools (Clay, HubSpot, Salesforce, n8n, Slack)",
+        "Written runbook, prompts and golden test set",
+        "Two weeks of tuning after launch"
+      ],
+      "cta": "secondary"
+    },
+    {
+      "id": "embedded",
+      "name": "Embedded GTM engineer",
+      "duration": "Monthly",
+      "format": "Part-time, in your Slack",
+      "who": "Series B+ teams that want the whole loop built and iterated over a few quarters.",
+      "get": [
+        "Build order executed system by system",
+        "Weekly reporting by segment and persona",
+        "Prompt, signal and copy iteration from live results"
+      ],
+      "cta": "primary"
+    }
+  ],
+  "buildOrder": [
+    { "step": 1, "system": "Enrichment", "why": "Everything downstream scores and routes what enrichment produces. Bad input, bad machine." },
+    { "step": 2, "system": "Scoring", "why": "Decides who gets a message this week. Timing over fit." },
+    { "step": 3, "system": "Reply routing", "why": "The first system that touches revenue. Minutes matter." },
+    { "step": 4, "system": "Signal detection", "why": "Feeds scoring with fresh timing instead of stale lists." },
+    { "step": 5, "system": "Reporting", "why": "Tells you which segment × persona is actually working, so you can double down." }
+  ]
+}

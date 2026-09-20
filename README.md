@@ -119,3 +119,10 @@ the interactive flows (menu, theme toggle, work filters, Apps tiles, contact
 form). It exits non-zero with a findings list. Needs Playwright with
 Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
 A weekly routine runs this and reports.
+
+## Signalforge (GTM engineering showcase)
+
+`signalforge/` is a separate Next.js app: a client-facing showcase with
+working demos of enrichment, scoring, reply routing, signal detection and
+reporting systems. It has its own `package.json` and deploys to Vercel from
+that directory. See [`signalforge/README.md`](signalforge/README.md).
