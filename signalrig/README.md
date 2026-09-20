@@ -1,4 +1,4 @@
-# Signalforge
+# SignalRig
 
 A single-purpose marketing and demo site that proves GTM engineering capability:
 five working, client-side demos (enrichment → scoring → routing → signals →
@@ -11,7 +11,7 @@ secrets, no analytics. Every demo runs on labelled sample data in `data/`.
 ## Run locally
 
 ```bash
-cd signalforge
+cd signalrig
 npm install
 npm run dev        # http://localhost:3000
 npm run build      # production build, also type-checks
@@ -23,17 +23,17 @@ Node 20 or newer.
 
 ## Deploy to Vercel
 
-The app lives in the `signalforge/` subdirectory of the portfolio repo, so
+The app lives in the `signalrig/` subdirectory of the portfolio repo, so
 point Vercel at that directory:
 
 ```bash
-cd signalforge
+cd signalrig
 npx vercel --prod
 ```
 
 When Vercel asks for settings, accept the Next.js defaults. If you connect the
 GitHub repo through the Vercel dashboard instead, set **Root Directory** to
-`signalforge` in the project settings. Nothing else is required: fonts are
+`signalrig` in the project settings. Nothing else is required: fonts are
 bundled from npm, the OG image is rendered at build time, and there are no
 environment variables.
 

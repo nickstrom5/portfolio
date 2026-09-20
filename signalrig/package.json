@@ -1,8 +1,8 @@
 {
-  "name": "signalforge",
+  "name": "signalrig",
   "version": "1.0.0",
   "private": true,
-  "description": "Signalforge — a GTM engineering showcase with working demos of enrichment, scoring, routing, signal detection and reporting systems.",
+  "description": "SignalRig — a GTM engineering showcase with working demos of enrichment, scoring, routing, signal detection and reporting systems.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
