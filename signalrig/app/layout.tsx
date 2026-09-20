@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import siteJson from "@/data/site.json";
 import { display, mono, sans } from "./fonts";
+import { StructuredData } from "@/components/site/StructuredData";
 import "./globals.css";
 
 const title = `${siteJson.name} — GTM engineering for B2B teams`;
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
   applicationName: siteJson.name,
   keywords: ["GTM engineering", "RevOps automation", "outbound systems", "lead enrichment", "lead scoring", "reply routing", "signal detection", "Clay", "HubSpot"],
   authors: [{ name: siteJson.owner.name, url: siteJson.owner.site }],
+  creator: siteJson.owner.name,
+  alternates: { canonical: "/" },
+  verification: siteJson.seo.googleSiteVerification ? { google: siteJson.seo.googleSiteVerification } : undefined,
   openGraph: {
     type: "website",
     siteName: siteJson.name,
@@ -28,7 +32,7 @@ export const metadata: Metadata = {
     title,
     description: siteJson.description,
   },
-  robots: { index: true, follow: true },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
 };
 
 export const viewport: Viewport = {
@@ -42,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body>
+        <StructuredData />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-[8px] focus:bg-accent focus:px-3 focus:py-2 focus:text-[#0a0b0d]"
