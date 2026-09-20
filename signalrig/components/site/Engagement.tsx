@@ -9,7 +9,7 @@ export function Engagement() {
     <Section
       id="engage"
       eyebrow="Engagement options"
-      title="Three ways to work with us."
+      title="Three ways to work together."
       lede="Start with the teardown if you are unsure. It is the fastest way to find out whether your problem is list quality, timing, response speed or reporting, and each of those has a different fix."
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
