@@ -1,7 +1,8 @@
 ---
 import Layout from '@/layouts/Base.astro';
-import AlbumMark from '@/components/AlbumMark.astro';
+import AlbumArt from '@/components/AlbumArt.astro';
 import { url } from '@/lib/url';
+import { albumCover, spotifyAlbumUrl } from '@/lib/covers';
 import { records, defaultRecord, spotifyEmbed, spotifySearch, type Record_ } from '@/data/discography';
 import { referenceSet, song, songLedger } from '@/data/tour';
 
@@ -15,6 +16,11 @@ const liveSongs = (r: Record_) =>
         .filter((t) => t.album === r.setKey)
         .map((t) => t.title)
     : [];
+
+/** Real cover art, resolved once per build and shared by the wall and the player. */
+const covers = Object.fromEntries(
+  await Promise.all(records.map(async (r) => [r.id, await albumCover(r.spotifyId)] as const)),
+) as Record<string, string | undefined>;
 
 const solo = records.filter((r) => r.kind === 'solo');
 const collab = records.filter((r) => r.kind === 'collab');
@@ -70,8 +76,9 @@ const paletteAttrs = (r: Record_) => ({
           <h1 style="font-size:clamp(44px,8vw,96px)">Discography</h1>
         </div>
         <p>
-          Click a square. It starts playing, and the page turns to match the record. {playable} of
-          {records.length} play here through Spotify; the rest open where they live.
+          Click a square. It starts playing, and the page turns to match the record. Cover art is the
+          real artwork, served by Spotify; {playable} of {records.length} play here, and the one that
+          never reached streaming says so.
         </p>
       </div>
     </div>
@@ -83,7 +90,7 @@ const paletteAttrs = (r: Record_) => ({
         {
           records.map((r) => (
             <div class="pm" data-pm={r.id} hidden={r.id !== defaultRecord.id}>
-              <AlbumMark record={r} />
+              <AlbumArt record={r} cover={covers[r.id]} eager={r.id === defaultRecord.id} />
             </div>
           ))
         }
@@ -130,7 +137,7 @@ const paletteAttrs = (r: Record_) => ({
         {
           solo.map((r) => (
             <button class="sq reveal" type="button" {...paletteAttrs(r)} aria-pressed={r.id === defaultRecord.id}>
-              <span class="sq-art"><AlbumMark record={r} /></span>
+              <span class="sq-art"><AlbumArt record={r} cover={covers[r.id]} /></span>
               <span class="sq-meta">
                 <span class="sq-title">{r.title}</span>
                 <span class="sq-year">{r.year} {'·'} {r.tracks} tracks</span>
@@ -149,7 +156,7 @@ const paletteAttrs = (r: Record_) => ({
         {
           collab.map((r) => (
             <button class="sq reveal" type="button" {...paletteAttrs(r)} aria-pressed="false">
-              <span class="sq-art"><AlbumMark record={r} /></span>
+              <span class="sq-art"><AlbumArt record={r} cover={covers[r.id]} /></span>
               <span class="sq-meta">
                 <span class="sq-title">{r.title}</span>
                 <span class="sq-year">{r.year} {'·'} {r.billed}</span>
@@ -174,7 +181,7 @@ const paletteAttrs = (r: Record_) => ({
                   <span class="rule-num">{r.released} {'·'} {r.label}</span>
                   <p class="prose" style="margin-top:14px">{r.note}</p>
                   <div class="hero-cta" style="justify-content:flex-start;margin-top:22px">
-                    <a class="btn-ye" href={spotifySearch(r)} rel="noopener nofollow">Open in Spotify</a>
+                    <a class="btn-ye" href={r.spotifyId ? spotifyAlbumUrl(r.spotifyId) : spotifySearch(r)} rel="noopener nofollow">Open in Spotify</a>
                     {live.length > 0 && <a class="btn-ye" href={url('/setlists/')}>In the 2026 set</a>}
                   </div>
                 </div>
@@ -204,9 +211,10 @@ const paletteAttrs = (r: Record_) => ({
       <div class="notice">
         <div>
           <b>About the squares</b>
-          These are not the album sleeves. Cover art belongs to the people who made it, so every square
-          here is an original generated figure drawn from that record's palette — the same rule the rest of
-          this archive follows. Playback is Spotify's own embedded player; nothing is hosted here.
+          The covers are the real artwork, served by Spotify's own image CDN and shown unaltered — not
+          cropped, nothing laid over them — with every record linking back to its Spotify page, which is
+          what their terms ask for. Playback is Spotify's embedded player. Nothing is hosted here. Donda 2
+          has no square because it never reached streaming.
         </div>
       </div>
     </div>
@@ -269,6 +277,14 @@ const paletteAttrs = (r: Record_) => ({
     display: block;
     aspect-ratio: 1;
     overflow: hidden;
+  }
+
+  [data-noart] {
+    background: repeating-linear-gradient(135deg, var(--ye-slab) 0 8px, var(--ye-pit) 8px 16px);
+  }
+
+  [data-noart] img {
+    display: none;
   }
 
   .sq-meta {
@@ -429,6 +445,13 @@ const paletteAttrs = (r: Record_) => ({
 </style>
 
 <script>
+  // Artwork comes from a third-party CDN, so treat a failed load as a state.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-cover]')) {
+    const drop = () => img.closest('.sq-art, .pm')?.setAttribute('data-noart', '');
+    if (img.complete && img.naturalWidth === 0) drop();
+    img.addEventListener('error', drop);
+  }
+
   const player = document.querySelector<HTMLElement>('[data-player]');
   const wash = document.querySelector<HTMLElement>('.disc-wash');
   const host = document.querySelector<HTMLElement>('[data-spotify-host]');

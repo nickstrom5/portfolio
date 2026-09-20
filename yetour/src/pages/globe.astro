@@ -1,10 +1,8 @@
 ---
 import Layout from '@/layouts/Base.astro';
-import GlobeStage from '@/components/GlobeStage.astro';
-import GlobeLook from '@/components/GlobeLook.astro';
 import VideoEmbed from '@/components/VideoEmbed.astro';
 import { url } from '@/lib/url';
-import { globe, specs, quotes, looks, videos, videoSearches, globeSources } from '@/data/globe';
+import { globe, specs, quotes, stills, heroStill, videos, videoSearches, globeSources } from '@/data/globe';
 import { shows } from '@/data/tour';
 
 const venues = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) => s.venue)).size;
@@ -35,7 +33,9 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <section class="hero">
-    <div class="hero-bg" aria-hidden="true"><GlobeStage lines={18} speed={26} uid="globepage" /></div>
+    <div class="hero-bg hero-shot" aria-hidden="true">
+      <img src={heroStill} alt="" width="1280" height="720" fetchpriority="high" decoding="async" data-yt={videos[0]!.id} />
+    </div>
     <div class="hero-fade" aria-hidden="true"></div>
     <div class="wrap hero-in">
       <p class="eyebrow">{globe.designers} {'·'} Lighting by {globe.lighting}</p>
@@ -48,7 +48,7 @@ const jsonLd = [
         been to {venues} venues across three continents since. Nobody has said how it works.
       </p>
       <div class="hero-cta">
-        <a class="btn-ye solid" href="#looks">The eight states</a>
+        <a class="btn-ye solid" href="#looks">Stills of the stage</a>
         <a class="btn-ye" href="#film">Full-show film</a>
       </div>
     </div>
@@ -90,7 +90,7 @@ const jsonLd = [
           <p>
             The lighting is John McGuire's. That matters more than it sounds: a sphere has no flat plane
             to wash, so the rig has to model a curved surface from above and behind while the surface
-            itself is projecting. Most of the states below are lighting decisions, not video ones.
+            itself is projecting. Much of what changes across a set is a lighting decision, not a video one.
           </p>
           <p>
             What nobody outside the production has said is how any of it is rigged, driven or projected.
@@ -114,10 +114,10 @@ const jsonLd = [
         }
         <div class="notice">
           <div>
-            <b>A note on these drawings</b>
-            The eight states below are original renderings, not photographs. They are drawn from written
-            descriptions of what the sphere does across a set, and they are how the rest of this archive
-            shows you things it cannot legally show you.
+            <b>Where the pictures come from</b>
+            Ye livestreamed Istanbul in full, which is why this is the one page in the archive with real
+            photographs of the stage on it. Everything below is a frame from that broadcast, served by
+            YouTube and linked back to the video it came from.
           </div>
         </div>
       </div>
@@ -128,27 +128,30 @@ const jsonLd = [
     <div class="wrap">
       <div class="sec-head">
         <div>
-          <span class="rule-num">03 {'—'} Gallery</span>
-          <h2>Eight states</h2>
+          <span class="rule-num">03 {'\u2014'} Stills</span>
+          <h2>The stage, photographed</h2>
         </div>
         <p>
-          The sphere does not sit still. Across two hours it moves through planet, moon, structure and
-          pure light — each one tied to a stretch of the set.
+          Frames from the two full-length Istanbul uploads, served by YouTube. Each one links back to the
+          video it came from.
         </p>
       </div>
       <div class="gallery">
         {
-          looks.map((look) => (
-            <figure class="plate reveal" style={`--ye-accent:${look.accent}`}>
-              <GlobeLook look={look} />
-              <figcaption>
-                <strong style="display:block;font-family:var(--ye-display);font-size:15px;color:var(--ye-bone);letter-spacing:0;text-transform:none;margin-bottom:6px">
-                  {look.title}
-                </strong>
-                <span style="text-transform:none;letter-spacing:0;font-family:var(--ye-body);font-size:13px;color:var(--ye-ash)">
-                  {look.caption}
-                </span>
-              </figcaption>
+          stills.map((still) => (
+            <figure class="plate reveal">
+              <a href={still.watch} rel="noopener nofollow" aria-label={`Watch on YouTube — ${still.caption}`}>
+                <img
+                  class="still"
+                  src={still.src}
+                  alt={still.alt}
+                  width="480"
+                  height="360"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+              <figcaption>{still.caption}</figcaption>
             </figure>
           ))
         }
@@ -217,3 +220,44 @@ const jsonLd = [
     <a class="next" href={url('/andre/')}><span>Next {'→'}</span><b>André Troutman</b><i>The talk box at the front of it</i></a>
   </nav>
 </Layout>
+
+<style>
+  .hero-shot {
+    overflow: hidden;
+  }
+
+  .hero-shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.42;
+    filter: saturate(0.85) contrast(1.05);
+  }
+
+  .still {
+    display: block;
+    width: 100%;
+    /* The numbered frames arrive letterboxed at 4:3; crop back to the picture. */
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    background: #0b0d0f;
+    transition: opacity 0.3s;
+  }
+
+  .plate a:hover .still,
+  .plate a:focus-visible .still {
+    opacity: 0.82;
+  }
+</style>
+
+<script>
+  // maxresdefault only exists for uploads encoded at 1080p or better.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
+    img.addEventListener('error', () => {
+      if (img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+    });
+  }
+</script>

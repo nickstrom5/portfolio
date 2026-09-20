@@ -1,0 +1,50 @@
+---
+/**
+ * Real cover art from Spotify's CDN, shown unaltered as their terms require:
+ * square container, `object-fit: contain`, nothing overlaid on it.
+ *
+ * If the artwork cannot be resolved at build time, or fails to load in the
+ * browser, the generated mark takes its place rather than leaving a broken
+ * image behind.
+ */
+import AlbumMark from '@/components/AlbumMark.astro';
+import type { Record_ } from '@/data/discography';
+
+interface Props {
+  record: Record_;
+  cover?: string;
+  /** The tile that is visible on first paint should not lazy-load. */
+  eager?: boolean;
+}
+
+const { record, cover, eager = false } = Astro.props;
+---
+
+{
+  cover ? (
+    <img
+      class="cover"
+      src={cover}
+      alt={`${record.title} — album cover`}
+      width="640"
+      height="640"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      data-cover
+      style={`background:${record.palette.panel}`}
+    />
+  ) : (
+    <AlbumMark record={record} />
+  )
+}
+
+<style>
+  .cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    height: auto;
+    /* contain, never cover: Spotify artwork must not be cropped. */
+    object-fit: contain;
+  }
+</style>
