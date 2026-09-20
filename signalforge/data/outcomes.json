@@ -1,0 +1,32 @@
+{
+  "disclaimer": "Patterns drawn from public GTM engineering practice. These are illustrative, not client claims. Real results depend on list quality, offer and deliverability.",
+  "cards": [
+    {
+      "id": "sdr-automation",
+      "title": "Automate ~80% of SDR workflow",
+      "pattern": "Enrichment, scoring, first-touch drafting and reply triage run as systems. Humans handle positive replies and calls.",
+      "metric": "80–100",
+      "metricLabel": "meetings per rep per month, reported in public patterns",
+      "mechanism": ["Qualify before enrich", "Signal-timed sequencing", "Reply routing under 5 minutes"],
+      "caveat": "Depends on a real ICP and clean domains. Volume without deliverability is just spam."
+    },
+    {
+      "id": "dynamic-content",
+      "title": "Dynamic content from signals",
+      "pattern": "First lines and offers generated from the signal that fired (role opened, round closed, exec joined), not from a template.",
+      "metric": "2–3×",
+      "metricLabel": "reply-rate lift over static templates, in public patterns",
+      "mechanism": ["Signal → hook mapping", "Persona-specific proof", "Forbid invention in generated copy"],
+      "caveat": "Lift collapses when the signal is stale. Decay rules matter."
+    },
+    {
+      "id": "call-language",
+      "title": "Call language → outbound loop",
+      "pattern": "Phrases buyers actually use on recorded calls are mined weekly and fed back into sequences and ICP tests.",
+      "metric": "Weekly",
+      "metricLabel": "feedback cycle from calls to copy, instead of quarterly rewrites",
+      "mechanism": ["Transcript mining", "Objection clustering", "Copy tests by segment"],
+      "caveat": "Requires consent-compliant recording and a reporting layer that splits by segment."
+    }
+  ]
+}

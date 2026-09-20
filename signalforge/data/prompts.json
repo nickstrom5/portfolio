@@ -1,0 +1,94 @@
+{
+  "bad": {
+    "title": "Vague",
+    "verdict": "Looks fine on 10 companies. Falls apart on 10,000.",
+    "text": "You are a sales research assistant. Read the company information below and decide whether this company is a good fit for our product. Our ideal customers are growing B2B SaaS companies with a sales team. Give a score from 1 to 10 and explain your reasoning.\n\nCompany info:\n{{company_info}}",
+    "problems": [
+      "'Good fit' and 'growing' are not testable. Two runs give two answers.",
+      "No disqualifiers, so an agency with a sales team scores 7.",
+      "Nothing forbids invention. Missing data gets filled with plausible guesses.",
+      "Reasoning is free-form, so you cannot audit or aggregate it.",
+      "A 1 to 10 scale with no anchors clusters at 6 to 8."
+    ]
+  },
+  "good": {
+    "title": "Holds at volume",
+    "verdict": "Same output shape every time. Auditable. Cheap to re-run.",
+    "text": "You score companies against an ICP. You never invent facts.\n\nEvidence you may use: the SOURCE block only. If a test cannot be verified from SOURCE, mark it \"unknown\" and award 0 points.\n\nTESTS (award full points or 0):\n1. b2b_software (20): sells software to businesses. Fail for services, agencies, hardware, consumer.\n2. stage (15): Series B–D, OR 80–600 employees.\n3. sales_team (20): ≥3 open or filled SDR/AE roles.\n4. buyer (15): pricing or customers imply ACV ≥ $15k (enterprise tier, 'talk to sales', enterprise logos).\n5. crm (10): HubSpot or Salesforce detected.\n6. geo (10): HQ in US, CA, UK or EU.\n7. outbound_motion (10): sequencing tool detected OR SDR roles open.\n\nDISQUALIFIERS (any present ⇒ score = min(score, 30)):\n- consumer product · agency/consultancy/staffing · <40 employees · no sales function · regulated life sciences · government\n\nOUTPUT strict JSON:\n{\n  \"tests\": [{\"id\": \"...\", \"pass\": true|false|\"unknown\", \"evidence\": \"<quote or paraphrase from SOURCE, ≤ 25 words>\"}],\n  \"disqualifiers\": [\"...\"],\n  \"score\": <0–100>,\n  \"reason\": \"<≤ 40 words, must cite at least two specific facts>\"\n}\n\nSOURCE:\n{{source}}",
+    "wins": [
+      "Each test is binary with a written pass condition.",
+      "Disqualifiers cap the score, so no amount of fit rescues a bad company.",
+      "'Unknown scores zero' removes invention and makes silence visible.",
+      "Evidence is quoted, so a human can spot-check 50 records in 10 minutes.",
+      "Weights are explicit; the score distribution is calculable before you run it."
+    ]
+  },
+  "symptoms": [
+    {
+      "symptom": "Keeps bad companies",
+      "cause": "No disqualifiers, or disqualifiers phrased as negative points instead of caps.",
+      "fix": "Add explicit disqualifiers that cap the score. Test against 20 known-bad records before scaling."
+    },
+    {
+      "symptom": "Drops good companies",
+      "cause": "Tests require evidence the scraper rarely finds (exact employee count, funding stage).",
+      "fix": "Allow alternative evidence per test ('Series B–D OR 80–600 employees'). Log 'unknown' rates per test and fix the scraper, not the prompt."
+    },
+    {
+      "symptom": "Generic reasons",
+      "cause": "Reason field is unconstrained and the model pads it.",
+      "fix": "Cap the reason at 40 words and require at least two cited facts. Reject outputs that fail the check."
+    },
+    {
+      "symptom": "Score clustering",
+      "cause": "Unanchored scale. The model hedges toward the middle.",
+      "fix": "Replace the scale with weighted binary tests. The score becomes arithmetic, not opinion."
+    },
+    {
+      "symptom": "Different answer on re-run",
+      "cause": "Vague criteria and temperature above zero.",
+      "fix": "Binary tests, temperature 0, and a golden set of 100 records that must score within ±5 on every deploy."
+    },
+    {
+      "symptom": "Bill grows faster than the list",
+      "cause": "Frontier model reads every record, including the 80% that a keyword rule could reject.",
+      "fix": "Cheap-model-first routing: a small model applies disqualifiers, the frontier model scores survivors only."
+    }
+  ],
+  "routing": {
+    "stages": [
+      {
+        "id": "in",
+        "label": "Raw domains",
+        "note": "10,000 records",
+        "share": 1.0
+      },
+      {
+        "id": "rules",
+        "label": "Rules",
+        "note": "Regex + firmographic filters. Free.",
+        "share": 0.62
+      },
+      {
+        "id": "small",
+        "label": "Small model",
+        "note": "Applies disqualifiers. ~$0.0003 / record.",
+        "share": 0.28
+      },
+      {
+        "id": "frontier",
+        "label": "Frontier model",
+        "note": "Full ICP scoring. ~$0.012 / record.",
+        "share": 0.28
+      },
+      {
+        "id": "out",
+        "label": "Qualified",
+        "note": "Enriched and routed.",
+        "share": 0.19
+      }
+    ],
+    "costNaive": 120,
+    "costRouted": 37
+  }
+}

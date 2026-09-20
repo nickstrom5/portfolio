@@ -1,0 +1,216 @@
+{
+  "schedule": {
+    "cadence": "runs daily",
+    "time": "06:00 America/Chicago",
+    "lastRun": "2026-09-01T06:00:00-05:00",
+    "durationSec": 142
+  },
+  "rules": [
+    {
+      "id": "ats_buyer",
+      "feed": "ats",
+      "label": "2+ buyer-function roles opened in 30 days",
+      "weight": 30,
+      "windowDays": 30,
+      "short": "Buyer roles opened"
+    },
+    {
+      "id": "funding_recent",
+      "feed": "funding",
+      "label": "Series B or later closed in 90 days",
+      "weight": 25,
+      "windowDays": 90,
+      "short": "Series B+ closed"
+    },
+    {
+      "id": "exec_change",
+      "feed": "exec",
+      "label": "New VP Sales, CRO or CMO in 60 days",
+      "weight": 20,
+      "windowDays": 60,
+      "short": "New revenue exec"
+    },
+    {
+      "id": "ads_category",
+      "feed": "ads",
+      "label": "Started running category ads in 30 days",
+      "weight": 10,
+      "windowDays": 30,
+      "short": "Category ads live"
+    }
+  ],
+  "feeds": [
+    {
+      "id": "ats",
+      "label": "ATS job boards",
+      "sources": [
+        "Greenhouse-style",
+        "Lever-style",
+        "Ashby-style"
+      ],
+      "items": [
+        {
+          "account": "Kestrel",
+          "domain": "kestrelhq.com",
+          "detail": "Sales Development Representative (x4) · Enterprise AE (x2)",
+          "date": "2026-08-14",
+          "meta": "Greenhouse-style board",
+          "contentMatch": true
+        },
+        {
+          "account": "Ferro Labs",
+          "domain": "ferrolabs.ai",
+          "detail": "Head of Sales Development",
+          "date": "2026-08-27",
+          "meta": "Ashby-style board",
+          "contentMatch": true
+        },
+        {
+          "account": "LumenOps",
+          "domain": "lumenops.com",
+          "detail": "Account Executive (x2), first sales hires",
+          "date": "2026-08-20",
+          "meta": "Lever-style board",
+          "contentMatch": true
+        },
+        {
+          "account": "Tessellate",
+          "domain": "tessellate.hr",
+          "detail": "Senior Backend Engineer (x3)",
+          "date": "2026-08-22",
+          "meta": "Greenhouse-style board",
+          "contentMatch": false
+        },
+        {
+          "account": "Harborstack",
+          "domain": "harborstack.com",
+          "detail": "SDR (x3) · AE (x3) · Sales Enablement Manager",
+          "date": "2026-08-30",
+          "meta": "Greenhouse-style board",
+          "contentMatch": true
+        }
+      ]
+    },
+    {
+      "id": "funding",
+      "label": "Funding",
+      "sources": [
+        "Press releases",
+        "Registry filings",
+        "Investor announcements"
+      ],
+      "items": [
+        {
+          "account": "Kestrel",
+          "domain": "kestrelhq.com",
+          "detail": "Series B, $34M led by a growth fund",
+          "date": "2026-02-11",
+          "meta": "Press release",
+          "contentMatch": true
+        },
+        {
+          "account": "LumenOps",
+          "domain": "lumenops.com",
+          "detail": "Series A extension, $9M",
+          "date": "2026-05-04",
+          "meta": "Investor blog",
+          "contentMatch": false
+        },
+        {
+          "account": "Quillsend",
+          "domain": "quillsend.co",
+          "detail": "Series B, $28M",
+          "date": "2026-08-19",
+          "meta": "Press release",
+          "contentMatch": true
+        },
+        {
+          "account": "OrbitFleet",
+          "domain": "orbitfleet.io",
+          "detail": "Series B, $22M",
+          "date": "2025-11-18",
+          "meta": "Press release",
+          "contentMatch": true
+        }
+      ]
+    },
+    {
+      "id": "exec",
+      "label": "Executive changes",
+      "sources": [
+        "Profile changes",
+        "Press",
+        "Company news pages"
+      ],
+      "items": [
+        {
+          "account": "Kestrel",
+          "domain": "kestrelhq.com",
+          "detail": "VP Sales joined (previously at a conversation-intelligence vendor)",
+          "date": "2026-07-10",
+          "meta": "Profile change",
+          "contentMatch": true
+        },
+        {
+          "account": "Ferro Labs",
+          "domain": "ferrolabs.ai",
+          "detail": "Chief Revenue Officer announced",
+          "date": "2026-08-05",
+          "meta": "Company news",
+          "contentMatch": true
+        },
+        {
+          "account": "Northwind Pay",
+          "domain": "northwindpay.com",
+          "detail": "VP Engineering joined",
+          "date": "2026-08-12",
+          "meta": "Profile change",
+          "contentMatch": false
+        },
+        {
+          "account": "Tessellate",
+          "domain": "tessellate.hr",
+          "detail": "CMO joined",
+          "date": "2026-08-25",
+          "meta": "Press",
+          "contentMatch": true
+        }
+      ]
+    },
+    {
+      "id": "ads",
+      "label": "Ad library",
+      "sources": [
+        "LinkedIn ad library",
+        "Meta ad library",
+        "Google transparency"
+      ],
+      "items": [
+        {
+          "account": "Quillsend",
+          "domain": "quillsend.co",
+          "detail": "12 new LinkedIn ads targeting 'revenue operations'",
+          "date": "2026-08-24",
+          "meta": "LinkedIn ad library",
+          "contentMatch": true
+        },
+        {
+          "account": "Harborstack",
+          "domain": "harborstack.com",
+          "detail": "Retargeting creative refreshed (no category terms)",
+          "date": "2026-08-11",
+          "meta": "Meta ad library",
+          "contentMatch": false
+        },
+        {
+          "account": "Ferro Labs",
+          "domain": "ferrolabs.ai",
+          "detail": "Search ads on 'SDR outsourcing alternative'",
+          "date": "2026-08-28",
+          "meta": "Google transparency",
+          "contentMatch": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Signalforge",
+  "tagline": "GTM systems that compound.",
+  "description": "Signalforge builds GTM engineering systems for B2B companies: enrichment, scoring, routing, outbound, signal detection and reporting that replace manual SDR and RevOps volume.",
+  "url": "https://signalforge.work-with-nick.com",
+  "owner": {
+    "name": "Nick Soderstrom",
+    "location": "Chicago",
+    "site": "https://work-with-nick.com",
+    "siteLabel": "work-with-nick.com",
+    "email": "hello@work-with-nick.com"
+  },
+  "cta": {
+    "primary": { "label": "Book a systems teardown", "href": "mailto:hello@work-with-nick.com?subject=Systems%20teardown%20request&body=Company%3A%0AWhat%20we%20sell%3A%0ACurrent%20outbound%20stack%3A%0AWhat%20breaks%20today%3A" },
+    "secondary": { "label": "Send a sample ICP", "href": "mailto:hello@work-with-nick.com?subject=Sample%20ICP%20for%20review&body=Paste%20your%20ICP%20definition%20below.%20We%27ll%20return%20a%20scored%20sample%20list%20and%20a%20list%20of%20disqualifiers%20you%27re%20missing.%0A%0A" }
+  },
+  "nav": [
+    { "id": "what", "label": "What we build" },
+    { "id": "demos", "label": "Demos" },
+    { "id": "prompt-lab", "label": "Prompt lab" },
+    { "id": "foundation", "label": "Foundation" },
+    { "id": "engage", "label": "Engage" }
+  ]
+}

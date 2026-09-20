@@ -1,0 +1,190 @@
+{
+  "asOf": "2026-09-01",
+  "decayMonths": 12,
+  "decayFactor": 0.25,
+  "signalTypes": [
+    {
+      "id": "funding",
+      "label": "Funding round",
+      "weight": 25,
+      "why": "Fresh capital funds headcount and tooling. Budget exists for roughly two quarters."
+    },
+    {
+      "id": "hiring_buyer",
+      "label": "Hiring for buyer function",
+      "weight": 30,
+      "why": "Open roles for the people who would use the product mean the function is growing right now."
+    },
+    {
+      "id": "new_exec",
+      "label": "New executive",
+      "weight": 20,
+      "why": "A new leader re-evaluates the stack in their first 90 days."
+    },
+    {
+      "id": "tech_fit",
+      "label": "Tech stack fit",
+      "weight": 15,
+      "why": "Integrations exist; implementation friction is low."
+    },
+    {
+      "id": "growth",
+      "label": "Headcount or geo growth",
+      "weight": 10,
+      "why": "Expansion strains the processes the product replaces."
+    }
+  ],
+  "accounts": [
+    {
+      "id": "kestrel",
+      "name": "Kestrel",
+      "domain": "kestrelhq.com",
+      "segment": "RevOps software",
+      "fit": 72,
+      "signals": [
+        {
+          "type": "funding",
+          "detail": "Series B, $34M",
+          "date": "2026-02-11"
+        },
+        {
+          "type": "hiring_buyer",
+          "detail": "4 SDR + 2 AE roles posted",
+          "date": "2026-08-14"
+        },
+        {
+          "type": "new_exec",
+          "detail": "New VP Sales (ex-Gong)",
+          "date": "2026-07-10"
+        }
+      ]
+    },
+    {
+      "id": "harborstack",
+      "name": "Harborstack",
+      "domain": "harborstack.com",
+      "segment": "Supply chain",
+      "fit": 95,
+      "signals": [
+        {
+          "type": "funding",
+          "detail": "Series C, $60M",
+          "date": "2023-09-20"
+        },
+        {
+          "type": "tech_fit",
+          "detail": "Salesforce + Salesloft",
+          "date": "2024-11-03"
+        }
+      ]
+    },
+    {
+      "id": "orbitfleet",
+      "name": "OrbitFleet",
+      "domain": "orbitfleet.io",
+      "segment": "Logistics",
+      "fit": 68,
+      "signals": [
+        {
+          "type": "funding",
+          "detail": "Series B, $22M",
+          "date": "2025-11-18"
+        },
+        {
+          "type": "growth",
+          "detail": "Opened Dallas office, +38 headcount",
+          "date": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "id": "quillsend",
+      "name": "Quillsend",
+      "domain": "quillsend.co",
+      "segment": "Martech",
+      "fit": 90,
+      "signals": [
+        {
+          "type": "tech_fit",
+          "detail": "HubSpot detected",
+          "date": "2025-01-15"
+        }
+      ]
+    },
+    {
+      "id": "ferrolabs",
+      "name": "Ferro Labs",
+      "domain": "ferrolabs.ai",
+      "segment": "Fintech",
+      "fit": 61,
+      "signals": [
+        {
+          "type": "hiring_buyer",
+          "detail": "Head of Sales Development role",
+          "date": "2026-08-27"
+        },
+        {
+          "type": "new_exec",
+          "detail": "New CRO announced",
+          "date": "2026-08-05"
+        },
+        {
+          "type": "tech_fit",
+          "detail": "Salesforce detected",
+          "date": "2026-03-10"
+        },
+        {
+          "type": "growth",
+          "detail": "Headcount +22% in 6 months",
+          "date": "2026-07-30"
+        }
+      ]
+    },
+    {
+      "id": "northwind",
+      "name": "Northwind Pay",
+      "domain": "northwindpay.com",
+      "segment": "Fintech",
+      "fit": 88,
+      "signals": [
+        {
+          "type": "new_exec",
+          "detail": "New CMO",
+          "date": "2024-05-12"
+        },
+        {
+          "type": "hiring_buyer",
+          "detail": "2 SDR roles",
+          "date": "2024-08-01"
+        }
+      ]
+    },
+    {
+      "id": "lumenops",
+      "name": "LumenOps",
+      "domain": "lumenops.com",
+      "segment": "DevTools",
+      "fit": 55,
+      "signals": [
+        {
+          "type": "funding",
+          "detail": "Series A extension, $9M",
+          "date": "2026-05-04"
+        },
+        {
+          "type": "hiring_buyer",
+          "detail": "First 2 AE roles posted",
+          "date": "2026-08-20"
+        }
+      ]
+    },
+    {
+      "id": "tessellate",
+      "name": "Tessellate",
+      "domain": "tessellate.hr",
+      "segment": "HR Tech",
+      "fit": 83,
+      "signals": []
+    }
+  ]
+}

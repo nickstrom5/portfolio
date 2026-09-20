@@ -1,0 +1,27 @@
+{
+  "name": "Demo ICP: outbound-led B2B SaaS",
+  "threshold": 70,
+  "summary": "Series B to D B2B software companies with an outbound sales motion, selling to mid-market or enterprise buyers, headquartered in North America or Western Europe.",
+  "tests": [
+    { "id": "b2b_software", "label": "Sells software to businesses (not consumers, not services)", "weight": 20 },
+    { "id": "stage", "label": "Series B to D, or profitable with 80 to 600 employees", "weight": 15 },
+    { "id": "sales_team", "label": "Has a sales team of at least 3 SDRs or AEs", "weight": 20 },
+    { "id": "buyer", "label": "Sells to mid-market or enterprise buyers (ACV above $15k)", "weight": 15 },
+    { "id": "crm", "label": "Runs HubSpot or Salesforce", "weight": 10 },
+    { "id": "geo", "label": "HQ in US, Canada, UK or EU", "weight": 10 },
+    { "id": "outbound_motion", "label": "Evidence of outbound (SDR job posts, sequencing tool, sales-led pricing)", "weight": 10 }
+  ],
+  "disqualifiers": [
+    "Consumer or prosumer product",
+    "Agency, consultancy or staffing business",
+    "Fewer than 40 employees",
+    "No sales function (pure self-serve)",
+    "Regulated life sciences or clinical healthcare",
+    "Government or public sector"
+  ],
+  "rules": [
+    "Every score must cite a specific fact from the source material.",
+    "If a test cannot be verified, mark it unknown and score it zero. Never invent evidence.",
+    "Any disqualifier present forces the score below the threshold regardless of other tests."
+  ]
+}

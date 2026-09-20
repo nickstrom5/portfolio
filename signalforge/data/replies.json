@@ -1,0 +1,127 @@
+{
+  "channels": {
+    "positive": "#inbound-hot",
+    "nurture": "#inbound-nurture",
+    "ooo": "#inbound-auto",
+    "negative": "#inbound-closed"
+  },
+  "owners": [
+    { "id": "amara", "name": "Amara Diallo", "territory": "US East", "segments": ["Fintech", "HR Tech"] },
+    { "id": "jonas", "name": "Jonas Berg", "territory": "EMEA", "segments": ["DevTools", "Martech"] },
+    { "id": "rae", "name": "Rae Tanaka", "territory": "US West", "segments": ["Logistics", "Supply chain", "RevOps software"] }
+  ],
+  "responseCurve": {
+    "note": "Illustrative curve. Relative close probability vs. time to first human response on a positive reply.",
+    "points": [
+      { "minutes": 5, "multiplier": 1.0 },
+      { "minutes": 30, "multiplier": 0.86 },
+      { "minutes": 60, "multiplier": 0.74 },
+      { "minutes": 240, "multiplier": 0.55 },
+      { "minutes": 1440, "multiplier": 0.38 },
+      { "minutes": 4320, "multiplier": 0.22 }
+    ],
+    "baseCloseRate": 0.24
+  },
+  "replies": [
+    {
+      "id": "r1",
+      "from": "Dana Whitfield",
+      "company": "Kestrel",
+      "segment": "RevOps software",
+      "territory": "US West",
+      "subject": "Re: quota planning without the spreadsheet",
+      "body": "This is timely. We're rebuilding territories for FY27 and I'd like to see how you handle mid-year rebalancing. Do you have 30 minutes Thursday?",
+      "classification": "positive",
+      "confidence": 0.96,
+      "intent": "meeting_request"
+    },
+    {
+      "id": "r2",
+      "from": "Auto-reply",
+      "company": "Northwind Pay",
+      "segment": "Fintech",
+      "territory": "US East",
+      "subject": "Automatic reply: quota planning without the spreadsheet",
+      "body": "I am out of the office until 14 September with limited access to email. For urgent matters please contact ops@northwindpay.com.",
+      "classification": "ooo",
+      "confidence": 0.99,
+      "intent": "auto_reply",
+      "returnDate": "2026-09-14"
+    },
+    {
+      "id": "r3",
+      "from": "Marcus Oyelaran",
+      "company": "OrbitFleet",
+      "segment": "Logistics",
+      "territory": "US West",
+      "subject": "Re: routing at 500 vehicles",
+      "body": "Not right now. We just signed with another vendor in Q2. Happy to revisit next year when the contract comes up.",
+      "classification": "nurture",
+      "confidence": 0.91,
+      "intent": "timing_later",
+      "revisit": "2027-04-01"
+    },
+    {
+      "id": "r4",
+      "from": "Lena Hoffmann",
+      "company": "Plumbline",
+      "segment": "DevTools",
+      "territory": "EMEA",
+      "subject": "Re: enterprise motion",
+      "body": "Please remove me from this list. We are not looking at anything in this space.",
+      "classification": "negative",
+      "confidence": 0.98,
+      "intent": "unsubscribe"
+    },
+    {
+      "id": "r5",
+      "from": "Priya Raman",
+      "company": "Harborstack",
+      "segment": "Supply chain",
+      "territory": "US West",
+      "subject": "Re: visibility for the SDR pod",
+      "body": "Interesting. Can you send a one-pager? I'll loop in our RevOps lead if it makes sense.",
+      "classification": "positive",
+      "confidence": 0.82,
+      "intent": "info_request"
+    },
+    {
+      "id": "r6",
+      "from": "Tom Ashby",
+      "company": "Quillsend",
+      "segment": "Martech",
+      "territory": "EMEA",
+      "subject": "Re: reply handling",
+      "body": "We're mid-migration to Salesforce so nothing until that's done, probably January. Ping me then.",
+      "classification": "nurture",
+      "confidence": 0.93,
+      "intent": "timing_later",
+      "revisit": "2027-01-10"
+    },
+    {
+      "id": "r7",
+      "from": "Auto-reply",
+      "company": "Ferro Labs",
+      "segment": "Fintech",
+      "territory": "US East",
+      "subject": "Out of office",
+      "body": "Thanks for your note. I'm travelling this week and will reply on my return on Monday.",
+      "classification": "ooo",
+      "confidence": 0.97,
+      "intent": "auto_reply",
+      "returnDate": "2026-09-07"
+    },
+    {
+      "id": "r8",
+      "from": "Sam Okafor",
+      "company": "Tessellate",
+      "segment": "HR Tech",
+      "territory": "US East",
+      "subject": "Re: reply handling",
+      "body": "Yes, let's talk. Our SDR team spends half its day triaging inboxes. Send a few times for next week.",
+      "classification": "positive",
+      "confidence": 0.95,
+      "intent": "meeting_request"
+    }
+  ]
+}

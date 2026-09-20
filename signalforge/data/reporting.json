@@ -1,0 +1,32 @@
+{
+  "period": "Last 90 days · demo data",
+  "personas": ["VP Sales", "Head of RevOps", "CRO"],
+  "segments": [
+    { "id": "fintech", "label": "Fintech · 100–300" },
+    { "id": "devtools", "label": "DevTools · 50–150" },
+    { "id": "hrtech", "label": "HR Tech · 300–600" },
+    { "id": "martech", "label": "Martech · 100–300" },
+    { "id": "logistics", "label": "Logistics · 150–400" },
+    { "id": "healthit", "label": "Health IT · 200–600" }
+  ],
+  "cells": [
+    { "segment": "fintech", "persona": "VP Sales", "sent": 1420, "replies": 131, "interested": 47, "meetings": 31, "pipeline": 1180000 },
+    { "segment": "fintech", "persona": "Head of RevOps", "sent": 960, "replies": 38, "interested": 9, "meetings": 5, "pipeline": 140000 },
+    { "segment": "fintech", "persona": "CRO", "sent": 610, "replies": 19, "interested": 4, "meetings": 2, "pipeline": 95000 },
+    { "segment": "devtools", "persona": "VP Sales", "sent": 880, "replies": 31, "interested": 6, "meetings": 3, "pipeline": 70000 },
+    { "segment": "devtools", "persona": "Head of RevOps", "sent": 1210, "replies": 98, "interested": 36, "meetings": 24, "pipeline": 640000 },
+    { "segment": "devtools", "persona": "CRO", "sent": 540, "replies": 16, "interested": 3, "meetings": 1, "pipeline": 30000 },
+    { "segment": "hrtech", "persona": "VP Sales", "sent": 1130, "replies": 34, "interested": 8, "meetings": 4, "pipeline": 120000 },
+    { "segment": "hrtech", "persona": "Head of RevOps", "sent": 790, "replies": 22, "interested": 5, "meetings": 2, "pipeline": 60000 },
+    { "segment": "hrtech", "persona": "CRO", "sent": 620, "replies": 15, "interested": 3, "meetings": 1, "pipeline": 45000 },
+    { "segment": "martech", "persona": "VP Sales", "sent": 1050, "replies": 30, "interested": 7, "meetings": 3, "pipeline": 80000 },
+    { "segment": "martech", "persona": "Head of RevOps", "sent": 900, "replies": 26, "interested": 6, "meetings": 3, "pipeline": 70000 },
+    { "segment": "martech", "persona": "CRO", "sent": 480, "replies": 11, "interested": 2, "meetings": 1, "pipeline": 25000 },
+    { "segment": "logistics", "persona": "VP Sales", "sent": 970, "replies": 28, "interested": 6, "meetings": 3, "pipeline": 90000 },
+    { "segment": "logistics", "persona": "Head of RevOps", "sent": 720, "replies": 19, "interested": 4, "meetings": 2, "pipeline": 50000 },
+    { "segment": "logistics", "persona": "CRO", "sent": 510, "replies": 13, "interested": 2, "meetings": 1, "pipeline": 35000 },
+    { "segment": "healthit", "persona": "VP Sales", "sent": 1080, "replies": 27, "interested": 5, "meetings": 2, "pipeline": 60000 },
+    { "segment": "healthit", "persona": "Head of RevOps", "sent": 830, "replies": 20, "interested": 4, "meetings": 1, "pipeline": 30000 },
+    { "segment": "healthit", "persona": "CRO", "sent": 560, "replies": 12, "interested": 2, "meetings": 1, "pipeline": 20000 }
+  ]
+}
