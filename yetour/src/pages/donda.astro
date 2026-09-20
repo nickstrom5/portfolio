@@ -1,0 +1,222 @@
+---
+import Layout from '@/layouts/Base.astro';
+import PortraitPlate from '@/components/PortraitPlate.astro';
+import HousePlate from '@/components/HousePlate.astro';
+import { url } from '@/lib/url';
+import { donda, milestones, namedForHer, house, dondaSources } from '@/data/donda';
+
+const chicagoNights = ['chicago-2026-09-03', 'chicago-2026-09-04'];
+
+const jsonLd = [
+  {
+    '@type': 'Person',
+    name: 'Donda West',
+    alternateName: donda.name,
+    birthDate: '1949-07-12',
+    deathDate: '2007-11-10',
+    birthPlace: { '@type': 'Place', name: donda.bornPlace },
+    jobTitle: 'Professor of English; chair, Department of English, Communications, Media and Theatre',
+    affiliation: { '@type': 'CollegeOrUniversity', name: 'Chicago State University' },
+    alumniOf: [
+      { '@type': 'CollegeOrUniversity', name: 'Virginia Union University' },
+      { '@type': 'CollegeOrUniversity', name: 'Auburn University' },
+    ],
+    children: { '@type': 'Person', name: 'Ye', alternateName: 'Kanye West' },
+    sameAs: ['https://en.wikipedia.org/wiki/Donda_West'],
+  },
+];
+---
+
+<Layout
+  title="Donda West"
+  description="Dr Donda West: English professor, chair at Chicago State for 27 years, Fulbright scholar, author — and the reason an album, a school and a law carry her name."
+  accent="#d9a441"
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <section class="show-hero">
+    <div class="wrap show-hero-in">
+      <div>
+        <div class="show-crumb">
+          <a href={url('/')}>All dates</a>
+          <span aria-hidden="true">/</span>
+          <span>1949 — 2007</span>
+        </div>
+        <h1 class="show-title" style="font-size:clamp(48px,10vw,116px)">
+          Donda West
+          <span>PROFESSOR {'·'} DEPARTMENT CHAIR {'·'} AUTHOR</span>
+        </h1>
+        <p class="show-headline">
+          Twenty-seven years at Chicago State University, a Fulbright year in Nanjing, a research centre
+          named for Gwendolyn Brooks, and a California patient-safety statute that carries her name. She
+          is usually introduced as somebody's mother. She was a career academic first.
+        </p>
+      </div>
+
+      <div class="poster-frame"><PortraitPlate /></div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-block:clamp(36px,5vw,60px)">
+    <div class="wrap">
+      <dl class="facts">
+        <div class="fact"><dt>Full name</dt><dd>{donda.name}</dd></div>
+        <div class="fact"><dt>Born</dt><dd>{donda.born}<br />{donda.bornPlace}</dd></div>
+        <div class="fact"><dt>Died</dt><dd>{donda.died}<br />{donda.diedPlace}</dd></div>
+        <div class="fact"><dt>At Chicago State</dt><dd>{donda.years}</dd></div>
+        <div class="fact"><dt>Book</dt><dd style="font-size:15px;line-height:1.5">{donda.book}</dd></div>
+      </dl>
+
+      <div class="notice" style="margin-top:22px">
+        <div>
+          <b>Why there is no photograph here</b>
+          Photographs of Dr West belong to the people who took them, and a generated "portrait" of a real
+          woman would be an invention presented as a tribute. So the plate above is an engraved memorial,
+          not a likeness, and the real pictures are one click away:
+          <a href="https://commons.wikimedia.org/wiki/Category:Donda_West" rel="noopener nofollow" style="color:var(--ye-bone)">Wikimedia Commons {'↗'}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">01 {'—'} The career</span>
+          <h2>What she actually did</h2>
+        </div>
+        <p>
+          Three degrees, two continents, a research centre, a department, and a memoir — before any of it
+          got attached to a discography.
+        </p>
+      </div>
+      <ul class="bullets">
+        {
+          milestones.map((m) => (
+            <li style="padding:18px 0 18px 26px">
+              <span style="display:block;font-family:var(--ye-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ye-accent);margin-bottom:7px">{m.year}</span>
+              <strong style="display:block;font-family:var(--ye-display);font-size:18px;color:var(--ye-bone);margin-bottom:6px">{m.title}</strong>
+              {m.body}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">02 {'—'} 7815 S. South Shore Drive</span>
+          <h2>The house</h2>
+        </div>
+        <p>
+          A {house.size} Chicago cottage from {house.built} in {house.neighbourhood}. It was nearly
+          demolished in 2017. It is still standing.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <figure class="plate" style="margin:0">
+            <HousePlate />
+            <figcaption>
+              {house.address} · elevation drawn from the published description of the building, not traced
+              from a photograph
+            </figcaption>
+          </figure>
+          <div class="notice" style="margin-top:18px">
+            <div>
+              <b>Current status</b>
+              {house.status}
+            </div>
+          </div>
+          <div class="hero-cta" style="justify-content:flex-start;margin-top:18px">
+            <a class="btn-ye" href="https://www.preservationchicago.org/win-grammy-winning-performer-kanye-west-buys-his-childhood-home-to-prevent-demolition/" rel="noopener nofollow">
+              Photos at Preservation Chicago
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <ul class="bullets">
+            {
+              house.timeline.map((t) => (
+                <li style="padding:16px 0 16px 26px">
+                  <span style="display:block;font-family:var(--ye-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ye-accent);margin-bottom:6px">{t.year}</span>
+                  {t.body}
+                </li>
+              ))
+            }
+          </ul>
+          <div class="panel" style="margin-top:18px">
+            <div class="panel-title">The Soldier Field connection</div>
+            <p style="margin:0;font-size:14.5px;line-height:1.65;color:#d7d3ca">
+              He rebuilt this house, full scale, on the floor of Soldier Field for the Donda event in 2021
+              — after first trying to move the actual building there. In September 2026 he played the same
+              stadium twice, four miles from the real one, and broke its attendance record.
+            </p>
+            <div class="hero-cta" style="justify-content:flex-start;margin-top:16px">
+              {chicagoNights.map((slug, i) => <a class="btn-ye" href={url(`/shows/${slug}/`)}>Soldier Field, night {i + 1}</a>)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">03 {'—'} The name</span>
+          <h2>What carries it now</h2>
+        </div>
+        <p>An album, a school, a holding company, a song he could not finish, and a statute.</p>
+      </div>
+      <div class="date-grid">
+        {
+          namedForHer.map((n) => (
+            <article class="box reveal" style="min-height:0">
+              <h3 style="font-size:clamp(20px,2.4vw,25px)">{n.name}</h3>
+              <p class="box-venue" style="margin-top:12px">{n.body}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="notice warn" style="margin-top:26px">
+        <div>
+          <b>The Donda West Law</b>
+          California Assembly Bill 1116, signed on 11 October 2009, prohibits elective cosmetic surgery
+          unless the patient has had a physical examination and written clearance from a licensed
+          practitioner within the previous 30 days, with the medical history confirmed again on the day.
+          It exists because she died the day after an elective procedure, and it is the part of her legacy
+          that has nothing to do with music at all.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">04 {'—'} Provenance</span>
+          <h2>Sources</h2>
+        </div>
+        <p>Every claim on this page traces back to one of these.</p>
+      </div>
+      <ul class="srcs">
+        {dondaSources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/andre/')}><span>{'←'} Back</span><b>André Troutman</b><i>The talk box on the globe</i></a>
+    <a class="next" href={url('/features/')}><span>Next {'→'}</span><b>Features &amp; credits</b><i>The work outside his own albums</i></a>
+  </nav>
+</Layout>

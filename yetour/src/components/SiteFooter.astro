@@ -1,0 +1,56 @@
+---
+import { url } from '@/lib/url';
+import { tour, shows, played, upcoming } from '@/data/tour';
+import { site } from '@/data/site';
+
+const legsLinks = [
+  { href: '/', label: 'All dates' },
+  { href: '/globe/', label: 'The globe' },
+  { href: '/route/', label: 'The route' },
+  { href: '/setlists/', label: 'Setlist ledger' },
+  { href: '/bully/', label: 'BULLY (2026)' },
+];
+
+const meta = [
+  { href: '/discography/', label: 'Discography player' },
+  { href: '/features/', label: 'Features & credits' },
+  { href: '/andre/', label: 'André Troutman' },
+  { href: '/donda/', label: 'Donda West' },
+  { href: '/about/', label: 'Sources & method' },
+];
+---
+
+<footer class="tfoot">
+  <div class="wrap">
+    <div class="tfoot-grid">
+      <div>
+        <h2>YE — {tour.display} {tour.year}</h2>
+        <p>
+          An unofficial, fan-built archive of all {shows.length} announced dates: {played.length} played,
+          {upcoming.length} still to come. Every fact on this site is footnoted to a public source, and the
+          artwork is original — no press photography is reproduced here.
+        </p>
+      </div>
+      <div>
+        <div class="tfoot-title">The tour</div>
+        <ul>
+          {legsLinks.map((l) => <li><a href={url(l.href)}>{l.label}</a></li>)}
+        </ul>
+      </div>
+      <div>
+        <div class="tfoot-title">Deep cuts</div>
+        <ul>
+          {meta.map((l) => <li><a href={url(l.href)}>{l.label}</a></li>)}
+          <li><a href={tour.officialSite} rel="noopener nofollow">Official tour site ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="tfoot-base">
+      <span>
+        {site.domain} {'\u00B7'} unofficial fan project, not affiliated with Ye, YZY, Gamma or any
+        promoter. Built by <a href={site.authorUrl} rel="noopener">{site.author}</a>.
+      </span>
+      <span>Last compiled {site.compiled}</span>
+    </div>
+  </div>
+</footer>

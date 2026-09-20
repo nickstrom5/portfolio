@@ -1,0 +1,355 @@
+---
+import Layout from '@/layouts/Base.astro';
+import GlobeStage from '@/components/GlobeStage.astro';
+import ShowCard from '@/components/ShowCard.astro';
+import { url } from '@/lib/url';
+import {
+  shows, played, upcoming, cancelled, legs, tour, nextShow, longDate, shortPlace, parts,
+} from '@/data/tour';
+
+const countries = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) => s.country)).size;
+const continents = ['North America', 'Europe', 'Asia'] as const;
+const regionCount = (c: string) => shows.filter((s) => s.continent === c).length;
+
+const marquee = shows.map((s) => ({ city: s.city.toUpperCase(), n: String(s.n).padStart(2, '0'), status: s.status }));
+
+const jsonLd = [
+  {
+    '@type': 'MusicGroup',
+    '@id': '#ye',
+    name: 'Ye',
+    alternateName: 'Kanye West',
+    genre: ['Hip hop', 'Rap'],
+  },
+  ...shows
+    .filter((s) => s.status !== 'cancelled')
+    .map((s) => ({
+      '@type': 'MusicEvent',
+      name: `Ye — Live Concert Tour 2026, ${s.city}`,
+      startDate: s.date,
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      performer: { '@id': '#ye' },
+      location: {
+        '@type': 'Place',
+        name: s.venue,
+        address: { '@type': 'PostalAddress', addressLocality: s.city, addressCountry: s.countryCode },
+      },
+      url: new URL(url(`/shows/${s.slug}/`), Astro.site).href,
+    })),
+];
+
+const nextParts = nextShow ? parts(nextShow.date) : null;
+---
+
+<Layout
+  title="Every Date of the 2026 Tour"
+  description="Every date of Ye's 2026 Live Concert Tour behind BULLY: 20 announced shows, setlists, guests, venues, attendance and sources for every single night."
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"><GlobeStage lines={16} speed={30} uid="hero" /></div>
+    <div class="hero-fade" aria-hidden="true"></div>
+    <div class="wrap hero-in">
+      <p class="eyebrow">
+        {tour.ordinal} {'·'} In support of <b>BULLY</b> {'·'} 01 APR {'—'} 21 NOV
+      </p>
+      <h1 class="wordmark">
+        YE
+        <small>LIVE CONCERT TOUR 2O26</small>
+      </h1>
+      <p class="hero-sub">
+        {shows.length} announced dates. {played.length} played, {upcoming.length} to come,
+        {cancelled.length} taken off him by governments. One spinning globe, {continents.length} continents
+        and the first Ye tour since 2016. Pick a night.
+      </p>
+
+      {
+        nextShow && nextParts && (
+          <div class="countdown" data-countdown data-target={`${nextShow.date}T20:00:00Z`}>
+            <div><b data-cd="d">--</b><span>Days</span></div>
+            <div><b data-cd="h">--</b><span>Hrs</span></div>
+            <div><b data-cd="m">--</b><span>Min</span></div>
+            <div><b data-cd="s">--</b><span>Sec</span></div>
+          </div>
+        )
+      }
+      {
+        nextShow && (
+          <p class="eyebrow" style="margin:22px 0 0">
+            Next up {'—'} <b>{shortPlace(nextShow).toUpperCase()}</b> {'·'} {longDate(nextShow.date).toUpperCase()}
+          </p>
+        )
+      }
+
+      <div class="hero-cta">
+        <a class="btn-ye solid" href="#dates">All {shows.length} dates</a>
+        {nextShow && <a class="btn-ye" href={url(`/shows/${nextShow.slug}/`)}>The next show</a>}
+        <a class="btn-ye" href={url('/discography/')}>Play the discography</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      {
+        [0, 1].map(() =>
+          marquee.map((m) => (
+            <span>
+              {m.status === 'cancelled' ? <em>{m.city}</em> : m.city} {'·'} {m.n}
+            </span>
+          )),
+        )
+      }
+    </div>
+  </div>
+
+  <section class="stats">
+    <div class="wrap">
+      <div class="stats-grid">
+        <div class="stat">
+          <b>{shows.length}</b><span>Dates</span><i>{played.length} played · {upcoming.length} upcoming</i>
+        </div>
+        <div class="stat"><b>{countries}</b><span>Countries</span><i>{continents.length} continents</i></div>
+        <div class="stat">
+          <b>118K</b><span>Biggest crowd</span><i>Istanbul, 30 May — a claimed world record</i>
+        </div>
+        <div class="stat"><b>$29.8M</b><span>Two nights at SoFi</span><i>≈142,000 people across 1 + 3 April</i></div>
+        <div class="stat"><b>{cancelled.length}</b><span>Cancelled</span><i>London and Reggio Emilia</i></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="dates">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">01 {'—'} The itinerary</span>
+          <h2>Every date</h2>
+        </div>
+        <p>
+          One box per announced date, cancellations included. Open any of them for the venue, the running
+          order, who came out, what it grossed and where every claim came from.
+        </p>
+      </div>
+
+      <div class="filters" role="group" aria-label="Filter dates by status">
+        <button class="chip" type="button" data-filter="status" data-value="all" aria-pressed="true">
+          All<b>{shows.length}</b>
+        </button>
+        <button class="chip" type="button" data-filter="status" data-value="upcoming" aria-pressed="false">
+          Upcoming<b>{upcoming.length}</b>
+        </button>
+        <button class="chip" type="button" data-filter="status" data-value="played" aria-pressed="false">
+          Played<b>{played.length}</b>
+        </button>
+        <button class="chip" type="button" data-filter="status" data-value="cancelled" aria-pressed="false">
+          Cancelled<b>{cancelled.length}</b>
+        </button>
+      </div>
+
+      <div class="filters" role="group" aria-label="Filter dates by region">
+        <button class="chip" type="button" data-filter="continent" data-value="all" aria-pressed="true">
+          Worldwide<b>{shows.length}</b>
+        </button>
+        {
+          continents.map((c) => (
+            <button class="chip" type="button" data-filter="continent" data-value={c} aria-pressed="false">
+              {c}<b>{regionCount(c)}</b>
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="date-grid" data-grid>
+        {shows.map((show) => <ShowCard show={show} />)}
+      </div>
+      <p class="filter-empty" data-empty hidden>No dates match that combination.</p>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">02 {'—'} Routing</span>
+          <h2>Eight legs</h2>
+        </div>
+        <p>
+          The 2026 map was drawn as much by immigration decisions as by promoters. Here is how the year
+          actually broke up.
+        </p>
+      </div>
+
+      <div class="date-grid">
+        {
+          legs.map((leg) => {
+            const inLeg = shows.filter((s) => s.leg === leg.id);
+            return (
+              <article class="box reveal" style={`--ye-accent:${leg.color};min-height:0`}>
+                <div class="box-top">
+                  <span>LEG {String(leg.n).padStart(2, '0')}</span>
+                  <span>{inLeg.length} {inLeg.length === 1 ? 'date' : 'dates'}</span>
+                </div>
+                <h3 style="margin-top:16px">{leg.name}</h3>
+                <div class="box-date" style="margin-top:8px">{leg.region}</div>
+                <p class="box-venue" style="margin-top:14px">{leg.blurb}</p>
+                <div class="box-foot" style="flex-wrap:wrap;gap:6px">
+                  {inLeg.map((s) => (
+                    <a class="box-go" href={url(`/shows/${s.slug}/`)}>
+                      {parts(s.date).dd}.{parts(s.date).mm} {s.city}
+                    </a>
+                  ))}
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="two-col">
+        <div>
+          <span class="rule-num">03 {'—'} Production</span>
+          <h2 style="font-size:clamp(30px,5.2vw,56px)">The globe</h2>
+          <div class="prose" style="margin-top:24px">
+            <p>
+              Ye built this show with production designer {tour.designer} around one object: a large
+              spherical stage that spins, carries the band, and doubles as the screen. It projects Earth
+              and Moon surfaces across the set, which is why every review of 2026 reaches for the word
+              cosmic within two paragraphs.
+            </p>
+            <p>
+              It travels. The same sphere that opened SoFi in April is the one rigged into a 23,804-seat
+              stadium in Almaty in August and into Gelora Bung Karno in October, where the promoters have
+              been selling it by name — the Globe Stage, 360 degrees.
+            </p>
+            <p>
+              Around it: cinematic visuals, pyrotechnics, and a talk-box. André Troutman has carried the
+              BULLY material on nearly every date of the tour.
+            </p>
+          </div>
+          <div class="hero-cta" style="justify-content:flex-start;margin-top:30px">
+            <a class="btn-ye" href={url('/bully/')}>The album</a>
+            <a class="btn-ye" href={url('/route/')}>The route</a>
+            <a class="btn-ye" href={url('/discography/')}>Discography</a>
+          </div>
+        </div>
+        <div>
+          <div class="poster-frame"><GlobeStage lines={12} speed={22} rig={true} uid="stage" /></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">04 {'\u2014'} The rest of it</span>
+          <h2>Deep cuts</h2>
+        </div>
+        <p>Six sections that are not a list of dates.</p>
+      </div>
+      <div class="date-grid">
+        {
+          [
+            { href: '/globe/', title: 'The globe', accent: '#4a8bff', body: 'Who designed the 50-foot sphere, how it is lit, the eight states it cycles through, and full-show film from Istanbul.' },
+            { href: '/discography/', title: 'Discography', accent: '#f2ede1', body: 'Every album as a square. Click one and it plays, and the page turns to match the record.' },
+            { href: '/features/', title: 'Features & credits', accent: '#cfa94a', body: 'Guest verses, production for other artists, and the shoes, films and hardware that carry his name.' },
+            { href: '/andre/', title: 'André Troutman', accent: '#f0821e', body: 'The talk box, the Troutman family, and why the oldest trick on the stage is the one nobody can fake.' },
+            { href: '/donda/', title: 'Donda West', accent: '#d9a441', body: 'The professor, the department she chaired, the house on South Shore Drive, and the law with her name on it.' },
+            { href: '/setlists/', title: 'Setlist ledger', accent: '#ff3b2a', body: 'Every song reported at a 2026 date, which nights it was played, and where the documentation stops.' },
+          ].map((s) => (
+            <a class="box reveal" href={url(s.href)} style={`--ye-accent:${s.accent};min-height:0`}>
+              <h3 style="font-size:clamp(23px,2.8vw,30px)">{s.title}</h3>
+              <p class="box-venue" style="margin-top:12px">{s.body}</p>
+              <div class="box-foot"><span class="box-go" aria-hidden="true">Open {'\u2192'}</span></div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="notice">
+        <div>
+          <b>About this archive</b>
+          This is an unofficial fan project. Every number, date and guest appearance is footnoted to a
+          published source on the show pages, setlists are labelled by how well documented they are, and
+          all artwork here is original vector work — no press photography is reproduced.
+          <br /><a href={url('/about/')} style="color:var(--ye-bone)">Read the method {'→'}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Date filters. Cards are all in the DOM; this only toggles [hidden].
+  const grid = document.querySelector<HTMLElement>('[data-grid]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+  if (grid) {
+    const state: Record<string, string> = { status: 'all', continent: 'all' };
+    const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip[data-filter]')];
+
+    const apply = () => {
+      let shown = 0;
+      for (const card of grid.querySelectorAll<HTMLElement>('[data-show]')) {
+        const ok =
+          (state.status === 'all' || card.dataset.status === state.status) &&
+          (state.continent === 'all' || card.dataset.continent === state.continent);
+        card.hidden = !ok;
+        if (ok) shown++;
+      }
+      if (empty) empty.hidden = shown !== 0;
+    };
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        const group = chip.dataset.filter!;
+        state[group] = chip.dataset.value!;
+        for (const other of chips) {
+          if (other.dataset.filter === group) {
+            other.setAttribute('aria-pressed', String(other === chip));
+          }
+        }
+        apply();
+      });
+    }
+  }
+
+  // Countdown to the next announced date.
+  const cd = document.querySelector<HTMLElement>('[data-countdown]');
+  if (cd) {
+    const target = new Date(cd.dataset.target!).getTime();
+    const cell = (k: string) => cd.querySelector<HTMLElement>(`[data-cd="${k}"]`);
+    const pad = (n: number) => String(Math.max(0, n)).padStart(2, '0');
+    const tick = () => {
+      const left = target - Date.now();
+      if (left <= 0) {
+        for (const k of ['d', 'h', 'm', 's']) {
+          const el = cell(k);
+          if (el) el.textContent = '00';
+        }
+        return;
+      }
+      const sec = Math.floor(left / 1000);
+      const d = cell('d');
+      const h = cell('h');
+      const m = cell('m');
+      const s = cell('s');
+      if (d) d.textContent = pad(Math.floor(sec / 86400));
+      if (h) h.textContent = pad(Math.floor(sec / 3600) % 24);
+      if (m) m.textContent = pad(Math.floor(sec / 60) % 60);
+      if (s) s.textContent = pad(sec % 60);
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+</script>

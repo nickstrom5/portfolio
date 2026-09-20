@@ -1,0 +1,47 @@
+---
+import BoxArt from '@/components/BoxArt.astro';
+import { url } from '@/lib/url';
+import { legsById, parts, type Show } from '@/data/tour';
+
+interface Props {
+  show: Show;
+}
+
+const { show } = Astro.props;
+const p = parts(show.date);
+const leg = legsById[show.leg];
+const accent = leg?.color ?? '#efece4';
+
+const statusLabel =
+  show.status === 'played' ? 'Played' : show.status === 'upcoming' ? 'Upcoming' : 'Cancelled';
+---
+
+<a
+  class:list={['box', 'reveal', { 'is-cancelled': show.status === 'cancelled' }]}
+  href={url(`/shows/${show.slug}/`)}
+  style={`--ye-accent:${accent}`}
+  data-show
+  data-status={show.status}
+  data-continent={show.continent}
+  data-leg={show.leg}
+>
+  <div class="box-top">
+    <span>N{'°'} {String(show.n).padStart(2, '0')}</span>
+    <span class:list={['tag', show.status]}>
+      <i class="dot" aria-hidden="true"></i>{statusLabel}
+    </span>
+  </div>
+
+  <div class="box-art">
+    <BoxArt seed={show.n} status={show.status} />
+  </div>
+
+  <div class="box-date">{p.day} {p.dd} {p.month} {p.y}</div>
+  <h3>{show.city}</h3>
+  <p class="box-venue">{show.venue}<br />{show.area ? `${show.area}, ${show.country}` : show.country}</p>
+
+  <div class="box-foot">
+    <span class="box-go">Leg {leg?.n} {'—'} {leg?.name}</span>
+    <span class="box-go" aria-hidden="true">View {'→'}</span>
+  </div>
+</a>

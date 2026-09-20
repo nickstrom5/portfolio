@@ -1,0 +1,68 @@
+---
+/**
+ * A memorial plate for Donda West.
+ *
+ * Deliberately NOT a likeness. Every photograph of her belongs to the person
+ * who took it, and a generated "portrait" of a real woman would be a
+ * fabrication dressed up as a tribute. So this is what it says it is: an
+ * engraved plate — initials, dates, an aperture of light — with a link to
+ * where the real photographs live.
+ */
+interface Props {
+  accent?: string;
+}
+
+const { accent = '#d9a441' } = Astro.props;
+const MONO = "'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace";
+const DISPLAY = "Archivo, 'Arial Narrow', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+---
+
+<svg viewBox="0 0 440 560" role="img" aria-label="An engraved memorial plate for Dr Donda Clairann West, 1949 to 2007. Not a photograph.">
+  <defs>
+    <radialGradient id="dp-light" cx="50%" cy="38%" r="58%">
+      <stop offset="0%" stop-color={accent} stop-opacity="0.5" />
+      <stop offset="48%" stop-color={accent} stop-opacity="0.13" />
+      <stop offset="100%" stop-color={accent} stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="dp-plate" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#15171a" />
+      <stop offset="100%" stop-color="#0a0b0d" />
+    </linearGradient>
+    <clipPath id="dp-arch">
+      <path d="M130 268 V176 a90 90 0 0 1 180 0 V268 a90 96 0 0 1 -180 0 Z" />
+    </clipPath>
+  </defs>
+
+  <rect width="440" height="560" fill="url(#dp-plate)" />
+  <rect x="16" y="16" width="408" height="528" fill="none" stroke={accent} stroke-opacity="0.35" />
+  <rect x="24" y="24" width="392" height="512" fill="none" stroke={accent} stroke-opacity="0.15" />
+
+  <g clip-path="url(#dp-arch)">
+    <rect x="130" y="80" width="180" height="290" fill="#0d0f12" />
+    <rect x="130" y="80" width="180" height="290" fill="url(#dp-light)" />
+    {
+      Array.from({ length: 16 }, (_, i) => (
+        <path d={`M130 ${96 + i * 18} H310`} stroke={accent} stroke-opacity={0.06 + (i % 4) * 0.03} />
+      ))
+    }
+    <circle cx="220" cy="196" r="62" fill="none" stroke={accent} stroke-opacity="0.4" />
+    <circle cx="220" cy="196" r="86" fill="none" stroke={accent} stroke-opacity="0.18" />
+  </g>
+  <path d="M130 268 V176 a90 90 0 0 1 180 0 V268 a90 96 0 0 1 -180 0 Z" fill="none" stroke={accent} stroke-opacity="0.65" stroke-width="1.6" />
+
+  <text x="220" y="204" text-anchor="middle" font-family={DISPLAY} font-weight="900" font-size="58" letter-spacing="10" fill={accent} fill-opacity="0.9">DCW</text>
+
+  <path d="M58 404 H382" stroke={accent} stroke-opacity="0.35" />
+  <text x="220" y="444" text-anchor="middle" font-family={DISPLAY} font-weight="800" font-size="34" letter-spacing="-0.5" fill="#efece4">DONDA WEST</text>
+  <text x="220" y="472" text-anchor="middle" font-family={MONO} font-size="13" letter-spacing="4" fill={accent}>1949 {'—'} 2007</text>
+  <text x="220" y="502" text-anchor="middle" font-family={MONO} font-size="11.5" letter-spacing="2.6" fill="#767d85">PROFESSOR {'·'} CHAIR {'·'} AUTHOR</text>
+  <text x="220" y="522" text-anchor="middle" font-family={MONO} font-size="11" letter-spacing="2.2" fill="#5d646b">CHICAGO STATE UNIVERSITY</text>
+</svg>
+
+<style>
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>
