@@ -12,6 +12,8 @@
   --accent: #1f5fd0;
   --accent-strong: #174aa6;
   --accent-soft: #e7eefc;
+  --accent-btn: #17429b;
+  --accent-btn-hover: #103377;
   --success: #1f7a4d;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
 
@@ -35,6 +37,8 @@
     --accent: #6f9cff;
     --accent-strong: #8fb2ff;
     --accent-soft: #1a2740;
+    --accent-btn: #4272d8;
+    --accent-btn-hover: #3562c2;
     --success: #4ccb8a;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
     color-scheme: dark;
@@ -51,6 +55,8 @@
   --accent: #6f9cff;
   --accent-strong: #8fb2ff;
   --accent-soft: #1a2740;
+  --accent-btn: #4272d8;
+  --accent-btn-hover: #3562c2;
   --success: #4ccb8a;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
   color-scheme: dark;
@@ -167,11 +173,11 @@ p {
   transform: translateY(1px);
 }
 .btn-primary {
-  background: var(--accent);
+  background: var(--accent-btn);
   color: #fff;
 }
 .btn-primary:hover {
-  background: var(--accent-strong);
+  background: var(--accent-btn-hover);
   color: #fff;
 }
 .btn-secondary {
