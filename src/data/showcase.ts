@@ -33,7 +33,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -338,6 +338,15 @@ export const projects: Project[] = [
       { label: 'You’re on it', href: '/', primary: true },
     ],
     status: 'Live · updated by prompt',
+  },
+  {
+    id: 'damp',
+    name: 'Damp',
+    kicker: 'iPhone app · in the works',
+    tileBlurb: 'The next app in the same experiment. Built the same way: one sentence in, a real product out.',
+    bg: 'linear-gradient(135deg, #0f2233 0%, #12161f 60%, #0d2a3a 100%)',
+    fg: '#5fb8e6',
+    comingSoon: true,
   },
   {
     id: 'lume',
