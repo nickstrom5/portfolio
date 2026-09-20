@@ -154,9 +154,9 @@ if (await page.$('[data-filter="mobile"]')) {
   if (visible.some((c) => c !== 'mobile') || visible.length === 0) findings.push('work filter broken: ' + visible.join(','));
 }
 await page.goto(base + '/apps/', { waitUntil: 'load' });
-await page.tap('[data-project="goodwalk"]');
+await page.tap('[data-project="clam"]');
 await page.waitForTimeout(400);
-if (!(await page.evaluate(() => !document.getElementById('goodwalk').hidden && document.getElementById('clam').hidden && location.hash === '#goodwalk'))) findings.push('apps tiles: switching to Good Walk failed');
+if (!(await page.evaluate(() => !document.getElementById('clam').hidden && document.getElementById('goodwalk').hidden && location.hash === '#clam'))) findings.push('apps tiles: switching to Clam failed');
 await page.goto(base + '/apps/#site', { waitUntil: 'load' });
 if (!(await page.evaluate(() => !document.getElementById('site').hidden))) findings.push('apps deep link #site failed');
 await page.goto(base + '/contact/', { waitUntil: 'load' });
