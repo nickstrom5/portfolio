@@ -609,6 +609,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     display: block;
   }
   .gw-card {
+    flex: none;
     margin-top: calc(var(--w) * 0.03);
     border-radius: 1.1em;
     overflow: hidden;
@@ -618,7 +619,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
   .screen .ui .gw-photo {
     width: 100%;
     height: auto;
-    aspect-ratio: 1 / 0.85;
+    aspect-ratio: 1 / 0.72;
     object-fit: cover;
     object-position: center 30%;
     display: block;
