@@ -6,6 +6,7 @@ import { PromptLab } from "@/components/site/PromptLab";
 import { Outcomes } from "@/components/site/Outcomes";
 import { Foundation } from "@/components/site/Foundation";
 import { Engagement } from "@/components/site/Engagement";
+import { AboutSite } from "@/components/site/AboutSite";
 import { Footer } from "@/components/site/Footer";
 
 export default function Page() {
@@ -20,6 +21,7 @@ export default function Page() {
         <Outcomes />
         <Foundation />
         <Engagement />
+        <AboutSite />
       </main>
       <Footer />
     </>
