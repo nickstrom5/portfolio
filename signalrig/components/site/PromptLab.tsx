@@ -50,7 +50,7 @@ export function PromptLab() {
                   </Badge>
                   <span className="text-[0.78rem] text-ink-3">{pr.verdict}</span>
                 </div>
-                <pre className="code scroll-thin max-h-[420px] overflow-auto px-5 py-4 text-ink-2">{pr.text}</pre>
+                <pre className="code scroll-thin max-h-[420px] overflow-auto px-5 py-4 text-ink-2" tabIndex={0} aria-label={`${pr.title} prompt text`}>{pr.text}</pre>
                 <ul className="flex flex-col gap-1.5 border-t border-line px-5 py-4">
                   {(good ? promptsJson.good.wins : promptsJson.bad.problems).map((line) => (
                     <li key={line} className="flex gap-2 text-[0.82rem] text-ink-2">

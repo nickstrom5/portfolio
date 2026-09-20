@@ -29,21 +29,21 @@ export function Header() {
           <Logo />
           <span className="font-display text-[1.05rem] font-semibold tracking-tight">{siteJson.name}</span>
         </a>
-        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
           {siteJson.nav.map((n) => (
             <a key={n.id} href={`#${n.id}`} className="rounded-[6px] px-3 py-1.5 text-[0.88rem] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink">
               {n.label}
             </a>
           ))}
         </nav>
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <Button size="sm" href={siteJson.cta.primary.href}>
             {siteJson.cta.primary.label}
           </Button>
         </div>
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-line text-ink-2 md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-line text-ink-2 lg:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label={open ? "Close menu" : "Open menu"}
@@ -55,7 +55,7 @@ export function Header() {
         </button>
       </div>
       {open && (
-        <nav id="mobile-nav" aria-label="Primary mobile" className="wrap flex flex-col gap-1 border-t border-line py-3 md:hidden">
+        <nav id="mobile-nav" aria-label="Primary mobile" className="wrap flex flex-col gap-1 border-t border-line py-3 lg:hidden">
           {siteJson.nav.map((n) => (
             <a key={n.id} href={`#${n.id}`} onClick={() => setOpen(false)} className="rounded-[6px] px-3 py-2 text-[0.95rem] text-ink-2 hover:bg-surface-2 hover:text-ink">
               {n.label}
