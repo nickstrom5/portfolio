@@ -1,7 +1,8 @@
 ---
 /**
  * Print-optimized résumé. Not linked in the nav; used to generate the PDF
- * in /public via `npm run resume:pdf`, and reachable at /resume for a web copy.
+ * in /public via `npm run resume:pdf`. The web page at /resume is the canonical résumé;
+ * the PDF is generated from it and only offered from this page.
  */
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
@@ -35,7 +36,13 @@ const contacts = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content={`${site.name} · Résumé`} />
+    <meta property="og:description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content={`Résumé of ${site.name}, ${site.role.toLowerCase()}.`} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
