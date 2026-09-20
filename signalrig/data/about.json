@@ -1,0 +1,32 @@
+{
+  "eyebrow": "About this site",
+  "title": "What SignalRig is, and isn't.",
+  "what": [
+    "SignalRig is a working demonstration of GTM engineering, built by one person to show how I approach the work: which systems to build, in what order, and the judgement that goes into each. It is not a company with clients, and nothing here is a client claim.",
+    "The code and the logic are real and run in your browser. The companies, replies, signals and reporting numbers are invented sample data, labelled as such on every demo. Swap the JSON for a real ICP and the same systems run on it."
+  ],
+  "path": {
+    "title": "If you have three minutes",
+    "steps": [
+      { "href": "#demo-enrichment", "label": "Run the enrichment pipeline", "note": "Try kestrelhq.com, then marrowbio.com. Watch the waterfall get skipped." },
+      { "href": "#demo-scoring", "label": "Flip fit to timing in the scoring model", "note": "Then turn decay off and see a stale account climb." },
+      { "href": "#demo-reporting", "label": "Split the report by segment × persona", "note": "Two cells carry sixteen. The aggregate hides it." }
+    ]
+  },
+  "built": {
+    "title": "How it was built",
+    "facts": [
+      { "k": "Stack", "v": "Next.js 16, TypeScript, Tailwind v4. No backend, no tracking, no API calls." },
+      { "k": "Data", "v": "Eleven JSON files. Every demo, card and checklist reads from them, so the pitch changes without touching React." },
+      { "k": "Process", "v": "Designed, built, screenshot-tested at desktop and phone widths, and deployed in one working session, with Claude Code as the build partner and me directing the architecture, data and copy." },
+      { "k": "Accessibility", "v": "Keyboard operable, reduced-motion aware, colours validated for colour-vision separation on the dark surface." }
+    ]
+  },
+  "hiring": {
+    "title": "Hiring for GTM engineering, RevOps or sales systems?",
+    "body": "I'm open to full-time and contract roles. The résumé and the rest of my work are on work-with-nick.com.",
+    "primary": { "label": "See the résumé", "href": "https://work-with-nick.com/resume/" },
+    "secondary": { "label": "Email me", "href": "mailto:hello@work-with-nick.com?subject=SignalRig" },
+    "source": { "label": "Source on GitHub", "href": "https://github.com/nickstrom5/portfolio/tree/main/signalrig" }
+  }
+}
