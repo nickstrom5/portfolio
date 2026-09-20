@@ -241,11 +241,11 @@ export function RoutingDemo() {
                 {inChannel.map((m, i) => (
                   <li key={`${m.reply.id}-${i}`} className="rise flex gap-2.5">
                     <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-accent font-display text-[0.7rem] font-bold text-[#0a0b0d]">
-                      SF
+                      SR
                     </span>
                     <div className="min-w-0">
                       <p className="text-[0.8rem]">
-                        <span className="font-medium text-ink">Signalforge</span>{" "}
+                        <span className="font-medium text-ink">SignalRig</span>{" "}
                         <span className="font-mono text-[0.66rem] text-ink-3">bot · owner {m.owner.name} · {m.owner.territory}</span>
                       </p>
                       <p className="text-[0.82rem] text-ink-2">{m.action}</p>

@@ -25,7 +25,7 @@ export function Header() {
       )}
     >
       <div className="wrap flex h-16 items-center justify-between gap-4">
-        <a href="#top" className="flex items-center gap-2.5" aria-label="Signalforge, back to top">
+        <a href="#top" className="flex items-center gap-2.5" aria-label="SignalRig, back to top">
           <Logo />
           <span className="font-display text-[1.05rem] font-semibold tracking-tight">{siteJson.name}</span>
         </a>

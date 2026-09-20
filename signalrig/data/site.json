@@ -1,8 +1,8 @@
 {
-  "name": "Signalforge",
+  "name": "SignalRig",
   "tagline": "GTM systems that compound.",
-  "description": "Signalforge builds GTM engineering systems for B2B companies: enrichment, scoring, routing, outbound, signal detection and reporting that replace manual SDR and RevOps volume.",
-  "url": "https://signalforge.work-with-nick.com",
+  "description": "SignalRig builds GTM engineering systems for B2B companies: enrichment, scoring, routing, outbound, signal detection and reporting that replace manual SDR and RevOps volume.",
+  "url": "https://signalrig.dev",
   "owner": {
     "name": "Nick Soderstrom",
     "location": "Chicago",
