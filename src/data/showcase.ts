@@ -32,8 +32,8 @@ export interface Prompt {
   pick?: boolean;
 }
 
-export interface Project {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site';
+export interface StoryProject {
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalforge';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -45,8 +45,7 @@ export interface Project {
   fgDark?: string;
   /** 'light' tiles and heroes use dark text on a light background. */
   tone?: 'light' | 'dark';
-  /** Shown as a non-clickable “Coming soon” tile with no story. */
-  comingSoon?: boolean;
+  comingSoon?: false;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
@@ -58,6 +57,22 @@ export interface Project {
   status: string;
   caseStudy?: string;
 }
+
+/** A non-clickable “Coming soon” tile with no story behind it. */
+export interface SoonProject {
+  id: StoryProject['id'];
+  name: string;
+  kicker: string;
+  tileBlurb: string;
+  bg: string;
+  fg: string;
+  bgDark?: string;
+  fgDark?: string;
+  tone?: 'light' | 'dark';
+  comingSoon: true;
+}
+
+export type Project = StoryProject | SoonProject;
 
 export const projects: Project[] = [
   {
@@ -327,55 +342,19 @@ export const projects: Project[] = [
   {
     id: 'lume',
     name: 'Lume',
-    comingSoon: true,
     kicker: 'iPhone app · daily glow coach',
     tileBlurb: 'One photo. A glow score. Sixty seconds.',
     bg: 'linear-gradient(135deg, #1a1916 0%, #0e0e0c 60%, #2a2620 100%)',
     fg: '#e8e4db',
-    hero: {
-      title: 'The camera already knows. You just haven’t asked it.',
-      sub: 'Take one photo in the same light each morning, get a score for glow, evenness, texture and calm, and do a sixty-second ritual. The picture is processed on the phone and never uploaded.',
-      screen: 'lume-score',
-    },
-    siteShot: {
-      desktop: '/showcase/lume-site.jpg',
-      mobile: '/showcase/lume-site-mobile.jpg',
-      caption: 'lumenow.app. The serif headline, the pricing and the “not a medical device” framing all came out of the same working sessions.',
-      url: 'https://lumenow.app',
-    },
-    features: [
-      {
-        eyebrow: 'The scan',
-        title: 'Same window. Same hour.',
-        body: 'Consistency beats precision. Lume guides you to the same light every morning so the trend line means something, and it reads the photo on device.',
-        screen: 'lume-scan',
-      },
-      {
-        eyebrow: 'The ritual',
-        title: 'Rinse. Press. Seal. SPF.',
-        body: 'Four steps, fifteen seconds each, morning and evening. On iPhone Duo the face stays on one screen and the ritual on the other, like a book.',
-        screen: 'lume-ritual',
-        flip: true,
-      },
-    ],
-    split: {
-      ai: 95,
-      aiLabel: 'Claude & Grok',
-      meLabel: 'Nick',
-      aiDid: 'Positioning against the skincare and glow-up apps, the scoring model, capture flow, trend view, share cards, StoreKit 2 trial, marketing site, App Store listing and social kit.',
-      meDid: 'The constraint that photos never leave the phone, the sixty-second limit, the Duo layout call, device testing and the decision to launch after Clam.',
-    },
-    steps: [
-      { title: 'Find the gap', ai: 'Mapped the category: diagnosis apps on one side, shops on the other.', me: 'Picked “coach with a camera” and said no to anything medical.' },
-      { title: 'Write the product', ai: 'Screens, copy, pricing and the not-a-medical-device language.', me: 'Approved the flow and the sixty-second ceiling.' },
-      { title: 'Generate the app', ai: 'SwiftUI capture, on-device scoring, ritual timer, StoreKit 2.', me: 'Tested scans on a real phone in real light.' },
-      { title: 'Prepare the launch', ai: 'Listing, keywords, promo text, landing page, social handles plan.', me: 'Registered lumenow.app and lined up the accounts.' },
-    ],
-    links: [
-      { label: 'lumenow.app', href: 'https://lumenow.app', primary: true },
-      { label: 'Site source on GitHub', href: 'https://github.com/nickstrom5/lume' },
-    ],
-    status: 'In development · App Store link goes live with the listing',
-    caseStudy: 'lume-daily-glow-coach',
+    comingSoon: true,
+  },
+  {
+    id: 'signalforge',
+    name: 'Signalforge',
+    kicker: 'GTM engineering · demo site',
+    tileBlurb: 'Five working go-to-market demos: enrichment, scoring, routing, signals and reporting. Built in one session on Next.js.',
+    bg: 'linear-gradient(135deg, #1e1410 0%, #121217 60%, #2c1a0e 100%)',
+    fg: '#ff7a2f',
+    comingSoon: true,
   },
 ];
