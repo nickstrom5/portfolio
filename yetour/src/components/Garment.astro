@@ -1,0 +1,223 @@
+---
+/**
+ * An exhibit drawing. Original vector art in a 0 0 400 300 frame — resolution
+ * independent, so it is as sharp on a 6K display as it is on a phone, which is
+ * the only honest way this archive can show a garment it cannot photograph.
+ *
+ * No <defs>/ids: a room holds several of these at once.
+ */
+import type { Figure } from '@/data/yeezy';
+
+interface Props {
+  figure: Figure;
+  accent: string;
+  label: string;
+}
+
+const { figure, accent, label } = Astro.props;
+const ink = '#0e1013';
+const line = 'rgba(255,255,255,0.22)';
+---
+
+<svg viewBox="0 0 400 300" role="img" aria-label={`Drawing of ${label}`}>
+  <rect width="400" height="300" fill="#0b0d0f" />
+  <g stroke={line} stroke-width="0.8">
+    <path d="M0 250 H400" />
+    <path d="M40 250 v14 M360 250 v14" />
+  </g>
+
+  {/* ---------------------------------------------------------- footwear */}
+  {figure === 'bapesta' && (
+    <g>
+      <path d="M72 226 q10-52 46-62 l42-12 q22 26 54 30 l72 10 q30 6 34 22 l4 12 z" fill={accent} fill-opacity="0.9" />
+      <path d="M68 226 h256 q10 0 10 10 t-10 10 H68 q-10 0-10-10 t10-10 z" fill={ink} />
+      <path d="M150 168 l66 44 -20 24 -66-44 z" fill={ink} fill-opacity="0.85" />
+      <path d="M196 176 l14 22 24-4 -16 18 10 24 -22-12 -22 12 10-24 -16-18 24 4 z" fill="#0b0d0f" />
+      <path d="M118 166 q22 10 34 26" fill="none" stroke={ink} stroke-width="3" />
+    </g>
+  )}
+
+  {(figure === 'hightop' || figure === 'midtop') && (
+    <g>
+      <path d={figure === 'hightop' ? 'M96 220 V126 q0-24 28-24 h40 v54 l70 26 q44 14 56 38 z' : 'M96 220 V148 q0-22 28-22 h40 v42 l70 26 q44 14 56 26 z'} fill={accent} fill-opacity="0.9" />
+      <path d="M88 220 h240 q12 0 12 12 t-12 12 H88 q-12 0-12-12 t12-12 z" fill={ink} />
+      <path d="M96 190 h150" stroke={ink} stroke-width="9" fill="none" />
+      <path d="M96 190 h150" stroke={accent} stroke-width="2" fill="none" stroke-opacity="0.6" />
+      {[0, 1, 2, 3].map((i) => <path d={`M120 ${136 + i * 16} l52 10`} stroke={ink} stroke-width="3" fill="none" />)}
+      <path d="M164 156 l84 30" stroke={ink} stroke-width="2" fill="none" stroke-opacity="0.5" />
+      <circle cx="268" cy="206" r="6" fill={ink} />
+    </g>
+  )}
+
+  {figure === 'boot' && (
+    <g>
+      <path d="M104 218 V108 q0-22 26-22 h44 v70 l68 30 q42 18 50 32 z" fill={accent} fill-opacity="0.9" />
+      <path d="M96 218 h236 q14 0 14 14 t-14 14 H96 q-14 0-14-14 t14-14 z" fill={ink} />
+      <path d="M96 232 h236" stroke={accent} stroke-width="3" stroke-opacity="0.35" fill="none" />
+      <path d="M104 132 h112 q10 0 10 10 t-10 10 H104 z" fill={ink} />
+      <circle cx="216" cy="142" r="7" fill={accent} fill-opacity="0.7" />
+      <path d="M130 100 q30 8 44 26" stroke={ink} stroke-width="3" fill="none" />
+    </g>
+  )}
+
+  {(figure === 'runner' || figure === 'stripe') && (
+    <g>
+      <path d="M78 214 q16-46 62-56 l56-12 q30 22 68 28 l46 8 q22 6 24 20 l2 12 z" fill={accent} fill-opacity="0.9" />
+      <path d="M72 214 h256 q12 0 12 12 t-12 12 H72 q-12 0-12-12 t12-12 z" fill={ink} />
+      <path d="M72 226 h256" stroke={accent} stroke-width="2" stroke-opacity="0.4" fill="none" />
+      {figure === 'stripe' && <path d="M150 210 L268 168 l10 18 -118 42 z" fill="#f2ede1" fill-opacity="0.85" />}
+      {[0, 1, 2, 3, 4, 5].map((i) => <path d={`M${110 + i * 26} ${196 - i * 3} l10 -14`} stroke={ink} stroke-width="1.6" fill="none" stroke-opacity="0.55" />)}
+      <path d="M96 200 q34-22 78-30" stroke={ink} stroke-width="2.4" fill="none" stroke-opacity="0.5" />
+    </g>
+  )}
+
+  {figure === 'chunky' && (
+    <g>
+      <path d="M72 196 q20-50 66-58 l52-10 q28 26 68 32 l48 8 q22 6 22 18 z" fill={accent} fill-opacity="0.85" />
+      <path d="M64 196 h272 q16 0 16 16 v10 q0 14-16 14 H64 q-16 0-16-14 v-10 q0-16 16-16 z" fill={ink} />
+      <path d="M64 214 h272" stroke={accent} stroke-width="3" stroke-opacity="0.35" fill="none" />
+      <path d="M140 138 l48 16 -10 26 -48-16 z" fill={ink} fill-opacity="0.8" />
+      <path d="M214 150 l60 12" stroke={ink} stroke-width="8" fill="none" />
+      <path d="M96 176 q28-18 62-26" stroke={ink} stroke-width="2.4" fill="none" stroke-opacity="0.5" />
+    </g>
+  )}
+
+  {figure === 'foam' && (
+    <g>
+      <path d="M86 210 q6-62 60-70 l60-8 q40 4 62 26 q26 26 22 52 z" fill={accent} fill-opacity="0.9" />
+      <path d="M80 210 h216 q14 0 14 14 t-14 14 H80 q-14 0-14-14 t14-14 z" fill={ink} />
+      {[[136, 156], [172, 146], [208, 150], [148, 186], [186, 180], [224, 184], [244, 154]].map(([x, y]) => (
+        <ellipse cx={x} cy={y} rx="13" ry="9" fill="#0b0d0f" transform={`rotate(-16 ${x} ${y})`} />
+      ))}
+      <path d="M100 196 q24-30 62-38" stroke={ink} stroke-width="2" fill="none" stroke-opacity="0.45" />
+    </g>
+  )}
+
+  {figure === 'slide' && (
+    <g>
+      <path d="M92 216 q0-20 18-22 l160-8 q26-2 30 14 l2 16 z" fill={ink} />
+      <path d="M92 216 h218 q12 0 12 12 t-12 12 H92 q-12 0-12-12 t12-12 z" fill={accent} fill-opacity="0.85" />
+      <path d="M118 194 q52-40 112-26 q22 6 24 26" fill={accent} fill-opacity="0.9" stroke="none" />
+      <path d="M124 190 q48-32 100-20" stroke={ink} stroke-width="3" fill="none" />
+      <path d="M92 228 h218" stroke={ink} stroke-width="2" stroke-opacity="0.4" fill="none" />
+    </g>
+  )}
+
+  {figure === 'sock' && (
+    <g>
+      <path d="M124 214 V118 q0-18 24-18 h30 q0 44 22 60 l60 42 q18 12 14 22 z" fill={accent} fill-opacity="0.9" />
+      <path d="M116 214 h172 q12 0 12 12 t-12 12 H116 q-12 0-12-12 t12-12 z" fill={ink} />
+      {[0, 1, 2, 3, 4, 5].map((i) => <path d={`M126 ${126 + i * 15} h50`} stroke={ink} stroke-width="1.4" fill="none" stroke-opacity="0.4" />)}
+      <path d="M124 116 h54" stroke={ink} stroke-width="7" fill="none" />
+    </g>
+  )}
+
+  {figure === 'pod' && (
+    <g>
+      <path d="M128 216 q-14-70 26-96 q30-20 60-2 q42 26 30 98 z" fill={accent} fill-opacity="0.9" />
+      <path d="M120 216 h164 q12 0 12 12 t-12 12 H120 q-12 0-12-12 t12-12 z" fill={ink} />
+      <path d="M150 140 q50-18 96 4" stroke={ink} stroke-width="2.6" fill="none" stroke-opacity="0.6" />
+      <path d="M142 176 q58-16 112 2" stroke={ink} stroke-width="2.6" fill="none" stroke-opacity="0.45" />
+      <path d="M200 120 V216" stroke={ink} stroke-width="1.6" fill="none" stroke-opacity="0.3" />
+    </g>
+  )}
+
+  {figure === 'shades' && (
+    <g>
+      <path d="M74 138 q126-34 252 0 q6 44-30 56 q-96 18-192 0 q-36-12-30-56 z" fill={accent} fill-opacity="0.9" />
+      <path d="M74 138 q126-34 252 0" stroke={ink} stroke-width="8" fill="none" />
+      <path d="M186 150 q14 30 28 0" stroke={ink} stroke-width="4" fill="none" />
+      <path d="M96 176 q60 14 108 14 q48 0 100-14" stroke={ink} stroke-width="2" fill="none" stroke-opacity="0.45" />
+    </g>
+  )}
+
+  {/* ---------------------------------------------------------- garments */}
+  {(figure === 'varsity' || figure === 'bomber' || figure === 'puffer') && (
+    <g>
+      <path d="M146 62 h108 l48 24 q22 10 20 34 l-8 52 -30-8 v78 q0 14-16 14 H132 q-16 0-16-14 v-78 l-30 8 -8-52 q-2-24 20-34 z" fill={accent} fill-opacity="0.9" />
+      <path d="M200 62 v202" stroke={ink} stroke-width="3" />
+      <path d="M146 62 l54 34 54-34" fill="none" stroke={ink} stroke-width="3" />
+      <path d="M116 108 h-20 M284 108 h20" stroke={ink} stroke-width="2" stroke-opacity="0.4" fill="none" />
+      {figure === 'varsity' && (
+        <g>
+          <path d="M96 116 q-14 40-10 72 l22 10 q4-42 12-70 z" fill={ink} fill-opacity="0.85" />
+          <path d="M304 116 q14 40 10 72 l-22 10 q-4-42-12-70 z" fill={ink} fill-opacity="0.85" />
+          <path d="M146 62 h108 v16 H146 z" fill={ink} />
+          <path d="M152 140 l20-26 12 42 12-42 20 26" fill="none" stroke={ink} stroke-width="5" />
+        </g>
+      )}
+      {figure === 'bomber' && (
+        <g>
+          <path d="M116 246 h168" stroke={ink} stroke-width="10" fill="none" />
+          <path d="M146 62 h108" stroke={ink} stroke-width="10" fill="none" />
+          <path d="M152 140 h40 M208 140 h40" stroke={ink} stroke-width="2.4" fill="none" stroke-opacity="0.5" />
+        </g>
+      )}
+      {figure === 'puffer' && (
+        <g>
+          {[100, 128, 156, 184, 212, 240].map((y) => <path d={`M116 ${y} h168`} stroke={ink} stroke-width="2.6" fill="none" stroke-opacity="0.5" />)}
+          <path d="M146 62 h108" stroke={ink} stroke-width="6" fill="none" stroke-opacity="0.5" />
+        </g>
+      )}
+    </g>
+  )}
+
+  {figure === 'hoodie' && (
+    <g>
+      <path d="M150 74 q50-34 100 0 l46 24 q20 10 18 32 l-8 50 -28-8 v80 q0 12-14 12 H136 q-14 0-14-12 v-80 l-28 8 -8-50 q-2-22 18-32 z" fill={accent} fill-opacity="0.9" />
+      <path d="M150 74 q50 46 100 0" fill="none" stroke={ink} stroke-width="4" />
+      <path d="M186 96 v54 M214 96 v54" stroke={ink} stroke-width="4" fill="none" />
+      <path d="M152 196 h96 q10 0 10 10 t-10 10 h-96 q-10 0-10-10 t10-10 z" fill={ink} fill-opacity="0.75" />
+      <path d="M122 252 h156" stroke={ink} stroke-width="9" fill="none" />
+    </g>
+  )}
+
+  {figure === 'tee' && (
+    <g>
+      <path d="M152 76 h96 l50 26 q16 8 12 26 l-10 40 -30-10 v90 q0 10-12 10 H142 q-12 0-12-10 v-90 l-30 10 -10-40 q-4-18 12-26 z" fill={accent} fill-opacity="0.9" />
+      <path d="M152 76 q48 34 96 0" fill="none" stroke={ink} stroke-width="4" />
+      <rect x="164" y="132" width="72" height="56" fill={ink} fill-opacity="0.8" />
+      <path d="M176 152 h48 M176 168 h32" stroke={accent} stroke-width="4" fill="none" stroke-opacity="0.7" />
+    </g>
+  )}
+
+  {figure === 'fur' && (
+    <g>
+      <path d="M142 68 h116 l42 26 q20 12 16 36 l-12 62 -26-10 v70 q0 12-14 12 H136 q-14 0-14-12 v-70 l-26 10 -12-62 q-4-24 16-36 z" fill={accent} fill-opacity="0.85" />
+      {Array.from({ length: 34 }, (_, i) => {
+        const x = 100 + (i % 9) * 24;
+        const y = 92 + Math.floor(i / 9) * 42;
+        return <path d={`M${x} ${y} q8-12 16 0 q8 12 16 0`} stroke={ink} stroke-width="2.4" fill="none" stroke-opacity="0.55" />;
+      })}
+      <path d="M200 68 v196" stroke={ink} stroke-width="3" stroke-opacity="0.6" />
+    </g>
+  )}
+
+  {figure === 'gown' && (
+    <g>
+      <path d="M166 70 h68 l16 30 q-6 24-2 46 l30 106 q4 12-10 12 H122 q-14 0-10-12 l30-106 q4-22-2-46 z" fill={accent} fill-opacity="0.9" />
+      <path d="M166 70 q34 26 68 0" fill="none" stroke={ink} stroke-width="4" />
+      <path d="M152 146 h96" stroke={ink} stroke-width="7" fill="none" />
+      <path d="M200 100 v164" stroke={ink} stroke-width="2" stroke-opacity="0.4" />
+      {[0, 1, 2, 3].map((i) => <path d={`M${158 + i * 28} 170 l-${8 + i * 2} 94`} stroke={ink} stroke-width="1.6" fill="none" stroke-opacity="0.35" />)}
+    </g>
+  )}
+
+  {figure === 'bodysuit' && (
+    <g>
+      <path d="M170 60 h60 l22 22 q-8 28-4 50 v54 q0 18-10 34 l-14 44 h-20 l-6-58 h-16 l-6 58 h-20 l-14-44 q-10-16-10-34 v-54 q4-22-4-50 z" fill={accent} fill-opacity="0.9" />
+      <path d="M170 60 q30 24 60 0" fill="none" stroke={ink} stroke-width="4" />
+      <path d="M200 84 v180" stroke={ink} stroke-width="1.8" stroke-opacity="0.4" />
+      <path d="M156 132 q44 16 88 0" stroke={ink} stroke-width="2.2" fill="none" stroke-opacity="0.45" />
+      <path d="M160 186 q40 14 80 0" stroke={ink} stroke-width="2.2" fill="none" stroke-opacity="0.45" />
+    </g>
+  )}
+</svg>
+
+<style>
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>

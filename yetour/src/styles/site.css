@@ -202,8 +202,14 @@ a {
   gap: 2px;
   min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Fade the trailing edge so it reads as scrollable. The matching padding
+     means the fade sits over empty space once you have scrolled to the end. */
+  padding-right: 22px;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
 }
 
 .tnav-links::-webkit-scrollbar {
