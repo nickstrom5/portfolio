@@ -158,9 +158,9 @@ export const projects: Project[] = [
         screen: 'goodwalk-reminder',
       },
       {
-        eyebrow: 'Their photo on everything',
-        title: 'Your dog is the whole interface.',
-        body: 'You add one photo when you set up the app. From then on it is on the home screen, the streak cards, the month view and anything you share. No collar, no map, no account. Just your dog and the days you walked.',
+        eyebrow: 'The month view',
+        title: 'Every walk, on the calendar.',
+        body: 'Each day you walk fills in a dot. The month view shows the run you are on, the days you missed and the total so far, at a glance. No stats to dig through, no charts. A glance tells you whether this was a good month for your dog.',
         screen: 'goodwalk-photo',
         flip: true,
       },
