@@ -821,7 +821,7 @@ export const shows: Show[] = [
     coords: [33.5276, -112.2626],
     headline: 'The last date. The globe powers down in Glendale.',
     story: [
-      'State Farm Stadium on 21 November closes the Ye Live Concert Tour — eight months, four continents and a stage that had never been built before.',
+      'State Farm Stadium on 21 November closes the Ye Live Concert Tour — eight months, three continents and a stage that had never been built before.',
       'Whatever else 2026 was, it was the year a spherical stage the size of a building went around the world and back, and the year the guest list in Chicago included Kid Cudi again.',
       'If the pattern holds, it ends the way every other night has: house lights down, one song, "Runaway".',
     ],
@@ -904,7 +904,7 @@ export const tour = {
   opened: '2026-04-01',
   closes: '2026-11-21',
   countries: 10,
-  continents: 4,
+  continents: 3,
   biggestCrowd: 118000,
   biggestCrowdCity: 'Istanbul',
   officialSite: 'https://tour.yeezy.com/ye-tour',

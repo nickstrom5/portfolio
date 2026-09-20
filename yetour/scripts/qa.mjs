@@ -209,7 +209,11 @@ for (const [name, width, height] of viewports) {
       }
 
       // Contrast against whatever opaque background is actually behind the text.
-      const parse = (c) => (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      // rgb() gives 0–255; color-mix() computes to color(srgb …) with 0–1 floats.
+      const parse = (c) => {
+        const n = (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+        return c.startsWith('color(') ? n.map((v) => v * 255) : n;
+      };
       const srgb = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
       const lum = ([r, g, b]) => 0.2126 * srgb(r / 255) + 0.7152 * srgb(g / 255) + 0.0722 * srgb(b / 255);
       const behind = (el) => {
