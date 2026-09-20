@@ -36,10 +36,33 @@
     "year": 2026,
     "appStore": "",
     "playStore": "",
-    "website": "",
+    "website": "https://getgoodwalk.app",
     "status": "In development · App Store launch 1–7 October",
     "projectSlug": "goodwalk-dog-walk-tracker",
     "icon": "GW",
+    "placeholder": false
+  },
+  {
+    "name": "Damp",
+    "tagline": "Drink less, not never. A one-tap dry-night tracker that counts your streak, the money you kept and the calories you skipped. No account, nothing leaves the phone.",
+    "platforms": [
+      "iOS"
+    ],
+    "stack": [
+      "SwiftUI",
+      "StoreKit 2",
+      "WidgetKit",
+      "App Intents",
+      "Local notifications"
+    ],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://usedamp.app",
+    "status": "In development",
+    "projectSlug": "damp-drink-less-tracker",
+    "icon": "D",
     "placeholder": false
   },
   {
