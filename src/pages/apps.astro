@@ -6,17 +6,29 @@ import { projects } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="AI / Projects" description="Clam, Lume, LaunchNeat and this website: four projects built by directing AI, shown as scroll-through stories.">
+<Base title="AI / Projects" description="Clam, Good Walk, LaunchNeat and this website: projects built by directing AI, shown as scroll-through stories.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI / Projects</span>
       <h1>Built with AI. Directed by me.</h1>
       <p class="lede">
-        Four projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
+        Projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
       </p>
 
       <div class="tiles" role="tablist" aria-label="Projects">
-        {projects.map((p, i) => (
+        {projects.map((p, i) => p.comingSoon ? (
+          <div
+            class="tile soon"
+            data-project={p.id}
+            data-tone={p.tone ?? 'dark'}
+            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+          >
+            <span class="t-kicker">{p.kicker}</span>
+            <span class="t-name">{p.name}</span>
+            <span class="t-blurb">{p.tileBlurb}</span>
+            <span class="t-cta">Coming soon</span>
+          </div>
+        ) : (
           <button
             class="tile"
             role="tab"
@@ -38,7 +50,7 @@ import { url } from '@/lib/url';
     </div>
   </section>
 
-  {projects.map((p, i) => (
+  {projects.filter((p) => !p.comingSoon).map((p, i) => (
     <article
       class="story"
       id={p.id}
@@ -310,6 +322,16 @@ import { url } from '@/lib/url';
   }
   .tile:hover {
     transform: translateY(-2px);
+  }
+  .tile.soon {
+    cursor: default;
+    opacity: 0.7;
+  }
+  .tile.soon:hover {
+    transform: none;
+  }
+  .tile.soon .t-cta {
+    opacity: 0.8;
   }
   .tile.active,
   .tile[aria-selected='true'] {
