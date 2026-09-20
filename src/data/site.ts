@@ -23,7 +23,7 @@ export const site = {
   /** Headline numbers shown in the hero. Taken from the Upwork profile, September 2026. */
   stats: [
     { value: '300+', label: 'Client contracts', note: '257 on Upwork' },
-    { value: '17,800+', label: 'Hours billed' },
+    { value: '18,000+', label: 'Hours billed' },
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
