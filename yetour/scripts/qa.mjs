@@ -189,7 +189,13 @@ for (const [name, width, height] of viewports) {
       });
 
       document.querySelectorAll('a').forEach((a) => {
-        if (!(a.textContent || '').trim() && !a.getAttribute('aria-label')) out.push('link without accessible text: ' + a.getAttribute('href'));
+        const named =
+          (a.textContent || '').trim() ||
+          a.getAttribute('aria-label') ||
+          a.getAttribute('title') ||
+          [...a.querySelectorAll('img[alt]')].some((i) => i.getAttribute('alt').trim()) ||
+          [...a.querySelectorAll('svg[aria-label]')].some((i) => i.getAttribute('aria-label').trim());
+        if (!named) out.push('link without accessible text: ' + a.getAttribute('href'));
       });
 
       if (width <= 390) {

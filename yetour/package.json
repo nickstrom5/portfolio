@@ -8,7 +8,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "qa": "node scripts/qa.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "covers": "node scripts/fetch-covers.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

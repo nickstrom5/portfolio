@@ -48,26 +48,6 @@ export const quotes: Quote[] = [
   },
 ];
 
-export interface Look {
-  id: string;
-  mode: 'earth' | 'moon' | 'wire' | 'terminator' | 'flare' | 'eclipse' | 'grid' | 'scan';
-  title: string;
-  accent: string;
-  caption: string;
-}
-
-/** The recurring states of the sphere across a set, drawn rather than photographed. */
-export const looks: Look[] = [
-  { id: 'earth', mode: 'earth', title: 'Earth', accent: '#4a8bff', caption: 'The default state. A rotating planet surface, lit from one side, running under the BULLY sequence.' },
-  { id: 'moon', mode: 'moon', title: 'Moon', accent: '#c9c4bb', caption: 'Cratered, grey, unlit from within. The state it holds under "Moon" and the quieter Donda material.' },
-  { id: 'terminator', mode: 'terminator', title: 'Terminator', accent: '#f0821e', caption: 'Day and night meeting on the surface, with the line crawling as the sphere turns.' },
-  { id: 'wire', mode: 'wire', title: 'Wireframe', accent: '#efece4', caption: 'Surface off, structure on. The look the tour is most photographed in, and the one this site takes its motif from.' },
-  { id: 'flare', mode: 'flare', title: 'Flare', accent: '#ff3b2a', caption: 'The Yeezus block. The sphere goes red, the house goes dark, and the lighting rig does the rest.' },
-  { id: 'eclipse', mode: 'eclipse', title: 'Eclipse', accent: '#57d3a5', caption: 'Rim-lit, body black. Used for entrances and for the drop into "Runaway".' },
-  { id: 'grid', mode: 'grid', title: 'Graticule', accent: '#b06ce0', caption: 'Latitude and longitude only — the routing diagram, drawn on the thing that travelled it.' },
-  { id: 'scan', mode: 'scan', title: 'Scan', accent: '#d9a441', caption: 'Horizontal sweeps across the surface, the transitional state between songs.' },
-];
-
 export interface Video {
   /** YouTube id, verified from a public watch URL. */
   id: string;
@@ -91,6 +71,38 @@ export const videos: Video[] = [
     note: 'A second angle on the same show, which Ye livestreamed in full on his own YouTube channel.',
   },
 ];
+
+export interface Still {
+  src: string;
+  alt: string;
+  caption: string;
+  watch: string;
+}
+
+/**
+ * Real frames of the stage, served by YouTube from the two full-length uploads
+ * above. `maxresdefault` is the video's own thumbnail; the numbered frames sit
+ * at roughly a quarter, a half and three quarters of the way through, which is
+ * how YouTube generates them.
+ */
+const FRAMES: { key: string; caption: string }[] = [
+  { key: 'maxresdefault', caption: 'The frame YouTube uses as the thumbnail' },
+  { key: 'hq1', caption: 'Roughly a quarter of the way through the set' },
+  { key: 'hq2', caption: 'Around the middle of the set' },
+  { key: 'hq3', caption: 'Roughly three quarters through' },
+];
+
+export const stills: Still[] = videos.flatMap((v) =>
+  FRAMES.map((f) => ({
+    src: `https://img.youtube.com/vi/${v.id}/${f.key}.jpg`,
+    alt: `The globe stage during Ye's concert at ${v.where}`,
+    caption: `${f.caption} \u00B7 ${v.where}`,
+    watch: `https://www.youtube.com/watch?v=${v.id}`,
+  })),
+);
+
+/** The single best frame, used as the page's backdrop. */
+export const heroStill = `https://img.youtube.com/vi/${videos[0]!.id}/maxresdefault.jpg`;
 
 /** Shows with no verified full-length upload get a search link instead of a guessed embed. */
 export const videoSearches = [

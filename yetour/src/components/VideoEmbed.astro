@@ -1,8 +1,10 @@
 ---
 /**
- * A click-to-load YouTube facade. Nothing from youtube.com is requested until
- * the visitor asks for it, which keeps the page fast, keeps third-party
- * cookies off it, and means a blocked network never breaks the layout.
+ * A click-to-load YouTube facade with the real broadcast frame as its poster.
+ *
+ * Nothing from youtube.com is requested until the visitor asks for it, which
+ * keeps the page fast and keeps third-party cookies off it. The poster is
+ * YouTube's own thumbnail for the video, which is what thumbnails are for.
  */
 interface Props {
   videoId: string;
@@ -15,22 +17,21 @@ interface Props {
 const { videoId, title, where, note, accent = '#ff3b2a' } = Astro.props;
 const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
 const watch = `https://www.youtube.com/watch?v=${videoId}`;
+const poster = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 ---
 
 <figure class="vid" style={`--ye-accent:${accent}`}>
   <button class="vid-btn" type="button" data-video={src} data-label={title}>
-    <span class="vid-art" aria-hidden="true">
-      <svg viewBox="0 0 480 270" role="presentation" focusable="false">
-        <rect width="480" height="270" fill="#0a0c0e" />
-        <circle cx="240" cy="126" r="72" fill="none" stroke={accent} stroke-opacity="0.55" stroke-width="1.6" />
-        <ellipse cx="240" cy="126" rx="72" ry="16" fill="none" stroke={accent} stroke-opacity="0.3" />
-        <ellipse cx="240" cy="126" rx="24" ry="72" fill="none" stroke={accent} stroke-opacity="0.3" />
-        <ellipse cx="240" cy="126" rx="50" ry="72" fill="none" stroke={accent} stroke-opacity="0.2" />
-        <circle cx="240" cy="126" r="96" fill="none" stroke={accent} stroke-opacity="0.14" stroke-dasharray="3 12" />
-        <path d="M40 240 H440" stroke="#2b3138" stroke-width="2" />
-        <path d="M228 114 l26 14 -26 14 z" fill={accent} />
-      </svg>
-    </span>
+    <img
+      class="vid-art"
+      src={poster}
+      alt={`The globe stage during ${title}`}
+      width="1280"
+      height="720"
+      loading="lazy"
+      decoding="async"
+      data-yt={videoId}
+    />
     <span class="vid-play">
       <span class="vid-cue">Play</span>
       <span class="vid-title">{title}</span>
@@ -63,25 +64,27 @@ const watch = `https://www.youtube.com/watch?v=${videoId}`;
     overflow: hidden;
   }
 
-  .vid-art svg {
+  .vid-art {
     display: block;
     width: 100%;
+    aspect-ratio: 16 / 9;
     height: auto;
+    object-fit: cover;
     transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.4s;
   }
 
-  .vid-btn:hover .vid-art svg,
-  .vid-btn:focus-visible .vid-art svg {
+  .vid-btn:hover .vid-art,
+  .vid-btn:focus-visible .vid-art {
     transform: scale(1.04);
-    opacity: 0.8;
+    opacity: 0.82;
   }
 
   .vid-play {
     position: absolute;
     inset: auto 0 0 0;
     display: block;
-    padding: 18px 16px 15px;
-    background: linear-gradient(to top, rgb(5 6 7 / 0.95), transparent);
+    padding: 30px 16px 15px;
+    background: linear-gradient(to top, rgb(5 6 7 / 0.96), rgb(5 6 7 / 0.7) 55%, transparent);
   }
 
   .vid-cue {
@@ -138,6 +141,15 @@ const watch = `https://www.youtube.com/watch?v=${videoId}`;
 </style>
 
 <script>
+  // maxresdefault only exists for uploads encoded at 1080p or better.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
+    img.addEventListener('error', () => {
+      if (img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+    });
+  }
+
   for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-video]')) {
     btn.addEventListener('click', () => {
       const frame = document.createElement('iframe');

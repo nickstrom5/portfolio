@@ -14,6 +14,7 @@ npm run dev        # http://localhost:4321
 npm run build      # astro check + static build to ./dist
 npm run preview
 npm run qa         # full audit against ./dist — see below
+npm run covers     # refresh album cover URLs from Spotify into src/data/covers.ts
 ```
 
 ## Deploying to Cloudflare Pages
@@ -82,9 +83,14 @@ pager, the sitemap and the JSON-LD all follow from it.
 
 ## House rules
 
-- **No photography.** Every image on the site is original vector work generated from the
-  data — posters, stage plots, crowd fields, album marks, the globe states, the Donda plate
-  and the house elevation. Nothing is traced from or reproduces a copyrighted image.
+- **Photography only from the rights holder's own host.** Album covers are resolved from
+  Spotify's public oEmbed endpoint and served from their CDN, unaltered and linked back to
+  each record, as their terms require. The stage photographs on the globe page are frames
+  YouTube serves from the two full-length Istanbul uploads, each linked to its video.
+  Nothing is copied into this repository and nothing is re-hosted.
+- **Everything else is drawn.** Posters, stage plots, crowd fields, the Donda memorial plate
+  and the house elevation are original vector work generated from the data. They are labelled
+  as drawings and never presented as photographs.
 - **Nothing unsourced is stated as fact.** Editorial writing is clearly editorial; numbers,
   dates, venues and guests are footnoted on the page they appear on.
 - **Playback is the rights holder's.** Albums play through Spotify's own embed and shows

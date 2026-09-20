@@ -85,7 +85,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
       <div class="hero-cta">
         <a class="btn-ye solid" href="#dates">All {shows.length} dates</a>
         {nextShow && <a class="btn-ye" href={url(`/shows/${nextShow.slug}/`)}>The next show</a>}
-        <a class="btn-ye" href={url('/discography/')}>Play the discography</a>
+        <a class="btn-ye" href={url('/globe/')}>The Globe</a>
       </div>
     </div>
   </section>
@@ -282,8 +282,9 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
         <div>
           <b>About this archive</b>
           This is an unofficial fan project. Every number, date and guest appearance is footnoted to a
-          published source on the show pages, setlists are labelled by how well documented they are, and
-          all artwork here is original vector work — no press photography is reproduced.
+          published source on the show pages, and setlists are labelled by how well documented they are.
+          Album covers are served by Spotify and stage photography by YouTube, from their own links; the
+          remaining artwork is original vector work.
           <br /><a href={url('/about/')} style="color:var(--ye-bone)">Read the method {'→'}</a>
         </div>
       </div>
