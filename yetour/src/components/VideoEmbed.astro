@@ -117,6 +117,14 @@ const poster = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     color: var(--ye-dust);
   }
 
+  [data-broken] .vid-art {
+    visibility: hidden;
+  }
+
+  .vid-btn[data-broken] {
+    background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
+  }
+
   .vid :global(iframe) {
     display: block;
     width: 100%;
@@ -141,12 +149,16 @@ const poster = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
 </style>
 
 <script>
-  // maxresdefault only exists for uploads encoded at 1080p or better.
+  // maxresdefault only exists for uploads encoded at 1080p or better. If the
+  // smaller frame fails too, mark the container rather than leaving a broken icon.
   for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
     img.addEventListener('error', () => {
-      if (img.dataset.fallback) return;
-      img.dataset.fallback = '1';
-      img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+      if (!img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+        return;
+      }
+      img.closest('.vid-btn, .plate')?.setAttribute('data-broken', '');
     });
   }
 

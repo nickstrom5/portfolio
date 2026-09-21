@@ -149,6 +149,7 @@ const jsonLd = [
                   height="360"
                   loading="lazy"
                   decoding="async"
+                  data-yt={videos[0]!.id}
                 />
               </a>
               <figcaption>{still.caption}</figcaption>
@@ -245,6 +246,15 @@ const jsonLd = [
     transition: opacity 0.3s;
   }
 
+  [data-broken] .still,
+  [data-broken] img {
+    visibility: hidden;
+  }
+
+  [data-broken] {
+    background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
+  }
+
   .plate a:hover .still,
   .plate a:focus-visible .still {
     opacity: 0.82;
@@ -252,12 +262,15 @@ const jsonLd = [
 </style>
 
 <script>
-  // maxresdefault only exists for uploads encoded at 1080p or better.
+  // A frame that will not load should leave a plate, not a broken icon.
   for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
     img.addEventListener('error', () => {
-      if (img.dataset.fallback) return;
-      img.dataset.fallback = '1';
-      img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+      if (img.src.includes('maxresdefault') && !img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+        return;
+      }
+      (img.closest('.plate') ?? img.parentElement)?.setAttribute('data-broken', '');
     });
   }
 </script>
