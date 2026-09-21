@@ -114,7 +114,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
         <div class="stat">
           <b>118K</b><span>Biggest crowd</span><i>Istanbul, 30 May — a claimed world record</i>
         </div>
-        <div class="stat"><b>$29.8M</b><span>Two nights at SoFi</span><i>≈142,000 people across 1 + 3 April</i></div>
+        <div class="stat"><b>$32.6M</b><span>Two nights at SoFi</span><i>$16.3M a night — a record for any rapper</i></div>
         <div class="stat"><b>{cancelled.length}</b><span>Cancelled</span><i>London and Reggio Emilia</i></div>
       </div>
     </div>
@@ -233,8 +233,6 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
             </p>
           </div>
           <div class="hero-cta" style="justify-content:flex-start;margin-top:30px">
-            <a class="btn-ye" href={url('/bully/')}>The album</a>
-            <a class="btn-ye" href={url('/route/')}>The route</a>
             <a class="btn-ye" href={url('/discography/')}>Discography</a>
           </div>
         </div>
@@ -252,16 +250,14 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
           <span class="rule-num">04 {'\u2014'} The rest of it</span>
           <h2>Deep cuts</h2>
         </div>
-        <p>Six sections that are not a list of dates.</p>
+        <p>Four sections that are not a list of dates.</p>
       </div>
       <div class="date-grid">
         {
           [
-            { href: '/globe/', title: 'The globe', accent: '#4a8bff', body: 'Who designed the 50-foot sphere, how it is lit, the eight states it cycles through, and full-show film from Istanbul.' },
+            { href: '/globe/', title: 'The globe', accent: '#4a8bff', body: 'Who designed the 50-foot sphere, how it is lit, photographed at every filmed date, and the full-show film.' },
             { href: '/discography/', title: 'Discography', accent: '#f2ede1', body: 'Every album as a square. Click one and it plays, and the page turns to match the record.' },
-            { href: '/features/', title: 'Features & credits', accent: '#cfa94a', body: 'Guest verses, production for other artists, and the shoes, films and hardware that carry his name.' },
             { href: '/andre/', title: 'André Troutman', accent: '#f0821e', body: 'The talk box, the Troutman family, and why the oldest trick on the stage is the one nobody can fake.' },
-            { href: '/donda/', title: 'Donda West', accent: '#d9a441', body: 'The professor, the department she chaired, the house on South Shore Drive, and the law with her name on it.' },
             { href: '/setlists/', title: 'Setlist ledger', accent: '#ff3b2a', body: 'Every song reported at a 2026 date, which nights it was played, and where the documentation stops.' },
           ].map((s) => (
             <a class="box reveal" href={url(s.href)} style={`--ye-accent:${s.accent};min-height:0`}>
@@ -284,7 +280,6 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
           published source on the show pages, and setlists are labelled by how well documented they are.
           Album covers are served by Spotify and stage photography by YouTube, from their own links; the
           remaining artwork is original vector work.
-          <br /><a href={url('/about/')} style="color:var(--ye-bone)">Read the method {'→'}</a>
         </div>
       </div>
     </div>
