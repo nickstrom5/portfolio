@@ -2,10 +2,15 @@
 import Layout from '@/layouts/Base.astro';
 import VideoEmbed from '@/components/VideoEmbed.astro';
 import { url } from '@/lib/url';
-import { globe, specs, quotes, stills, heroStill, videos, videoSearches, globeSources } from '@/data/globe';
-import { shows } from '@/data/tour';
+import { globe, specs, quotes, globeSources } from '@/data/globe';
+import { shows, shortPlace, longDate } from '@/data/tour';
+import { tourStills } from '@/lib/stills';
 
 const venues = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) => s.venue)).size;
+const gallery = tourStills(shows);
+const filmed = shows.filter((s) => s.videos?.length);
+const unfilmed = shows.filter((s) => s.status === 'played' && !s.videos?.length);
+const hero = gallery.find((g) => g.show.slug === 'istanbul-2026-05-30') ?? gallery[0]!;
 
 const jsonLd = [
   {
@@ -27,14 +32,14 @@ const jsonLd = [
 
 <Layout
   title="The Globe"
-  description="The 50-foot spinning sphere at the centre of Ye's 2026 tour: who designed it, what it projects, how it is lit, the states it cycles through, and full-show video."
+  description="The 50-foot spinning sphere at the centre of Ye's 2026 tour: who designed it, how it is lit, photographed at every filmed date, and the full-show film."
   accent="#4a8bff"
   ogType="article"
   jsonLd={jsonLd}
 >
   <section class="hero">
     <div class="hero-bg hero-shot" aria-hidden="true">
-      <img src={heroStill} alt="" width="1280" height="720" fetchpriority="high" decoding="async" data-yt={videos[0]!.id} />
+      <img src={hero.src} alt="" width="1280" height="720" fetchpriority="high" decoding="async" data-yt={hero.video} />
     </div>
     <div class="hero-fade" aria-hidden="true"></div>
     <div class="wrap hero-in">
@@ -45,10 +50,11 @@ const jsonLd = [
       </h1>
       <p class="hero-sub">
         It debuted on 1 April 2026 at SoFi Stadium on a night billed as "Ye: The Homecoming", and it has
-        been to {venues} venues across three continents since. Nobody has said how it works.
+        been to {venues} venues across three continents since. {gallery.length} of those nights were filmed
+        end to end. Nobody has said how it works.
       </p>
       <div class="hero-cta">
-        <a class="btn-ye solid" href="#looks">Stills of the stage</a>
+        <a class="btn-ye solid" href="#looks">The globe at every show</a>
         <a class="btn-ye" href="#film">Full-show film</a>
       </div>
     </div>
@@ -78,24 +84,24 @@ const jsonLd = [
           <p>
             Ye has framed the stage as an idea about coming back rather than a piece of engineering. The
             brief, in his words, was the feeling of standing on top of the world after everything we have
-            been through — which is why opening night put him literally on top of a demi-globe, tethered at
-            its apex, in a stadium twenty minutes from where he used to live.
+            been through {'—'} which is why opening night put him literally on top of a demi-globe,
+            tethered at its apex, in a stadium twenty minutes from where he used to live.
           </p>
           <p>
             Aus Taylor, the production designer who built it with him, has been almost aggressively modest
             about his own part: "just a vessel." Between them they replaced the two things every stadium
-            show has — a stage at one end and a screen behind it — with a single object in the middle that
-            is both.
+            show has {'—'} a stage at one end and a screen behind it {'—'} with a single object in
+            the middle that is both.
           </p>
           <p>
-            The lighting is John McGuire's. That matters more than it sounds: a sphere has no flat plane
-            to wash, so the rig has to model a curved surface from above and behind while the surface
-            itself is projecting. Much of what changes across a set is a lighting decision, not a video one.
+            The lighting is John McGuire's. That matters more than it sounds: a sphere has no flat plane to
+            wash, so the rig has to model a curved surface from above and behind while the surface itself is
+            projecting. Much of what changes across a set is a lighting decision, not a video one.
           </p>
           <p>
             What nobody outside the production has said is how any of it is rigged, driven or projected.
-            That silence looks deliberate, and it is treated here as a fact about the tour rather than a
-            gap to fill in with a guess.
+            That silence looks deliberate, and it is treated here as a fact about the tour rather than a gap
+            to fill in with a guess.
           </p>
         </div>
       </div>
@@ -115,8 +121,8 @@ const jsonLd = [
         <div class="notice">
           <div>
             <b>Where the pictures come from</b>
-            Ye livestreamed Istanbul in full, which is why this is the one page in the archive with real
-            photographs of the stage on it. Everything below is a frame from that broadcast, served by
+            Ye livestreamed Istanbul himself, and most of the rest of the tour has been filmed end to end
+            from the floor. Every photograph on this site is a frame from one of those uploads, served by
             YouTube and linked back to the video it came from.
           </div>
         </div>
@@ -128,35 +134,54 @@ const jsonLd = [
     <div class="wrap">
       <div class="sec-head">
         <div>
-          <span class="rule-num">03 {'\u2014'} Stills</span>
-          <h2>The stage, photographed</h2>
+          <span class="rule-num">03 {'—'} Gallery</span>
+          <h2>The globe at every show</h2>
         </div>
         <p>
-          Frames from the two full-length Istanbul uploads, served by YouTube. Each one links back to the
-          video it came from.
+          One frame per filmed date, {gallery.length} in all. Each opens that night's page; the stills on
+          those pages come from the same upload.
         </p>
       </div>
       <div class="gallery">
         {
-          stills.map((still) => (
+          gallery.map((still) => (
             <figure class="plate reveal">
-              <a href={still.watch} rel="noopener nofollow" aria-label={`Watch on YouTube — ${still.caption}`}>
+              <a href={url(`/shows/${still.show.slug}/`)}>
                 <img
                   class="still"
                   src={still.src}
                   alt={still.alt}
-                  width="480"
-                  height="360"
+                  width="1280"
+                  height="720"
                   loading="lazy"
                   decoding="async"
-                  data-yt={videos[0]!.id}
+                  data-yt={still.video}
                 />
               </a>
-              <figcaption>{still.caption}</figcaption>
+              <figcaption>
+                <strong style="display:block;font-family:var(--ye-display);font-size:15px;color:var(--ye-bone);letter-spacing:0;text-transform:none;margin-bottom:5px">
+                  {shortPlace(still.show)}
+                </strong>
+                <span style="text-transform:none;letter-spacing:0;font-family:var(--ye-body);font-size:13px;color:var(--ye-ash)">
+                  {longDate(still.show.date)} {'·'} {still.show.venue}
+                </span>
+              </figcaption>
             </figure>
           ))
         }
       </div>
+      {
+        unfilmed.length > 0 && (
+          <div class="notice" style="margin-top:22px">
+            <div>
+              <b>Not every night is here</b>
+              {unfilmed.length} played {unfilmed.length === 1 ? 'date has' : 'dates have'} no full-length
+              upload this archive can vouch for, and the dates still to come have not happened yet. Those
+              pages carry drawings instead, and say so.
+            </div>
+          </div>
+        )
+      }
     </div>
   </section>
 
@@ -168,35 +193,22 @@ const jsonLd = [
           <h2>See it move</h2>
         </div>
         <p>
-          Istanbul is the best-documented night of the tour because Ye livestreamed the whole thing.
-          Nothing loads from YouTube until you press play.
+          Full-length uploads from {filmed.length} of the {shows.length} dates. Nothing loads from YouTube
+          until you press play.
         </p>
       </div>
       <div class="gallery">
-        {videos.map((v) => <VideoEmbed videoId={v.id} title={v.title} where={v.where} note={v.note} accent="#4a8bff" />)}
-      </div>
-
-      <div class="panel" style="margin-top:22px">
-        <div class="panel-title">No verified full upload yet</div>
-        <p style="margin:0 0 14px;font-size:14px;color:var(--ye-ash);line-height:1.6">
-          For these nights there is plenty of phone footage but no single upload this archive can vouch
-          for, so you get a search rather than an embed of something I have not checked.
-        </p>
-        <ul class="pills">
-          {
-            videoSearches.map((v) => (
-              <li style="padding:0">
-                <a
-                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(v.q)}`}
-                  rel="noopener nofollow"
-                  style="display:block;padding:10px 13px;text-decoration:none;color:var(--ye-bone)"
-                >
-                  {v.label} {'↗'}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
+        {
+          filmed.map((show) => (
+            <VideoEmbed
+              videoId={show.videos![0]!.id}
+              title={`${shortPlace(show)} — ${show.videos![0]!.label}`}
+              where={`${show.venue} · ${longDate(show.date)}`}
+              note={show.headline}
+              accent="#4a8bff"
+            />
+          ))
+        }
       </div>
     </div>
   </section>
@@ -217,8 +229,12 @@ const jsonLd = [
   </section>
 
   <nav class="pager" aria-label="Elsewhere">
-    <a href={url('/')}><span>{'←'} Back</span><b>All dates</b><i>Where the globe has been</i></a>
-    <a class="next" href={url('/andre/')}><span>Next {'→'}</span><b>André Troutman</b><i>The talk box at the front of it</i></a>
+    <a href={url('/')}>
+      <span>{'←'} Back</span><b>All dates</b><i>Where the globe has been</i>
+    </a>
+    <a class="next" href={url('/andre/')}>
+      <span>Next {'→'}</span><b>André Troutman</b><i>The talk box at the front of it</i>
+    </a>
   </nav>
 </Layout>
 
@@ -231,19 +247,23 @@ const jsonLd = [
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.42;
+    opacity: 0.4;
     filter: saturate(0.85) contrast(1.05);
   }
 
   .still {
     display: block;
     width: 100%;
-    /* The numbered frames arrive letterboxed at 4:3; crop back to the picture. */
     aspect-ratio: 16 / 9;
     height: auto;
     object-fit: cover;
     background: #0b0d0f;
     transition: opacity 0.3s;
+  }
+
+  .plate a:hover .still,
+  .plate a:focus-visible .still {
+    opacity: 0.82;
   }
 
   [data-broken] .still,
@@ -253,11 +273,6 @@ const jsonLd = [
 
   [data-broken] {
     background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
-  }
-
-  .plate a:hover .still,
-  .plate a:focus-visible .still {
-    opacity: 0.82;
   }
 </style>
 

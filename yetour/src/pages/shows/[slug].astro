@@ -2,6 +2,8 @@
 import Layout from '@/layouts/Base.astro';
 import Poster from '@/components/Poster.astro';
 import Plates from '@/components/Plates.astro';
+import VideoEmbed from '@/components/VideoEmbed.astro';
+import { stillsFor } from '@/lib/stills';
 import { url } from '@/lib/url';
 import {
   shows, legsById, neighbours, referenceSet, song, albums, longDate, parts, placeLine, shortPlace,
@@ -21,6 +23,7 @@ const leg = legsById[show.leg]!;
 const accent = leg.color;
 const p = parts(show.date);
 const { prev, next } = neighbours(show.slug);
+const stills = stillsFor(show);
 
 /** Meta descriptions have to land between 50 and 165 characters. */
 function clamp(text: string, max = 162): string {
@@ -294,15 +297,56 @@ const jsonLd = [
       <div class="wrap">
         <div class="sec-head">
           <div>
-            <span class="rule-num">03 {'—'} Plates</span>
+            <span class="rule-num">03 {'—'} {stills.length ? 'Stills' : 'Plates'}</span>
             <h2>The room</h2>
           </div>
           <p>
-            Original drawings, not photographs: the globe centred in the room, the rig in section, and a
-            crowd field drawn to this venue's reported scale.
+            {
+              stills.length
+                ? 'Frames of the globe from this night, served by YouTube from the full-length upload below.'
+                : "No full-length upload of this date exists, so the room is drawn instead: the globe centred in it, the rig in section, and a crowd field at this venue's reported scale."
+            }
           </p>
         </div>
-        <Plates show={show} accent={accent} />
+
+        {
+          stills.length > 0 ? (
+            <>
+              <div class="gallery">
+                {stills.map((still) => (
+                  <figure class="plate reveal">
+                    <a href={still.watch} rel="noopener nofollow" aria-label={`Watch this night on YouTube — ${still.caption}`}>
+                      <img
+                        class="still"
+                        src={still.src}
+                        alt={still.alt}
+                        width="1280"
+                        height="720"
+                        loading="lazy"
+                        decoding="async"
+                        data-yt={still.video}
+                      />
+                    </a>
+                    <figcaption>{still.caption}</figcaption>
+                  </figure>
+                ))}
+              </div>
+              <div class="gallery" style="margin-top:14px">
+                {show.videos!.map((v) => (
+                  <VideoEmbed
+                    videoId={v.id}
+                    title={v.label}
+                    where={`${show.venue} \u00B7 ${longDate(show.date)}`}
+                    note={show.headline}
+                    accent={accent}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <Plates show={show} accent={accent} />
+          )
+        }
       </div>
     </section>
 
@@ -361,3 +405,43 @@ const jsonLd = [
     </nav>
   </article>
 </Layout>
+
+<style>
+  .still {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    background: #0b0d0f;
+    transition: opacity 0.3s;
+  }
+
+  .plate a:hover .still,
+  .plate a:focus-visible .still {
+    opacity: 0.82;
+  }
+
+  [data-broken] .still,
+  [data-broken] img {
+    visibility: hidden;
+  }
+
+  [data-broken] {
+    background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
+  }
+</style>
+
+<script>
+  // A frame that will not load should leave a plate, not a broken icon.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
+    img.addEventListener('error', () => {
+      if (img.src.includes('maxresdefault') && !img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+        return;
+      }
+      (img.closest('.plate, .vid-btn') ?? img.parentElement)?.setAttribute('data-broken', '');
+    });
+  }
+</script>
