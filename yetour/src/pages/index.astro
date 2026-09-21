@@ -209,7 +209,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
           <span class="rule-num">03 {'\u2014'} The rest of it</span>
           <h2>Deep cuts</h2>
         </div>
-        <p>Four sections that are not a list of dates.</p>
+        <p>Three sections that are not a list of dates.</p>
       </div>
       <div class="date-grid">
         {
@@ -217,7 +217,6 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
             { href: '/globe/', title: 'The globe', accent: '#4a8bff', body: 'Who designed the 50-foot sphere, how it is lit, photographed at every filmed date, and the full-show film.' },
             { href: '/discography/', title: 'Discography', accent: '#f2ede1', body: 'Every album as a square. Click one and it plays, and the page turns to match the record.' },
             { href: '/andre/', title: 'André Troutman', accent: '#f0821e', body: 'The talk box, the Troutman family, and why the oldest trick on the stage is the one nobody can fake.' },
-            { href: '/setlists/', title: 'Setlist ledger', accent: '#ff3b2a', body: 'Every song reported at a 2026 date, which nights it was played, and where the documentation stops.' },
           ].map((s) => (
             <a class="box reveal" href={url(s.href)} style={`--ye-accent:${s.accent};min-height:0`}>
               <h3 style="font-size:clamp(23px,2.8vw,30px)">{s.title}</h3>
