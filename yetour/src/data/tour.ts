@@ -8,7 +8,7 @@
  * 'reference' (no public setlist, so the page shows the tour's recurring spine
  * and says so). The UI surfaces that distinction on every show page.
  *
- * This is an unofficial fan archive. See /about/ for the full source list.
+ * This is an unofficial fan archive. Each show carries its own source list.
  */
 
 /* ------------------------------------------------------------------ albums */

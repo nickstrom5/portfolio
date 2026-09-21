@@ -203,7 +203,6 @@ const jsonLd = [
             <ul class="bullets">
               <li>{show.coords[0].toFixed(4)}° {show.coords[0] >= 0 ? 'N' : 'S'}, {Math.abs(show.coords[1]).toFixed(4)}° {show.coords[1] >= 0 ? 'E' : 'W'}</li>
               <li>{show.continent} · {show.country}</li>
-              <li><a href={url('/route/')} style="color:var(--ye-accent)">See it on the route map →</a></li>
             </ul>
           </div>
         </div>
@@ -395,10 +394,10 @@ const jsonLd = [
             <i>{longDate(next.date)} · {shortPlace(next)}</i>
           </a>
         ) : (
-          <a class="next" href={url('/route/')}>
+          <a class="next" href={url('/globe/')}>
             <span>End of the tour {'→'}</span>
-            <b>The route</b>
-            <i>Eight legs, three continents</i>
+            <b>The globe</b>
+            <i>The stage, photographed at every show</i>
           </a>
         )
       }
