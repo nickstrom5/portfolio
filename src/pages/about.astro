@@ -55,7 +55,6 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
         <div class="cta">
           <a class="btn btn-primary" href={url('/contact')}>Work with me</a>
           <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-          <a class="btn btn-secondary" href={url(site.resumePdf)} download>Download resume (PDF)</a>
           {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork</a>}
           {linkedinLive && <a class="btn btn-secondary" href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>}
         </div>
