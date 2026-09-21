@@ -28,11 +28,21 @@ The domain is registered in Cloudflare, so Pages is the shortest path. In the da
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Root directory | `yetour` |
-| Node version | `22` (set `NODE_VERSION=22` under Environment variables) |
+
+Node comes from the committed `.node-version` (22), so there is nothing to set under
+Environment variables. A clean `npm ci && npm run build` takes about ten seconds.
 
 Then **Custom domains → Set up a custom domain → `yetour.info`**, and add `www.yetour.info`
 as a second custom domain if you want the redirect. Cloudflare writes the DNS records itself
 because the zone is already in the account.
+
+Branches other than the production one get their own preview URL automatically, which is the
+way to check that the Spotify cover art and the YouTube stills resolve before any of it is
+pointed at the real domain.
+
+`SITE_URL` can be set as a build variable to override the canonical host; leaving it unset
+means every page canonicalises to yetour.info, which keeps preview deploys out of search
+results.
 
 `public/_headers` sets the security headers and immutable caching for hashed assets; Pages
 picks it up automatically. `SITE_URL` can be set as a build variable to override the canonical
@@ -49,10 +59,12 @@ sitemap coverage, outbound `rel` hygiene) and ten interaction checks covering th
 filters, the countdown, the discography player and its theme swap, deep links, the video
 facades and the full prev/next chain across all twenty dates.
 
-It needs Playwright with Chromium:
+Playwright is deliberately not a dependency of this project — installing it pulls
+browser binaries, which would land in every deploy build for no reason. Install it when
+you want to run the audit:
 
 ```bash
-npx playwright install chromium
+npm i -D playwright && npx playwright install chromium
 npm run build && npm run qa
 ```
 
