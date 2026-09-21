@@ -182,7 +182,6 @@ const paletteAttrs = (r: Record_) => ({
                   <p class="prose" style="margin-top:14px">{r.note}</p>
                   <div class="hero-cta" style="justify-content:flex-start;margin-top:22px">
                     <a class="btn-ye" href={r.spotifyId ? spotifyAlbumUrl(r.spotifyId) : spotifySearch(r)} rel="noopener nofollow">Open in Spotify</a>
-                    {live.length > 0 && <a class="btn-ye" href={url('/setlists/')}>In the 2026 set</a>}
                   </div>
                 </div>
                 {
@@ -202,7 +201,7 @@ const paletteAttrs = (r: Record_) => ({
   </section>
 
   <nav class="pager" aria-label="Elsewhere">
-    <a href={url('/setlists/')}><span>{'←'} Back</span><b>Setlists</b><i>Every song reported in 2026</i></a>
+    <a href={url('/globe/')}><span>{'←'} Back</span><b>The globe</b><i>The stage, photographed</i></a>
     <a class="next" href={url('/')}><span>Next {'→'}</span><b>All dates</b><i>The 2026 itinerary</i></a>
   </nav>
 </Layout>
