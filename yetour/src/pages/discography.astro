@@ -176,7 +176,7 @@ const paletteAttrs = (r: Record_) => ({
           const live = liveSongs(r);
           return (
             <div class="pnote" data-pnote={r.id} hidden={r.id !== defaultRecord.id}>
-              <div class="two-col">
+              <div class:list={['two-col', { 'one-col': live.length === 0 }]}>
                 <div>
                   <span class="rule-num">{r.released} {'·'} {r.label}</span>
                   <p class="prose" style="margin-top:14px">{r.note}</p>
@@ -185,38 +185,19 @@ const paletteAttrs = (r: Record_) => ({
                     {live.length > 0 && <a class="btn-ye" href={url('/setlists/')}>In the 2026 set</a>}
                   </div>
                 </div>
-                <div class="panel">
-                  <div class="panel-title">
-                    {live.length > 0 ? `On the 2026 tour · ${live.length}` : 'Not in the 2026 set'}
-                  </div>
-                  {live.length > 0 ? (
-                    <ul class="pills">{live.map((t) => <li>{t}</li>)}</ul>
-                  ) : (
-                    <p style="margin:0;font-size:14px;color:var(--ye-ash);line-height:1.6">
-                      No song from this record has been reported at a 2026 date. That is what the sources
-                      say, not a claim that it was never played.
-                    </p>
-                  )}
-                </div>
+                {
+                  live.length > 0 && (
+                    <div class="panel">
+                      <div class="panel-title">On the 2026 tour {'·'} {live.length}</div>
+                      <ul class="pills">{live.map((t) => <li>{t}</li>)}</ul>
+                    </div>
+                  )
+                }
               </div>
             </div>
           );
         })
       }
-    </div>
-  </section>
-
-  <section class="sec" style="padding-top:0">
-    <div class="wrap">
-      <div class="notice">
-        <div>
-          <b>About the squares</b>
-          The covers are the real artwork, served by Spotify's own image CDN and shown unaltered — not
-          cropped, nothing laid over them — with every record linking back to its Spotify page, which is
-          what their terms ask for. Playback is Spotify's embedded player. Nothing is hosted here. Donda 2
-          has no square because it never reached streaming.
-        </div>
-      </div>
     </div>
   </section>
 
@@ -441,6 +422,10 @@ const paletteAttrs = (r: Record_) => ({
 
   .pnote {
     padding-top: 10px;
+  }
+
+  .one-col {
+    grid-template-columns: minmax(0, 1fr);
   }
 </style>
 
