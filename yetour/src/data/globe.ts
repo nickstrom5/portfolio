@@ -48,69 +48,6 @@ export const quotes: Quote[] = [
   },
 ];
 
-export interface Video {
-  /** YouTube id, verified from a public watch URL. */
-  id: string;
-  title: string;
-  where: string;
-  note: string;
-}
-
-/** Full-show video that exists publicly. Embeds load only when clicked. */
-export const videos: Video[] = [
-  {
-    id: 'XcI4yndnhpM',
-    title: 'YE — Full concert, Istanbul 2026 (4K60)',
-    where: 'Atatürk Olympic Stadium, 30 May 2026',
-    note: 'The 118,000-capacity night, shot front of house. The clearest full-length look at the sphere in daylight-to-dark.',
-  },
-  {
-    id: 'Ga-oUBV2k0E',
-    title: 'Kanye West — Istanbul full concert (live)',
-    where: 'Atatürk Olympic Stadium, 30 May 2026',
-    note: 'A second angle on the same show, which Ye livestreamed in full on his own YouTube channel.',
-  },
-];
-
-export interface Still {
-  src: string;
-  alt: string;
-  caption: string;
-  watch: string;
-}
-
-/**
- * Real frames of the stage, served by YouTube from the two full-length uploads
- * above. `maxresdefault` is the video's own thumbnail; the numbered frames sit
- * at roughly a quarter, a half and three quarters of the way through, which is
- * how YouTube generates them.
- */
-const FRAMES: { key: string; caption: string }[] = [
-  { key: 'maxresdefault', caption: 'The frame YouTube uses as the thumbnail' },
-  { key: 'hq1', caption: 'Roughly a quarter of the way through the set' },
-  { key: 'hq2', caption: 'Around the middle of the set' },
-  { key: 'hq3', caption: 'Roughly three quarters through' },
-];
-
-export const stills: Still[] = videos.flatMap((v) =>
-  FRAMES.map((f) => ({
-    src: `https://img.youtube.com/vi/${v.id}/${f.key}.jpg`,
-    alt: `The globe stage during Ye's concert at ${v.where}`,
-    caption: `${f.caption} \u00B7 ${v.where}`,
-    watch: `https://www.youtube.com/watch?v=${v.id}`,
-  })),
-);
-
-/** The single best frame, used as the page's backdrop. */
-export const heroStill = `https://img.youtube.com/vi/${videos[0]!.id}/maxresdefault.jpg`;
-
-/** Shows with no verified full-length upload get a search link instead of a guessed embed. */
-export const videoSearches = [
-  { label: 'Opening night, SoFi Stadium', q: 'Ye SoFi Stadium 2026 full concert globe stage' },
-  { label: 'Soldier Field, night two — the Kid Cudi reunion', q: 'Ye Kid Cudi Soldier Field 2026 reunion' },
-  { label: 'Tirana, Eagle Stadium', q: 'Ye live Tirana Albania 2026 Eagle Stadium' },
-];
-
 export const globeSources = [
   { label: 'Complex — Kanye West’s Los Angeles show featured set design by Ye and Aus Taylor', url: 'https://www.complex.com/style/a/tracewilliamcowen/kanye-west-los-angeles-show-set-design' },
   { label: 'Gadget Review — The globe stage turns SoFi Stadium into a planetary theater', url: 'https://www.gadgetreview.com/kanye-wests-globe-stage-turns-sofi-stadium-into-planetary-theater' },

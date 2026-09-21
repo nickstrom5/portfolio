@@ -217,6 +217,8 @@ export interface Show {
   /** Editorial write-up. Each paragraph is one string. */
   story: string[];
   guests: string[];
+  /** Verified YouTube uploads of this date. The first supplies the page's stills. */
+  videos?: { id: string; label: string }[];
   /** Song ids confirmed played at this date. */
   reported: string[];
   setlistSource: SetlistSource;
@@ -244,19 +246,21 @@ export const shows: Show[] = [
     story: [
       'The Ye Live Concert Tour opened at SoFi Stadium on 1 April 2026, ten years after the Saint Pablo Tour and four days after BULLY arrived through YZY and Gamma. Nobody in the building had seen the stage before doors.',
       'What they got was a sphere. Ye built the show with production designer Aus Taylor around a single spinning globe that doubles as the stage and the screen, projecting Earth and Moon surfaces across two hours while it rotates above the floor.',
-      'André Troutman brought the talk-box out for the BULLY material, Don Toliver came out for "Moon", and North West performed "Miss Westie" with her father. The two SoFi nights together drew roughly 142,000 people and grossed $29.8 million.',
+      'André Troutman brought the talk-box out for the BULLY material, Don Toliver came out for "Moon", and North West performed "Miss Westie" with her father. The two SoFi nights grossed $32.6 million between them — $16.3 million a night, the highest-grossing concerts any rapper has played.',
     ],
     guests: ['André Troutman', 'Don Toliver', 'North West'],
+    videos: [{ id: 'Q6rkDTShjEY', label: 'Opening night, 1 April' }],
     reported: ['moon', 'miss-westie'],
     setlistSource: 'partial',
     facts: [
       'First Ye headline tour date since the Saint Pablo Tour in 2016.',
       'BULLY, his twelfth studio album, had been out four days.',
-      'The two-night SoFi run drew about 142,000 people and grossed $29.8 million; one of the nights grossed $18 million on its own.',
+      '$32.6 million across the two nights, $16.3 million each — the highest-grossing concerts in touring history by any rapper.',
     ],
     sources: [
       { label: 'Billboard — Ye’s 2026 BULLY setlist, night 1 at SoFi Stadium', url: 'https://www.billboard.com/lists/yes-2026-bully-concert-setlist-night-1-sofi-stadium/' },
       { label: 'setlist.fm — SoFi Stadium, 1 April 2026', url: 'https://www.setlist.fm/setlist/ye/2026/sofi-stadium-inglewood-ca-5349a3bd.html' },
+      { label: 'Ratings Game Music — Ye sets touring history with record-breaking SoFi Stadium concerts', url: 'https://ratingsgamemusic.com/2026/07/24/ye-sofi-stadium-touring-record-2026/' },
     ],
   },
   {
@@ -269,7 +273,7 @@ export const shows: Show[] = [
     countryCode: 'US',
     venue: 'SoFi Stadium',
     capacity: 70000,
-    gross: '$18,000,000 (single night)',
+    gross: '$16,300,000 (single night)',
     continent: 'North America',
     leg: 'origin',
     status: 'played',
@@ -277,18 +281,20 @@ export const shows: Show[] = [
     headline: 'Travis Scott, CeeLo Green and Ms. Lauryn Hill in one night.',
     story: [
       'Night two at SoFi is the one people still argue about. Travis Scott came out for "FATHER", the BULLY record he features on. CeeLo Green appeared. So did Ms. Lauryn Hill, whose catalogue Ye has sampled and cited since The College Dropout.',
-      'North West performed again. The night is reported to have grossed $18 million on its own, which puts it among the highest-grossing single concerts ever staged anywhere.',
+      'North West performed again. Each of the two SoFi nights grossed $16.3 million, which Billboard\u2019s Boxscore report put at the top of the all-time list for a rapper.',
       'It also set the template the rest of the year followed: a fixed spine of BULLY and Yeezus material, and a guest list built city by city.',
     ],
     guests: ['Travis Scott', 'North West', 'CeeLo Green', 'Ms. Lauryn Hill'],
+    videos: [{ id: 'hWCARfMBJJ4', label: 'Night two, full set' }, { id: 'PIb3_PWyInM', label: 'Floor view, 4K' }],
     reported: ['father', 'miss-westie'],
     setlistSource: 'partial',
     facts: [
-      'Reported $18 million gross for the single night — one of the highest-grossing concerts on record.',
+      '$16.3 million for the night, part of a $32.6 million two-night run.',
       'Travis Scott performed "FATHER", the BULLY track he appears on.',
     ],
     sources: [
       { label: 'setlist.fm — SoFi Stadium, 3 April 2026', url: 'https://www.setlist.fm/setlist/ye/2026/sofi-stadium-inglewood-ca-73484685.html' },
+      { label: 'Ratings Game Music — Ye sets touring history with record-breaking SoFi Stadium concerts', url: 'https://ratingsgamemusic.com/2026/07/24/ye-sofi-stadium-touring-record-2026/' },
     ],
   },
   {
@@ -312,6 +318,7 @@ export const shows: Show[] = [
       'André Troutman worked the talk-box again. The show closed on "Runaway" with a new extended synth outro built around a spoken-word sample of Donda West — an ending that stayed in the set for the rest of the year.',
     ],
     guests: ['André Troutman'],
+    videos: [{ id: 'XcI4yndnhpM', label: 'Full concert, 4K60' }, { id: 'Ga-oUBV2k0E', label: 'Second angle' }],
     reported: ['runaway'],
     setlistSource: 'partial',
     facts: [
@@ -345,6 +352,7 @@ export const shows: Show[] = [
       'Two dates, 6 and 8 June, both with the standard BULLY-forward running order.',
     ],
     guests: [],
+    videos: [{ id: 'dDOCrJ0T6yQ', label: 'Full set, GelreDome' }, { id: 'cY1qmPcKmmQ', label: 'Second angle' }],
     reported: [],
     setlistSource: 'reference',
     facts: ['Smallest venue on the 2026 itinerary.', 'One of two Arnhem dates, 6 and 8 June.'],
@@ -371,6 +379,7 @@ export const shows: Show[] = [
       'Arnhem is where the tour settled into the shape it kept: BULLY in sequence inside the globe, the Yeezus block in red, the catalogue with the sphere raised, and "Runaway" alone at the end.',
     ],
     guests: [],
+    videos: [{ id: 'wSthEnhRgOE', label: 'Night two, GelreDome' }],
     reported: [],
     setlistSource: 'reference',
     facts: ['Final Western European date before the tour turned east.'],
@@ -397,6 +406,7 @@ export const shows: Show[] = [
       'The routing was not an accident. With the United Kingdom refusing entry and Italy cancelling, the map for 2026 was drawn by which governments would have him.',
     ],
     guests: [],
+    videos: [{ id: 'uXgnuIN1jhw', label: 'Full concert, Dinamo Arena' }, { id: '8kKsWHkAF1I', label: '\u201CHeartless\u201D with the crowd' }],
     reported: [],
     setlistSource: 'reference',
     facts: ['One of nine countries visited on the tour’s international run.'],
@@ -426,6 +436,7 @@ export const shows: Show[] = [
       'The pyrotechnic package that the stadium shows had been carrying since April made more sense on 4 July than on any other night of the year.',
     ],
     guests: [],
+    videos: [{ id: 'iV1rbWpln6Y', label: 'Full concert, Alamodome' }, { id: 'VXshmjsiXSg', label: 'Second angle' }],
     reported: [],
     setlistSource: 'reference',
     facts: ['Over 60,000 tickets sold.', 'More than $9 million in ticket sales.', 'The only U.S. date between April and August.'],
@@ -452,6 +463,7 @@ export const shows: Show[] = [
       'The national tourism agency promoted it as the largest music event of the Albanian summer. For a country of under three million, a one-night 60,000-capacity build is a reasonable claim.',
     ],
     guests: [],
+    videos: [{ id: '8Eytyjh74BA', label: 'Full show, 4K UHD' }, { id: 'XINAqv9Dtmk', label: 'Second angle' }],
     reported: [],
     setlistSource: 'reference',
     facts: [
@@ -534,6 +546,7 @@ export const shows: Show[] = [
       'Those twenty minutes are worth noting: for a tour with this reputation, the 2026 dates ran close to schedule almost everywhere.',
     ],
     guests: [],
+    videos: [{ id: 'L-1GPMf8Wdo', label: 'Full concert, 4K' }, { id: '8Dm5-DMGmw8', label: 'Complete live set' }],
     reported: [],
     setlistSource: 'reference',
     doors: '18:30',
@@ -566,6 +579,7 @@ export const shows: Show[] = [
       'Doors at 17:00, scheduled 21:00, onstage 21:45, off at 23:35. A hundred and ten minutes, the shortest fully documented set of the European summer.',
     ],
     guests: [],
+    videos: [{ id: 'E7W2iOTqros', label: 'Full show, Est\u00e1dio Algarve' }, { id: '-kI1EeHH66Y', label: 'Second angle' }],
     reported: [],
     setlistSource: 'reference',
     doors: '17:00',
@@ -597,6 +611,7 @@ export const shows: Show[] = [
       'Almaty Central Stadium holds under 24,000, which makes this the most intimate ticket of 2026 by a wide margin. The globe had to be rigged into a footprint roughly a third the size of SoFi’s.',
     ],
     guests: [],
+    videos: [{ id: 'UkAelYC4Icc', label: 'Full concert, Almaty' }],
     reported: [],
     setlistSource: 'reference',
     facts: [
@@ -623,12 +638,13 @@ export const shows: Show[] = [
     leg: 'homecoming',
     status: 'played',
     coords: [29.9511, -90.0812],
-    headline: 'First New Orleans performance in thirteen years.',
+    headline: 'First New Orleans performance in thirteen years, with Ty Dolla $ign.',
     story: [
       'Ye had not performed in New Orleans since 2013. The Superdome date on 28 August ended that, and it opened the American stretch that runs to the end of the tour.',
-      'Presale registration ran through Ye Louisiana and Ticketmaster, with general sale on 17 July. Four days after this show the production was in Chicago.',
+      'Presale registration ran through Ye Louisiana and Ticketmaster, with general sale on 17 July. Ty Dolla $ign came out for "Carnival". Four days after this show the production was in Chicago.',
     ],
-    guests: [],
+    guests: ['Ty Dolla $ign'],
+    videos: [{ id: 'qPvQQ6my-qs', label: 'Full concert, Superdome' }, { id: 'kzgmZ2eEge4', label: 'With Ty Dolla $ign' }],
     reported: [],
     setlistSource: 'reference',
     facts: ['First New Orleans show in thirteen years.', 'General on-sale 17 July 2026.'],
@@ -648,6 +664,7 @@ export const shows: Show[] = [
     countryCode: 'US',
     venue: 'Soldier Field',
     capacity: 61500,
+    attendance: 71000,
     continent: 'North America',
     leg: 'homecoming',
     status: 'played',
@@ -659,6 +676,7 @@ export const shows: Show[] = [
       '"Homecoming" is a song about Chicago written as a letter to a girl named Windy. It has been in his set for nineteen years. It does not sound the same at Soldier Field.',
     ],
     guests: ['André Troutman', 'Big Sean', '2 Chainz', 'Future', 'Twista'],
+    videos: [{ id: 'SvKB44hUVV0', label: 'Night one, Soldier Field' }, { id: '5M5bpmVJVtQ', label: 'Second angle' }],
     reported: ['homecoming', 'father-stretch'],
     setlistSource: 'partial',
     doors: '18:00',
@@ -670,6 +688,8 @@ export const shows: Show[] = [
       { label: 'setlist.fm — Soldier Field, 3 September 2026', url: 'https://www.setlist.fm/setlist/ye/2026/soldier-field-chicago-il-5b72a764.html' },
       { label: 'HotNewHipHop — setlist from night one of the Chicago homecoming shows', url: 'https://www.hotnewhiphop.com/1008562-ye-setlist-night-one-chicago-homecoming-show' },
       { label: 'Soldier Field — YE Live in Chicago', url: 'https://www.soldierfield.com/events/detail/ye' },
+      { label: 'Rolling Out — Two sold-out nights draw 142,000 fans', url: 'https://rollingout.com/2026/09/08/ye-makes-history-chicago-soldier-field/' },
+      { label: 'The Source — Ye breaks the Soldier Field single-night revenue record', url: 'https://thesource.com/2026/09/10/ye-breaks-soldier-field-single-night-revenue-record-after-massive-chi-town-homecoming/' },
     ],
   },
   {
@@ -682,18 +702,21 @@ export const shows: Show[] = [
     countryCode: 'US',
     venue: 'Soldier Field',
     capacity: 61500,
+    attendance: 71000,
+    gross: '$15,760,000 (single night)',
     continent: 'North America',
     leg: 'homecoming',
     status: 'played',
     coords: [41.8623, -87.6167],
-    headline: 'Kid Cudi walked out. Fifteen guests, three hours, an attendance record.',
+    headline: 'Kid Cudi walked out. Fifteen guests, three hours, a stadium revenue record.',
     story: [
       'The best-documented night of the tour and, by most accounts, the best one. Doors 18:00, onstage 20:35, off 23:40 — three hours and five minutes, fifty minutes longer than a normal 2026 date.',
       'The guest list reads like a Chicago census: Lil Durk, Chief Keef, Big Sean, 2 Chainz, Rick Ross, Don Toliver, Travis Scott, Young Thug, CyHi, Really Doe, Consequence, Common, Lupe Fiasco and Twista.',
       'Then Kid Cudi came out. Ye and Cudi performed "Father Stretch My Hands, Pt. 1", "Ghost Town" and "Pursuit of Happiness" together — the first time they had shared a stage after years of public fallout, and the reason this date is the one people will still be posting about in a decade.',
-      'The Soldier Field run was reported at 118,000 ticketed fans, taking the stadium record from Zach Bryan’s 113,000 the year before.',
+      'Across the two nights Soldier Field sold 129,562 tickets and took $29.8 million, with around 142,000 people reported through the gates. Night two alone grossed $15.76 million — the biggest single night the stadium has ever recorded, past Beyoncé.',
     ],
     guests: ['Kid Cudi', 'Lil Durk', 'Chief Keef', 'Big Sean', '2 Chainz', 'Rick Ross', 'Don Toliver', 'Travis Scott', 'Young Thug', 'CyHi', 'Really Doe', 'Consequence', 'Common', 'Lupe Fiasco', 'Twista'],
+    videos: [{ id: '8lrjZUtgJZg', label: 'Night two, Soldier Field' }, { id: 'tuqbO5r_GHQ', label: 'Second angle' }],
     reported: [
       'put-on', 'homecoming', 'cant-tell-me-nothing', 'niggas-in-paris', 'love-sosa', 'i-dont-like',
       'off-the-grid', 'praise-god', 'black-skinhead', 'new-slaves', 'on-sight', 'blood-on-the-leaves',
@@ -707,12 +730,14 @@ export const shows: Show[] = [
     facts: [
       'Kid Cudi reunion — "Father Stretch My Hands, Pt. 1", "Ghost Town" and "Pursuit of Happiness".',
       'Fifteen guest performers, the most of any 2026 date.',
-      'Soldier Field run reported at 118,000 ticketed fans, past Zach Bryan’s 113,000.',
+      '129,562 tickets across the two nights and $29.8 million; night two grossed $15.76 million, a Soldier Field record.',
       'Longest set of the tour at roughly three hours.',
     ],
     sources: [
       { label: 'setlist.fm — Soldier Field, 4 September 2026', url: 'https://www.setlist.fm/setlist/ye/2026/soldier-field-chicago-il-5b72a758.html' },
       { label: 'HotNewHipHop — full setlist and special guests, night two', url: 'https://www.hotnewhiphop.com/1008672-ye-setlist-special-guests-night-two-chicago-homecoming-shows' },
+      { label: 'Rolling Out — Two sold-out nights draw 142,000 fans', url: 'https://rollingout.com/2026/09/08/ye-makes-history-chicago-soldier-field/' },
+      { label: 'The Source — Ye breaks the Soldier Field single-night revenue record', url: 'https://thesource.com/2026/09/10/ye-breaks-soldier-field-single-night-revenue-record-after-massive-chi-town-homecoming/' },
     ],
   },
   {
