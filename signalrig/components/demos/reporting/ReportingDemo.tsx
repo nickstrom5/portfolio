@@ -206,7 +206,7 @@ function AggregateView({ aggregate, metric, totals, onSplit }: { aggregate: numb
           This is the number in most weekly reports. It looks like a healthy program. It is actually two segment × persona pairs carrying sixteen that are losing money, and the
           aggregate cannot show you which.
         </p>
-        <button type="button" onClick={onSplit} className="self-start text-[0.85rem] text-accent-ink underline underline-offset-4">
+        <button type="button" onClick={onSplit} className="inline-flex min-h-11 items-center self-start text-[0.85rem] text-accent-ink underline underline-offset-4">
           Split it →
         </button>
       </div>
@@ -219,7 +219,7 @@ function KillChart({ ranked, aggregate, metric, max }: { ranked: (Cell & { v: nu
   return (
     <div className="relative" role="img" aria-label={`Bar chart of ${METRICS.find((m) => m.id === metric)?.label} per segment and persona, with the aggregate marked at ${fmt(aggregate, metric)}`}>
       <div className="absolute top-0 bottom-0 z-10 w-px border-l border-dashed border-ink-2" style={{ left: `calc(11rem + (100% - 11rem - 3.5rem) * ${aggX / 100})` }} aria-hidden>
-        <span className="absolute -top-4 left-1 whitespace-nowrap font-mono text-[0.62rem] text-ink-2">aggregate {fmt(aggregate, metric)}</span>
+        <span className="absolute -top-4 left-1 whitespace-nowrap font-mono text-[0.7rem] text-ink-2">aggregate {fmt(aggregate, metric)}</span>
       </div>
       <ul className="mt-4 flex flex-col gap-[6px]">
         {ranked.map((c, i) => {

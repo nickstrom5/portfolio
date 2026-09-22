@@ -82,7 +82,7 @@ export function DemoShowcase() {
                   on ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2",
                 )}
               >
-                <span className={cn("font-mono text-[0.66rem]", on ? "text-accent-ink" : "text-ink-3")}>0{i + 1}</span>
+                <span className={cn("font-mono text-[0.7rem]", on ? "text-accent-ink" : "text-ink-3")}>0{i + 1}</span>
                 {d.short}
               </a>
             );
