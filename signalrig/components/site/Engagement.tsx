@@ -20,9 +20,9 @@ export function Engagement() {
             <article key={o.id} className={cn("card flex flex-col p-6", featured && "ring-1 ring-inset ring-accent/40")}>
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className="font-display text-[1.25rem] font-semibold text-ink">{o.name}</h3>
-                <span className="font-mono text-[0.68rem] text-ink-3">{o.duration}</span>
+                <span className="font-mono text-[0.7rem] text-ink-3">{o.duration}</span>
               </div>
-              <p className="mt-0.5 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-accent-ink">{o.format}</p>
+              <p className="mt-0.5 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-accent-ink">{o.format}</p>
               <p className="mt-3 text-[0.85rem] text-ink-2">{o.who}</p>
               <ul className="mt-4 flex flex-1 flex-col gap-2">
                 {o.get.map((g) => (

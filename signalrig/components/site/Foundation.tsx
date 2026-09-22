@@ -168,7 +168,7 @@ function FunnelMaths() {
               </li>
             ))}
           </ol>
-          <p className="mt-1 text-[0.68rem] text-ink-3">Bars are square-root scaled so the small stages stay visible. Values are per month.</p>
+          <p className="mt-1 text-[0.7rem] text-ink-3">Bars are square-root scaled so the small stages stay visible. Values are per month.</p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="card-2 p-4">
               <p className="text-[0.72rem] text-ink-3">Pipeline created / month</p>
