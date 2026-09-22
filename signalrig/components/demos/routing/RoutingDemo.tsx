@@ -150,8 +150,8 @@ export function RoutingDemo() {
       <div className="grid grid-cols-1 lg:grid-cols-3">
         {/* Inbox */}
         <div className="border-b border-line lg:border-r lg:border-b-0">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3 md:px-6">
-            <h4 className="text-[0.8rem] font-medium uppercase tracking-[0.1em] text-ink-3">Inbound replies</h4>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 md:px-6">
+            <h4 className="whitespace-nowrap text-[0.8rem] font-medium uppercase tracking-[0.1em] text-ink-3">Inbound replies</h4>
             <div className="flex gap-2">
               <Button size="sm" variant="ghost" onClick={reset} disabled={!processed.length && !running}>
                 Reset
@@ -201,9 +201,9 @@ export function RoutingDemo() {
           ) : (
             <ol ref={logRef} className="scroll-thin max-h-[420px] overflow-y-auto p-4 font-mono text-[0.74rem] leading-relaxed" aria-live="polite">
               {events.map((e, i) => (
-                <li key={`${e.t}-${i}`} className="rise mb-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
+                <li key={`${e.t}-${i}`} className="rise mb-2 grid grid-cols-1 gap-x-2 sm:grid-cols-[auto_minmax(0,1fr)]">
                   <span className={cn("whitespace-nowrap", toneText(e.tone))}>{e.type}</span>
-                  <span className="break-words text-ink-3">{e.payload}</span>
+                  <span className="break-words pl-3 text-ink-3 sm:pl-0">{e.payload}</span>
                 </li>
               ))}
             </ol>
@@ -223,12 +223,12 @@ export function RoutingDemo() {
                   type="button"
                   onClick={() => setChannel(c)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 font-mono text-[0.74rem] whitespace-nowrap transition-colors",
+                    "flex items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 pointer-coarse:min-h-10 font-mono text-[0.74rem] whitespace-nowrap transition-colors",
                     active ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2",
                   )}
                 >
                   {data.channels[c]}
-                  {counts[c] > 0 && <span className="rounded-full bg-accent px-1.5 text-[0.62rem] text-[#0a0b0d] tabular">{counts[c]}</span>}
+                  {counts[c] > 0 && <span className="rounded-full bg-accent px-1.5 text-[0.7rem] text-[#0a0b0d] tabular">{counts[c]}</span>}
                 </button>
               );
             })}
@@ -246,7 +246,7 @@ export function RoutingDemo() {
                     <div className="min-w-0">
                       <p className="text-[0.8rem]">
                         <span className="font-medium text-ink">SignalRig</span>{" "}
-                        <span className="font-mono text-[0.66rem] text-ink-3">bot · owner {m.owner.name} · {m.owner.territory}</span>
+                        <span className="font-mono text-[0.7rem] text-ink-3">bot · owner {m.owner.name} · {m.owner.territory}</span>
                       </p>
                       <p className="text-[0.82rem] text-ink-2">{m.action}</p>
                       <blockquote className="mt-1 border-l-2 border-line-strong pl-2 text-[0.76rem] text-ink-3 line-clamp-2">{m.reply.body}</blockquote>

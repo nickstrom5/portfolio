@@ -43,7 +43,7 @@ export function ScoringDemo() {
             onChange={setMode}
             options={[
               { value: "fit", label: "Rank by fit" },
-              { value: "timing", label: "Rank by timing score" },
+              { value: "timing", label: "Rank by timing" },
             ]}
           />
           <Toggle id="decay-toggle" checked={decay} onChange={setDecay} label={`Signals older than ${data.decayMonths} months decay`} hint={`Weight × ${data.decayFactor}`} />
@@ -56,7 +56,7 @@ export function ScoringDemo() {
             type="button"
             onClick={() => setTuning((t) => !t)}
             aria-expanded={tuning}
-            className="text-[0.85rem] text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
+            className="inline-flex min-h-11 items-center text-[0.85rem] text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink"
           >
             {tuning ? "Hide weights" : "Tune signal weights"}
           </button>
@@ -130,7 +130,7 @@ function RankedList({
 
   return (
     <ol className="flex flex-col" aria-label="Ranked accounts">
-      <li className="grid grid-cols-[1.25rem_minmax(0,1fr)_2.5rem_2.75rem_3.25rem] items-center gap-2 border-b border-line px-4 py-2 sm:grid-cols-[2rem_minmax(0,1fr)_4rem_4rem_4.5rem] sm:px-5 font-mono text-[0.66rem] uppercase tracking-[0.08em] text-ink-3 md:px-6">
+      <li className="grid grid-cols-[1.25rem_minmax(0,1fr)_2.5rem_2.75rem_3.25rem] items-center gap-2 border-b border-line px-4 py-2 sm:grid-cols-[2rem_minmax(0,1fr)_4rem_4rem_4.5rem] sm:px-5 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-ink-3 md:px-6">
         <span>#</span>
         <span>Account</span>
         <span className="text-right">Fit</span>
@@ -163,7 +163,7 @@ function RankedList({
                 <span className="mt-0.5 flex flex-wrap items-center gap-1">
                   <span className="text-[0.72rem] text-ink-3">{a.segment}</span>
                   {a.signals.length > 0 && (
-                    <span className="hidden font-mono text-[0.66rem] text-ink-3 sm:inline">
+                    <span className="hidden font-mono text-[0.7rem] text-ink-3 sm:inline">
                       · {a.fresh} fresh{a.signals.length - a.fresh > 0 ? ` / ${a.signals.length - a.fresh} stale` : ""}
                     </span>
                   )}
@@ -221,7 +221,7 @@ function AccountDetail({ account }: { account: ScoredAccount }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-[0.85rem] font-medium text-ink">{def?.label}</span>
-                    <span className="font-mono text-[0.68rem] text-ink-3">{ago(s.date, data.asOf)}</span>
+                    <span className="font-mono text-[0.7rem] text-ink-3">{ago(s.date, data.asOf)}</span>
                     {s.decayed && <Badge tone="neutral">decayed</Badge>}
                   </div>
                   <p className="text-[0.8rem] text-ink-2">{s.detail}</p>

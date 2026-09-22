@@ -21,7 +21,7 @@ export function DemoFrame({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-28">
+    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-32">
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <div className="mb-2 flex items-center gap-3">

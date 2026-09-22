@@ -55,11 +55,11 @@ export function WhatWeBuild() {
               <a href={`#demo-${s.id}`} className="absolute inset-0 rounded-[var(--radius)]" aria-label={`Open the ${s.name} demo`} />
               <div className="mb-4 flex items-center justify-between">
                 <span className="font-display text-[2rem] font-semibold leading-none text-accent-ink">{order.step}</span>
-                <span className="font-mono text-[0.66rem] text-ink-3 transition-colors group-hover:text-accent-ink">demo →</span>
+                <span className="font-mono text-[0.7rem] text-ink-3 transition-colors group-hover:text-accent-ink">demo →</span>
               </div>
               <h3 className="font-display text-[1.1rem] font-semibold leading-tight text-ink">{s.name}</h3>
               <p className="mt-2 flex-1 text-[0.85rem] leading-relaxed text-ink-2">{s.line}</p>
-              <p className="mt-4 font-mono text-[0.68rem] text-ink-3">{s.io}</p>
+              <p className="mt-4 font-mono text-[0.7rem] text-ink-3">{s.io}</p>
               <p className="mt-2 border-t border-line pt-2 text-[0.78rem] text-ink-2">
                 <span className="text-ink-3">Why {order.step === 1 ? "first" : `#${order.step}`}: </span>
                 {order.why}

@@ -13,13 +13,13 @@ export function Footer() {
         </div>
         <div className="flex flex-col gap-1 text-[0.8rem] text-ink-3 md:items-end">
           <p>
-            <a href={`mailto:${o.email}`} className="text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
+            <a href={`mailto:${o.email}`} className="inline-block py-2 text-ink-2 underline decoration-line-strong underline-offset-4 hover:text-ink">
               {o.email}
             </a>
           </p>
           <p>
             {o.name} · {o.location} ·{" "}
-            <a href={o.site} target="_blank" rel="noreferrer" className="underline decoration-line-strong underline-offset-4 hover:text-ink-2">
+            <a href={o.site} target="_blank" rel="noreferrer" className="inline-block py-2 underline decoration-line-strong underline-offset-4 hover:text-ink-2">
               {o.siteLabel}
             </a>
           </p>
