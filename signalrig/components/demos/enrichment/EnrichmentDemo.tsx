@@ -89,7 +89,7 @@ export function EnrichmentDemo() {
               placeholder="company domain, e.g. kestrelhq.com"
               autoComplete="off"
               spellCheck={false}
-              className="h-11 w-full rounded-[var(--radius-ctl)] border border-line-strong bg-surface-2 px-3 font-mono text-[0.9rem] text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none"
+              className="h-11 w-full rounded-[var(--radius-ctl)] border border-line-strong bg-surface-2 px-3 font-mono text-base text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none"
             />
             <datalist id="enrich-domains">
               {companies.map((c) => (
@@ -108,7 +108,7 @@ export function EnrichmentDemo() {
               type="button"
               onClick={() => setInput(c.domain!)}
               className={cn(
-                "rounded-full border px-2.5 py-0.5 font-mono text-[0.72rem] transition-colors",
+                "rounded-full border px-2.5 py-0.5 font-mono text-[0.72rem] transition-colors pointer-coarse:min-h-9 pointer-coarse:px-3",
                 input === c.domain ? "border-accent text-accent-ink" : "border-line text-ink-3 hover:text-ink-2 hover:border-line-strong",
               )}
             >
@@ -395,7 +395,7 @@ function RecordCard({ record, pending, qualified }: { record: CompanyRecord | nu
         <Field k="Segment" v={record.source.industry.split("·").pop()?.trim() ?? ""} />
       </dl>
       <div className="mt-4 rounded-[6px] border border-line bg-surface p-3">
-        <p className="mb-1 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-ink-3">Cited reason (goes to CRM)</p>
+        <p className="mb-1 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-ink-3">Cited reason (goes to CRM)</p>
         <p className="text-[0.82rem] text-ink-2">{record.icp.reason}</p>
       </div>
     </div>

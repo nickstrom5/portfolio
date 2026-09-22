@@ -102,12 +102,12 @@ export function SignalsDemo() {
                   aria-selected={active}
                   onClick={() => setFeed(f.id)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 text-[0.82rem] whitespace-nowrap transition-colors",
+                    "flex items-center gap-1.5 rounded-[6px] px-3 py-1.5 pointer-coarse:min-h-10 text-[0.82rem] whitespace-nowrap transition-colors",
                     active ? "bg-surface-3 text-ink" : "text-ink-3 hover:text-ink-2",
                   )}
                 >
                   {f.label}
-                  <span className={cn("rounded-full px-1.5 font-mono text-[0.62rem] tabular", n ? "bg-accent text-[#0a0b0d]" : "bg-surface-3 text-ink-3")}>{n}</span>
+                  <span className={cn("rounded-full px-1.5 font-mono text-[0.7rem] tabular", n ? "bg-accent text-[#0a0b0d]" : "bg-surface-3 text-ink-3")}>{n}</span>
                 </button>
               );
             })}
@@ -142,7 +142,7 @@ export function SignalsDemo() {
                   >
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="text-[0.88rem] font-medium text-ink">{it.account}</span>
-                      <span className="font-mono text-[0.68rem] text-ink-3">{ago(it.date, AS_OF)}</span>
+                      <span className="font-mono text-[0.7rem] text-ink-3">{ago(it.date, AS_OF)}</span>
                       <span className="ml-auto flex gap-1">
                         <Badge tone={it.contentMatch ? "good" : "neutral"}>{it.contentMatch ? "content ✓" : "content ✕"}</Badge>
                         <Badge tone={it.inWindow ? "good" : "neutral"}>{it.inWindow ? `≤ ${it.rule.windowDays}d ✓` : `> ${it.rule.windowDays}d`}</Badge>
@@ -150,7 +150,7 @@ export function SignalsDemo() {
                       </span>
                     </div>
                     <p className="mt-1 text-[0.82rem] text-ink-2">{it.detail}</p>
-                    <p className="mt-0.5 font-mono text-[0.66rem] text-ink-3">{it.meta}</p>
+                    <p className="mt-0.5 font-mono text-[0.7rem] text-ink-3">{it.meta}</p>
                   </li>
                 ))}
             {!scanning && visible.length === 0 && <li className="text-[0.8rem] text-ink-3">Nothing from {selectedAccount} in this feed.</li>}

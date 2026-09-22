@@ -45,7 +45,7 @@ export function AboutSite() {
                 </div>
               ))}
             </dl>
-            <a href={a.hiring.source.href} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[0.85rem] text-accent-ink underline decoration-line-strong underline-offset-4 hover:text-ink">
+            <a href={a.hiring.source.href} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center text-[0.85rem] text-accent-ink underline decoration-line-strong underline-offset-4 hover:text-ink">
               {a.hiring.source.label} →
             </a>
           </div>

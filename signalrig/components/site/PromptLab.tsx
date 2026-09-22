@@ -84,11 +84,11 @@ export function PromptLab() {
                 </summary>
                 <div className="grid grid-cols-1 gap-3 px-5 pb-4 text-[0.85rem] sm:grid-cols-2">
                   <p>
-                    <span className="block font-mono text-[0.66rem] uppercase tracking-[0.08em] text-ink-3">Cause</span>
+                    <span className="block font-mono text-[0.7rem] uppercase tracking-[0.08em] text-ink-3">Cause</span>
                     <span className="text-ink-2">{s.cause}</span>
                   </p>
                   <p>
-                    <span className="block font-mono text-[0.66rem] uppercase tracking-[0.08em] text-accent-ink">Fix</span>
+                    <span className="block font-mono text-[0.7rem] uppercase tracking-[0.08em] text-accent-ink">Fix</span>
                     <span className="text-ink-2">{s.fix}</span>
                   </p>
                 </div>
@@ -120,7 +120,7 @@ function RoutingDiagram() {
                 <div className="flex flex-col items-center">
                   <span
                     className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border font-mono text-[0.68rem]",
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] border font-mono text-[0.7rem]",
                       frontier ? "border-accent bg-accent text-[#0a0b0d]" : "border-line-strong bg-surface-2 text-ink-2",
                     )}
                     aria-hidden
