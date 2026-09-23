@@ -28,6 +28,9 @@ export function initGhlPage() {
       t.setAttribute('aria-selected', String(on));
       t.tabIndex = on ? 0 : -1;
       if (on && opts.focus) t.focus();
+      // On phones the tabs are a swipeable strip; keep the selected one visible.
+      const strip = t.parentElement;
+      if (on && strip && strip.scrollWidth > strip.clientWidth) strip.scrollTo({ left: t.offsetLeft - strip.offsetLeft - 16 });
     });
     panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
     if (opts.hash) history.replaceState(null, '', `#${id}`);

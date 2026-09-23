@@ -373,7 +373,7 @@ export const speedToLead: Automation = {
     { title: 'Score with Custom Code', body: 'Three properties go in through inputData, and a score and a call window come out through output. I tested the step with three sample contacts so later steps could map its output, then saved both values to contact fields with Update Contact Field.' },
     { title: 'Route and alert', body: 'Assign To User rotates Maya and Luis equally, but only for unassigned contacts. The internal notification goes to the assigned user, in-app and by email, not by text at midnight.' },
     { title: 'Compliance branch', body: 'An If/Else checks consent and SMS DND. The text path gets a quiet-hours Advance Window and an opt-out line in the first message; the None path is email and phone only.' },
-    { title: 'Settings that decide behaviour', body: 'Stop on Response on, so any reply hands the lead to a person. Re-entry off, so a double submit does not double-text. Workflow 03 removes the contact from this one when they book.' },
+    { title: 'Settings that decide behavior', body: 'Stop on Response on, so any reply hands the lead to a person. Re-entry off, so a double submit does not double-text. Workflow 03 removes the contact from this one when they book.' },
     { title: 'Test, publish, hand off', body: 'Five test contacts, one per scenario above, checked against Execution Logs and Enrollment History before publishing. Then a short Loom walkthrough and a one-page SOP for the office.' },
   ],
   edgeCases: [
