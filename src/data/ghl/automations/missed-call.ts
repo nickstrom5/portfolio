@@ -29,7 +29,7 @@ export const missedCall: Automation = {
     triggers: [
       {
         title: 'Call Details',
-        filters: ['Call direction is Inbound', 'Call status is No answer, Busy or Voicemail', 'Number is (312) 555-0142, the main line'],
+        filters: ['Call direction is Inbound', 'Call status is no-answer, busy or voicemail', 'Number is (312) 555-0142, the main line'],
         label: 'Call Details (missed inbound call)',
       },
     ],
@@ -92,8 +92,8 @@ export const missedCall: Automation = {
                 action: 'add_task',
                 title: 'Add Task',
                 label: 'Call back',
-                summary: 'For their rep, due in 30 minutes.',
-                run: ({ contact }) => ({ log: `Task for ${rep(contact)}: call ${contact.firstName || contact.phone} back within 30 minutes.` }),
+                summary: 'For their rep, so the call-back sits on a task list and not only in a notification.',
+                run: ({ contact }) => ({ log: `Task for ${rep(contact)}: call ${contact.firstName || contact.phone} back.` }),
               },
             ],
           },
@@ -119,8 +119,25 @@ export const missedCall: Automation = {
               action: 'create_opportunity',
               title: 'Create Opportunity',
               label: 'New lead',
-              summary: 'Roofing Sales › New Lead, with the opportunity source set to Missed call so reporting can count these leads.',
-              effect: { opportunity: { pipeline: 'Roofing Sales', stage: 'New Lead', status: 'open', name: 'Missed call' } },
+              summary: 'Roofing Sales › New Lead, source Missed call, so reporting can count these leads. The account allows one opportunity per contact, so this makes nothing for someone who already has a card.',
+              run: ({ contact }) =>
+                contact.opportunity
+                  ? { log: `They already have a card (${contact.opportunity.stage}, ${contact.opportunity.status}), and this account allows one opportunity per contact, so Create makes nothing. The next step reopens it.` }
+                  : { effect: { opportunity: { pipeline: 'Roofing Sales', stage: 'New Lead', status: 'open', name: 'Missed call' } }, log: 'Roofing Sales › New Lead, source Missed call.' },
+            },
+            {
+              id: 'reopen',
+              kind: 'action',
+              action: 'update_opportunity',
+              title: 'Update Opportunity',
+              label: 'Reopen if needed',
+              summary: 'Stage New Lead, status Open, source Missed call. Nothing changes for a brand-new caller; for a past lead whose deal was lost or abandoned, this is the step that reopens their card.',
+              run: ({ contact }) => {
+                const was = contact.opportunity;
+                const effect = { opportunity: { pipeline: 'Roofing Sales', stage: 'New Lead', status: 'open' as const } };
+                if (was && was.status !== 'open') return { effect, log: `Reopened their ${was.status} card as New Lead, source Missed call.` };
+                return { effect, log: 'Already New Lead and open, so there is nothing to reopen.' };
+              },
             },
             {
               id: 'tag',
@@ -150,12 +167,12 @@ export const missedCall: Automation = {
               action: 'internal_notification',
               title: 'Internal Notification',
               label: 'Alert the rep',
-              summary: 'In-app and email to the assigned rep. Nobody on the team gets a text at 9 PM.',
+              summary: 'In-app and email to the assigned rep. No SMS alerts to staff, so a late call does not wake anyone.',
               message: {
                 channel: 'internal',
                 to: '{{user.name}} (assigned user)',
-                subject: 'Missed call: {{contact.phone}}, no deal on file',
-                body: 'New lead, source Missed call. Call back within 15 minutes. The text-back and any reply are in Conversations.',
+                subject: 'Missed call: {{contact.phone}}, new lead',
+                body: 'No open or won deal, so this is now a New Lead with source Missed call. Call back within 15 minutes, and check Conversations first for a reply.',
               },
             },
             {
@@ -164,8 +181,8 @@ export const missedCall: Automation = {
               action: 'add_task',
               title: 'Add Task',
               label: 'Call back',
-              summary: 'For the assigned rep, due in 15 minutes. A call that comes in after hours shows as overdue first thing in the morning.',
-              run: ({ contact }) => ({ log: `Task for ${rep(contact)}: call ${contact.phone} back within 15 minutes.` }),
+              summary: 'For the assigned rep, so the call-back sits on a task list and not only in a notification. Due In counts whole days, so the 15-minute target lives in the alert and the SOP.',
+              run: ({ contact }) => ({ log: `Task for ${rep(contact)}: call ${contact.phone} back.` }),
             },
             {
               id: 'wait-reply',
@@ -175,7 +192,7 @@ export const missedCall: Automation = {
               mode: 'event',
               event: 'reply',
               minutes: 120,
-              summary: 'Wait for the contact to reply, with a 2-hour timeout. That gives the rep time to call back before anything else is sent.',
+              summary: 'The contact to reply, with a 2-hour timeout. That gives the rep time to call back before anything else is sent.',
               branches: {
                 met: {
                   label: 'Replied',
@@ -196,8 +213,8 @@ export const missedCall: Automation = {
                               action: 'add_note',
                               title: 'Add Note',
                               label: 'Opt-out record',
-                              summary: 'A dated note that SMS DND is on and why, so there is a record of when the opt-out was honoured.',
-                              run: () => ({ log: 'Note added: SMS DND is on after their reply. Phone only from here.' }),
+                              summary: 'A dated note that texts are off and why, so there is a record of when the opt-out was honoured.',
+                              run: () => ({ log: 'Note added: DND is on for texts after their reply. Phone only from here.' }),
                             },
                             {
                               id: 'notify-optout',
@@ -210,7 +227,7 @@ export const missedCall: Automation = {
                                 channel: 'internal',
                                 to: '{{user.name}} (assigned user)',
                                 subject: '{{contact.phone}} has opted out of texts',
-                                body: 'SMS DND is on, so GHL will not text them. Do not text them from your own phone either. If they still need help, call.',
+                                body: 'DND is on for texts, so GHL will not text them. Do not text them from your own phone either. If they still need help, call.',
                               },
                             },
                           ],
@@ -284,7 +301,7 @@ export const missedCall: Automation = {
                             mode: 'time',
                             minutes: 0,
                             window: { start: '08:00', end: '20:00', days: ALL_WEEK },
-                            summary: "No delay, but the Advanced Window only resumes between 8 AM and 8 PM in the contact's time zone. The nudge is a follow-up, not an answer to the call, so it waits.",
+                            summary: "No delay, but the Advance Window only resumes between 8 AM and 8 PM in the contact's time zone. The nudge is a follow-up, not an answer to the call, so it waits.",
                           },
                           {
                             id: 'sms-nudge',
@@ -306,7 +323,7 @@ export const missedCall: Automation = {
                             mode: 'event',
                             event: 'reply',
                             minutes: DAY,
-                            summary: 'Wait for the contact to reply, with a 1-day timeout.',
+                            summary: 'The contact to reply, with a 1-day timeout.',
                             branches: {
                               met: {
                                 label: 'Replied',
@@ -388,12 +405,12 @@ export const missedCall: Automation = {
     },
     {
       id: 'dnd',
-      label: 'Already opted out of texts',
-      summary: 'Replied STOP to a text last year and has no open deal. Both texts are skipped; the rep still gets the alert and the call-back task.',
+      label: 'Past lead who opted out of texts',
+      summary: 'Went with another roofer last year and replied STOP to a text back then. Both texts are skipped; the lost card reopens as New Lead and Luis gets the alert and the call-back task.',
       start: at(2, 16, 40),
-      contact: { assignedTo: 'luis', dnd: { sms: true } },
+      contact: { assignedTo: 'luis', dnd: { sms: true }, opportunity: { pipeline: 'Roofing Sales', stage: 'Estimate Sent', status: 'lost' } },
       events: [],
-      expect: { outcome: 'completed', visits: ['notify-new', 'task-callback', 'reached:else', 'wait-reply-2:timeout'], skips: ['sms-textback', 'sms-nudge'], tags: ['missed-call'], stage: 'New Lead' },
+      expect: { outcome: 'completed', visits: ['opp', 'reopen', 'notify-new', 'task-callback', 'reached:else', 'wait-reply-2:timeout'], skips: ['sms-textback', 'sms-nudge'], tags: ['missed-call'], stage: 'New Lead' },
     },
   ],
   dataModel: {
@@ -407,8 +424,8 @@ export const missedCall: Automation = {
       body: "I asked where the main line rings, for how long, and who calls back. If calls forward to a cell phone, the cell's own voicemail can pick up first, and then GHL can see the call as answered and nothing fires. So the forwarding rings for less time than the cell takes to reach its voicemail, and I tested it on every phone in the rotation.",
     },
     {
-      title: 'Trigger on Call Details',
-      body: 'Inbound calls to the main line with a status of no answer, busy or voicemail; answered calls never enter. The help center also has an older Call Status trigger with similar statuses. I built on Call Details because it can filter by the number that was called.',
+      title: 'A workflow, not the built-in setting',
+      body: 'GHL has a built-in Missed Call Text Back under Settings › Phone System that sends one message to every missed caller. This client needs different texts for customers and new callers, an opportunity, an owner and a follow-up, so I built it on the Call Details trigger (the one that used to be called Call Status): inbound, main line, status no-answer, busy or voicemail. The built-in setting stays off, or callers would get two texts.',
     },
     {
       title: 'Known callers first',
@@ -416,41 +433,41 @@ export const missedCall: Automation = {
     },
     {
       title: 'Text first, then the CRM work',
-      body: 'The text-back is the first action, so it lands while the caller still has the phone in their hand. Then the opportunity (New Lead, source Missed call), the tag, the round robin and the rep alert. No text uses the contact\'s first name: a new caller is only a phone number in GHL, and "Hi ," is a poor first impression.',
+      body: "The text-back is the first action, so it lands while the caller still has the phone in their hand. I treat it as a reply, not a solicitation: it answers a call they made seconds ago. No text uses the contact's first name, because a new caller is only a phone number in GHL and \"Hi ,\" is a poor first impression. Then Create Opportunity, and an Update Opportunity right after it: the account allows one opportunity per contact, so for a past lead Create makes nothing and Update is what reopens their lost card.",
     },
     {
       title: 'Replies go to a person',
-      body: 'Stop on Response is off because replies are handled inside the workflow, by a 2-hour reply wait with branches. A reply moves the deal to Contacted and alerts the rep. If the reply was STOP, GHL has already switched on SMS DND, so the workflow adds a note and tells the rep not to text. The reply wait after the nudge uses Go To, so both replies share one set of steps.',
+      body: 'Stop on Response is off because replies are handled inside the workflow, by a Wait step set to The contact to reply, with a 2-hour timeout and two branches. A reply moves the deal to Contacted and alerts the rep. If the reply was STOP, GHL has already switched on DND, so the workflow adds a note and tells the rep not to text. The reply wait after the nudge uses Go To, so both replies share one set of steps.',
     },
     {
       title: 'One nudge, and only if nobody got through',
-      body: "Before the follow-up, an If/Else checks that the deal is still New Lead. If they booked (03 moves it to Inspection Booked) or the rep reached them and moved it to Contacted, the workflow ends there. Otherwise a Wait with an Advanced Window holds the nudge for 8 AM to 8 PM. A new caller has no time zone on file, so GHL falls back to the account's, Chicago, which is right for a local roofer.",
+      body: "Before the follow-up, an If/Else checks that the deal is still New Lead. If they booked (03 moves it to Inspection Booked) or the rep reached them and moved it to Contacted, the workflow ends there. Otherwise a Wait with an Advance Window holds the nudge for 8 AM to 8 PM. A new caller has no time zone on file, so GHL falls back to the account's, Chicago, which is right for a local roofer.",
     },
     {
       title: 'Settings on purpose',
-      body: 'Allow Re-entry is on: every missed call deserves an answer, whether it is the first this year or the fifth. The known-caller branch stops a second call from sending a second booking link. No workflow Time Window, because it would hold the text-back too. Every step is a standard action, so nothing here is billed per execution beyond the texts themselves.',
+      body: 'Allow Re-entry is on, so someone who calls again after a run has finished gets an answer too. GHL never enrols a contact who is still active in the workflow, so a second call in the same hour sends nothing new. No workflow Time Window, because it would hold the text-back as well. Every step is a standard action, so nothing is billed per execution beyond the texts.',
     },
     {
       title: 'Test with real phones, then hand off',
-      body: 'Test calls from a cell, a landline and two phones at once for busy, each checked in Execution Logs. Then a one-page SOP for the team, because the nudge check only works if whoever gets through moves the opportunity to Contacted.',
+      body: 'Test calls from a cell, a landline and two phones at once for busy, each checked in Execution Logs. Then a one-page SOP for the team, because the check before the nudge only works if whoever gets through moves the opportunity to Contacted.',
     },
   ],
   edgeCases: [
     { title: 'Call at 8:47 PM', body: 'The text-back goes out at once, because it answers a call they just made. The rep alert is in-app and email, not a text at night. The nudge is a follow-up, so it waits for 8 AM.' },
-    { title: 'Two calls in a row', body: 'Re-entry is on, so the second call enrols them again. By then they have an open New Lead opportunity, so they take the known-caller path: one short "your rep will call" text, no second booking link and no second opportunity.' },
-    { title: 'A customer calls mid-job', body: 'An open or won deal gets a text naming their own rep, not a booking link for an inspection they already had. If they reply, that also stops 04 · Estimate Follow-Up through its Stop on Response, which is right: a person is talking to them now.' },
+    { title: 'Two calls in a row', body: 'While the first run is still going, GHL does not enrol them again, so the second call sends nothing new and the alert and task from the first call still stand. A call after that run has ended starts a fresh one, and their open New Lead deal sends it down the known-caller path: a short "your rep will call" text and no second booking link.' },
+    { title: 'A customer calls mid-job', body: 'An open or won deal gets a text naming their own rep, not a booking link for an inspection they already had, and no second opportunity. The alert goes to the rep who knows the job.' },
     { title: 'Booked or reached before the nudge', body: 'The If/Else before the nudge checks whether the deal is still New Lead. Booking through the link or a call-back that got through ends the workflow, so nobody gets "sorry we missed each other" after they have spoken to us.' },
-    { title: 'Opt-outs in their own words', body: 'STOP and the other standard keywords switch on SMS DND automatically, and the reply branch notes it and warns the rep. "Please stop texting me" does not. Here a person reads every reply, and the SOP says to switch DND on by hand the same day: since April 11, 2025 the FCC requires honouring an opt-out made by any reasonable means, within 10 business days. 07 automates this because it handles far more replies.' },
-    { title: 'Landlines and numbers that cannot take texts', body: 'The text fails and Execution Logs shows the error. The rep alert and the call-back task do not depend on the text, so the caller still gets a call back.' },
+    { title: 'Opt-outs in their own words', body: 'STOP and the other standard keywords switch on DND automatically, and the reply branch notes it and warns the rep. "Please stop texting me" does not. Here a person reads every reply, and the SOP says to switch DND on by hand the same day: since April 11, 2025 the FCC has required honouring an opt-out made by any reasonable means, within 10 business days. 07 automates this because it handles far more replies.' },
+    { title: 'Landlines and numbers that cannot take texts', body: "The text fails and Execution Logs shows the error. GHL's DND article lists carrier error codes 30003 to 30006 as a reason it switches DND on, so later texts are skipped too. The rep alert and the call-back task do not depend on the text, so the caller still gets a call back." },
   ],
   qa: [
     'Let a test call ring out: the text-back arrives within a minute, the opportunity is New Lead with source Missed call, and the rep gets the alert and the task. Repeat for busy and voicemail; an answered call never enters',
     'Call from a contact with an open deal: a short text with no booking link, their own rep is alerted, and no second opportunity appears',
-    'Call twice within a minute: one booking link and one opportunity',
+    'Call from a test contact whose deal is lost: the same card reopens as New Lead instead of a second card appearing',
     'Reply to the text-back: the stage moves to Contacted, the rep is alerted, and no nudge follows',
     'Book from the link without replying, and separately move a test deal to Contacted: neither gets the nudge at the two-hour mark',
     'Call at 9 PM: the text-back arrives at once, and the nudge shows as waiting in Execution Logs until 8 AM',
-    'Reply STOP: SMS DND is on, the note and the opt-out alert appear, and nothing else is texted',
+    'Reply STOP: DND is on, the note and the opt-out alert appear, and nothing else is texted',
     'Call from a landline: the SMS error shows in Execution Logs, and the alert and task still arrive',
   ],
   snippets: [
@@ -461,23 +478,23 @@ export const missedCall: Automation = {
 1. Call back within 15 minutes, from the GHL app or the office line, not your own number.
 2. Got through? Move the opportunity to Contacted, or book the inspection. Either one stops the follow-up text.
 3. They texted back? Answer in Conversations, and add their name to the contact.
-4. They asked us to stop texting, in any words? Turn on DND for SMS on the contact the same day.
+4. They asked us to stop texting, in any words? Turn on DND for texts on the contact the same day.
 5. Never text a customer from your personal phone.`,
       note: 'Part of the handover. The check before the nudge depends on step 2.',
     },
     {
       title: 'A2P sample messages for this flow',
       language: 'text',
-      code: `Text-back (new caller):
-Hi, this is Harbor & Pine Roofing. Sorry we missed your call. We'll call you back as soon as we can, or reply here if texting is easier. To book a free roof inspection yourself: [booking link] Reply STOP to opt out.
+      code: `Text-back to a new caller:
+Hi, this is Harbor & Pine Roofing. Sorry we missed your call. We'll call you back as soon as we can, or reply here if texting is easier. To book a free roof inspection yourself: harborpine.example/book Reply STOP to opt out.
 
-Follow-up (once, 8 AM to 8 PM):
-Hi, it's [rep first name] at Harbor & Pine Roofing. Sorry we missed each other earlier. How can we help? Reply here or book a free roof inspection: [booking link]
+One follow-up, between 8 AM and 8 PM:
+Hi, it's Maya at Harbor & Pine Roofing. Sorry we missed each other earlier. How can we help? Reply here or book a free roof inspection: harborpine.example/book
 
 Existing customer:
-Hi, it's Harbor & Pine Roofing. Sorry we missed your call. [rep first name] will call you back as soon as possible, or reply here if texting is easier.`,
-      note: 'Carriers check live traffic against the registered campaign, so every automated text in the account is listed as a sample message, with links as bracketed placeholders.',
+Hi, it's Harbor & Pine Roofing. Sorry we missed your call. Maya will call you back as soon as possible, or reply here if texting is easier.`,
+      note: "GHL's registration guide says not to put custom fields or values in sample messages, so each one is written out the way a customer receives it. Reviewers check that the samples match the campaign's use case.",
     },
   ],
-  features: ['Call Details', 'Allow Re-entry', 'If/Else', 'Send SMS', 'Create Opportunity', 'Add Contact Tag', 'Assign To User', 'Internal Notification', 'Add Task', 'Wait · Contact Reply', 'Update Opportunity', 'Add Note', 'Wait · Advanced Window', 'Go To'],
+  features: ['Call Details', 'Allow Re-entry', 'If/Else', 'Send SMS', 'Create Opportunity', 'Update Opportunity', 'Add Contact Tag', 'Assign To User', 'Internal Notification', 'Add Task', 'Wait · Contact reply', 'Wait · Advance Window', 'Add Note', 'Go To'],
 };
