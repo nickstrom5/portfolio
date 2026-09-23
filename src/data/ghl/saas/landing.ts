@@ -59,8 +59,8 @@ export const landing: LandingPage = {
   ],
   steps: [
     'The form creates the contact with their company, team size and role, and records the optional text consent.',
-    'Form Submitted fires workflow 01 · Demo Request, where Custom Code scores the fit and picks the segment.',
-    'The segment decides who gets you: enterprise to an account executive, mid-market to the SDR, small teams to the weekly live demo. The rep hears about it in Slack within seconds.',
+    'Form Submitted fires 01 · Inbound · Demo Request, where Custom Code scores the fit and picks the segment.',
+    'The segment decides who gets you: enterprise to Aisha, mid-market to Ben, small teams to the weekly live demo with Priya following up. The rep hears about it in Slack within seconds.',
   ],
   notes: [
     { title: 'Qualify with the form, not a call', body: 'Team size and role are the two questions routing needs, so the form asks exactly those. Company size ranges match the Custom Code thresholds, word for word.' },

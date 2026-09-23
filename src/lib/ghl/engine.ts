@@ -162,6 +162,8 @@ function mergeContext(contact: Contact, env: MergeEnv, appt: Appointment | undef
       source: contact.source ?? '',
       address1: contact.address ?? '',
       full_address: contact.address ?? '',
+      // GHL's standard Company Name field; the sample forms store it as a custom field keyed company.
+      company_name: contact.fields.company ?? '',
       ...snake,
     },
     user,
@@ -530,7 +532,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       if (out.vars) Object.assign(vars, out.vars);
       if (out.effect) applyEffect(out.effect);
       if (out.log) detail = out.log;
-      if (out.eventStart !== undefined) appt = { start: out.eventStart, status: 'booked' };
+      if (out.eventStart !== undefined) {
+        appt = { start: out.eventStart, status: 'booked' };
+        // A new Event Start Date ends "skip all outbound communication", like the next wait does.
+        skipOutbound = false;
+      }
     }
     if (node.effect) applyEffect(node.effect);
     let message: TraceMessage | undefined;

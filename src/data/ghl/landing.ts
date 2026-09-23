@@ -25,7 +25,7 @@ export const roofingLanding: LandingPage = {
     { name: 'age', label: 'How old is the roof?', type: 'select', options: ['Under 10 years', '10-20 years', 'Over 20 years', 'Not sure'], initial: 'Not sure', maps: { field: 'roof_age' } },
   ],
   consent: {
-    transactional: 'Text me about my inspection request: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
+    transactional: 'Text me about my inspection, estimate and job: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
     marketing: 'Also text me occasional offers and seasonal roof reminders. Reply STOP to opt out.',
     fine: 'Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service',
   },
@@ -54,7 +54,7 @@ export const roofingLanding: LandingPage = {
   ],
   steps: [
     'The form creates the contact and saves each answer to a custom field, plus hidden UTM fields read from the page URL.',
-    'Form Submitted fires workflow 01 · Speed to Lead.',
+    'Form Submitted fires 01 · Lead Intake · Speed to Lead.',
     'A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.',
   ],
   notes: [
