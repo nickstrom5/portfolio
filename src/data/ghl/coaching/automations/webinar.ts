@@ -77,7 +77,7 @@ export const webinar: Automation = {
         'Allow Re-entry on: the workshop runs every week. GHL lets a contact back in only after their current run has finished, so a double submit never starts a second run.',
         'Stop on Response off: "see you Thursday" or a question about the replay must not cancel the reminders or the replay. Replies land in Conversations for a person, and STOP still turns on SMS DND by itself.',
         'Timezone: Contact. Event Start Date ignores this and always uses the account time zone, Central, which is what a live session needs. The contact zone only drives the Advance Window after a replay click.',
-        'No workflow Time Window: it would also hold the 8:15 PM follow-up emails. The texts are pinned to the session instead, and the latest one lands at 7:55 PM Eastern.',
+        'No workflow Time Window: it would also hold the 8:15 PM follow-up emails. The texts are pinned to the session instead, and the latest one lands at 7:55 PM Eastern. In Atlantic Canada that is 8:55 PM, five minutes before a session that starts at 9 PM there, and a reminder they asked for.',
         'Sender: From Name Morgan Hale, from morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not the name of the assigned user, because the assigned user changes when Devon picks up an application.',
       ],
     },
@@ -707,7 +707,7 @@ export const webinar: Automation = {
     },
     {
       title: 'Reading the Join click',
-      body: 'The help center documents a trigger-link click as something a Wait can listen for (The contact to take an action: Clicks a trigger link), so the post-session split is two of those waits, not an If/Else. The first starts after the 1-hour text and times out at 6:55 PM; a click there skips the doors-open text, because they are already in the room. The second starts after that text and times out at 8:15 PM. A click in either goes to a wait for 8:15 PM and then the offer. No click means the replay. Both replay waits listen only for the Replay link, so a late click on Join does not count as watching.',
+      body: 'The help center documents a trigger-link click as something a Wait can listen for (The contact to take an action: Clicks a trigger link), so the post-session split is two of those waits, not an If/Else. A Goal Event on the click was the other option, but a goal pulls the contact forward from wherever they are, so a Tuesday test click would skip every reminder. The first wait starts after the 1-hour text and times out at 6:55 PM; a click there skips the doors-open text, because they are already in the room. The second starts after that text and times out at 8:15 PM. A click in either goes to a wait for 8:15 PM and then the offer. No click means the replay. Both replay waits listen only for the Replay link, so a late click on Join does not count as watching.',
     },
     {
       title: 'Consent by DND, and what it costs',
