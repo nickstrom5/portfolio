@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://sparc.science'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

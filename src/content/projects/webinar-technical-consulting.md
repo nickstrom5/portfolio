@@ -11,6 +11,7 @@ featured: false
 source: 'upwork'
 links: {}
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

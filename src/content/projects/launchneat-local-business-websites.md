@@ -11,7 +11,9 @@ featured: false
 source: 'personal'
 links:
   live: 'https://launchneat.com'
+cover: '/showcase/launchneat-site.jpg'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The idea
