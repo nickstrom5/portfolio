@@ -121,7 +121,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" />
+          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" loading="lazy" decoding="async" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
@@ -150,7 +150,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:32</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="gw-card">
-          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" />
+          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" loading="lazy" decoding="async" />
           <div class="gw-card-body">
             <strong>Rex</strong>
             <span>14 days in a row · 41 walks total</span>
@@ -211,7 +211,7 @@ const isShot = screen === 'image' && !!image;
     overflow: hidden;
     background: #121217;
     color: #fff;
-    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    font-family: -apple-system, var(--font-inter);
     font-size: calc(var(--w) * 0.05);
     line-height: 1.3;
   }

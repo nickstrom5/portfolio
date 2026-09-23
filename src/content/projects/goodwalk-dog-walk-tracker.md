@@ -10,6 +10,7 @@ year: 2026
 featured: false
 source: 'personal'
 links: {}
+cover: '/showcase/goodwalk-site.jpg'
 placeholder: false
 published: 2026-09-20
 ---

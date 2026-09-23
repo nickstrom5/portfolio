@@ -11,6 +11,7 @@ featured: false
 source: 'personal'
 links:
   live: 'https://signalrig.dev'
+cover: '/showcase/signalrig-site.jpg'
 placeholder: false
 published: 2026-09-20
 ---
