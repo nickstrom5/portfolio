@@ -1,4 +1,4 @@
-import type { Automation, Contact } from '@/lib/ghl/types';
+import type { ActionNode, Automation, Condition, Contact } from '@/lib/ghl/types';
 import { env } from '../business';
 
 const DAY = 1440;
@@ -19,6 +19,27 @@ const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 const OPT_OUT = ['stop texting', 'stop messaging', 'stop contacting', 'please stop', 'remove me', 'take me off', 'unsubscribe', 'opt out', 'opt-out', 'wrong number', "don't text", 'do not text', 'no more texts', 'leave me alone', 'revoke'];
 const YES = ['yes', 'yeah', 'yep', 'sure', 'interested', 'still on', 'come out', 'stop by', 'take a look', 'quote', 'call me', 'book'];
 const NO = ['no', 'not', 'nope', 'maybe', "don't", 'already', 'sold', 'moved', 'next year', 'later', 'someone else', 'another company', 'went with', 'all set', 'taken care of', 'sorted'];
+
+/** Every email ends with the business name and postal address (CAN-SPAM). GHL adds the unsubscribe link. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
+/**
+ * Add Task's Assign To takes one named user, so the call task splits on
+ * Assigned User first. The simulator reads the owner that the Drip and
+ * Assign To User steps recorded.
+ */
+const ownerIsLuis: Condition = { type: 'var', key: 'owner', op: 'eq', value: 'luis', label: 'Assigned User is Luis Grant' };
+
+/** The call-back task, one per estimator. */
+const callTask = (id: string, key: 'maya' | 'luis'): ActionNode => ({
+  id,
+  kind: 'action',
+  action: 'add_task',
+  title: 'Add Task',
+  label: `Call back: ${env.users[key].first_name}`,
+  summary: `Assign To ${env.users[key].name}, Due In 1 day, Skip Weekends on. A notification is easy to miss; an overdue task is not.`,
+  run: ({ contact }) => ({ log: `Task for ${env.users[key].name}: call ${contact.firstName} about the reactivation reply. Due in 1 day, weekends skipped.` }),
+});
 
 /** First name of the contact's owner, for logs. */
 const owner = (c: Contact) => (c.assignedTo && env.users[c.assignedTo]?.first_name) || 'the assigned estimator';
@@ -46,6 +67,7 @@ const S = {
   emailOnly: at(2, 10, 30),
   unclear: at(0, 13, 40),
   silent: at(3, 16, 45),
+  yesLater: at(0, 10, 20),
 };
 
 const deciderSetup = `Action name:   Route the reply
@@ -115,11 +137,15 @@ export const reactivation: Automation = {
           event: 'appointment_booked',
           by: 'Booking fires 03 · Inspection Booked, whose first step is Remove from Workflow: 07 · Database Reactivation. Nobody with an inspection on the calendar gets asked whether their roof is still on their list.',
         },
+        {
+          event: 'form_submitted',
+          by: 'Filling in the inspection form fires 01 · Speed to Lead, whose first step removes them from 07. A missed call does the same through 02 · Missed-Call Text-Back. Either way they are a live lead again, with one follow-up.',
+        },
       ],
       notes: [
         'Time Window Mon-Fri 10 AM-6 PM holds texts and emails only. Routing, DND, tags and notifications run the moment a reply arrives.',
         'Stop on Response off: the workflow routes replies itself. With it on, a reply would end the run before the Decision Maker saw it.',
-        'Re-entry off. Next year the workflow is cloned with a new trigger tag, reactivate-2027.',
+        'Allow Re-entry off: one run per contact per campaign. Next year the workflow is cloned with a new trigger tag, reactivate-2027.',
         "Timezone: Contact. Old imports with no time zone fall back to the account's, Chicago, which is right for a local roofer.",
         'Allow multiple Opportunities is for opportunity-based triggers. Here the Duplicate Opportunity toggle on Create Opportunity is what matters.',
       ],
@@ -143,7 +169,7 @@ export const reactivation: Automation = {
         title: 'Drip',
         label: 'Pace the sends',
         summary: 'Batch size 50, interval 15 minutes. A list of 400 leaves in 8 batches over 1 hr 45 min, so even a 4 PM start clears the 6 PM close. It protects the number and spreads the replies out so the estimators can answer them.',
-        run: () => ({ log: 'Released with its batch. Batches of 50 leave every 15 minutes, so the number never sends to the whole list at once.' }),
+        run: ({ contact }) => ({ vars: { owner: contact.assignedTo ?? '' }, log: 'Released with its batch. Batches of 50 leave every 15 minutes, so the number never sends to the whole list at once.' }),
       },
       {
         id: 'can-text',
@@ -155,7 +181,7 @@ export const reactivation: Automation = {
             label: 'Offers consent',
             when: {
               type: 'all',
-              label: 'SMS Consent (offers) is Yes, and the contact is not DND for SMS',
+              label: 'SMS consent (offers) is Yes, and the contact is not DND for SMS',
               of: [
                 { type: 'field', key: 'sms_marketing_consent', op: 'eq', value: 'Yes' },
                 { type: 'not', of: { type: 'dnd', channel: 'sms' } },
@@ -242,7 +268,7 @@ export const reactivation: Automation = {
                                 action: 'internal_notification',
                                 title: 'Internal Notification',
                                 label: 'Tell Jordan',
-                                summary: 'To the owner, who is responsible for opt-outs. In-app and email.',
+                                summary: 'Type Email, To User Type Particular Users: Jordan Blake, who is responsible for opt-outs. The email doubles as a dated record.',
                                 message: {
                                   channel: 'internal',
                                   to: 'Jordan Blake (particular user)',
@@ -280,9 +306,9 @@ export const reactivation: Automation = {
                                 label: 'Keep the estimator',
                                 summary: 'Maya and Luis, split equally, with Only Apply to Unassigned Contacts on. The estimator who signed the texts keeps the lead. It only assigns someone if the list clean-up missed an owner.',
                                 run: ({ contact }) => {
-                                  if (contact.assignedTo) return { log: `Already ${owner(contact)}'s contact, and ${owner(contact)} signed the texts, so the owner stays the same.` };
+                                  if (contact.assignedTo) return { vars: { owner: contact.assignedTo }, log: `Already ${owner(contact)}'s contact, and ${owner(contact)} signed the texts, so the owner stays the same.` };
                                   const who = [...`${contact.firstName}${contact.lastName}`].reduce((n, ch) => n + ch.charCodeAt(0), 0) % 2 ? 'luis' : 'maya';
-                                  return { effect: { assignTo: who }, log: `No owner on file, so the rotation picks ${env.users[who].name}.` };
+                                  return { effect: { assignTo: who }, vars: { owner: who }, log: `No owner on file, so the rotation picks ${env.users[who].name}.` };
                                 },
                               },
                               {
@@ -307,7 +333,7 @@ export const reactivation: Automation = {
                                 action: 'internal_notification',
                                 title: 'Internal Notification',
                                 label: 'Call them today',
-                                summary: 'In-app and email to the assigned estimator. A person writes back: the AI picks the branch, it never answers the homeowner.',
+                                summary: 'Type Notification (the bell), To User Type Assigned User, Redirect Page the contact. A person writes back: the AI picks the branch, it never answers the homeowner.',
                                 message: {
                                   channel: 'internal',
                                   to: '{{user.name}} (assigned user)',
@@ -316,13 +342,12 @@ export const reactivation: Automation = {
                                 },
                               },
                               {
-                                id: 'task-call',
-                                kind: 'action',
-                                action: 'add_task',
-                                title: 'Add Task',
-                                label: 'Call back',
-                                summary: 'For the assigned estimator, due in 1 day with Skip Weekends on. A notification is easy to miss; an overdue task is not.',
-                                run: ({ contact }) => ({ log: `Task for ${owner(contact)}: call ${contact.firstName} about the reactivation reply. Due in 1 day, weekends skipped.` }),
+                                id: 'whose-call',
+                                kind: 'ifelse',
+                                title: 'If/Else',
+                                label: 'Whose lead?',
+                                branches: [{ label: 'Luis', when: ownerIsLuis, nodes: [callTask('task-call-luis', 'luis')] }],
+                                otherwise: { label: 'Maya', nodes: [callTask('task-call-maya', 'maya')] },
                               },
                             ],
                           },
@@ -369,7 +394,7 @@ export const reactivation: Automation = {
                               action: 'internal_notification',
                               title: 'Internal Notification',
                               label: 'A person reads it',
-                              summary: 'Anything the model cannot place goes to the estimator, with nothing sent to the homeowner in the meantime.',
+                              summary: 'Type Notification to the Assigned User, Redirect Page the contact. Anything the model cannot place goes to the estimator, with nothing sent to the homeowner in the meantime.',
                               message: {
                                 channel: 'internal',
                                 to: '{{user.name}} (assigned user)',
@@ -451,11 +476,11 @@ export const reactivation: Automation = {
               action: 'send_email',
               title: 'Send Email',
               label: 'Check-in',
-              summary: 'The same question for anyone without offers consent or on SMS DND. Booking link, postal address, and the unsubscribe link in the template footer.',
+              summary: 'The same question for anyone without offers consent or on SMS DND. Booking link, and the postal address at the foot; the sub-account adds the unsubscribe link.',
               message: {
                 channel: 'email',
                 subject: 'Is your roof still on your list, {{contact.first_name}}?',
-                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we can come out for a free roof inspection. It takes about 45 minutes, and you get photos of anything we find and a written estimate.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is taken care of, there is no need to reply. Thanks,\n{{user.name}}\nHarbor & Pine Roofing, {{location.address}}',
+                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we can come out for a free roof inspection. It takes about 45 minutes, and you get photos of anything we find and a written estimate.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is taken care of, there is no need to reply. Thanks,\n{{user.name}}' + footer,
               },
             },
             { id: 'wait-4d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 4 * DAY, summary: 'Four days.' },
@@ -469,7 +494,7 @@ export const reactivation: Automation = {
               message: {
                 channel: 'email',
                 subject: 'One last note about your roof',
-                body: 'Hi {{contact.first_name}},\n\nOne last note from me. If a roof inspection would help this year, you can book one any time at {{custom_values.booking_link}}, or call the office at {{custom_values.office_phone}}. If we have already spoken, please ignore this one.\n\n{{user.name}}\nHarbor & Pine Roofing, {{location.address}}',
+                body: 'Hi {{contact.first_name}},\n\nOne last note from me. If a roof inspection would help this year, you can book one any time at {{custom_values.booking_link}}, or call the office at {{custom_values.office_phone}}. If we have already spoken, please ignore this one.\n\n{{user.name}}' + footer,
               },
             },
           ],
@@ -485,7 +510,7 @@ export const reactivation: Automation = {
       start: S.interested,
       contact: oldLead('maya', 'estimate-no-decision', { fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', estimate_amount: 16200 } }),
       events: [{ at: 47, type: 'reply', value: 'Yes, still on the list. A few shingles came off this winter. Can someone stop by next week?' }],
-      expect: { outcome: 'completed', visits: ['start', 'drip', 'can-text:0', 'sms-1', 'wait-1:met', 'route:1', 'intent-yes', 'assign', 'opp', 'notify-rep', 'task-call'], stage: 'New Lead' },
+      expect: { outcome: 'completed', visits: ['start', 'drip', 'can-text:0', 'sms-1', 'wait-1:met', 'route:1', 'intent-yes', 'assign', 'opp', 'notify-rep', 'whose-call:else', 'task-call-maya'], stage: 'New Lead' },
     },
     {
       id: 'opt-out',
@@ -504,6 +529,15 @@ export const reactivation: Automation = {
       contact: oldLead('maya', 'estimate-no-decision', { fields: { service_needed: 'Full replacement', roof_age: '10-20 years', estimate_amount: 9800 } }),
       events: [{ at: at(4, 18, 40) - S.notNow, type: 'reply', value: "Not this year, money's tight after the furnace. Maybe next spring." }],
       expect: { outcome: 'completed', visits: ['wait-1:timeout', 'sms-2', 'wait-2:met', 'goto-route', 'route:2', 'intent-later', 'note-later'] },
+    },
+    {
+      id: 'yes-later',
+      label: 'Yes, on the second text',
+      summary: "One of Luis's old inspection requests. Ignores the check-in, then answers the second text on Thursday morning: they want a price this spring. Luis gets the new card, the alert and the call task.",
+      start: S.yesLater,
+      contact: oldLead('luis', 'stl-no-response', { fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years' } }),
+      events: [{ at: at(3, 9, 50) - S.yesLater, type: 'reply', value: "Yes, we're finally doing it this spring. Can you give me a call about a quote?" }],
+      expect: { outcome: 'completed', visits: ['wait-1:timeout', 'sms-2', 'wait-2:met', 'goto-route', 'route:1', 'opp', 'whose-call:0', 'task-call-luis'], stage: 'New Lead' },
     },
     {
       id: 'unclear',
@@ -535,7 +569,7 @@ export const reactivation: Automation = {
   ],
   dataModel: {
     customFields: [
-      { name: 'SMS Consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'The second box on the form: offers and seasonal reminders. Unticked by default. Only these contacts get reactivation texts.' },
+      { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'The second box on the form: offers and seasonal reminders. Unticked by default. Only these contacts get reactivation texts.' },
       { name: 'Reply Intent', key: 'reply_intent', type: 'Dropdown (single)', note: 'Interested · Not now · Opt-out · Unclear. Written by each Decision Maker branch.' },
     ],
     tags: [
@@ -556,7 +590,7 @@ export const reactivation: Automation = {
     },
     {
       title: 'Consent picks the channel',
-      body: 'The form has two SMS boxes: one for inspection updates and one for offers. A reactivation text is an offer, so only the second box counts. Everyone else, including old imports with no consent on record, gets email. The email template has the postal address and an unsubscribe link, which CAN-SPAM requires.',
+      body: 'The form has two SMS boxes: one for inspection updates and one for offers. A reactivation text is an offer, so only the second box counts. Everyone else, including old imports with no consent on record, gets email. Each email ends with the business name and postal address, and the sub-account\'s unsubscribe link setting stays on, which is what CAN-SPAM asks of a marketing email.',
     },
     {
       title: 'Pace it, and pick the start days',
@@ -580,14 +614,14 @@ export const reactivation: Automation = {
     },
     {
       title: 'Test, publish, report',
-      body: 'Six test contacts, one per scenario above, checked in Execution Logs before publishing. The first thing I check is the Decision Maker\'s input. GHL documents {{message.body}} as the message that triggered the workflow, and this one starts from a tag, so the test has to show the reply the wait caught. If it does not, the routing moves to a small companion workflow triggered by Customer Replied (Replied to Workflow is 07, Reply Channel is SMS), where it always does. Results live in two places: Reply Intent for how the list answered, and Roofing Sales cards with source Reactivation for what it was worth. Next year I clone the workflow and change the trigger tag.',
+      body: 'Seven test contacts, one per scenario above, checked in Execution Logs before publishing. The first thing I check is the Decision Maker\'s input. GHL documents {{message.body}} as the message that triggered the workflow, and this one starts from a tag, so the test has to show the reply the wait caught. If it does not, the routing moves to a small companion workflow triggered by Customer Replied (Replied to Workflow is 07, Reply Channel is SMS), where it always does. Results live in two places: Reply Intent for how the list answered, and Roofing Sales cards with source Reactivation for what it was worth. Next year I clone the workflow and change the trigger tag.',
     },
   ],
   edgeCases: [
     { title: '"Can someone stop by?"', body: 'The automatic opt-out only fires when the whole reply is a keyword such as STOP, and the Decision Maker reads the whole sentence, with an instruction that "stop by" means a visit, so this goes to Interested. The simulator\'s keyword rules look for phrases such as "stop texting", never the bare word, for the same reason.' },
     { title: 'An opt-out in plain words', body: '"Please stop texting me" or "wrong number" does not trigger the keyword opt-out. The Opt-out branch switches on SMS DND at once, and Jordan decides whether they meant every channel. Missing an opt-out is a compliance problem. Misreading a yes as an opt-out loses one lead. That is why the model is told to pick Opt-out whenever it cannot tell, and only then: a reply it simply cannot place goes to the Default Branch and a person.' },
     { title: 'The model gets it wrong', body: 'The AI only picks a branch. It never writes to the homeowner, so a wrong call costs a phone call, not a wrong text. Interested creates a card and alerts a person. Anything it cannot place goes to the Default Branch, where a person reads it.' },
-    { title: 'Most of the list already has a card', body: 'Create Opportunity checks for duplicates by contact ID. With duplicates off it would create nothing for anyone who ever had a card, which is almost everyone here. So Duplicate Opportunity is on in the action, and Allow Multiple Opportunities per Contact is on in the account\'s opportunity settings. The Smart List leaves out open cards, so the new card is the only open one, and when they book, 03 finds the latest open card and moves that one, not the old one.' },
+    { title: 'Most of the list already has a card', body: 'Create Opportunity checks for duplicates by contact ID. With duplicates off it would create nothing for anyone who ever had a card, which is almost everyone here. So Duplicate Opportunity is on in the action, and Allow Multiple Opportunities per Contact is on in the account\'s opportunity settings. The Smart List leaves out open cards, and 01, 02 and 03 take a contact out of 07 when they come back by form, call or booking, so the new card is the only open one. When they book, 03 finds the latest open card and moves that one, not the old one.' },
     { title: 'Tagged late in the week', body: 'Without the start wait, a Thursday text times out on Saturday, the Time Window holds text 2 until Monday, and a Sunday reply lands while no wait is listening: it is never routed, and text 2 still goes out on Monday, even after "please stop texting me". The start wait holds a Thursday tag until Monday at 10 AM, so both texts land on weekdays and a wait is always listening.' },
     { title: 'Someone picks up the conversation by hand', body: 'GHL\'s help center warns that a text sent by hand while a contact is waiting for a reply can stop the workflow from counting their reply. The wait then times out and they get text 2 while already talking to the estimator. The SOP: whoever answers someone on this list by text, email or phone removes them from 07 first, from the contact\'s Workflows tab. Booking needs no SOP, because 03 removes them.' },
   ],

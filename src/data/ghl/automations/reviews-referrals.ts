@@ -22,6 +22,9 @@ const finished = (start: number, assignedTo: string, amount: number, over: Parti
   opportunity: { pipeline: 'Roofing Sales', stage: 'Job Complete', status: 'won', value: amount, name: 'Dana Whitfield · Roof replacement' },
 });
 
+/** Every email ends with the business name and postal address (CAN-SPAM). GHL adds the unsubscribe link. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
 const S = {
   saturday: at(5, 16, 30),
   quiet: at(3, 11, 15),
@@ -31,7 +34,7 @@ const S = {
 
 const templates = `SMS request · Reputation › Settings › SMS Requests (Live template)
 When to send SMS after check-in: Immediately
-Until clicked, repeat / Maximum retries: set so it sends once
+Recurring Review Requests: off, so each request sends once
 Default sender number: the main line, (312) 555-0142
 
   Hi {{contact.first_name}}, this is Harbor & Pine Roofing. Thank you for
@@ -39,7 +42,7 @@ Default sender number: the main line, (312) 555-0142
   It helps other homeowners: {{reputation.review_link}} Reply STOP to opt out.
 
 Email request · Reputation › Settings › Email Requests (Live template)
-When to send Email after check-in: Immediately   Retries: set so it sends once
+When to send Email after check-in: Immediately   Recurring: off
 Subject: Your review of Harbor & Pine Roofing
 
   Hi {{contact.first_name}},
@@ -51,9 +54,11 @@ Subject: Your review of Harbor & Pine Roofing
 
   [ Leave a review ]   the Review Link element, which uses the link below
 
+  Harbor & Pine Roofing, 1200 W Lake St, Oak Park, IL 60302
+
 Review Link · Reputation › Settings › Review Link
   Custom Link: the Google review form for Harbor & Pine, which opens straight
-  to the stars, not the Maps listing. Same URL as the review_link custom value.`;
+  to the stars, not the Maps listing. {{reputation.review_link}} fills from it.`;
 
 const survey = `Survey: Job check-in                    Sites › Surveys
 Sticky Contact: on
@@ -70,7 +75,7 @@ Sticky Contact: on
                     that has used one of our forms before.
 
 On submit: "Thank you. Jordan reads every answer."
-Published on harborpine.example/how-did-we-do`;
+Published on harborpine.example/how-did-we-do, the Feedback Link custom value`;
 
 const replySop = `Replying to reviews · one page for the office
 
@@ -119,6 +124,7 @@ export const reviewsReferrals: Automation = {
     settings: {
       allowReEntry: false,
       stopOnResponse: false,
+      allowMultipleOpportunities: false,
       timezone: 'contact',
       timeWindow: { start: '10:00', end: '19:00', days: MON_SAT },
       senderName: 'Jordan Blake, Harbor & Pine Roofing',
@@ -126,6 +132,7 @@ export const reviewsReferrals: Automation = {
         'Stop on Response off: "thanks, the crew was great" is a reply, and the customer who sends it should still get the check-in and the referral email. Replies land in Conversations for Jordan.',
         'Time Window Monday to Saturday, 10 AM to 7 PM, contact time zone. It holds the texts and emails. The alert and the task for Jordan are internal, so they go out the moment a low score comes in, at any hour.',
         'Allow Re-entry off: one review request per homeowner, even if a card is moved back to Job Scheduled and forward again.',
+        'Allow multiple Opportunities off (new workflows start with it on): a second finished card for the same homeowner does not start a second run either.',
         'Sender Details: From Name Jordan Blake, From Email jordan@harborpine.example, for the check-in and referral emails. The review requests use the default sender number and email set in Reputation › Settings: the main line and Jordan\'s address.',
       ],
     },
@@ -144,10 +151,10 @@ export const reviewsReferrals: Automation = {
         action: 'review_request',
         title: 'Send Review Request',
         label: 'By text',
-        summary: 'Review Type SMS: the Live template from Reputation › Settings, the same words and link for every customer. In GHL the link is the tracked {{reputation.review_link}}; here it shows as the review_link custom value, the same URL.',
+        summary: 'Review Type SMS: the Live template from Reputation › Settings, the same words and the same {{reputation.review_link}} for every customer. GHL tracks clicks on that link.',
         message: {
           channel: 'sms',
-          body: 'Hi {{contact.first_name}}, this is Harbor & Pine Roofing. Thank you for trusting us with your roof. Would you share an honest review of the job? It helps other homeowners: {{custom_values.review_link}} Reply STOP to opt out.',
+          body: 'Hi {{contact.first_name}}, this is Harbor & Pine Roofing. Thank you for trusting us with your roof. Would you share an honest review of the job? It helps other homeowners: {{reputation.review_link}} Reply STOP to opt out.',
         },
       },
       { id: 'wait-3d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 3 * DAY, summary: 'Three days.' },
@@ -161,7 +168,7 @@ export const reviewsReferrals: Automation = {
         message: {
           channel: 'email',
           subject: 'Your review of Harbor & Pine Roofing',
-          body: 'Hi {{contact.first_name}},\n\nThank you again for choosing Harbor & Pine Roofing. If you have two minutes, we would be grateful for an honest review of the job on Google. Good or bad, it helps the next homeowner decide, and it tells us what to keep doing and what to fix.\n\nLeave a review: {{custom_values.review_link}}\n\n{{custom_values.owner_name}}\nOwner, Harbor & Pine Roofing',
+          body: 'Hi {{contact.first_name}},\n\nThank you again for choosing Harbor & Pine Roofing. If you have two minutes, we would be grateful for an honest review of the job on Google. Good or bad, it helps the next homeowner decide, and it tells us what to keep doing and what to fix.\n\nLeave a review: {{reputation.review_link}}\n\n{{custom_values.owner_name}}\nOwner' + footer,
         },
       },
       {
@@ -169,8 +176,7 @@ export const reviewsReferrals: Automation = {
         kind: 'goal',
         title: 'Goal Event',
         label: 'Review Request Clicked',
-        event: 'link_clicked',
-        value: 'review',
+        event: 'review_clicked',
         summary: 'Goal type Review Request Clicked, any channel. A click during the wait skips the email reminder; without one, Continue anyway. Nobody is asked about a review after this point.',
         ifNotMet: 'continue',
       },
@@ -192,7 +198,7 @@ export const reviewsReferrals: Automation = {
         message: {
           channel: 'email',
           subject: 'How did we do on your roof?',
-          body: "Hi {{contact.first_name}},\n\nNow that the crew has been gone a few days, I'd like to know how the job went. Rate it from 1 to 5 and tell us if anything needs fixing. It takes under a minute: {{location.website}}/how-did-we-do\n\nI read every answer. If something is not right, you can also reply to this email or call me at {{custom_values.office_phone}}. Your warranty details are here: {{custom_values.warranty_link}}\n\n{{custom_values.owner_name}}\nOwner, Harbor & Pine Roofing",
+          body: "Hi {{contact.first_name}},\n\nNow that the crew has been gone a few days, I'd like to know how the job went. Rate it from 1 to 5 and tell us if anything needs fixing. It takes under a minute: {{custom_values.feedback_link}}\n\nI read every answer. If something is not right, you can also reply to this email or call me at {{custom_values.office_phone}}. Your warranty details are here: {{custom_values.warranty_link}}\n\n{{custom_values.owner_name}}\nOwner" + footer,
         },
       },
       {
@@ -216,7 +222,7 @@ export const reviewsReferrals: Automation = {
                 branches: [
                   {
                     label: 'Below 4',
-                    when: { type: 'var', key: 'survey_score', op: 'lt', value: 4, label: 'Satisfaction is less than 4' },
+                    when: { type: 'field', key: 'satisfaction', op: 'lt', value: 4, label: 'Satisfaction is less than 4' },
                     nodes: [
                       {
                         id: 'notify-owner',
@@ -224,12 +230,12 @@ export const reviewsReferrals: Automation = {
                         action: 'internal_notification',
                         title: 'Internal Notification',
                         label: 'Jordan calls',
-                        summary: 'Email and in-app to Jordan as soon as the score lands; the Time Window never holds internal steps. Not a text at 9 PM: the call task below is what makes sure it happens.',
+                        summary: 'Type Email, To User Type Particular Users: Jordan Blake, as soon as the score lands; the Time Window never holds internal steps. Not a text at 9 PM: the call task below is what makes sure it happens.',
                         message: {
                           channel: 'internal',
-                          to: '{{custom_values.owner_name}} (owner)',
+                          to: 'Jordan Blake (particular user)',
                           subject: 'Low check-in score: {{contact.name}}',
-                          body: 'Rated the job below 4 out of 5 in the check-in. The job was finished on {{contact.job_date}}. The score and any comment are on the contact record. Call within one business day: {{contact.phone}}. If it is workmanship, bring in {{custom_values.production_manager}}. Their review request went out like everyone else\'s and stays out. Never offer anything in exchange for changing or removing a review.',
+                          body: 'Rated the job {{contact.satisfaction}} out of 5 in the check-in. The job was finished on {{contact.job_date}}. The score and any comment are on the contact record. Call within one business day: {{contact.phone}}. If it is workmanship, bring in {{custom_values.production_manager}}. Their review request went out like everyone else\'s and stays out. Never offer anything in exchange for changing or removing a review.',
                         },
                       },
                       {
@@ -238,7 +244,7 @@ export const reviewsReferrals: Automation = {
                         action: 'add_task',
                         title: 'Add Task',
                         label: 'Service recovery call',
-                        summary: 'Assign To Jordan Blake, Due In 1 day, Skip Weekends on. The note on the task says to log what was agreed.',
+                        summary: 'Assign To Jordan Blake, Due In 1 day, Skip Weekends on. The description says to call, agree the fix, and log it in a note.',
                         run: ({ contact, now }) => ({
                           log: `Task for Jordan Blake, due ${formatDay(nextWeekdayAt(now, 0))}: call ${contact.firstName} ${contact.lastName} about the check-in, agree the fix, and add a note saying what was agreed.`,
                         }),
@@ -273,11 +279,11 @@ export const reviewsReferrals: Automation = {
                       action: 'send_email',
                       title: 'Send Email',
                       label: 'Referral ask',
-                      summary: "A thank-you for introductions, with the referral form and the reward. It never mentions reviews: a reward next to a review ask reads as paying for reviews. The account's email template adds the postal address and unsubscribe link.",
+                      summary: 'A thank-you for introductions, with the referral form and the reward. It never mentions reviews: a reward next to a review ask reads as paying for reviews. It asks anyone who shares the link in public to mention the gift card.',
                       message: {
                         channel: 'email',
                         subject: 'Know someone who needs a roof?',
-                        body: 'Hi {{contact.first_name}},\n\nMost of our work comes from homeowners telling a neighbor or a friend about us, so we like to say thank you properly.\n\nIf someone you know is thinking about their roof, send them here: {{custom_values.referral_link}}. They get the same free inspection you did. If they go ahead with a roof from us, we will send you a $250 gift card. There is no limit on referrals.\n\nThanks again for choosing us.\n\n{{custom_values.owner_name}}\nOwner, Harbor & Pine Roofing',
+                        body: 'Hi {{contact.first_name}},\n\nIf someone you know is thinking about their roof, send them here: {{custom_values.referral_link}}. They get the same free inspection you did, and if they go ahead with a roof from us, we will send you a $250 gift card as a thank-you. There is no limit on referrals. If you share the link on social media, please mention the gift card.\n\nThanks again for choosing us.\n\n{{custom_values.owner_name}}\nOwner' + footer,
                       },
                     },
                   ],
@@ -310,8 +316,8 @@ export const reviewsReferrals: Automation = {
       contact: finished(S.saturday, 'maya', 14800),
       events: [
         { at: at(7, 10, 19) - S.saturday, type: 'reply', value: 'Will do. The crew was great and left the yard cleaner than they found it.', label: 'Stop on Response is off, so the reply goes to Conversations and she stays in the workflow' },
-        { at: at(7, 10, 22) - S.saturday, type: 'link_clicked', value: 'review', label: 'The review link in the text request' },
-        { at: at(11, 20, 5) - S.saturday, type: 'survey_submitted', value: 5, label: 'Job check-in: 5 of 5, no comment' },
+        { at: at(7, 10, 22) - S.saturday, type: 'review_clicked', label: 'The review link in the text request' },
+        { at: at(11, 20, 5) - S.saturday, type: 'survey_submitted', value: 5, field: 'satisfaction', label: 'Job check-in: 5 of 5, no comment' },
       ],
       expect: { outcome: 'goal', visits: ['ask-sms', 'goal-clicked', 'email-checkin', 'wait-survey:met', 'score:else', 'wait-referral', 'email-referral'], stage: 'Job Complete' },
     },
@@ -331,11 +337,12 @@ export const reviewsReferrals: Automation = {
       start: S.low,
       contact: finished(S.low, 'maya', 12950),
       events: [
-        { at: at(2, 18, 55) - S.low, type: 'link_clicked', value: 'review', label: 'The review link in the text request' },
+        { at: at(2, 18, 55) - S.low, type: 'review_clicked', label: 'The review link in the text request' },
         {
           at: at(12, 20, 40) - S.low,
           type: 'survey_submitted',
           value: 2,
+          field: 'satisfaction',
           label: 'Job check-in: 2 of 5. "The gutter over the garage is pulling away, and there were nails in the flower bed."',
         },
       ],
@@ -347,7 +354,7 @@ export const reviewsReferrals: Automation = {
       summary: 'Replied STOP to an estimate follow-up text before she signed. The text request is skipped, and the email request is her ask: day four is a Sunday, so GHL holds it until Monday at 10 AM. She rates the job 4 the morning after the check-in.',
       start: S.textsOff,
       contact: finished(S.textsOff, 'luis', 9800, { dnd: { sms: true } }),
-      events: [{ at: at(12, 9, 30) - S.textsOff, type: 'survey_submitted', value: 4, label: 'Job check-in: 4 of 5. "Good job, a bit slow to start."' }],
+      events: [{ at: at(12, 9, 30) - S.textsOff, type: 'survey_submitted', value: 4, field: 'satisfaction', label: 'Job check-in: 4 of 5. "Good job, a bit slow to start."' }],
       expect: { outcome: 'completed', visits: ['ask-email', 'goal-clicked', 'email-checkin', 'wait-survey:met', 'score:else', 'wait-referral', 'email-referral'], skips: ['ask-sms'], stage: 'Job Complete' },
     },
   ],
@@ -359,7 +366,7 @@ export const reviewsReferrals: Automation = {
     tags: [{ name: 'service-recovery', note: 'Check-in score below 4. Jordan owns it until the fix is agreed; no referral email' }],
     pipeline: { name: 'Roofing Sales', stages: ['New Lead', 'Contacted', 'Inspection Booked', 'Inspected', 'Estimate Sent', 'Job Scheduled', 'Job Complete'] },
     customValues: [
-      { name: 'Review Link', key: 'review_link', value: 'harborpine.example/review' },
+      { name: 'Feedback Link', key: 'feedback_link', value: 'harborpine.example/how-did-we-do' },
       { name: 'Referral Link', key: 'referral_link', value: 'harborpine.example/refer' },
       { name: 'Warranty Link', key: 'warranty_link', value: 'harborpine.example/warranty' },
       { name: 'Owner Name', key: 'owner_name', value: 'Jordan Blake' },
@@ -374,7 +381,7 @@ export const reviewsReferrals: Automation = {
     },
     {
       title: 'Reputation settings before the workflow',
-      body: "The Review Link is a Custom Link that opens the Google review form directly, the same URL as the review_link custom value. The SMS and email templates are written and set Live, with the main line and Jordan's address as the default senders. One help article says a workflow request goes out on behalf of the contact's assigned user, so the text is signed by the company, not a person, and the QA list checks which number it comes from. When to send after check-in is Immediately, and the retries are set so each request sends once: the workflow owns the timing, so the Time Window, the reminder and the Execution Logs are in one place.",
+      body: "The Review Link is a Custom Link that opens the Google review form directly, and every template uses {{reputation.review_link}}, so clicks are tracked. The SMS and email templates are written and set Live, with the main line and Jordan's address as the default senders. One help article says a workflow request goes out on behalf of the contact's assigned user, so the text is signed by the company, not a person, and the QA list checks which number it comes from. When to send after check-in is Immediately, and Recurring Review Requests is off, so each request sends once: the workflow owns the timing, so the Time Window, the reminder and the Execution Logs are in one place.",
     },
     {
       title: 'Trigger on the stage 05 sets',
@@ -394,7 +401,7 @@ export const reviewsReferrals: Automation = {
     },
     {
       title: 'Low scores add work, never remove the link',
-      body: 'Below 4: Jordan gets an email and in-app alert and a call task due the next business day, and the contact is tagged service-recovery. They skip the referral email, which is allowed: a referral is an introduction, not a review. A 4 or 5 gets the referral email a week later. No answer in ten days goes straight to the same email through a Go To, so there is one referral email to maintain.',
+      body: 'Below 4: Jordan gets an email alert and a call task due the next business day, and the contact is tagged service-recovery. They skip the referral email, which is allowed: a referral is an introduction, not a review. A 4 or 5 gets the referral email a week later. No answer in ten days goes straight to the same email through a Go To, so there is one referral email to maintain.',
     },
     {
       title: 'Test, publish, hand off',
@@ -408,7 +415,7 @@ export const reviewsReferrals: Automation = {
     },
     {
       title: 'Incentives',
-      body: 'The $250 referral reward is fine: it pays for an introduction, not an opinion. Nothing is offered for a review, not a discount and not a raffle entry. Google prohibits review incentives outright, and the FTC rule bans incentives tied to what the review says (16 CFR 465.4). The referral email never mentions reviews, so nobody can read the two together.',
+      body: 'The $250 referral reward is fine: it pays for an introduction, not an opinion. Nothing is offered for a review, not a discount and not a raffle entry. Google prohibits review incentives outright, and the FTC rule bans incentives tied to what the review says (16 CFR 465.4). The referral email never mentions reviews, so nobody can read the two together. A customer who recommends us in public while a reward is on offer has a material connection under the FTC Endorsement Guides (16 CFR 255.5), so the email asks them to mention the gift card when they share the link.',
     },
     {
       title: 'A slow answer',
@@ -420,7 +427,7 @@ export const reviewsReferrals: Automation = {
     },
     {
       title: 'They reply to the review text',
-      body: 'Stop on Response is off, so "thanks, the crew was great" lands in Conversations and they stay in for the check-in. STOP switches SMS DND on automatically. "Please don\'t text me" does not, so the office turns on SMS DND from the conversation that day: since April 11, 2025 the FCC has required honouring an opt-out made by any reasonable means within 10 business days. Nothing later in this workflow is a text either way.',
+      body: 'Stop on Response is off, so "thanks, the crew was great" lands in Conversations and they stay in for the check-in. STOP switches SMS DND on automatically. "Please don\'t text me" does not, so the office turns on SMS DND from the conversation that day: since April 11, 2025 the FCC has required honoring an opt-out made by any reasonable means within 10 business days. Nothing later in this workflow is a text either way.',
     },
     {
       title: 'Card moved back and forward',
@@ -432,7 +439,7 @@ export const reviewsReferrals: Automation = {
     'Move one at 5 PM on Saturday: nothing sends on Sunday, and the request goes out Monday at 10 AM',
     'Click the link in the text: Execution Logs show the Goal Event met, and the email reminder never sends',
     'Do not click: the email request arrives on day four with the same link',
-    'Submit the survey with 2 stars on a Saturday night, five days after the check-in: Jordan gets the email and in-app alert at once and a task due Monday, the tag is added, no referral email follows, and nothing about the review request changes',
+    'Submit the survey with 2 stars on a Saturday night, five days after the check-in: Satisfaction is 2 on the contact, Jordan gets the email alert at once and a task due Monday, the tag is added, no referral email follows, and nothing about the review request changes',
     'Submit with 5, and on a second contact not at all: the first gets the referral email a week later, the second ten days after the check-in, both with the postal address and unsubscribe link in the footer',
     'Test contact on SMS DND: the text request shows as skipped and the email request goes out',
     'Read every message out loud: no reward anywhere near a review ask, no "if you were happy" wording, and the review link opens the Google review form on a phone',
@@ -442,7 +449,7 @@ export const reviewsReferrals: Automation = {
       title: 'Review request templates (Reputation › Settings)',
       language: 'text',
       code: templates,
-      note: 'GHL fills {{reputation.review_link}} from the Review Link setting and tracks clicks on it, which is what the Review Request Clicked goal listens for. In the simulator the link renders from the review_link custom value, which holds the same URL.',
+      note: 'GHL fills {{reputation.review_link}} from the Review Link setting and tracks clicks on it, which is what the Review Request Clicked goal listens for.',
     },
     { title: 'Check-in survey', language: 'text', code: survey, note: 'The rating element writes straight to the Satisfaction field, so the Wait and the If/Else read a number, not free text.' },
     { title: 'Replying to reviews (SOP)', language: 'text', code: replySop, note: 'The workflow asks everyone. What the office does with the answers is the other half of staying compliant.' },

@@ -1,4 +1,4 @@
-import type { Automation, Contact } from '@/lib/ghl/types';
+import type { ActionNode, Automation, Condition, Contact } from '@/lib/ghl/types';
 import { formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
 import { env } from '../business';
 
@@ -7,10 +7,32 @@ const DAY = 1440;
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
-/** First name of the contact's assigned estimator, for task logs. */
-const rep = (c: Contact) => (c.assignedTo && env.users[c.assignedTo]?.first_name) || 'the assigned estimator';
-
 const money = (v: string | number | boolean) => `$${Number(v).toLocaleString('en-US')}`;
+
+/** Every email ends with the business name and postal address (CAN-SPAM). GHL adds the unsubscribe link. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
+/**
+ * Add Task's Assign To takes one named user, so the call task splits on
+ * Assigned User first. The simulator reads the owner recorded at the first step.
+ */
+const ownerIsLuis: Condition = { type: 'var', key: 'owner', op: 'eq', value: 'luis', label: 'Assigned User is Luis Grant' };
+
+/** The day-seven call, one Add Task per estimator. */
+const callTask = (id: string, key: 'maya' | 'luis'): ActionNode => ({
+  id,
+  kind: 'action',
+  action: 'add_task',
+  title: 'Add Task',
+  label: `Call: ${env.users[key].first_name}`,
+  summary: `Assign To ${env.users[key].name}, Due In 1 day, Skip Weekends on. A week in, a person calls: the messages back the estimator up, they do not replace the call.`,
+  run: ({ contact, now }) => {
+    const amount = contact.fields.estimate_amount;
+    return {
+      log: `Task for ${env.users[key].name}, due ${formatDay(nextWeekdayAt(now, 0))}: call ${contact.firstName} about the ${amount ? `${money(amount)} ` : ''}estimate. If they decide on the call, add estimate-signed or estimate-declined.`,
+    };
+  },
+});
 
 /** The three tags this workflow reads or writes. Cleared at the start so an earlier estimate cannot decide this one. */
 const DECISION_TAGS = ['estimate-signed', 'estimate-declined', 'estimate-no-decision'];
@@ -116,6 +138,7 @@ export const estimateFollowUp: Automation = {
         run: ({ contact }) => {
           const old = DECISION_TAGS.filter((t) => contact.tags.includes(t));
           return {
+            vars: { owner: contact.assignedTo ?? '' },
             effect: { removeTags: DECISION_TAGS },
             log: old.length ? `Removed ${old.join(', ')}, left over from an earlier estimate.` : 'None of the three tags was on the contact, so nothing changed.',
           };
@@ -171,11 +194,11 @@ export const estimateFollowUp: Automation = {
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'Financing',
-                summary: 'Financing through a trigger link, so a click shows who is weighing the cost. No price in the email: estimates get revised, and last week\'s number in an automated email does more harm than none. The account\'s email template adds the postal address and unsubscribe link.',
+                summary: 'Financing through a trigger link, so a click shows who is weighing the cost. No price in the email: estimates get revised, and last week\'s number in an automated email does more harm than none. No rate or payment amount either: those are Regulation Z triggering terms, so they stay on the financing page with the lender\'s disclosures. The footer carries the postal address; the sub-account adds the unsubscribe link.',
                 message: {
                   channel: 'email',
                   subject: 'Your roof estimate, and spreading the cost',
-                  body: 'Hi {{contact.first_name}},\n\nThanks again for having us out to look at your roof. A new roof is a big purchase, and plenty of homeowners would rather pay for it monthly than all at once. You can see our financing options, and what a monthly payment could look like, here: {{trigger_link.financing}}\n\nIf anything in the estimate is unclear, reply to this email or call the office at {{custom_values.office_phone}}, and I will go through it with you.\n\n{{user.name}}\nHarbor & Pine Roofing',
+                  body: 'Hi {{contact.first_name}},\n\nThanks again for having us out to look at your roof. A new roof is a big purchase, and plenty of homeowners would rather pay for it monthly than all at once. You can see our financing options, and what a monthly payment could look like, here: {{trigger_link.financing}}\n\nIf anything in the estimate is unclear, reply to this email or call the office at {{custom_values.office_phone}}, and I will go through it with you.\n\n{{user.name}}' + footer,
                 },
               },
               { id: 'wait-3d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 3 * DAY, summary: 'Three days.' },
@@ -193,114 +216,123 @@ export const estimateFollowUp: Automation = {
               },
               { id: 'wait-2d-call', kind: 'wait', title: 'Wait', mode: 'time', minutes: 2 * DAY, summary: 'Two days.' },
               {
-                id: 'task-call',
-                kind: 'action',
-                action: 'add_task',
-                title: 'Add Task',
-                label: 'Call about the estimate',
-                summary: 'For the assigned estimator, Due In 1 day, Skip Weekends on. A week in, a person calls: the messages back the estimator up, they do not replace the call.',
-                run: ({ contact, now }) => {
-                  const amount = contact.fields.estimate_amount;
-                  return {
-                    log: `Task for ${rep(contact)}, due ${formatDay(nextWeekdayAt(now, 0))}: call ${contact.firstName} about the ${amount ? `${money(amount)} ` : ''}estimate. If they decide on the call, add estimate-signed or estimate-declined.`,
-                  };
-                },
-              },
-              { id: 'wait-5d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 5 * DAY, summary: 'Five days.' },
-              {
-                id: 'sms-close',
-                kind: 'action',
-                action: 'send_sms',
-                title: 'Send SMS',
-                label: 'Close the file?',
-                summary: 'Makes it easy to say no, which is still an answer. A reply here stops the workflow like any other.',
-                message: {
-                  channel: 'sms',
-                  body: "Hi {{contact.first_name}}, should I close out your roof estimate for now? No problem either way. If you'd like to go ahead or talk it through, just reply here. Thanks, {{user.first_name}}",
-                },
-              },
-              { id: 'wait-2d-end', kind: 'wait', title: 'Wait', mode: 'time', minutes: 2 * DAY, summary: 'Two days for a last answer before the decision.' },
-              {
-                id: 'goal',
-                kind: 'goal',
-                title: 'Goal Event',
-                label: 'Estimate decided',
-                event: 'tag_added',
-                summary: 'Contact Tag added: estimate-signed or estimate-declined, two criteria in one Goal Event. If neither tag arrives, Continue anyway takes the contact on to the decision.',
-                ifNotMet: 'continue',
-              },
-              {
-                id: 'decision',
+                id: 'whose-call',
                 kind: 'ifelse',
                 title: 'If/Else',
-                label: 'Decision',
+                label: 'Whose estimate?',
                 branches: [
                   {
-                    label: 'Signed',
-                    when: { type: 'tag', has: 'estimate-signed' },
+                    label: 'Luis',
+                    when: ownerIsLuis,
                     nodes: [
-                      {
-                        id: 'won',
-                        kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Won',
-                        summary: 'Status Won. That fires 05 · Won to Job Hand-Off, so production hears about the job without anyone retyping it.',
-                        effect: { opportunity: { status: 'won' } },
-                      },
-                    ],
-                  },
-                  {
-                    label: 'Declined',
-                    when: { type: 'tag', has: 'estimate-declined' },
-                    nodes: [
-                      {
-                        id: 'lost',
-                        kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Lost',
-                        summary: 'Status Lost. The estimator adds the lost reason on the card, which feeds the lost-deal report. No tag for 07: they said no.',
-                        effect: { opportunity: { status: 'lost' } },
-                      },
-                    ],
-                  },
-                  {
-                    label: 'No decision',
-                    when: { type: 'opportunity', status: 'open' },
-                    nodes: [
-                      {
-                        id: 'abandon',
-                        kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Abandoned',
-                        summary: 'Status Abandoned, not Lost: they never said no, so the lost-deal report stays honest.',
-                        effect: { opportunity: { status: 'abandoned' } },
-                      },
-                      {
-                        id: 'tag-nd',
-                        kind: 'action',
-                        action: 'add_tag',
-                        title: 'Add Contact Tag',
-                        label: 'estimate-no-decision',
-                        summary: 'Puts them on the list for a later reactivation campaign (07 · Database Reactivation).',
-                        effect: { addTags: ['estimate-no-decision'] },
-                      },
+                      callTask('task-call-luis', 'luis'),
+                      { id: 'goto-call', kind: 'goto', title: 'Go To', target: 'wait-5d', summary: 'Joins the Maya branch after her task, so the close-out and the decision exist once.' },
                     ],
                   },
                 ],
                 otherwise: {
-                  label: 'Closed by hand',
+                  label: 'Maya',
                   nodes: [
+                    callTask('task-call-maya', 'maya'),
+                    { id: 'wait-5d', kind: 'wait', title: 'Wait', label: 'Before the close-out', mode: 'time', minutes: 5 * DAY, summary: 'Five days.' },
                     {
-                      id: 'note-hand',
+                      id: 'sms-close',
                       kind: 'action',
-                      action: 'add_note',
-                      title: 'Add Note',
-                      label: 'Left as the rep set it',
-                      summary: 'Someone already closed the card by hand. The workflow records that and leaves the status alone instead of overwriting it with Abandoned.',
-                      run: ({ contact }) => ({ log: `Note added: the card was already ${contact.opportunity?.status ?? 'closed'} when the follow-up ended, so the workflow left it as the rep set it.` }),
+                      action: 'send_sms',
+                      title: 'Send SMS',
+                      label: 'Close the file?',
+                      summary: 'Makes it easy to say no, which is still an answer. A reply here stops the workflow like any other.',
+                      message: {
+                        channel: 'sms',
+                        body: "Hi {{contact.first_name}}, should I close out your roof estimate for now? No problem either way. If you'd like to go ahead or talk it through, just reply here. Thanks, {{user.first_name}}",
+                      },
+                    },
+                    { id: 'wait-2d-end', kind: 'wait', title: 'Wait', mode: 'time', minutes: 2 * DAY, summary: 'Two days for a last answer before the decision.' },
+                    {
+                      id: 'goal',
+                      kind: 'goal',
+                      title: 'Goal Event',
+                      label: 'Estimate decided',
+                      event: 'tag_added',
+                      value: ['estimate-signed', 'estimate-declined'],
+                      summary: 'Contact Tag added: estimate-signed or estimate-declined, two criteria in one Goal Event, and no other tag meets it. If neither arrives, Continue anyway takes the contact on to the decision.',
+                      ifNotMet: 'continue',
+                    },
+                    {
+                      id: 'decision',
+                      kind: 'ifelse',
+                      title: 'If/Else',
+                      label: 'Decision',
+                      branches: [
+                        {
+                          label: 'Signed',
+                          when: { type: 'tag', has: 'estimate-signed' },
+                          nodes: [
+                            {
+                              id: 'won',
+                              kind: 'action',
+                              action: 'update_opportunity',
+                              title: 'Update Opportunity',
+                              label: 'Won',
+                              summary: 'Status Won. That fires 05 · Won to Job Hand-Off, so production hears about the job without anyone retyping it.',
+                              effect: { opportunity: { status: 'won' } },
+                            },
+                          ],
+                        },
+                        {
+                          label: 'Declined',
+                          when: { type: 'tag', has: 'estimate-declined' },
+                          nodes: [
+                            {
+                              id: 'lost',
+                              kind: 'action',
+                              action: 'update_opportunity',
+                              title: 'Update Opportunity',
+                              label: 'Lost',
+                              summary: 'Status Lost. The estimator adds the lost reason on the card, which feeds the lost-deal report. No tag for 07: they said no.',
+                              effect: { opportunity: { status: 'lost' } },
+                            },
+                          ],
+                        },
+                        {
+                          label: 'No decision',
+                          when: { type: 'opportunity', status: 'open' },
+                          nodes: [
+                            {
+                              id: 'abandon',
+                              kind: 'action',
+                              action: 'update_opportunity',
+                              title: 'Update Opportunity',
+                              label: 'Abandoned',
+                              summary: 'Status Abandoned, not Lost: they never said no, so the lost-deal report stays honest.',
+                              effect: { opportunity: { status: 'abandoned' } },
+                            },
+                            {
+                              id: 'tag-nd',
+                              kind: 'action',
+                              action: 'add_tag',
+                              title: 'Add Contact Tag',
+                              label: 'estimate-no-decision',
+                              summary: 'Puts them on the list for a later reactivation campaign (07 · Database Reactivation).',
+                              effect: { addTags: ['estimate-no-decision'] },
+                            },
+                          ],
+                        },
+                      ],
+                      otherwise: {
+                        label: 'Closed by hand',
+                        nodes: [
+                          {
+                            id: 'note-hand',
+                            kind: 'action',
+                            action: 'add_note',
+                            title: 'Add Note',
+                            label: 'Left as the rep set it',
+                            summary: 'Someone already closed the card by hand. The workflow records that and leaves the status alone instead of overwriting it with Abandoned.',
+                            run: ({ contact }) => ({ log: `Note added: the card was already ${contact.opportunity?.status ?? 'closed'} when the follow-up ended, so the workflow left it as the rep set it.` }),
+                          },
+                        ],
+                      },
                     },
                   ],
                 },
@@ -317,7 +349,7 @@ export const estimateFollowUp: Automation = {
               action: 'internal_notification',
               title: 'Internal Notification',
               label: 'Fill in the amount',
-              summary: 'In-app and email to the assigned estimator the minute the card moves, so the gap is fixed the same day.',
+              summary: 'Type Notification (the bell), To User Type Assigned User, Redirect Page the contact, the minute the card moves, so the gap is fixed the same day.',
               message: {
                 channel: 'internal',
                 to: '{{user.name}} (assigned user)',
@@ -363,7 +395,7 @@ export const estimateFollowUp: Automation = {
       start: S.quiet,
       contact: estimateOut('maya', 23400, { tags: ['estimate-no-decision', 'reactivate-2026'] }),
       events: [],
-      expect: { outcome: 'completed', visits: ['reset', 'sms-questions', 'task-call', 'sms-close', 'goal', 'decision:2', 'abandon', 'tag-nd'], tags: ['estimate-no-decision'] },
+      expect: { outcome: 'completed', visits: ['reset', 'sms-questions', 'whose-call:else', 'task-call-maya', 'sms-close', 'goal', 'decision:2', 'abandon', 'tag-nd'], tags: ['estimate-no-decision'] },
     },
     {
       id: 'saturday',
@@ -372,7 +404,7 @@ export const estimateFollowUp: Automation = {
       start: S.saturday,
       contact: estimateOut('luis', undefined, { fields: { roof_age: '10-20 years' } }),
       events: [{ at: at(15, 11, 5) - S.saturday, type: 'tag_added', value: 'estimate-declined', label: 'estimate-declined, added by Luis after the call' }],
-      expect: { outcome: 'goal', visits: ['amount:else', 'notify-blank', 'goto-seq', 'sms-walk', 'email-finance', 'task-call', 'goal', 'decision:1', 'lost'], tags: ['estimate-declined'] },
+      expect: { outcome: 'goal', visits: ['amount:else', 'notify-blank', 'goto-seq', 'sms-walk', 'email-finance', 'whose-call:0', 'task-call-luis', 'goto-call', 'goal', 'decision:1', 'lost'], tags: ['estimate-declined'] },
     },
     {
       id: 'dnd',
@@ -381,7 +413,7 @@ export const estimateFollowUp: Automation = {
       start: S.dnd,
       contact: estimateOut('maya', 9600, { dnd: { sms: true }, fields: { service_needed: 'Storm damage' } }),
       events: [{ at: at(11, 14, 30) - S.dnd, type: 'opportunity_lost', label: 'Maya drags the card to Lost: they went with another roofer' }],
-      expect: { outcome: 'completed', visits: ['email-finance', 'task-call', 'goal', 'decision:else', 'note-hand'], skips: ['sms-walk', 'sms-questions', 'sms-close'] },
+      expect: { outcome: 'completed', visits: ['email-finance', 'task-call-maya', 'goal', 'decision:else', 'note-hand'], skips: ['sms-walk', 'sms-questions', 'sms-close'] },
     },
   ],
   dataModel: {
@@ -439,7 +471,7 @@ export const estimateFollowUp: Automation = {
     { title: 'Yes or no on the phone', body: 'The estimator adds estimate-signed or estimate-declined. The Goal Event pulls the contact out of whatever wait they are in, so nobody gets "should I close your file?" after they have signed, and the card goes Won or Lost.' },
     { title: 'Card dragged instead of tagged', body: 'Marking the card Won by hand fires 05, whose first step removes the contact from this workflow. Dragging it to Lost does not stop the remaining messages, and GHL\'s Goal Event guide lists no opportunity-status goal, which is why the rule is the tag. The decision step still checks the card: if it is no longer open, the workflow adds a note and leaves Lost alone instead of overwriting it with Abandoned.' },
     { title: 'Second estimate for the same homeowner', body: 'A revised quote, a repeat customer, or a stalled lead that 07 brought back on a new card. Re-entry and multiple opportunities are on, so the new card gets its own two weeks. The first step clears the old decision tags, so last year\'s estimate-signed cannot mark this one Won. The one gap: if one homeowner has two open estimates at once, a tag closes both runs, so the estimator marks those cards by hand.' },
-    { title: 'No text consent, or SMS DND', body: 'The account rule is that anyone who has not agreed to texts is on SMS DND, set at intake or by the office as in 03, so this workflow relies on DND instead of repeating a consent branch. GHL does not send a text to a contact on SMS DND, and the test list checks in Execution Logs that the run goes on to the email and the call task. The decision step still closes the card after two weeks.' },
+    { title: 'No text consent, or SMS DND', body: 'The account rule is that anyone who has not agreed to texts is on SMS DND: 01 switches it on for a form lead who did not tick the box, and the office does it for anyone who says no on the phone. So this workflow relies on DND instead of repeating a consent branch. GHL does not send a text to a contact on SMS DND, and the test list checks in Execution Logs that the run goes on to the email and the call task. The decision step still closes the card after two weeks.' },
   ],
   qa: [
     'Move test cards to Estimate Sent at 4:30 PM on a weekday and on Saturday afternoon: the first text shows as waiting in Execution Logs and sends at 9 AM on the next open day, never on a Sunday',
@@ -449,6 +481,7 @@ export const estimateFollowUp: Automation = {
     'Mark a card Won by hand mid-sequence: 05 starts and this workflow\'s Enrollment History shows "Removed by External Workflow Action". Drag another to Lost: at the end it is still Lost, with a note',
     'Contact on SMS DND with a blank Estimate Amount: the texts show as skipped, the estimator gets the blank-amount alert, and the email and the task still happen',
     'Contact with an old estimate-signed tag and a second card: the tag is removed at the start and the new card gets its own run',
+    'One test estimate for Maya and one for Luis: each day-seven call task goes to the estimator who owns the contact',
     'Every merge field renders on a real phone and in Gmail and Outlook, and the financing click shows on the contact',
   ],
   snippets: [

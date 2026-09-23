@@ -10,7 +10,7 @@ const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 /** Last quarter's answer. The first step clears all three, so the tag is always the latest answer. */
 const NPS_TAGS = ['nps-detractor', 'nps-passive', 'nps-promoter'];
 
-const company = (c: Contact) => String(c.fields.company ?? `${c.firstName} ${c.lastName}`);
+const company = (c: Contact) => String(c.fields.company_name ?? c.fields.company ?? `${c.firstName} ${c.lastName}`);
 const comment = (c: Contact) => String(c.fields.nps_comment ?? '').trim();
 
 /** Update Contact Field on Account Health, logged as a change. */
@@ -24,13 +24,18 @@ function setHealth(to: string) {
   };
 }
 
-/** Commercial emails carry the postal address; the unsubscribe link sits in the template footer. */
-const footer = '\n\n{{location.name}}, {{location.address}}';
+/**
+ * The referral and case-study emails are commercial, so they sign off with the full postal address.
+ * Include Unsubscribe Link is on in the sub-account's Business Profile, so GHL adds the unsubscribe
+ * link to the footer of every email, these two included.
+ */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
 
+/** No offer and no link in the body: a relationship message about their own account. */
 const sorry = {
   subject: 'Thank you for being straight with us',
   body:
-    'Hi {{contact.first_name}},\n\nThank you for answering our survey, and for being honest. Your answer tells me Crewlo is not working the way your team needs it to, and I want to understand why.\n\nI will call you within one business day. If email is easier, or there is a better number or time to reach you, reply here and I will work around you.\n\nLeo Park\nCustomer Success, Crewlo',
+    'Hi {{contact.first_name}},\n\nThank you for answering our survey, and for being honest. Your answer tells me Crewlo is falling short for your team somewhere, and I want to understand where.\n\nI will call you within one business day. If email is easier, or there is a better number or time to reach you, reply here and I will work around you.\n\nLeo Park\nCustomer Success, Crewlo',
 };
 
 const ten = {
@@ -39,8 +44,15 @@ const ten = {
     'Hi {{contact.first_name}},\n\nThanks for answering our survey. You gave Crewlo {{contact.nps}} out of 10, which I read as: it works, but something is missing.\n\nWhat is the one thing that would make it a 10 for you? A line or two is plenty. Just reply to this email. I read every answer myself, and I pass product ideas to the team that builds Crewlo.\n\nLeo Park\nCustomer Success, Crewlo',
 };
 
+const referral = {
+  subject: 'Thank you, {{contact.first_name}}',
+  body:
+    'Hi {{contact.first_name}},\n\nThank you for the {{contact.nps}}. It is good to hear Crewlo is doing its job for {{contact.company_name}}.\n\nIf you know another field-service company that still schedules on a whiteboard or in a group chat, this link opens the Referrals page in your Crewlo account, with a personal link you can send them: {{trigger_link.referral}}\n\nWhen a company you refer becomes a Crewlo customer, you both get a month free. The terms are on the same page. If you share your link somewhere public, like a post or an industry group, please mention that you get a free month when someone signs up through it.\n\nLeo Park\nCustomer Success, Crewlo' +
+    footer,
+};
+
 const survey = `Survey: Quarterly NPS                               Sites › Surveys
-Sticky Contact: on
+Survey Settings: Sticky Contact on
 
 1  Radio Select   "How likely are you to recommend Crewlo to a friend
                    or colleague?"
@@ -55,15 +67,15 @@ Sticky Contact: on
 
 On submit: "Thank you. Leo Park reads every answer."
 
-Sent by a quarterly email campaign from Leo to the Customers
-smart list (tag customer), linking the survey page.`;
+Sent by a quarterly email campaign from Leo to the Customers smart list
+(tag customer), linking the survey page.`;
 
 const slackBody = `{
-  "text": "NPS detractor: {{contact.company}} answered {{contact.nps}}. Leo Park is calling today.",
+  "text": "NPS detractor: {{contact.company_name}} answered {{contact.nps}}. Leo Park is calling.",
   "blocks": [
     {
       "type": "header",
-      "text": { "type": "plain_text", "text": "Detractor: {{contact.company}} ({{contact.nps}}/10)" }
+      "text": { "type": "plain_text", "text": "Detractor: {{contact.company_name}} ({{contact.nps}}/10)" }
     },
     {
       "type": "section",
@@ -71,7 +83,7 @@ const slackBody = `{
         { "type": "mrkdwn", "text": "*Contact*\\n{{contact.name}}" },
         { "type": "mrkdwn", "text": "*Plan*\\n{{contact.plan}}, {{contact.seats}} seats" },
         { "type": "mrkdwn", "text": "*Account health*\\n{{contact.account_health}}" },
-        { "type": "mrkdwn", "text": "*Next step*\\nLeo Park calls today" }
+        { "type": "mrkdwn", "text": "*Next step*\\nLeo Park calls, task due now" }
       ]
     },
     {
@@ -89,11 +101,11 @@ export const npsHealth: Automation = {
   name: 'NPS and health',
   kicker: 'Customer success',
   tagline:
-    'Every answer to the quarterly NPS survey gets its own response. Detractors get a call from the customer success manager the same day, passives get one question, and promoters get the referral link. Nobody is asked for a public review because of their score.',
+    "Every answer to the quarterly NPS survey gets its own response. A detractor puts a call on the customer success manager's list within seconds, a passive gets one question, and a promoter gets the referral link. Nobody is asked for a public review because of their score.",
   problem:
     'Crewlo sent an NPS survey every quarter and read the results in a spreadsheet weeks later. By then an unhappy customer had been unhappy for a month, the comments from the 7s and 8s had gone unanswered, and the customers who would gladly have recommended Crewlo were never asked.',
   solution:
-    'The survey writes the score to the contact, and one If/Else sorts the answer. A 0 to 6 sets Account Health to At risk, emails Leo the comment, gives him a call task due today, posts to #cs-alerts and sends a short note from Leo saying he will call. A 7 or 8 gets one question from Leo, what would make it a 10, and a reply goes straight to him. A 9 or 10 gets the referral link, plus a case-study invite a few days later if they have never been asked. Anything unexpected, a missing score included, takes the detractor path, so a person looks at it.',
+    'The survey writes the score to the contact, and one If/Else sorts the answer. A 0 to 6 sets Account Health to At risk, emails Leo the comment, gives him a call task due now, posts to #cs-alerts and sends a short note from Leo saying he will call. A 7 or 8 gets one question from Leo, what would make it a 10, and a reply goes straight to him. A 9 or 10 gets the referral link, plus a case-study invite four days later if they have never been asked. Anything unexpected, a missing score included, takes the detractor path, so a person looks at it. Everything internal happens the moment the answer lands; emails to the customer wait for weekday business hours in their time zone.',
   workflow: {
     name: '06 · Customer Success · NPS and Health',
     folder: 'Customer Success',
@@ -102,15 +114,14 @@ export const npsHealth: Automation = {
       allowReEntry: true,
       stopOnResponse: false,
       timezone: 'contact',
-      timeWindow: { start: '08:00', end: '18:00', days: WEEKDAYS },
       senderName: 'Leo Park, Crewlo',
       notes: [
-        'Allow Re-entry on: the same customers answer every quarter. GHL does not let a contact re-enter while still active, and the longest path ends within ten days, long before the next survey.',
-        'Stop on Response off: the passive path waits for a reply on purpose. With it on, that reply would end the run instead of taking the Replied branch to Leo. A "thanks" to the referral email should not cancel anything either.',
-        "Time Window Monday to Friday, 8 AM to 6 PM, contact time zone. It holds the emails to the customer; the tags, Account Health, Leo's alert and task and the Slack post run the moment the answer lands.",
+        'Allow Re-entry on: the same customers answer every quarter. A contact still active here cannot be added again, and the longest path, a passive who answers on a Friday night and never replies, ends about eight days later, long before the next survey. The edge cases cover a second answer inside that time.',
+        'Stop on Response off: the passive path waits for a reply on purpose. With it on, that reply would end the run instead of taking the Replied branch to Leo. A "thanks" to the referral email should not cancel the case-study invite either.',
+        "No workflow Time Window. The settings article says it holds communication actions and not tags or field updates, but GHL files Internal Notification and Add Task under its communication actions, and a detractor alert must not wait for Monday. Each email to the customer sits behind its own zero-length Wait instead, with an Advance Window of Monday to Friday, 8 AM to 6 PM. Timezone is Contact, so that is the customer's 8 AM; a contact with no time zone falls back to the account's.",
         'Sender Details: From Name Leo Park, From Email leo@crewlo.example. Every email here is from him, so replies reach the person who can act on them.',
-        "Email only: the demo form's text consent covers booking reminders and product news, not survey follow-ups or referral asks.",
-        'Custom Webhook is a premium action, billed per execution. It runs for detractors only.',
+        "Email only. The demo form's service box covers demo bookings and reminders and its offers box covers product news and event invites; neither covers survey follow-ups or referral asks, and self-serve customers never saw either box.",
+        'Custom Webhook is a premium action, billed per execution, and it runs for detractors only. Workflow error notifications go to Hana, so a Slack post that fails reaches her inbox and the Needs Review tab.',
       ],
     },
     steps: [
@@ -158,30 +169,41 @@ export const npsHealth: Automation = {
                 run: setHealth('Healthy'),
               },
               {
+                id: 'hours-promoter',
+                kind: 'wait',
+                title: 'Wait',
+                label: 'Business hours',
+                mode: 'time',
+                minutes: 0,
+                window: { start: '08:00', end: '18:00', days: WEEKDAYS },
+                summary: "No delay, but its Advance Window resumes only Monday to Friday (Resume On), 8 AM to 6 PM (Resume Between Hours) in the contact's time zone.",
+              },
+              {
                 id: 'email-referral',
                 kind: 'action',
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'Referral program',
                 summary:
-                  'Thanks them for the score and offers the referral program through the Referral page trigger link, inserted with the picker. It opens their own referral page in the app. No review ask, and no mention of reviews.',
-                message: {
-                  channel: 'email',
-                  subject: 'Thank you, {{contact.first_name}}',
-                  body:
-                    'Hi {{contact.first_name}},\n\nThank you for the {{contact.nps}}. It is good to hear Crewlo is doing its job for {{contact.company}}.\n\nIf you know another field-service company that still schedules on a whiteboard or in a group chat, this link opens your referral page in Crewlo, with a personal link you can send them: {{trigger_link.referral}}\n\nWhen a company you refer becomes a Crewlo customer, you both get a month free.\n\nLeo Park\nCustomer Success, Crewlo' +
-                    footer,
-                },
+                  'Thanks them for the score and offers the referral program through the Referral trigger link, inserted with the picker. It opens the Referrals page in the app, where the signed-in customer sees their own link. It asks anyone who shares that link in public to mention the free month. No review ask, and no mention of reviews.',
+                message: { channel: 'email', subject: referral.subject, body: referral.body },
               },
               {
                 id: 'case-study',
                 kind: 'ifelse',
                 title: 'If/Else',
-                label: 'Asked for a case study before?',
+                label: 'Case-study invite?',
                 branches: [
                   {
-                    label: 'Never asked',
-                    when: { type: 'no_tag', has: 'case-study-invited' },
+                    label: 'Never asked, can be emailed',
+                    when: {
+                      type: 'all',
+                      label: 'Contact tag does not include case-study-invited, and the contact is not DND for Email',
+                      of: [
+                        { type: 'no_tag', has: 'case-study-invited' },
+                        { type: 'not', of: { type: 'dnd', channel: 'email' } },
+                      ],
+                    },
                     nodes: [
                       {
                         id: 'wait-case',
@@ -190,7 +212,8 @@ export const npsHealth: Automation = {
                         label: 'Four days',
                         mode: 'time',
                         minutes: 4 * DAY,
-                        summary: 'Four days after the referral email, so each email carries one ask.',
+                        window: { start: '08:00', end: '18:00', days: WEEKDAYS },
+                        summary: 'Four days after the referral email, so each email carries one ask. The same weekday 8 AM to 6 PM Advance Window, so a Sunday lands on Monday morning.',
                       },
                       {
                         id: 'email-case',
@@ -203,7 +226,7 @@ export const npsHealth: Automation = {
                           channel: 'email',
                           subject: 'Would you be open to a short case study?',
                           body:
-                            'Hi {{contact.first_name}},\n\nOne more question, and no is a perfectly good answer.\n\nWe are writing a few short case studies about how field-service teams run their day in Crewlo. Would {{contact.company}} be open to a 30-minute call with me about it? We write it up, you approve every word before anything is published, and you can pull out at any point.\n\nIf you are interested, reply and I will send a few times.\n\nLeo Park\nCustomer Success, Crewlo' +
+                            'Hi {{contact.first_name}},\n\nOne more question, and no is a perfectly good answer.\n\nWe are writing a few short case studies about how field-service teams run their day in Crewlo. Would {{contact.company_name}} be open to a 30-minute call with me about it? We write it up, you approve every word before anything is published, and you can pull out at any point.\n\nIf you are interested, reply and I will send a few times.\n\nLeo Park\nCustomer Success, Crewlo' +
                             footer,
                         },
                       },
@@ -220,13 +243,14 @@ export const npsHealth: Automation = {
                   },
                 ],
                 otherwise: {
-                  label: 'Asked before',
+                  label: 'Asked before, or email DND',
                   nodes: [
                     {
                       id: 'end-asked',
                       kind: 'end',
                       title: 'End',
-                      summary: 'They were invited in an earlier quarter. The referral email is enough; asking again every quarter would turn a thank-you into a chore.',
+                      summary:
+                        'Invited in an earlier quarter, or DND for email so GHL would skip the invite anyway. The referral email is enough; asking every quarter would turn a thank-you into a chore.',
                     },
                   ],
                 },
@@ -263,12 +287,22 @@ export const npsHealth: Automation = {
                 run: setHealth('Watch'),
               },
               {
+                id: 'hours-passive',
+                kind: 'wait',
+                title: 'Wait',
+                label: 'Business hours',
+                mode: 'time',
+                minutes: 0,
+                window: { start: '08:00', end: '18:00', days: WEEKDAYS },
+                summary: "No delay, but its Advance Window resumes only Monday to Friday, 8 AM to 6 PM in the contact's time zone, so the question arrives on a day Leo can answer.",
+              },
+              {
                 id: 'email-ten',
                 kind: 'action',
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'What would make it a 10?',
-                summary: 'One question from Leo, answered by replying. Plain text, no links, nothing to click.',
+                summary: 'One question from Leo, answered by replying. Plain text with no links in the body; the only link is the unsubscribe link GHL adds to the footer.',
                 message: { channel: 'email', subject: ten.subject, body: ten.body },
               },
               {
@@ -279,7 +313,7 @@ export const npsHealth: Automation = {
                 mode: 'event',
                 event: 'reply',
                 minutes: 5 * DAY,
-                summary: 'The contact to reply, Reply To channel Email, Timeout 5 days. A reply goes down the Replied branch to Leo.',
+                summary: 'The contact to reply, Reply To channel Email, Timeout 5 days. It sits right after the Send Email, as the reply wait requires. A reply goes down the Replied branch to Leo.',
                 branches: {
                   met: {
                     label: 'Replied',
@@ -290,12 +324,12 @@ export const npsHealth: Automation = {
                         action: 'internal_notification',
                         title: 'Internal Notification',
                         label: 'Tell Leo',
-                        summary: 'Type of Notification: Notification (in-app), To User Type: Particular Users, Leo Park, with the contact as the Redirect Page.',
+                        summary: 'Type of Notification: In-App Notification. To User Type: Particular Users, Leo Park, with the contact record as the Redirect Page.',
                         message: {
                           channel: 'internal',
                           to: 'Leo Park',
                           subject: '{{contact.first_name}} answered "what would make it a 10"',
-                          body: '{{contact.name}}, {{contact.company}}, answered {{contact.nps}} on the survey and replied to your follow-up. The reply is in Conversations, on the email thread. A task to answer it is due the next business day.',
+                          body: '{{contact.name}}, {{contact.company_name}}, answered {{contact.nps}} on the survey and replied to your follow-up. The reply is in Conversations, on the email thread. A task to answer it is due the next business day.',
                         },
                       },
                       {
@@ -304,7 +338,7 @@ export const npsHealth: Automation = {
                         action: 'add_task',
                         title: 'Add Task',
                         label: 'Answer the reply',
-                        summary: 'Assigned to Leo Park, Due In 1 day, Skip Weekends on. The description says to answer the customer and pass any product idea to the product team.',
+                        summary: 'Assign To Leo Park, Due In 1 day, Skip Weekends on. The description says to answer the customer and pass any product idea to the product team.',
                         run: ({ contact, now }) => ({
                           log: `Task for Leo Park, due ${formatDay(nextWeekdayAt(now, now % DAY))}: "Answer ${contact.firstName} ${contact.lastName}, ${company(contact)}: what would make it a 10". The reply is in Conversations.`,
                         }),
@@ -363,13 +397,13 @@ export const npsHealth: Automation = {
               title: 'Internal Notification',
               label: 'Email Leo the comment',
               summary:
-                'Type of Notification: Email, To User Type: Particular Users, Leo Park. Not the assigned user: many customers are still owned by the account executive who closed them.',
+                'Type of Notification: Email. To User Type: Particular Users, Leo Park, not the assigned user: customers who closed through sales moved to Leo in 05, but self-serve customers who paid in the app (04a) still belong to the rep from their trial, or to nobody.',
               message: {
                 channel: 'internal',
                 to: 'Leo Park',
-                subject: 'Detractor: {{contact.company}} answered {{contact.nps}}',
+                subject: 'Detractor: {{contact.company_name}} answered {{contact.nps}}',
                 body:
-                  '{{contact.name}} ({{contact.email}}, {{contact.phone}}) answered the Quarterly NPS survey with {{contact.nps}}.\n\nTheir reason:\n{{contact.nps_comment}}\n\nPlan {{contact.plan}}, {{contact.seats}} seats. Account Health is now At risk.\n\nYour call task is due today. They get a short email from you saying you will call within one business day.',
+                  '{{contact.name}} ({{contact.email}}, {{contact.phone}}) answered the Quarterly NPS survey with {{contact.nps}}.\n\nTheir reason:\n{{contact.nps_comment}}\n\nPlan {{contact.plan}}, {{contact.seats}} seats. Account Health is now At risk.\n\nYour call task is due now. They get a short email from you, inside weekday business hours, saying you will call within one business day.',
               },
             },
             {
@@ -378,11 +412,11 @@ export const npsHealth: Automation = {
               action: 'add_task',
               title: 'Add Task',
               label: 'Call today',
-              summary: 'Assigned to Leo Park, Due In Now, so it is due today and sits at the top of his list. The description has the score, the comment and the phone number.',
+              summary: 'Assign To Leo Park, Due In Now, so it sits at the top of his list. The description has the score, the comment and the phone number.',
               run: ({ contact, now }) => {
                 const why = comment(contact);
                 return {
-                  log: `Task for Leo Park, due today (${formatDay(now)}): "Call ${contact.firstName} ${contact.lastName}, ${company(contact)}: NPS ${contact.fields.nps}". ${why ? `Comment: "${why}" ` : 'No comment left. '}Read Conversations first, then call ${contact.phone}.`,
+                  log: `Task for Leo Park, due now (${formatDay(now)}): "Call ${contact.firstName} ${contact.lastName}, ${company(contact)}: NPS ${contact.fields.nps}". ${why ? `Comment: "${why}" ` : 'No comment left. '}Read Conversations first, then call ${contact.phone}.`,
                 };
               },
             },
@@ -397,10 +431,20 @@ export const npsHealth: Automation = {
               message: {
                 channel: 'slack',
                 to: '#cs-alerts',
-                subject: 'Detractor: {{contact.company}} ({{contact.nps}}/10)',
-                body: 'Contact: {{contact.name}}\nPlan: {{contact.plan}}, {{contact.seats}} seats\nAccount health: {{contact.account_health}}\nNext step: Leo Park calls today\nThe comment is in Leo\'s email and on the contact record, not in Slack.',
+                subject: 'Detractor: {{contact.company_name}} ({{contact.nps}}/10)',
+                body: "Contact: {{contact.name}}\nPlan: {{contact.plan}}, {{contact.seats}} seats\nAccount health: {{contact.account_health}}\nNext step: Leo Park calls, task due now\nThe comment is in Leo's email and on the contact record, not in Slack.",
               },
               code: { language: 'json', source: slackBody },
+            },
+            {
+              id: 'hours-detractor',
+              kind: 'wait',
+              title: 'Wait',
+              label: 'Business hours',
+              mode: 'time',
+              minutes: 0,
+              window: { start: '08:00', end: '18:00', days: WEEKDAYS },
+              summary: "No delay, but its Advance Window resumes only Monday to Friday, 8 AM to 6 PM in the contact's time zone. It sits after the alert, the task and the Slack post, so only the customer's email waits.",
             },
             {
               id: 'email-sorry',
@@ -408,7 +452,7 @@ export const npsHealth: Automation = {
               action: 'send_email',
               title: 'Send Email',
               label: 'Heard you, will call',
-              summary: 'Short and from Leo: thanks, no excuses, a promise to call within one business day, and a way to say email is easier. The Time Window holds it to business hours.',
+              summary: 'Short and from Leo: thanks, no excuses, a promise to call within one business day, and a way to say email is easier.',
               message: { channel: 'email', subject: sorry.subject, body: sorry.body },
             },
           ],
@@ -421,7 +465,7 @@ export const npsHealth: Automation = {
       id: 'detractor',
       label: 'Detractor, mid-afternoon',
       summary:
-        'Victor was a 7 last quarter. On Tuesday afternoon he answers 4: the mobile app keeps logging his crew leads out. Leo has the comment, a task and a Slack post within seconds, and Victor has a note from Leo.',
+        'Victor was a 7 last quarter. On Tuesday afternoon he answers 4: the mobile app keeps logging his crew leads out. Ben still owns his record from the demo, because Victor paid in the app, but the alert, a call task and the #cs-alerts post go to Leo by name within seconds, and Victor has an email from Leo in the same minute.',
       start: at(1, 14, 47),
       contact: {
         firstName: 'Victor',
@@ -445,14 +489,14 @@ export const npsHealth: Automation = {
       events: [],
       expect: {
         outcome: 'completed',
-        visits: ['untag', 'score:else', 'tag-detractor', 'health-risk', 'notify-leo', 'task-call', 'slack', 'email-sorry'],
+        visits: ['untag', 'score:else', 'tag-detractor', 'health-risk', 'notify-leo', 'task-call', 'slack', 'hours-detractor', 'email-sorry'],
         tags: ['customer', 'nps-detractor'],
       },
     },
     {
       id: 'passive-replies',
       label: 'Passive who replies',
-      summary: 'Jenna answers 7 on Monday morning. Leo asks what would make it a 10, and she replies after lunch: a live map of her techs. Leo gets the reply and a task.',
+      summary: 'Jenna answers 7 on Monday morning. Leo asks what would make it a 10, and she replies after lunch: a live map of her techs. Leo gets the reply in-app and a task for the next business day.',
       start: at(0, 10, 26),
       contact: {
         firstName: 'Jenna',
@@ -482,7 +526,7 @@ export const npsHealth: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['untag', 'score:1', 'tag-passive', 'health-watch', 'email-ten', 'wait-reply:met', 'notify-reply', 'task-reply'],
+        visits: ['untag', 'score:1', 'tag-passive', 'health-watch', 'hours-passive', 'email-ten', 'wait-reply:met', 'notify-reply', 'task-reply'],
         tags: ['customer', 'nps-passive'],
       },
     },
@@ -490,7 +534,7 @@ export const npsHealth: Automation = {
       id: 'passive-silent',
       label: 'Passive, Friday night, no reply',
       summary:
-        'Hector answers 8 at 7:34 on Friday evening, with no comment. The tag and Account Health change at once; Leo\'s question waits for Monday at 8 AM. Hector opens it but never replies, so a note is left for the next check-in.',
+        "Hector answers 8 at 7:34 on Friday evening in Denver, with no comment. The tag and Account Health change at once; Leo's question waits behind the Advance Window until Monday at 8 AM his time. Hector opens it but never replies, so a note is left for the next check-in.",
       start: at(4, 19, 34),
       contact: {
         firstName: 'Hector',
@@ -505,7 +549,7 @@ export const npsHealth: Automation = {
       events: [{ at: at(7, 9, 20) - at(4, 19, 34), type: 'email_opened' }],
       expect: {
         outcome: 'completed',
-        visits: ['score:1', 'health-watch', 'email-ten', 'wait-reply:timeout', 'note-quiet'],
+        visits: ['score:1', 'tag-passive', 'health-watch', 'hours-passive', 'email-ten', 'wait-reply:timeout', 'note-quiet'],
         tags: ['customer', 'nps-passive'],
       },
     },
@@ -533,14 +577,15 @@ export const npsHealth: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['untag', 'score:0', 'tag-promoter', 'health-good', 'email-referral', 'case-study:0', 'wait-case', 'email-case', 'tag-case'],
+        visits: ['untag', 'score:0', 'tag-promoter', 'health-good', 'hours-promoter', 'email-referral', 'case-study:0', 'wait-case', 'email-case', 'tag-case'],
         tags: ['customer', 'nps-promoter', 'case-study-invited'],
       },
     },
     {
       id: 'promoter-asked',
       label: 'Promoter, asked before',
-      summary: 'Amy answers 9 on Thursday afternoon. She was invited to a case study last quarter, so she gets the referral email and nothing else.',
+      summary:
+        "Amy's team signed an annual deal with Aisha last year, so 05 moved her record to Leo. She answers 9 on Thursday afternoon. She was invited to a case study last quarter, so she gets the referral email and the run ends there.",
       start: at(3, 13, 30),
       contact: {
         firstName: 'Amy',
@@ -550,10 +595,10 @@ export const npsHealth: Automation = {
         timezone: 'America/Los_Angeles',
         source: 'Website demo form',
         tags: ['customer', 'nps-promoter', 'case-study-invited'],
-        assignedTo: 'aisha',
+        assignedTo: 'leo',
         fields: {
           company: 'Chen Mechanical',
-          plan: 'standard-annual',
+          plan: 'annual',
           seats: 23,
           workspace_id: 'ws_2VN6TE',
           account_health: 'Healthy',
@@ -564,7 +609,7 @@ export const npsHealth: Automation = {
       events: [],
       expect: {
         outcome: 'ended',
-        visits: ['untag', 'score:0', 'health-good', 'email-referral', 'case-study:else', 'end-asked'],
+        visits: ['untag', 'score:0', 'tag-promoter', 'health-good', 'hours-promoter', 'email-referral', 'case-study:else', 'end-asked'],
         tags: ['customer', 'nps-promoter', 'case-study-invited'],
       },
     },
@@ -577,7 +622,7 @@ export const npsHealth: Automation = {
       { name: 'Account Health', key: 'account_health', type: 'Dropdown (single)', note: 'Healthy · Watch · At risk. Set from the latest answer; Leo can override it after a call.' },
     ],
     tags: [
-      { name: 'customer', note: 'Who gets the survey. Added by 04a when the app posts subscription.created' },
+      { name: 'customer', note: 'Who gets the survey. Added by 05 when a deal is won, or by 04a when the app posts subscription.created' },
       { name: 'nps-detractor · nps-passive · nps-promoter', note: 'The latest answer. All three are cleared at the start of every run' },
       { name: 'case-study-invited', note: 'Has had the one case-study ask' },
     ],
@@ -585,19 +630,19 @@ export const npsHealth: Automation = {
   build: [
     {
       title: 'Agree the playbook with Leo first',
-      body: 'Before anything in GHL, Leo and Hana agreed what each answer should cause. 0 to 6: Leo calls the same day, and the team hears about it. 7 or 8: one question, answered by a person. 9 or 10: the referral program, and once per customer a case-study invite. No public review ask anywhere in this workflow; the edge cases say why.',
+      body: 'Before anything in GHL, Leo and Hana agreed what each answer should cause. 0 to 6: Leo calls within a business day, and the team hears about it. 7 or 8: one question, answered by a person. 9 or 10: the referral program, and once per customer a case-study invite. No public review ask anywhere in this workflow; the edge cases say why.',
     },
     {
       title: 'A survey that stores a real 0 to 10',
-      body: 'GHL\'s Rating element offers 1 to 10 icons and stores the one picked, so it has no 0. The question is a Radio Select with options 0 to 10, each option scored with its own number, and a Score field turns that into NPS Score, unique key nps: a number the If/Else can compare. GHL treats any custom field with "score" in its name as a numeric scoring element, so the word goes on that field and nowhere else. The comment field is NPS Comment, not Score Reason.',
+      body: 'GHL\'s Rating element offers a scale of 1 to 10 and has no 0. The question is a Radio Select with options 0 to 10, each option scored with its own number, and a Score field turns that into NPS Score, unique key nps: a number the If/Else can compare. GHL treats any custom field with "score" in its name as a numeric scoring element, so the word goes on that field and nowhere else. The comment field is NPS Comment, not Score Reason.',
     },
     {
       title: 'How the survey reaches customers',
-      body: "A quarterly email campaign from Leo to the Customers smart list (tag customer) links the survey page. I did not use the email builder's inline NPS element: its help article only describes answers landing in the campaign's Submissions tab, not a Survey Submitted trigger or a contact field, and this workflow needs both. The survey asks for the email address, and Sticky Contact fills it in, so the answer lands on the existing contact.",
+      body: "A quarterly email campaign from Leo to the Customers smart list (tag customer) links the survey page. I did not use the email builder's inline NPS element: its help article only describes answers landing in the campaign's Submissions tab, not a Survey Submitted trigger or a contact field, and this workflow needs both. The survey asks for the email address and Sticky Contact fills it in, so the answer lands on the existing contact. GHL warns against Sticky Contact where staff fill in a form for customers, so Leo never enters an answer he hears on a call through the survey; he writes it on the record.",
     },
     {
       title: 'Trigger, then clear last quarter',
-      body: 'Survey Submitted, filtered to Survey is Quarterly NPS, so no other survey can start it. The first step removes last quarter\'s nps-detractor, nps-passive and nps-promoter tags, so a contact only ever carries the latest answer and the smart lists count each customer once.',
+      body: "Survey Submitted, filtered to Survey is Quarterly NPS, so no other survey can start it. The first step removes last quarter's nps-detractor, nps-passive and nps-promoter tags, so a contact only ever carries the latest answer and the smart lists count each customer once.",
     },
     {
       title: 'One If/Else, detractor as the default',
@@ -605,52 +650,52 @@ export const npsHealth: Automation = {
     },
     {
       title: 'Detractors: record first, then people',
-      body: "Tag and Account Health go first, so reports stay right even if a later step fails. The Internal Notification emails Leo as a particular user rather than the assigned user, because many customers are still owned by the AE who closed them. Add Task is Due In Now. The #cs-alerts post is a Custom Webhook to a Slack incoming webhook: the channel is private, and GHL's Slack action posts to private channels as the user who connected Slack. The customer's email comes last and waits for the Time Window.",
+      body: "Tag and Account Health go first, so reports stay right even if a later step fails. The Internal Notification emails Leo as a particular user rather than the assigned user: customers who closed through sales moved to Leo in 05, but self-serve customers who paid in the app (04a) still belong to the rep from their trial. Add Task is Due In Now. The #cs-alerts post is a Custom Webhook to a Slack incoming webhook, because the channel is private and GHL's Slack action posts to private channels as the user who connected Slack. Only then a zero-length Wait with a weekday Advance Window holds the customer's email.",
     },
     {
       title: 'Passives and promoters',
-      body: 'The passive email asks one question. A Wait for the contact to reply on Email, with a 5-day timeout, splits the path: a reply notifies Leo in-app and gives him a task for the next business day, and silence leaves a note for the next check-in. Promoters get the Referral page trigger link, which opens their own referral page in the app. The case-study invite waits 4 days so each email makes one ask, and the case-study-invited tag keeps it to once per customer. Both are commercial emails, so they carry the postal address and the unsubscribe link.',
+      body: 'The passive email asks one question. A Wait for the contact to reply on Email, with a 5-day timeout, splits the path: a reply notifies Leo in-app and gives him a task for the next business day, and silence leaves a note for the next check-in. Promoters get the Referral trigger link, which opens the Referrals page in the app. The referral email asks anyone who shares their link in public to mention the free month. The case-study invite waits 4 days so each email makes one ask, and only contacts without case-study-invited and not DND for email go down that path, so nobody sits in a four-day wait for an email GHL would skip.',
     },
     {
       title: 'Settings, test, hand over',
-      body: 'Allow Re-entry on for next quarter, Stop on Response off so the reply wait can do its job, Time Window weekdays 8 AM to 6 PM in the contact\'s time zone, Sender Details set to Leo. I submitted the live survey as five test contacts, one per scenario, read Execution Logs for each branch, and ran a copy with the waits cut to minutes for the timeout and the case-study email. Leo got a one-page SOP: what each alert means and what to do about it.',
+      body: "Allow Re-entry on for next quarter, Stop on Response off so the reply wait can do its job, no workflow Time Window (an Advance Window on the wait before each email instead), Timezone Contact, Sender Details set to Leo, and error notifications to Hana for the Slack call. I submitted the live survey from private browser windows as five test contacts, one per scenario, read Execution Logs for each branch, and ran a copy with the waits cut to minutes for the timeout and the case-study email. Leo got a one-page SOP: what each alert means, what to do about it, and a Monday look at the NPS not handled smart list.",
     },
   ],
   edgeCases: [
     {
       title: 'No G2 or Capterra ask, on purpose',
-      body: 'Asking only promoters for public reviews is review gating. Google lists "selectively solicit positive reviews from customers" among its prohibited practices, and the FTC\'s guidance for businesses that ask for reviews makes the same point: do not ask only the customers you expect to be happy. So the score never decides who is asked. If Crewlo wants G2 or Capterra reviews, the ask belongs in its own workflow that reaches every customer at the same point, say 90 days after go-live, whatever they answered here. The referral email never mentions reviews, and nothing is offered for one.',
+      body: 'Asking only promoters for public reviews is review gating. The FTC\'s guidance for businesses that ask for reviews says not to ask only the customers you expect to be happy, and Google lists "selectively solicit positive reviews from customers" among the practices its review policy prohibits. G2 and Capterra set their own rules for how vendors invite reviewers, and any ask would follow them. So the score never decides who is asked. If Crewlo wants G2 or Capterra reviews, the ask belongs in its own workflow that reaches every customer at the same point, say 90 days after go-live, whatever they answered here, with nothing offered for a review. The referral email never mentions reviews.',
     },
     {
-      title: 'A 0, or no score at all',
-      body: "Detractor is the None branch, so a 0 that lands as empty, or an answer with no score because someone edited the survey, still reaches Leo. His email then shows an empty score, which is the cue to check the survey's field mapping.",
+      title: 'The referral credit and the case study are endorsements',
+      body: "A free month for every company a customer refers is a material connection. Under the FTC's Endorsement Guides (16 CFR Part 255), a customer who recommends Crewlo in public with their referral link should say they get something for it, so the referral email asks them to, and the terms sit on the referral page. A case study is a testimonial: nothing is paid or discounted for taking part, and the customer approves the text. A result it features, such as hours saved, reads as what customers can generally expect, so Hana checks that Crewlo can back it up, or the piece says what is typical, before anything is published. The workflow only asks.",
     },
     {
-      title: 'An out-of-office reply to the passive email',
-      body: 'Any reply ends the wait, auto-replies included, so Leo sometimes gets a task for an out-of-office message. He closes it in seconds, and a real answer is never missed. Replies to the other emails are not watched; they land in Conversations like any email reply.',
+      title: 'A second answer inside a week',
+      body: 'GHL keeps every submission and writes the latest score to NPS Score, but a contact who is still active here cannot be added again. A passive stays in for up to five days waiting for a reply, a promoter four for the case-study invite, so an 8 who answers again with a 3 two days later changes the field and nothing else. A smart list, NPS not handled (NPS Score is less than 7, tag is not nps-detractor), catches exactly that case. Leo checks it every Monday and gives anyone on it the detractor treatment by hand: the call, At risk and the tag, which takes them off the list.',
+    },
+    {
+      title: 'A 0, no score, or a different email',
+      body: "Detractor is the None branch, so a 0 that lands as empty, or an answer with no score because someone edited the survey, still reaches Leo; his email then shows an empty score, the cue to check the survey's field mapping. The survey matches the contact on the email typed in. A customer who types a personal address creates a new contact without the customer tag, plan or company, so Leo's alert shows those empty, and the SOP says to merge the two contacts before calling.",
     },
     {
       title: 'Comments with quotes or line breaks',
-      body: "The Custom Webhook's Raw Body is a text template, so a comment with a double quote or a line break would break the JSON and Slack would answer 400. The comment stays out of Slack: Leo's email and the contact record carry it, which also keeps customers' words out of a channel that more people read than work the account. A company name with a double quote can still break the post; Execution Logs show the failure, and the email and task do not depend on Slack.",
+      body: "The Custom Webhook's Raw Body is a text template, so a comment with a double quote or a line break would break the JSON and Slack would answer 400. The comment stays out of Slack: Leo's email and the contact record carry it, which also keeps customers' words out of a channel that more people read than work the account. A company name with a double quote can still break the post; the error notification and Execution Logs show it, and the email and task do not depend on Slack.",
     },
     {
-      title: 'Answers with a different email',
-      body: "The survey matches the contact on the email typed in. A customer who types a personal address creates a new contact without the customer tag, plan or company, so Leo's alert shows those fields empty. The SOP says to merge the two contacts before calling.",
-    },
-    {
-      title: 'After hours, weekends, unsubscribed',
-      body: "The alert, the task and the Slack post go out when the answer lands, so a Saturday detractor is Leo's first overdue task on Monday. The emails wait for the weekday 8 AM to 6 PM window. A customer who has unsubscribed from email has every email skipped and logged; a detractor still gets Leo's call.",
+      title: 'Weekends, email DND and auto-replies',
+      body: "The alert, the task and the Slack post run when the answer lands, so a Saturday detractor is the first task on Leo's list on Monday, and the customer's email waits for Monday 8 AM their time. A contact who is DND for email has every email skipped and logged; a detractor still gets Leo's call, and a promoter skips the case-study wait. If email DND comes on during the four days, GHL skips the invite but the tag is still added, so nobody asks them later either. An out-of-office reply to the passive email ends the wait like any reply, so Leo sometimes closes a task in seconds, and a real answer is never missed.",
     },
   ],
   qa: [
-    'Live survey submitted with 0, 6, 7, 8, 9 and 10: NPS Score on the contact equals the answer, 0 included, and Execution Logs show the matching branch',
+    'Live survey submitted with 0, 6, 7, 8, 9 and 10, each from a private browser window so Sticky Contact cannot reuse the last test email: NPS Score equals the answer, 0 included, and Execution Logs show the matching branch',
     "A test submission with the score removed: it takes the detractor path, and Leo's email shows the empty score",
-    'Detractor: Leo gets the email with the comment and a task due today, #cs-alerts gets one post with no email, phone or comment, and the acknowledgment arrives from leo@crewlo.example',
+    'Detractor: Leo gets the email with the comment and a task due now, #cs-alerts gets one post with no email, phone or comment, and the acknowledgment arrives from leo@crewlo.example',
+    'Detractor submitted on a Saturday: the alert, task and Slack post run at once, and Execution Logs show the email waiting on its Advance Window until Monday 8 AM contact time',
     "Every path removes last quarter's NPS tag, adds the new one and changes Account Health",
     'Reply to the passive email: Leo gets the in-app notification and a task due the next business day; in a copy with minute-long waits, no reply leaves the note instead',
-    'Referral trigger link: it opens the referral page in the app, and the click shows in the activity timeline',
-    'Promoter without case-study-invited gets the invite 4 days later and the tag; the same contact answering 9 next quarter gets the referral email only',
-    'Submitted on a Friday evening: the email shows as waiting in Execution Logs and sends Monday at 8 AM; the referral and case-study emails show the address and unsubscribe link in Gmail and Outlook',
+    'Referral trigger link opens the Referrals page in the app and the click shows in the activity timeline; the referral and case-study emails show the full postal address and the unsubscribe link in Gmail and Outlook',
+    'Promoter without case-study-invited gets the invite 4 days later (Monday if that is a weekend) and the tag; the same contact answering 9 next quarter gets the referral email only, and a second answer while still in the workflow shows up on NPS not handled',
   ],
   snippets: [
     {
@@ -663,29 +708,37 @@ export const npsHealth: Automation = {
       title: '#cs-alerts post (Custom Webhook, Raw Body)',
       language: 'json',
       code: slackBody,
-      note: 'Event CUSTOM, Method POST, Content-Type application/json, sent to the incoming-webhook URL for #cs-alerts. The URL is a secret in itself, so it lives only in this action. No free text from the customer goes into the body.',
+      note: 'Event CUSTOM, Method POST, Content-Type application/json, sent to the incoming-webhook URL for #cs-alerts. The URL is a secret in itself, so it lives only in this action, never in a custom value or a message. No free text from the customer goes into the body.',
     },
     {
-      title: 'Detractor and passive emails',
+      title: 'Emails from Leo',
       language: 'text',
-      code: `Detractor, from Leo Park
+      code: `Detractor
 Subject: ${sorry.subject}
 
 ${sorry.body}
 
 ----------------------------------------------------------------
 
-Passive, from Leo Park
+Passive
 Subject: ${ten.subject}
 
-${ten.body}`,
-      note: 'Both are plain text from a person, with no links. The detractor email promises a call rather than an apology in bulk; the passive email asks exactly one question.',
+${ten.body}
+
+----------------------------------------------------------------
+
+Promoter
+Subject: ${referral.subject}
+
+${referral.body}`,
+      note: 'The detractor and passive emails offer nothing and link nothing, so they read as a person writing. The referral email is commercial: it carries the postal address, and it asks anyone who shares their link in public to disclose the free month. GHL adds the unsubscribe link to every footer.',
     },
   ],
   features: [
     'Survey Submitted',
     'Surveys · Radio Select option scores',
     'Surveys · Score field',
+    'Surveys · Sticky Contact',
     'Remove Contact Tag',
     'If/Else',
     'Add Contact Tag',
@@ -695,11 +748,12 @@ ${ten.body}`,
     'Custom Webhook (premium)',
     'Send Email',
     'Trigger Links',
+    'Wait · Advance Window',
     'Wait · A set period of time',
     'Wait · The contact to reply',
     'Add to Notes',
     'Allow Re-entry',
-    'Time Window',
     'Sender Details',
+    'Workflow error notifications',
   ],
 };

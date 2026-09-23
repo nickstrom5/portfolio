@@ -1,10 +1,38 @@
-import type { Automation, Contact } from '@/lib/ghl/types';
+import type { ActionNode, Automation, Condition, Contact } from '@/lib/ghl/types';
 
 const DAY = 1440;
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
 
-/** First name of the contact's owner, for task and log lines. Users are keyed by first name. */
-const owner = (c: Contact) => (c.assignedTo ? c.assignedTo[0].toUpperCase() + c.assignedTo.slice(1) : 'the assigned estimator');
+/** Minutes after Monday 00:00 of the sample week. */
+const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
+
+/** Every email ends with the business name and postal address. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
+/**
+ * Add Task's Assign To takes one named user, so a task for the estimator on
+ * the appointment splits on Assigned User first. The simulator reads the
+ * owner recorded at the first step.
+ */
+const ownerIsLuis: Condition = { type: 'var', key: 'owner', op: 'eq', value: 'luis', label: 'Assigned User is Luis Grant' };
+
+const NAMES = { maya: 'Maya Ortiz', luis: 'Luis Grant' } as const;
+
+const noshowTask = 'Due In 1 day, Skip Weekends on. The homeowner gets a text they can answer in their own time and a call from the person who drove out.';
+const noshowLog = (c: Contact) => `call ${c.firstName} to rebook, due in one business day.`;
+const estimateTask = 'Due In 1 day. Moving the card to Estimate Sent afterward starts 04 · Estimate Follow-Up.';
+const estimateLog = (c: Contact) => `send ${c.firstName}'s estimate within 24 hours, then move the card to Estimate Sent (that starts 04).`;
+
+/** One Add Task per estimator. */
+const task = (id: string, key: keyof typeof NAMES, label: string, summary: string, log: (c: Contact) => string): ActionNode => ({
+  id,
+  kind: 'action',
+  action: 'add_task',
+  title: 'Add Task',
+  label,
+  summary: `Assign To ${NAMES[key]}, ${summary}`,
+  run: ({ contact }) => ({ log: `Task for ${NAMES[key]}: ${log(contact)}` }),
+});
 
 const statusMap = `What happens                     Trigger or step                      Path
 Homeowner books from the link    Customer Booked Appointment          New booking
@@ -38,7 +66,7 @@ export const inspectionBooked: Automation = {
   solution:
     'One workflow for every visit on the Roof Inspection calendar. A booking gets a confirmation and two reminders naming the estimator, and the card moves by itself. Showed starts the estimate task straight away; No-show and Cancelled each get a rebook text and a person to follow up. It finds the deal before it updates it, and it is built around the GHL rule that a cancellation ends the reminder run.',
   evidence: {
-    text: 'When an appointment moves from New, Confirmed or Showed to Cancelled, Invalid or No-show, GHL treats it as cancelled: "The customer will be pulled out of the workflow, and no further actions will occur."',
+    text: 'When an appointment moves from New, Confirmed or Showed to Cancelled, Invalid or No-show, GHL treats it as "Cancelled": "The customer will be pulled out of the workflow, and no further actions will occur."',
     source: 'HighLevel Help Center, "Appointment scenarios in Workflow"',
     href: 'https://help.gohighlevel.com/support/solutions/articles/155000002697-appointment-scenarios-in-workflow',
   },
@@ -53,7 +81,7 @@ export const inspectionBooked: Automation = {
         label: 'Appointment Status (booked by the office)',
       },
       { title: 'Appointment Status', filters: ['In Calendar is Roof Inspection', 'Appointment Status is No-show'], label: 'Appointment Status (no-show)' },
-      { title: 'Appointment Status', filters: ['In Calendar is Roof Inspection', 'Appointment Status is Cancelled'], label: 'Appointment Status (cancelled)' },
+      { title: 'Appointment Status', filters: ['In Calendar is Roof Inspection', 'Appointment Status is Cancelled'], label: 'Appointment Status (canceled)' },
     ],
     settings: {
       allowReEntry: true,
@@ -74,6 +102,7 @@ export const inspectionBooked: Automation = {
         title: 'Remove from Workflow',
         label: 'Stop lead follow-up',
         summary: 'Another Workflow: 01 · Speed to Lead, 02 · Missed-Call Text-Back and 07 · Database Reactivation, before anything else runs. Nobody with an inspection on the calendar gets a "still interested?" text.',
+        run: ({ contact }) => ({ vars: { owner: contact.assignedTo ?? '' } }),
       },
       {
         id: 'settle',
@@ -123,34 +152,47 @@ export const inspectionBooked: Automation = {
                         effect: { addTags: ['inspection-no-show'] },
                       },
                       {
-                        id: 'task-noshow',
-                        kind: 'action',
-                        action: 'add_task',
-                        title: 'Add Task',
-                        label: 'Call to rebook',
-                        summary: 'For the assigned estimator, due in 1 day with Skip Weekends on. A call rebooks more people than a text alone.',
-                        run: ({ contact }) => ({ log: `Task for ${owner(contact)}: call ${contact.firstName} to rebook, due in one business day.` }),
-                      },
-                      {
-                        id: 'quiet-noshow',
-                        kind: 'wait',
-                        title: 'Wait',
-                        label: 'Quiet hours',
-                        mode: 'time',
-                        minutes: 0,
-                        window: { start: '08:00', end: '20:00', days: ALL_WEEK },
-                        summary: "No delay, but the Advance Window resumes only between 8 AM and 8 PM in the contact's time zone. A status set at 9 PM gets its text at 8 AM.",
-                      },
-                      {
-                        id: 'sms-noshow',
-                        kind: 'action',
-                        action: 'send_sms',
-                        title: 'Send SMS',
-                        label: 'Sorry we missed you',
-                        summary: 'From the estimator, no blame, one link to a new time.',
-                        message: {
-                          channel: 'sms',
-                          body: "Hi {{contact.first_name}}, it's {{user.first_name}} from Harbor & Pine. Sorry we missed you for your roof inspection. Pick a new time here: {{custom_values.booking_link}} or reply with a day that suits you. Reply STOP to opt out.",
+                        id: 'whose-noshow',
+                        kind: 'ifelse',
+                        title: 'If/Else',
+                        label: 'Whose visit?',
+                        branches: [
+                          {
+                            label: 'Luis',
+                            when: ownerIsLuis,
+                            nodes: [
+                              task('task-noshow-luis', 'luis', 'Call to rebook', noshowTask, noshowLog),
+                              { id: 'goto-noshow', kind: 'goto', title: 'Go To', target: 'quiet-noshow', summary: 'Joins the Maya branch at the rebook text, so there is one copy of it.' },
+                            ],
+                          },
+                        ],
+                        otherwise: {
+                          label: 'Maya',
+                          nodes: [
+                            task('task-noshow-maya', 'maya', 'Call to rebook', noshowTask, noshowLog),
+                            {
+                              id: 'quiet-noshow',
+                              kind: 'wait',
+                              title: 'Wait',
+                              label: 'Quiet hours',
+                              mode: 'time',
+                              minutes: 0,
+                              window: { start: '08:00', end: '20:00', days: ALL_WEEK },
+                              summary: "No delay, but the Advance Window resumes only between 8 AM and 8 PM in the contact's time zone. A status set at 9 PM gets its text at 8 AM.",
+                            },
+                            {
+                              id: 'sms-noshow',
+                              kind: 'action',
+                              action: 'send_sms',
+                              title: 'Send SMS',
+                              label: 'Sorry we missed you',
+                              summary: 'From the estimator, no blame, one link to a new time.',
+                              message: {
+                                channel: 'sms',
+                                body: "Hi {{contact.first_name}}, it's {{user.first_name}} from Harbor & Pine. Sorry we missed you for your roof inspection. Pick a new time here: {{custom_values.booking_link}} or reply with a day that suits you. Reply STOP to opt out.",
+                              },
+                            },
+                          ],
                         },
                       },
                     ],
@@ -173,9 +215,9 @@ export const inspectionBooked: Automation = {
                         kind: 'action',
                         action: 'add_tag',
                         title: 'Add Contact Tag',
-                        label: 'inspection-cancelled',
+                        label: 'inspection-canceled',
                         summary: 'Same idea as the no-show tag, kept separate so the two can be counted apart.',
-                        effect: { addTags: ['inspection-cancelled'] },
+                        effect: { addTags: ['inspection-canceled'] },
                       },
                       {
                         id: 'notify-cancel',
@@ -183,12 +225,12 @@ export const inspectionBooked: Automation = {
                         action: 'internal_notification',
                         title: 'Internal Notification',
                         label: 'Tell the estimator',
-                        summary: 'In-app and email to the assigned user, so the slot can be refilled and someone can call.',
+                        summary: 'Type Notification (the bell), To User Type Assigned User, Redirect Page the contact, so the slot can be refilled and someone can call.',
                         message: {
                           channel: 'internal',
                           to: '{{user.name}} (assigned user)',
-                          subject: 'Inspection cancelled: {{contact.name}}',
-                          body: 'The visit on {{appointment.only_start_date}} at {{appointment.only_start_time}} is cancelled. The card is back in Contacted and a rebook text goes out between 8 AM and 8 PM. Worth a call: {{contact.phone}}',
+                          subject: 'Inspection canceled: {{contact.name}}',
+                          body: 'The visit on {{appointment.only_start_date}} at {{appointment.only_start_time}} is canceled. The card is back in Contacted and a rebook text goes out between 8 AM and 8 PM. Worth a call: {{contact.phone}}',
                         },
                       },
                       {
@@ -210,7 +252,7 @@ export const inspectionBooked: Automation = {
                         summary: 'Confirms the cancellation and makes rebooking one tap.',
                         message: {
                           channel: 'sms',
-                          body: "Hi {{contact.first_name}}, your roof inspection on {{appointment.only_start_date}} is cancelled. If you'd like a new time, book here: {{custom_values.booking_link}} or reply and we'll set it up. Reply STOP to opt out.",
+                          body: "Hi {{contact.first_name}}, your roof inspection on {{appointment.only_start_date}} is canceled. If you'd like a new time, book here: {{custom_values.booking_link}} or reply and we'll set it up. Reply STOP to opt out.",
                         },
                       },
                     ],
@@ -225,8 +267,8 @@ export const inspectionBooked: Automation = {
                       action: 'remove_tag',
                       title: 'Remove Contact Tag',
                       label: 'Clear rebook tags',
-                      summary: 'Removes inspection-no-show and inspection-cancelled, so those tags always mean "still needs rebooking".',
-                      effect: { removeTags: ['inspection-no-show', 'inspection-cancelled'] },
+                      summary: 'Removes inspection-no-show and inspection-canceled, so those tags always mean "still needs rebooking".',
+                      effect: { removeTags: ['inspection-no-show', 'inspection-canceled'] },
                     },
                     {
                       id: 'opp-booked',
@@ -259,7 +301,7 @@ export const inspectionBooked: Automation = {
                       message: {
                         channel: 'email',
                         subject: 'Your roof inspection: {{appointment.only_start_date}} at {{appointment.only_start_time}}',
-                        body: "Hi {{contact.first_name}},\n\nYour free roof inspection is booked for {{appointment.only_start_date}} at {{appointment.only_start_time}}. {{user.name}} will meet you at the property.\n\nWhat to expect:\n- It takes about 45 minutes, and someone needs to be home.\n- We check the shingles, flashing, vents and gutters, and the attic if you're OK with us taking a look.\n- At the end, {{user.first_name}} walks you through the photos. Your written estimate follows within 24 hours.\n\nAdd it to your calendar: {{appointment.add_to_google_calendar}}\nNeed a different time? {{appointment.reschedule_link}}\n\nQuestions? Call us at {{custom_values.office_phone}}.\n\nHarbor & Pine Roofing",
+                        body: "Hi {{contact.first_name}},\n\nYour free roof inspection is booked for {{appointment.only_start_date}} at {{appointment.only_start_time}}. {{user.name}} will meet you at the property.\n\nWhat to expect:\n- It takes about 45 minutes, and someone needs to be home.\n- We check the shingles, flashing, vents and gutters, and the attic if you're OK with us taking a look.\n- At the end, {{user.first_name}} walks you through the photos. Your written estimate follows within 24 hours.\n\nAdd it to your calendar: {{appointment.add_to_google_calendar}}\nNeed a different time? {{appointment.reschedule_link}}\n\nQuestions? Call us at {{custom_values.office_phone}}." + footer,
                       },
                     },
                     {
@@ -269,7 +311,8 @@ export const inspectionBooked: Automation = {
                       label: '24 hours before',
                       mode: 'before_appointment',
                       offset: DAY,
-                      summary: 'An upcoming appointment: 24 hours before it starts. If that has already passed, it skips outbound messages until the next wait.',
+                      summary: 'An upcoming appointment or booking, Type Appointment / Calendar Event, Before 1 day. If this date has already passed: Skip all outbound communication actions till next wait, so a booking made for tomorrow morning gets no "tomorrow" text.',
+                      ifPassed: 'skip_outbound',
                     },
                     {
                       id: 'sms-24h',
@@ -290,7 +333,8 @@ export const inspectionBooked: Automation = {
                       label: '1 hour before',
                       mode: 'before_appointment',
                       offset: 60,
-                      summary: 'An upcoming appointment: 1 hour before it starts, with the same past-date setting. Slots begin at 9 AM, so this never lands before 8 AM.',
+                      summary: 'Same wait type, Before 1 hour, with the same past-date option. Slots begin at 9 AM, so this never lands before 8 AM.',
+                      ifPassed: 'skip_outbound',
                     },
                     {
                       id: 'sms-1h',
@@ -311,7 +355,8 @@ export const inspectionBooked: Automation = {
                       label: '3 hours after the start',
                       mode: 'after_appointment',
                       offset: 180,
-                      summary: 'An upcoming appointment: 3 hours after it starts, and Continue to next action if that has passed. Time for the visit and for the estimator to set the status. Showed cuts this short.',
+                      summary: 'Same wait type, After 3 hours. If this date has already passed: Continue to next action. Time for the visit and for the estimator to set the status; Showed cuts it short.',
+                      ifPassed: 'continue',
                     },
                     {
                       id: 'goal-showed',
@@ -342,13 +387,12 @@ export const inspectionBooked: Automation = {
                               effect: { opportunity: { stage: 'Inspected', status: 'open' } },
                             },
                             {
-                              id: 'task-estimate',
-                              kind: 'action',
-                              action: 'add_task',
-                              title: 'Add Task',
-                              label: 'Send the estimate',
-                              summary: 'For the assigned estimator, due in 1 day. Moving the card to Estimate Sent afterwards starts 04 · Estimate Follow-Up.',
-                              run: ({ contact }) => ({ log: `Task for ${owner(contact)}: send ${contact.firstName}'s estimate within 24 hours, then move the card to Estimate Sent (that starts 04).` }),
+                              id: 'whose-estimate',
+                              kind: 'ifelse',
+                              title: 'If/Else',
+                              label: 'Whose estimate?',
+                              branches: [{ label: 'Luis', when: ownerIsLuis, nodes: [task('task-estimate-luis', 'luis', 'Send the estimate', estimateTask, estimateLog)] }],
+                              otherwise: { label: 'Maya', nodes: [task('task-estimate-maya', 'maya', 'Send the estimate', estimateTask, estimateLog)] },
                             },
                           ],
                         },
@@ -362,7 +406,7 @@ export const inspectionBooked: Automation = {
                             action: 'internal_notification',
                             title: 'Internal Notification',
                             label: 'Set the status',
-                            summary: 'Show rates in reporting are only as good as the statuses, so an unset one gets chased the same day. No-show set after this still sends the rebook text, because that trigger fires on the change.',
+                            summary: 'Type Notification to the Assigned User, Redirect Page the contact. Show rates in reporting are only as good as the statuses, so an unset one gets chased the same day. No-show set after this still sends the rebook text, because that trigger fires on the change.',
                             message: {
                               channel: 'internal',
                               to: '{{user.name}} (assigned user)',
@@ -420,7 +464,7 @@ export const inspectionBooked: Automation = {
         { at: 9, type: 'reply', value: 'Great, see you Wednesday. You can park in the driveway.' },
         { at: 2 * DAY + 10 * 60 + 52 - (19 * 60 + 42), type: 'appointment_showed', label: 'Maya set it from the mobile app at the end of the visit' },
       ],
-      expect: { outcome: 'goal', visits: ['sms-confirm', 'email-confirm', 'sms-24h', 'sms-1h', 'goal-showed', 'if-showed:0', 'task-estimate'], stage: 'Inspected' },
+      expect: { outcome: 'goal', visits: ['sms-confirm', 'email-confirm', 'sms-24h', 'sms-1h', 'goal-showed', 'if-showed:0', 'whose-estimate:else', 'task-estimate-maya'], stage: 'Inspected' },
     },
     {
       id: 'office',
@@ -431,7 +475,7 @@ export const inspectionBooked: Automation = {
       appointment: { at: 3 * DAY + 14 * 60 - (DAY + 11 * 60 + 15) },
       contact: { assignedTo: 'luis', source: 'Phone call', fields: { service_needed: 'Storm damage', roof_age: 'Over 20 years' } },
       events: [{ at: 3 * DAY + 14 * 60 + 55 - (DAY + 11 * 60 + 15), type: 'appointment_showed', label: 'Luis set it from the mobile app before leaving' }],
-      expect: { outcome: 'goal', visits: ['find-opp:else', 'create-opp', 'goto-find', 'find-opp:0', 'opp-booked', 'if-showed:0'], stage: 'Inspected' },
+      expect: { outcome: 'goal', visits: ['find-opp:else', 'create-opp', 'goto-find', 'find-opp:0', 'opp-booked', 'if-showed:0', 'whose-estimate:0', 'task-estimate-luis'], stage: 'Inspected' },
     },
     {
       id: 'no-show',
@@ -442,7 +486,18 @@ export const inspectionBooked: Automation = {
       appointment: { at: -20 },
       contact: { assignedTo: 'maya', opportunity: { pipeline: 'Roofing Sales', stage: 'Inspection Booked', status: 'open' } },
       events: [{ at: 0, type: 'appointment_noshow', label: 'Maya waited 15 minutes and called once, then set it from the app' }],
-      expect: { outcome: 'completed', visits: ['router:0', 'opp-noshow', 'task-noshow', 'sms-noshow'], tags: ['inspection-no-show'], stage: 'Contacted' },
+      expect: { outcome: 'completed', visits: ['router:0', 'opp-noshow', 'whose-noshow:else', 'task-noshow-maya', 'sms-noshow'], tags: ['inspection-no-show'], stage: 'Contacted' },
+    },
+    {
+      id: 'no-show-late',
+      label: 'No-show set from home at 8:40 PM',
+      summary: "Luis's 3 PM Saturday visit. He forgets the status until the evening, so the task is created at once and the rebook text waits for 8 AM on Sunday.",
+      start: at(5, 20, 40),
+      trigger: 2,
+      appointment: { at: at(5, 15) - at(5, 20, 40) },
+      contact: { assignedTo: 'luis', opportunity: { pipeline: 'Roofing Sales', stage: 'Inspection Booked', status: 'open' } },
+      events: [{ at: 0, type: 'appointment_noshow', label: 'Luis set it from the app at home' }],
+      expect: { outcome: 'completed', visits: ['router:0', 'whose-noshow:0', 'task-noshow-luis', 'goto-noshow', 'quiet-noshow', 'sms-noshow'], tags: ['inspection-no-show'], stage: 'Contacted' },
     },
     {
       id: 'cancels',
@@ -452,8 +507,8 @@ export const inspectionBooked: Automation = {
       trigger: 3,
       appointment: { at: 8 * DAY + 13 * 60 - (6 * DAY + 22 * 60 + 12) },
       contact: { assignedTo: 'luis', opportunity: { pipeline: 'Roofing Sales', stage: 'Inspection Booked', status: 'open' } },
-      events: [{ at: 0, type: 'appointment_cancelled', label: 'Cancelled from the link in the calendar invite' }],
-      expect: { outcome: 'completed', visits: ['router:1', 'notify-cancel', 'quiet-cancel', 'sms-cancel'], tags: ['inspection-cancelled'], stage: 'Contacted' },
+      events: [{ at: 0, type: 'appointment_cancelled', label: 'Canceled from the link in the calendar invite' }],
+      expect: { outcome: 'completed', visits: ['router:1', 'notify-cancel', 'quiet-cancel', 'sms-cancel'], tags: ['inspection-canceled'], stage: 'Contacted' },
     },
     {
       id: 'rebooks',
@@ -464,7 +519,7 @@ export const inspectionBooked: Automation = {
       appointment: { at: 5 * DAY + 11 * 60 - (3 * DAY + 12 * 60 + 30) },
       contact: {
         assignedTo: 'luis',
-        tags: ['inspection-cancelled'],
+        tags: ['inspection-canceled'],
         dnd: { sms: true },
         opportunity: { pipeline: 'Roofing Sales', stage: 'Contacted', status: 'open' },
       },
@@ -480,7 +535,7 @@ export const inspectionBooked: Automation = {
   dataModel: {
     tags: [
       { name: 'inspection-no-show', note: 'Missed the visit and has not rebooked. Removed when they book again' },
-      { name: 'inspection-cancelled', note: 'Cancelled and has not rebooked. Removed when they book again' },
+      { name: 'inspection-canceled', note: 'Canceled and has not rebooked. Removed when they book again' },
     ],
     pipeline: { name: 'Roofing Sales', stages: ['New Lead', 'Contacted', 'Inspection Booked', 'Inspected', 'Estimate Sent', 'Job Scheduled', 'Job Complete'] },
     customValues: [
@@ -499,7 +554,7 @@ export const inspectionBooked: Automation = {
     },
     {
       title: 'Build around the cancellation rule',
-      body: 'GHL pulls a contact out of an appointment workflow when that appointment is cancelled or marked No-show, so a No-show branch at the end of the reminders would never run. Those statuses start a new run instead, and an If/Else near the top reads the status and picks the path. The first thing I verify in a live account is that GHL removes only the booking run, not the new run for the same appointment. If it removed both, triggers 3 and 4 and the two rebook paths would move to a small workflow of their own, unchanged.',
+      body: 'GHL pulls a contact out of an appointment workflow when that appointment is canceled or marked No-show, so a No-show branch at the end of the reminders would never run. Those statuses start a new run instead, and an If/Else near the top reads the status and picks the path. The first thing I verify in a live account is that GHL removes only the booking run, not the new run for the same appointment. If it removed both, triggers 3 and 4 and the two rebook paths would move to a small workflow of their own, unchanged.',
     },
     {
       title: 'Find the deal before updating it',
@@ -507,7 +562,7 @@ export const inspectionBooked: Automation = {
     },
     {
       title: 'Reminders tied to the appointment',
-      body: 'Both reminders use the "An upcoming appointment or booking" wait. "If this date has already passed" is set to skip outbound messages until the next wait, so a booking made less than a day ahead gets its confirmation and the 1-hour reminder, not two texts a minute apart.',
+      body: 'Both reminders use the "An upcoming appointment or booking" wait, Type Appointment / Calendar Event. "If this date has already passed" is set to Skip all outbound communication actions till next wait or event start date action, so a booking made less than a day ahead gets its confirmation and the 1-hour reminder, not two texts a minute apart. The wait after the visit is set to Continue to next action, so a booking entered after the fact still reaches the status check.',
     },
     {
       title: 'One Goal Event, spent on Showed',
@@ -515,7 +570,7 @@ export const inspectionBooked: Automation = {
     },
     {
       title: 'Settings and consent',
-      body: 'Allow Re-entry on, for reschedules and for the second run a No-show or Cancelled starts. Stop on Response off, because "see you Tuesday" should not cancel the reminders. No workflow time window, because it would hold the booking confirmation too; the rebook texts get their own 8 AM to 8 PM window. Every text is about a visit the homeowner booked, with no offers. The booking form says appointment texts will follow, the first one carries the opt-out line, and anyone who says no to texts on the phone gets SMS DND from the office, which leaves them the emails.',
+      body: 'Allow Re-entry on, for reschedules and for the second run a No-show or Cancelled starts. Stop on Response off, because "see you Tuesday" should not cancel the reminders. No workflow time window, because it would hold the booking confirmation too; the rebook texts get their own 8 AM to 8 PM window. Every text is about a visit the homeowner booked, with no offers. The booking form says appointment texts will follow, the first one carries the opt-out line, and anyone who did not tick the SMS box on the form (01 switches SMS DND on) or says no to texts on the phone (the office does) is on SMS DND, which leaves them the emails.',
     },
     {
       title: 'Test with real bookings',
@@ -554,7 +609,7 @@ export const inspectionBooked: Automation = {
     'Book less than 24 hours ahead: no day-before text, and the 1-hour reminder still sends',
     'Cancel from the invite mid-reminders: the booking run shows as removed, a new Cancelled run starts and is not removed with it, and a 10 PM cancel gets its rebook text at 8 AM',
     'Reschedule from the link and from the calendar: the old run ends, and the new time gets a fresh confirmation and reminders',
-    'Set No-show on one booking and Showed on another: Contacted, tag, task and one rebook text for the first; Inspected and an estimate task due in a day for the second',
+    'Set No-show on one booking and Showed on another, one for each estimator: Contacted, tag, task and one rebook text for the first; Inspected and an estimate task due in a day for the second, each task with the estimator on the appointment',
     'A contact with no opportunity and one with only a Won card: exactly one new card each, Find Opportunity twice in Execution Logs, then Inspection Booked',
     'Every appointment merge field (date, time, reschedule link, Add to Google Calendar) renders on a real phone and in Gmail and Outlook',
   ],
