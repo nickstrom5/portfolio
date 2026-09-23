@@ -1,5 +1,5 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
-import { formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
+import { calendarDate, dateFieldValue, formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
 import { env } from '../business';
 
 const DAY = 1440;
@@ -8,14 +8,8 @@ const MON_SAT = [0, 1, 2, 3, 4, 5];
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
-/** The simulated date as a calendar date. */
-const calendarDate = (min: number) => new Date(Date.UTC(2026, 2, 2) + Math.floor(min / DAY) * DAY * 60000);
-
 /** The way a GHL date field stores it: MM-DD-YYYY. */
-const dateField = (min: number) => {
-  const d = calendarDate(min);
-  return `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}-${d.getUTCFullYear()}`;
-};
+const dateField = dateFieldValue;
 
 /** The way {{right_now.middle_endian_date}} renders it: M/D/YYYY. */
 const sheetDate = (min: number) => {

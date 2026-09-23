@@ -29,7 +29,8 @@ import type {
  * browser the page moves it to the visitor's current week, so dates in the
  * log and in messages match their calendar.
  */
-let BASE = Date.UTC(2026, 2, 2);
+const SAMPLE_BASE = Date.UTC(2026, 2, 2);
+let BASE = SAMPLE_BASE;
 
 export function useWeekOf(date: Date): void {
   const monday = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - ((date.getDay() + 6) % 7) * 86400000;
@@ -38,6 +39,36 @@ export function useWeekOf(date: Date): void {
 const DAY = 1440;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MS_DAY = 86400000;
+
+/**
+ * Test contacts are written against the sample week, so their date fields and
+ * a few log lines hold dates like 03-17-2026, 3/7/2026 or "Mon, Mar 9". When
+ * the page moves the timeline to the visitor's week, those dates move with it.
+ * The move is a whole number of weeks, so weekdays stay right. Only dates
+ * within about five months of the sample week are touched, so dates the
+ * simulator already worked out for the visitor's week are left alone.
+ */
+export function shiftSampleDates(text: string): string {
+  const offset = BASE - SAMPLE_BASE;
+  if (!offset || !text) return text;
+  const near = (ms: number) => Math.abs(ms - SAMPLE_BASE) <= 150 * MS_DAY;
+  const pad = (n: number, like: string) => (like.length === 2 ? String(n).padStart(2, '0') : String(n));
+  return text
+    .replace(/\b(\d{1,2})([-/])(\d{1,2})\2(20\d\d)\b/g, (whole, m: string, sep: string, d: string, y: string) => {
+      const ms = Date.UTC(+y, +m - 1, +d);
+      if (!near(ms)) return whole;
+      const n = new Date(ms + offset);
+      return `${pad(n.getUTCMonth() + 1, m)}${sep}${pad(n.getUTCDate(), d)}${sep}${n.getUTCFullYear()}`;
+    })
+    .replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{1,2})\b/g, (whole, dow: string, mon: string, d: string) => {
+      const ms = Date.UTC(2026, MONTHS.indexOf(mon), +d);
+      // A sample date names its own weekday; anything else is already a real date.
+      if (!near(ms) || DAYS[(new Date(ms).getUTCDay() + 6) % 7] !== dow) return whole;
+      const n = new Date(ms + offset);
+      return `${dow}, ${MONTHS[n.getUTCMonth()]} ${n.getUTCDate()}`;
+    });
+}
 
 export function formatTime(min: number): string {
   const m = ((min % DAY) + DAY) % DAY;
@@ -49,6 +80,22 @@ export function formatTime(min: number): string {
 export function formatDay(min: number): string {
   const d = new Date(BASE + Math.floor(min / DAY) * DAY * 60000);
   return `${DAYS[(d.getUTCDay() + 6) % 7]}, ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
+
+/** The simulated day as a calendar date (midnight UTC) on the current timeline. */
+export function calendarDate(min: number): Date {
+  return new Date(BASE + Math.floor(min / DAY) * DAY * 60000);
+}
+
+/** The simulated day the way a GHL date field stores it: MM-DD-YYYY. */
+export function dateFieldValue(min: number): string {
+  const d = calendarDate(min);
+  return `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}-${d.getUTCFullYear()}`;
+}
+
+/** Minutes from the start of the timeline to the start of a calendar day (month 1-12). */
+export function minutesAtDate(year: number, month: number, day: number): number {
+  return (Date.UTC(year, month - 1, day) - BASE) / 60000;
 }
 
 export function formatClock(min: number): string {
@@ -271,7 +318,9 @@ export function mergeContact(base: Contact, over: Partial<Contact> = {}): Contac
  * name and answers on top of that.
  */
 export function startContact(base: Contact, scenario: Scenario, identity?: Partial<Contact>): Contact {
-  return mergeContact(mergeContact(base, scenario.contact), identity);
+  const c = mergeContact(mergeContact(base, scenario.contact), identity);
+  for (const [k, v] of Object.entries(c.fields)) if (typeof v === 'string') c.fields[k] = shiftSampleDates(v);
+  return c;
 }
 
 function hhmm(s: string): number {
@@ -320,7 +369,10 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
 
   const log = (s: Omit<TraceStep, 'contact' | 't'> & { t?: number }) => {
     if (--budget < 0) throw new Error(`${auto.id}/${scenario.id}: more than 400 log entries, probably a Go To loop`);
-    steps.push({ t: s.t ?? t, ...s, contact: clone(contact) });
+    const title = shiftSampleDates(s.title);
+    const detail = s.detail && shiftSampleDates(s.detail);
+    const message = s.message && { ...s.message, subject: s.message.subject && shiftSampleDates(s.message.subject), body: shiftSampleDates(s.message.body) };
+    steps.push({ t: s.t ?? t, ...s, title, detail, message, contact: clone(contact) });
   };
   const matches = (ev: ScenarioEvent, type: EventType, value?: GoalNode['value']) =>
     ev.type === type && (value === undefined || (Array.isArray(value) ? value.includes(ev.value as string | number) : value === ev.value));
@@ -490,7 +542,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   function applyEffect(e: NonNullable<ActionNode['effect']>) {
     for (const tag of e.addTags ?? []) if (!contact.tags.includes(tag)) contact.tags.push(tag);
     if (e.removeTags) contact.tags = contact.tags.filter((tag) => !e.removeTags!.includes(tag));
-    if (e.fields) Object.assign(contact.fields, e.fields);
+    for (const [k, v] of Object.entries(e.fields ?? {})) contact.fields[k] = typeof v === 'string' ? shiftSampleDates(v) : v;
     if (e.assignTo) contact.assignedTo = e.assignTo;
     if (e.dnd) Object.assign(contact.dnd, e.dnd);
     if (e.opportunity) {
