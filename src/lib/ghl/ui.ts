@@ -27,8 +27,13 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 }
 
+/** GHL lists a contact with no name by their phone number, then email. */
+function displayName(c: Contact) {
+  return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.phone || c.email || 'Unnamed contact';
+}
+
 function initials(c: Contact) {
-  return `${c.firstName[0] ?? ''}${c.lastName[0] ?? ''}`.toUpperCase() || '?';
+  return `${c.firstName?.[0] ?? ''}${c.lastName?.[0] ?? ''}`.toUpperCase() || '#';
 }
 
 export class Simulator {
@@ -287,7 +292,8 @@ export class Simulator {
     const av = el('span', 'g-avatar', initials(c));
     av.setAttribute('aria-hidden', 'true');
     const who = el('div');
-    who.append(el('strong', undefined, `${c.firstName} ${c.lastName}`.trim()), el('span', undefined, [c.phone, c.email].filter(Boolean).join(' · ')));
+    const name = displayName(c);
+    who.append(el('strong', undefined, name), el('span', undefined, [c.phone, c.email].filter((v) => v && v !== name).join(' · ')));
     head.append(av, who);
 
     const grid = el('dl', 'g-rec-grid');

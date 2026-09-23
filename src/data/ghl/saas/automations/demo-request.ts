@@ -61,8 +61,9 @@ const role = (inputData.job_role || '').trim();
 const domain = ((inputData.email || '').split('@')[1] || '').trim().toLowerCase();
 const freeMail = FREE_MAIL.includes(domain);
 
-// A work address is worth 20: in the trades plenty of owners use Gmail,
-// so it lowers the score without deciding it.
+// A work address is worth 20. In the trades plenty of owners run the
+// business from Gmail, so a personal address costs points instead of
+// disqualifying the request.
 let score = (SIZE[size] || 0) + (ROLE[role] || 0) + (freeMail ? 0 : 20);
 score = Math.max(0, Math.min(100, score));
 
@@ -150,7 +151,7 @@ export const demoRequest: Automation = {
   problem:
     'Demo requests landed in one shared inbox. Whoever looked first took them, a 400-person company could wait behind a two-van plumber, and the reps heard about new requests from each other instead of from the system.',
   solution:
-    'The form asks the two questions routing needs. Custom Code scores the fit and picks the segment: enterprise goes to Aisha, mid-market to Ben, small teams and anything that scores low to the weekly live demo with Priya following up. The buyer gets an email from the rep who will run the demo, the rep gets an in-app alert, Slack gets the source and the score, and the card lands in Demo Requested on the right board. A booking moves it to Demo Booked. No booking within a day gives the rep a task and sends one personal follow-up, in business hours.',
+    'The form asks the two questions routing needs. Custom Code scores the fit and picks the segment: enterprise goes to Aisha, mid-market to Ben, small teams and anything that scores low to the weekly live demo with Priya following up. The buyer gets an email from the rep who will run the demo, the rep gets an in-app alert, Slack gets the source and the score, and one card sits in Demo Requested with that rep as its owner. A booking moves it to Demo Booked. No booking within a day gives the rep a task and sends one personal follow-up, in business hours.',
   workflow: {
     name: '01 · Inbound · Demo Request',
     folder: 'Inbound',
@@ -158,14 +159,14 @@ export const demoRequest: Automation = {
     settings: {
       allowReEntry: true,
       stopOnResponse: true,
-      allowMultipleOpportunities: false,
       timezone: 'contact',
       notes: [
-        'Stop on Response on: a reply means a person takes the conversation, so no nudge follows it. The reply lands in Conversations with the owner.',
-        'Allow Re-entry on: someone who asks again after a finished run is routed again. GHL never enrolls a contact who is still active, so a double submit does nothing.',
+        'Stop on Response on: a reply to either email means a person takes the conversation, so no follow-up lands on top of it. The reply goes to Conversations with the owner. The run ends there, so a rep who books the demo from that reply moves the card to Demo Booked by hand.',
+        'Allow Re-entry on: someone who asks again after a finished run is routed again. GHL does not let a contact re-enter while still active, so a double submit does nothing.',
+        'Allow multiple Opportunities is left alone: it only matters for opportunity triggers. Duplicate cards are handled by Find Opportunity before Create Opportunity.',
         'No workflow Time Window: the invite, the alert and the Slack post answer a request made seconds ago. Only the no-booking follow-up waits for business hours, with its own Advance Window.',
-        'Sender: every email uses the assigned user for From Name and From Email, so replies go to the rep who owns the deal.',
-        'Custom Code and Custom Webhook are premium actions, billed per execution: two per demo request.',
+        'Sender: every email uses the assigned user for From Name and From Email, so replies go to the rep who owns the deal. The sub-account keeps its automatic unsubscribe link on, and both emails carry the postal address.',
+        'Custom Code and Custom Webhook are premium actions, billed per execution: two per demo request. Find Opportunity is a standard action.',
       ],
     },
     steps: [
@@ -220,171 +221,202 @@ export const demoRequest: Automation = {
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'Pick a time',
-                summary: "From the owner, with the Product Demo booking page. The calendar only shows the owner's times, so the buyer books with the rep named in the email.",
+                summary:
+                  "From the owner, with the book-demo trigger link to the Product Demo calendar. Always Book with Assigned User is on there, so the buyer sees only the owner's times and books with the rep named in the email.",
                 message: {
                   channel: 'email',
                   subject: 'Your Crewlo demo: pick a time with {{user.first_name}}',
-                  body: "Hi {{contact.first_name}},\n\nThanks for asking for a Crewlo demo. I'm {{user.first_name}}, and I'll run it. If you didn't get to pick a time on the last page, my open times are here: {{custom_values.demo_link}}\n\nIt takes 30 minutes. I'll set up the dispatch board the way a team like {{contact.company}} would use it and leave time for your questions. If someone else schedules the crews day to day, bring them along.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}",
+                  body: "Hi {{contact.first_name}},\n\nThanks for asking for a Crewlo demo. I'm {{user.first_name}}, and I'll run it. If you didn't get to pick a time on the last page, my open times are here: {{trigger_link.book_demo}}\n\nIt takes 30 minutes. I'll set up the dispatch board the way a team like {{contact.company}} would use it and leave time for your questions. If someone else schedules the crews day to day, bring them along.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}\n{{location.address}}",
                 },
               },
               {
-                id: 'opp',
-                kind: 'action',
-                action: 'create_opportunity',
-                title: 'Create Opportunity',
-                label: 'Demo Requested',
-                summary: "New Business › Demo Requested, named after the company, source Demo form, value 0 until discovery. It runs after Assign To User, so the card gets the contact's owner. Duplicate opportunities off.",
-                run: ({ contact }) =>
-                  contact.opportunity
-                    ? { log: `They already have a card (${contact.opportunity.stage}, ${contact.opportunity.status}), and duplicates are off, so Create makes nothing.` }
-                    : {
-                        effect: { opportunity: { pipeline: 'New Business', stage: 'Demo Requested', status: 'open', name: company(contact) } },
-                        log: `New Business › Demo Requested: "${company(contact)}", source Demo form, owner ${contact.assignedTo ? users[contact.assignedTo].name : 'unassigned'}.`,
-                      },
-              },
-              {
-                id: 'notify',
-                kind: 'action',
-                action: 'internal_notification',
-                title: 'Internal Notification',
-                label: 'Tell the owner',
-                summary: 'In-app notification to the assigned user, with the contact as the Redirect Page. One step serves all three segments.',
-                message: {
-                  channel: 'internal',
-                  to: '{{user.name}} (assigned user)',
-                  subject: 'Demo request: {{contact.company}}, fit {{contact.fit_score}}',
-                  body: 'From {{contact.name}}, {{contact.job_role}}. Team size {{contact.company_size}}, segment {{contact.segment}}. Your invite email has gone out. If nothing is booked within a day, you get a task.',
-                },
-              },
-              {
-                id: 'slack',
-                kind: 'action',
-                action: 'webhook',
-                title: 'Custom Webhook',
-                label: 'Post to #demo-requests',
-                summary: "POST to the channel's Slack incoming webhook: Event CUSTOM, Content-Type application/json, Block Kit in the Raw Body. Source, UTM and fit in the post; no email or phone.",
-                message: {
-                  channel: 'slack',
-                  to: '#demo-requests',
-                  body: 'New demo request: {{contact.name}}, {{contact.company}}\nOwner: {{user.name}}\nSegment: {{contact.segment}} · Fit score: {{contact.fit_score}}\nTeam size: {{contact.company_size}} · Role: {{contact.job_role}}\nSource: {{contact.source}} · UTM: {{contact.utm_source}} / {{contact.utm_medium}} / {{contact.utm_campaign}}',
-                },
-                code: { language: 'json', source: slackBody },
-              },
-              {
-                id: 'wait-book',
-                kind: 'wait',
-                title: 'Wait',
-                label: 'Booked within a day?',
-                // In GHL this waits for the demo-booked tag that 01a adds when a demo is
-                // booked. The simulator runs one workflow at a time, so it watches the
-                // booking itself.
-                mode: 'event',
-                event: 'appointment_booked',
-                minutes: DAY,
-                summary: 'Specific conditions to be met: contact tag includes demo-booked, which 01a · Demo Booked adds when a Product Demo or Weekly Live Demo booking comes in. Timeout 1 day, so no booking gets its own branch.',
-                branches: {
-                  met: {
-                    label: 'Booked',
+                id: 'find-opp',
+                kind: 'ifelse',
+                title: 'Find Opportunity',
+                label: 'Find the open card',
+                branches: [
+                  {
+                    label: 'Opportunity Found',
+                    when: { type: 'all', label: 'Latest opportunity in New Business with Status Open', of: [{ type: 'opportunity', status: 'open' }] },
                     nodes: [
                       {
-                        id: 'opp-booked',
+                        id: 'notify',
                         kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Demo Booked',
-                        summary: 'Stage Demo Booked. Allow Opportunity to Move to Any Previous Stage is off, so a card that is already further along never moves back.',
-                        run: ({ contact }) => {
-                          const now = contact.opportunity?.stage ?? '';
-                          if (stages.indexOf(now) > stages.indexOf('Demo Booked')) return { log: `The card is already at ${now}, and moving back is off, so it stays there.` };
-                          return { effect: { opportunity: { pipeline: 'New Business', stage: 'Demo Booked' } }, log: 'Moved the card from Demo Requested to Demo Booked.' };
+                        action: 'internal_notification',
+                        title: 'Internal Notification',
+                        label: 'Tell the owner',
+                        summary: 'In-app notification to the assigned user, with the contact as the Redirect Page. One step serves all three segments.',
+                        message: {
+                          channel: 'internal',
+                          to: '{{user.name}} (assigned user)',
+                          subject: 'Demo request: {{contact.company}}, fit {{contact.fit_score}}',
+                          body: 'From {{contact.name}}, {{contact.job_role}}. Team size {{contact.company_size}}, segment {{contact.segment}}. Your invite email has gone out. If nothing is booked within a day, you get a task.',
                         },
                       },
-                    ],
-                  },
-                  timeout: {
-                    label: 'No booking in a day',
-                    nodes: [
                       {
-                        id: 'office-hours',
-                        kind: 'wait',
-                        title: 'Wait',
-                        label: 'Weekday business hours',
-                        mode: 'time',
-                        minutes: 0,
-                        window: { start: '09:00', end: '17:00', days: WEEKDAYS },
-                        summary: "No delay, but the Advance Window only resumes Monday to Friday, 9 AM to 5 PM in the contact's time zone, so the task and the follow-up land in a working day.",
+                        id: 'slack',
+                        kind: 'action',
+                        action: 'webhook',
+                        title: 'Custom Webhook',
+                        label: 'Post to #demo-requests',
+                        summary:
+                          "POST to the channel's Slack incoming webhook: Event CUSTOM, Content-Type application/json, Block Kit in the Raw Body. Source, UTM and fit in the post; no email or phone. The webhook URL is the only secret, and it lives in the action's URL field.",
+                        message: {
+                          channel: 'slack',
+                          to: '#demo-requests',
+                          body: 'New demo request: {{contact.name}}, {{contact.company}}\nOwner: {{user.name}}\nSegment: {{contact.segment}} · Fit score: {{contact.fit_score}}\nTeam size: {{contact.company_size}} · Role: {{contact.job_role}}\nSource: {{contact.source}} · UTM: {{contact.utm_source}} / {{contact.utm_medium}} / {{contact.utm_campaign}}',
+                        },
+                        code: { language: 'json', source: slackBody },
                       },
                       {
-                        id: 'owner-task',
-                        kind: 'ifelse',
-                        title: 'If/Else',
-                        label: 'Whose task?',
-                        branches: [
-                          {
-                            label: 'Enterprise',
-                            when: isEnterprise,
+                        id: 'wait-book',
+                        kind: 'wait',
+                        title: 'Wait',
+                        label: 'Booked within a day?',
+                        // In GHL this waits for the demo-booked tag that 01a adds when a demo is
+                        // booked. The simulator runs one workflow at a time, so it watches the
+                        // booking itself.
+                        mode: 'event',
+                        event: 'appointment_booked',
+                        minutes: DAY,
+                        summary:
+                          'Specific conditions to be met: contact tag includes demo-booked, which 01a · Inbound · Demo Booked adds when a Product Demo or Weekly Live Demo booking comes in. Timeout 1 day, so no booking gets its own branch.',
+                        branches: {
+                          met: {
+                            label: 'Booked',
                             nodes: [
-                              task('task-aisha', 'aisha'),
                               {
-                                id: 'email-nudge',
+                                id: 'opp-booked',
                                 kind: 'action',
-                                action: 'send_email',
-                                title: 'Send Email',
-                                label: 'Personal follow-up',
-                                summary: 'Plain text from the owner: one question, no button, easy to answer. All three segments share it.',
-                                message: {
-                                  channel: 'email',
-                                  subject: 'Your Crewlo demo request',
-                                  body: "Hi {{contact.first_name}},\n\nThanks again for asking about Crewlo. I didn't see a time booked, so I wanted to follow up myself.\n\nTo make the demo useful from the first minute, one question: how does {{contact.company}} schedule its crews today? A whiteboard, spreadsheets, another tool?\n\nReply with a couple of times that suit you and I'll send an invite. And if now isn't the right time, just say so and I won't keep asking.\n\n{{user.name}}\n{{location.name}}, {{location.address}}",
+                                action: 'update_opportunity',
+                                title: 'Update Opportunity',
+                                label: 'Demo Booked',
+                                summary:
+                                  'The card Find Opportunity picked moves to Demo Booked. Allow Opportunity to Move to Any Previous Stage is off, so a card that is already further along never moves back.',
+                                run: ({ contact }) => {
+                                  const now = contact.opportunity?.stage ?? '';
+                                  if (stages.indexOf(now) > stages.indexOf('Demo Booked')) return { log: `The card is already at ${now}, and moving back is off, so it stays there.` };
+                                  return { effect: { opportunity: { pipeline: 'New Business', stage: 'Demo Booked' } }, log: 'Moved the card from Demo Requested to Demo Booked.' };
                                 },
                               },
+                            ],
+                          },
+                          timeout: {
+                            label: 'No booking in a day',
+                            nodes: [
                               {
-                                id: 'wait-late',
+                                id: 'office-hours',
                                 kind: 'wait',
                                 title: 'Wait',
-                                label: 'Booked after the nudge?',
-                                // Same stand-in as wait-book: GHL waits for the demo-booked tag.
-                                mode: 'event',
-                                event: 'appointment_booked',
-                                minutes: 7 * DAY,
-                                summary: 'The same demo-booked condition, with a 7-day timeout. A late booking still moves the card.',
-                                branches: {
-                                  met: {
-                                    label: 'Booked late',
+                                label: 'Weekday business hours',
+                                mode: 'time',
+                                minutes: 0,
+                                window: { start: '09:00', end: '17:00', days: WEEKDAYS },
+                                summary:
+                                  "No delay, but its Advance Window resumes only Monday to Friday (Resume On), 9 AM to 5 PM (Resume Between Hours) in the contact's time zone, so the task and the follow-up land in a working day.",
+                              },
+                              {
+                                id: 'owner-task',
+                                kind: 'ifelse',
+                                title: 'If/Else',
+                                label: 'Whose task?',
+                                branches: [
+                                  {
+                                    label: 'Enterprise',
+                                    when: isEnterprise,
                                     nodes: [
+                                      task('task-aisha', 'aisha'),
                                       {
-                                        id: 'goto-booked',
-                                        kind: 'goto',
-                                        title: 'Go To',
-                                        target: 'opp-booked',
-                                        summary: 'The same Update Opportunity step as a booking on the first day.',
+                                        id: 'email-nudge',
+                                        kind: 'action',
+                                        action: 'send_email',
+                                        title: 'Send Email',
+                                        label: 'Personal follow-up',
+                                        summary: 'Plain text from the owner: one question, no button, easy to answer or to decline. All three segments share it.',
+                                        message: {
+                                          channel: 'email',
+                                          subject: 'Your Crewlo demo request',
+                                          body: "Hi {{contact.first_name}},\n\nThanks again for asking about Crewlo. I don't see a demo on the calendar for you yet, so I wanted to follow up myself.\n\nTo make the demo useful from the first minute, one question: how does {{contact.company}} schedule its crews today? A whiteboard, spreadsheets, another tool?\n\nReply with a couple of times that suit you and I'll send an invite. If now isn't the right time, reply and say so, and I won't follow up again.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}\n{{location.address}}",
+                                        },
+                                      },
+                                      {
+                                        id: 'wait-late',
+                                        kind: 'wait',
+                                        title: 'Wait',
+                                        label: 'Booked after the nudge?',
+                                        // Same stand-in as wait-book: GHL waits for the demo-booked tag.
+                                        mode: 'event',
+                                        event: 'appointment_booked',
+                                        minutes: 7 * DAY,
+                                        summary: 'The same demo-booked condition, with a 7-day timeout. A late booking still moves the card. No more messages after this one.',
+                                        branches: {
+                                          met: {
+                                            label: 'Booked late',
+                                            nodes: [
+                                              {
+                                                id: 'goto-booked',
+                                                kind: 'goto',
+                                                title: 'Go To',
+                                                target: 'opp-booked',
+                                                summary: 'The same Update Opportunity step as a booking on the first day. The card Find Opportunity picked is still the one in context.',
+                                              },
+                                            ],
+                                          },
+                                          timeout: { label: 'Still no booking', nodes: [] },
+                                        },
                                       },
                                     ],
                                   },
-                                  timeout: { label: 'Still no booking', nodes: [] },
+                                  {
+                                    label: 'Mid-market',
+                                    when: isMidMarket,
+                                    nodes: [
+                                      task('task-ben', 'ben'),
+                                      { id: 'goto-nudge-ben', kind: 'goto', title: 'Go To', target: 'email-nudge', summary: 'The shared follow-up email, sent from Ben because he owns the contact.' },
+                                    ],
+                                  },
+                                ],
+                                otherwise: {
+                                  label: 'Small team or low fit',
+                                  nodes: [
+                                    task('task-priya', 'priya'),
+                                    { id: 'goto-nudge-priya', kind: 'goto', title: 'Go To', target: 'email-nudge', summary: 'The shared follow-up email, sent from Priya because she owns the contact.' },
+                                  ],
                                 },
                               },
                             ],
                           },
-                          {
-                            label: 'Mid-market',
-                            when: isMidMarket,
-                            nodes: [
-                              task('task-ben', 'ben'),
-                              { id: 'goto-nudge-ben', kind: 'goto', title: 'Go To', target: 'email-nudge', summary: 'The shared follow-up email, sent from Ben because he owns the contact.' },
-                            ],
-                          },
-                        ],
-                        otherwise: {
-                          label: 'Small team or low fit',
-                          nodes: [
-                            task('task-priya', 'priya'),
-                            { id: 'goto-nudge-priya', kind: 'goto', title: 'Go To', target: 'email-nudge', summary: 'The shared follow-up email, sent from Priya because she owns the contact.' },
-                          ],
                         },
                       },
                     ],
                   },
+                ],
+                otherwise: {
+                  label: 'Opportunity Not Found',
+                  nodes: [
+                    {
+                      id: 'create-opp',
+                      kind: 'action',
+                      action: 'create_opportunity',
+                      title: 'Create Opportunity',
+                      label: 'Demo Requested',
+                      summary:
+                        "New Business › Demo Requested, named after the company, source Demo form, value 0 until discovery. It runs after Assign To User, so the card gets the contact's owner. Duplicate Opportunity is on here on purpose: this step only runs when there is no open card.",
+                      run: ({ contact }) => ({
+                        effect: { opportunity: { pipeline: 'New Business', stage: 'Demo Requested', status: 'open', name: company(contact), value: 0 } },
+                        log: contact.opportunity
+                          ? `The only card on the record is ${contact.opportunity.status[0].toUpperCase()}${contact.opportunity.status.slice(1)}, at ${contact.opportunity.stage}, so a new one goes in Demo Requested: "${company(contact)}", owner ${contact.assignedTo ? users[contact.assignedTo].name : 'unassigned'}. With Duplicate Opportunity off, the old card would block it.`
+                          : `New Business › Demo Requested: "${company(contact)}", source Demo form, owner ${contact.assignedTo ? users[contact.assignedTo].name : 'unassigned'}.`,
+                      }),
+                    },
+                    {
+                      id: 'goto-refind',
+                      kind: 'goto',
+                      title: 'Go To',
+                      target: 'find-opp',
+                      summary: 'Back through Find Opportunity, which now finds the new card. GHL does not carry a card made by Create Opportunity into later Update Opportunity steps.',
+                    },
+                  ],
                 },
               },
             ],
@@ -412,10 +444,10 @@ export const demoRequest: Automation = {
               message: {
                 channel: 'email',
                 subject: 'Your Crewlo demo: join the weekly live demo',
-                body: "Hi {{contact.first_name}},\n\nThanks for asking about Crewlo. The quickest way to see it is our weekly live demo: 30 minutes, with time for questions at the end. Save a seat here: {{custom_values.group_demo_link}}\n\nYou'll see the dispatch board, the app your techs use on their phones and how a job goes from the first call to the invoice. If you'd rather try it yourself first, the free trial runs {{custom_values.trial_length}}: {{custom_values.app_url}}\n\nPrefer a one-to-one call? Reply here and I'll set one up.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}",
+                body: "Hi {{contact.first_name}},\n\nThanks for asking about Crewlo. The quickest way to see it is our weekly live demo: 30 minutes, with time for questions at the end. Save a seat here: {{custom_values.group_demo_link}}\n\nYou'll see the dispatch board, the app your techs use on their phones and how a job gets from the office to the tech on site. If you'd rather try it yourself first, the free trial runs {{custom_values.trial_length}}: {{custom_values.app_url}}\n\nPrefer a one-to-one call? Reply here and I'll set one up.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}\n{{location.address}}",
               },
             },
-            { id: 'goto-opp', kind: 'goto', title: 'Go To', target: 'opp', summary: 'Joins the shared steps after its own email: the card, the alert, the Slack post and the booking wait.' },
+            { id: 'goto-find', kind: 'goto', title: 'Go To', target: 'find-opp', summary: 'Joins the shared steps after its own email: the card, the alert, the Slack post and the booking wait.' },
           ],
         },
       },
@@ -437,12 +469,16 @@ export const demoRequest: Automation = {
           label: "Picks Wed 2:30 PM on the thank-you page, where the calendar shows only Ben's times. 01a adds demo-booked.",
         },
       ],
-      expect: { outcome: 'completed', visits: ['score', 'route:1', 'assign-ben', 'goto-demo', 'email-demo', 'opp', 'notify', 'slack', 'wait-book:met', 'opp-booked'], stage: 'Demo Booked' },
+      expect: {
+        outcome: 'completed',
+        visits: ['score', 'route:1', 'assign-ben', 'goto-demo', 'email-demo', 'find-opp:else', 'create-opp', 'goto-refind', 'find-opp:0', 'notify', 'slack', 'wait-book:met', 'opp-booked'],
+        stage: 'Demo Booked',
+      },
     },
     {
       id: 'replies',
       label: 'Replies to the email',
-      summary: 'The owner of a 400-person facilities company answers the invite with a day and a request. Replying takes him out of the workflow, and Aisha books it from Conversations.',
+      summary: 'The owner of a 400-person facilities company answers the invite with a day and a request. The reply takes him out of the workflow; Aisha books the demo from Conversations and moves the card herself.',
       start: at(2, 9, 5),
       contact: {
         firstName: 'Daniel',
@@ -452,8 +488,8 @@ export const demoRequest: Automation = {
         timezone: 'America/Chicago',
         fields: { company: 'Summit Facility Services', company_size: '201-1,000', job_role: 'Owner or executive', sms_consent: 'No', utm_source: 'linkedin', utm_medium: 'paid-social', utm_campaign: 'enterprise-dispatch' },
       },
-      events: [{ at: 35, type: 'reply', value: 'Thanks. Can we do Thursday afternoon? I would like our dispatcher on the call too.' }],
-      expect: { outcome: 'stopped', visits: ['route:0', 'assign-aisha', 'email-demo', 'opp', 'notify', 'slack'], stage: 'Demo Requested' },
+      events: [{ at: 35, type: 'reply', channel: 'email', value: 'Thanks. Can we do Thursday afternoon? I would like our dispatcher on the call too.' }],
+      expect: { outcome: 'stopped', visits: ['route:0', 'assign-aisha', 'email-demo', 'create-opp', 'find-opp:0', 'notify', 'slack'], stage: 'Demo Requested' },
     },
     {
       id: 'quiet',
@@ -469,7 +505,7 @@ export const demoRequest: Automation = {
         fields: { company: 'Northgate Facility Management', company_size: '1,000+', job_role: 'Owner or executive', sms_consent: 'No', utm_source: 'bing', utm_medium: 'cpc', utm_campaign: 'field-service-software' },
       },
       events: [],
-      expect: { outcome: 'completed', visits: ['route:0', 'wait-book:timeout', 'office-hours', 'owner-task:0', 'task-aisha', 'email-nudge', 'wait-late:timeout'], stage: 'Demo Requested' },
+      expect: { outcome: 'completed', visits: ['route:0', 'find-opp:0', 'wait-book:timeout', 'office-hours', 'owner-task:0', 'task-aisha', 'email-nudge', 'wait-late:timeout'], stage: 'Demo Requested' },
     },
     {
       id: 'small-team',
@@ -495,14 +531,15 @@ export const demoRequest: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['route:else', 'assign-priya', 'email-live', 'goto-opp', 'opp', 'wait-book:timeout', 'office-hours', 'owner-task:else', 'task-priya', 'goto-nudge-priya', 'email-nudge', 'wait-late:met', 'goto-booked', 'opp-booked'],
+        visits: ['route:else', 'assign-priya', 'email-live', 'goto-find', 'find-opp:else', 'create-opp', 'find-opp:0', 'wait-book:timeout', 'office-hours', 'owner-task:else', 'task-priya', 'goto-nudge-priya', 'email-nudge', 'wait-late:met', 'goto-booked', 'opp-booked'],
         stage: 'Demo Booked',
       },
     },
     {
       id: 'friday-night',
       label: 'Friday night request',
-      summary: 'An operations manager at a 120-person cleaning company asks at 9:48 PM on a Friday. The invite and the alerts go at once; the follow-up waits for Monday at 9 AM, and he answers it.',
+      summary:
+        "An operations manager at a 120-person cleaning company whose card from last year was marked Lost asks again at 9:48 PM on a Friday. He gets a new card, the invite and the alerts go at once, and the follow-up waits for Monday at 9 AM. He answers it.",
       start: at(4, 21, 48),
       contact: {
         firstName: 'Tom',
@@ -511,9 +548,14 @@ export const demoRequest: Automation = {
         phone: '(773) 555-0151',
         timezone: 'America/Chicago',
         fields: { company: 'Lakeshore Commercial Cleaning', company_size: '51-200', job_role: 'Operations or dispatch', sms_consent: 'No', utm_source: 'google', utm_medium: 'cpc', utm_campaign: 'cleaning-scheduling' },
+        opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'lost', name: 'Lakeshore Commercial Cleaning' },
       },
-      events: [{ at: at(7, 10, 12) - at(4, 21, 48), type: 'reply', value: 'Sorry, missed this on Friday. Tuesday at 2 works for me, and I will bring our two dispatchers.' }],
-      expect: { outcome: 'stopped', visits: ['route:1', 'email-demo', 'wait-book:timeout', 'office-hours', 'owner-task:1', 'task-ben', 'goto-nudge-ben', 'email-nudge'], stage: 'Demo Requested' },
+      events: [{ at: at(7, 10, 12) - at(4, 21, 48), type: 'reply', channel: 'email', value: 'Sorry, missed this on Friday. Tuesday at 2 works for me, and I will bring our two dispatchers.' }],
+      expect: {
+        outcome: 'stopped',
+        visits: ['route:1', 'email-demo', 'find-opp:else', 'create-opp', 'find-opp:0', 'wait-book:timeout', 'office-hours', 'owner-task:1', 'task-ben', 'goto-nudge-ben', 'email-nudge'],
+        stage: 'Demo Requested',
+      },
     },
   ],
   dataModel: {
@@ -525,10 +567,9 @@ export const demoRequest: Automation = {
       { name: 'SMS Consent', key: 'sms_consent', type: 'Checkbox', note: "Unticked and optional. It covers the calendar's booking reminders; this workflow sends no texts" },
       { name: 'UTM Source / Medium / Campaign', key: 'utm_source', type: 'Single line ×3', note: 'Hidden form fields filled from the page URL' },
     ],
-    tags: [{ name: 'demo-booked', note: 'Added by 01a · Demo Booked when a Product Demo or Weekly Live Demo booking comes in. Cleared here at entry.' }],
+    tags: [{ name: 'demo-booked', note: 'Added by 01a · Inbound · Demo Booked when a Product Demo or Weekly Live Demo booking comes in, whoever makes it. Cleared here at entry.' }],
     pipeline: { name: business.pipeline.name, stages: business.pipeline.stages },
     customValues: [
-      { name: 'Demo Link', key: 'demo_link', value: business.env.customValues.demo_link },
       { name: 'Group Demo Link', key: 'group_demo_link', value: business.env.customValues.group_demo_link },
       { name: 'App URL', key: 'app_url', value: business.env.customValues.app_url },
       { name: 'Trial Length', key: 'trial_length', value: business.env.customValues.trial_length },
@@ -548,12 +589,12 @@ export const demoRequest: Automation = {
       body: 'Three properties go in (company_size, job_role, email), and fit_score, segment and free_mail come out. GHL only lets later steps use the output once Test your Code has run, so I tested one sample per size band plus a Gmail address. Update Contact Field then writes Fit Score and Segment, and every step after that reads the contact fields.',
     },
     {
-      title: 'Owner first, then the card',
-      body: "Each branch starts with Assign To User: one named rep, with Only Apply to Unassigned Contacts off, so owner and segment always agree. Create Opportunity comes after the assignment, not before it. With the opportunity setting that gives new cards the contact's owner, the card lands on the right rep's board: New Business › Demo Requested, source Demo form, duplicates off.",
+      title: 'Owner first, then find or make the card',
+      body: "Each branch starts with Assign To User: one named rep, with Only Apply to Unassigned Contacts off, so owner and segment always agree. Then Find Opportunity (Latest, Pipeline is New Business, Status is Open), because Update Opportunity only works on a card that is in context, and GHL does not carry one made by Create Opportunity into later steps. Opportunity Not Found runs Create Opportunity in Demo Requested and a Go To back to Find, which now finds it. Duplicate Opportunity is on in that one step, on purpose: it only runs when there is no open card, and with it off, a contact whose only card is Lost would bounce between Find and Create forever. A new card takes the contact's owner by default, so it lands with the rep the routing just picked.",
     },
     {
       title: 'Write the shared steps once',
-      body: 'Mid-market is an Assign To User and a Go To into the enterprise path at the invite email. Small teams get their own live-demo email, then a Go To at Create Opportunity. The card, the in-app alert, the Slack post and the booking wait exist once, so changing the Slack format is one edit, not three.',
+      body: 'Mid-market is an Assign To User and a Go To into the enterprise path at the invite email. Small teams get their own live-demo email, then a Go To at Find Opportunity. The card, the in-app alert, the Slack post and the booking wait exist once, so changing the Slack format is one edit, not three.',
     },
     {
       title: 'Slack through a Custom Webhook',
@@ -561,33 +602,33 @@ export const demoRequest: Automation = {
     },
     {
       title: 'Booked, or not',
-      body: "If/Else only offers appointment conditions when the trigger is an appointment, and a condition wait checks contact data. So a one-action helper, 01a · Inbound · Demo Booked, adds a demo-booked tag, and the wait here releases on that tag. 01a fires on Customer Booked Appointment and on Appointment Status New modified by a user, for both demo calendars, so a rep booking on someone's behalf counts too. A booking moves the card to Demo Booked. A day without one waits for weekday business hours, then creates a task and sends one plain follow-up from the owner. Add Task takes a user picked from a list, so that path splits by segment once more before the shared email, and a second wait catches late bookings for a week.",
+      body: "If/Else only offers appointment conditions when the trigger is an appointment, and a Specific conditions to be met wait checks contact data. So a one-action helper, 01a · Inbound · Demo Booked, adds a demo-booked tag, and the wait here releases on that tag. 01a fires on Customer Booked Appointment and on Appointment Status (status New, Modified By User), both with In Calendar set to Product Demo and Weekly Live Demo, so a rep booking on someone's behalf counts too. A booking moves the card Find Opportunity picked to Demo Booked. A day without one waits for weekday business hours, then creates a task and sends one plain follow-up from the owner. Add Task's Assign To is a user picked from a list, so that path splits by segment once more before the shared email, and a second wait catches late bookings for a week.",
     },
     {
       title: 'Calendar, settings, tests',
-      body: "The Product Demo calendar is round robin across Aisha, Ben and Priya, with Always Book with Assigned User on and the form first in the booking widget, so a booker sees only their owner's times. Stop on Response and Allow Re-entry are on. Before publishing I ran a test contact per band, a Gmail address, a Friday-night submission and a reply, each checked in Execution Logs and Enrollment History.",
+      body: "The Product Demo calendar is round robin across Aisha, Ben and Priya, with Always Book with Assigned User on, the form first in the booking widget and Allow Staff Selection off, so a booker sees only their owner's times. The invite links to it through the book-demo trigger link, not the landing page, so nobody fills in the form twice. Stop on Response and Allow Re-entry are on. Before publishing I ran a test contact per band, a Gmail address, a contact with a Lost card, a Friday-night submission and a reply, each checked in Execution Logs and Enrollment History.",
     },
   ],
   edgeCases: [
     {
       title: 'Personal email, big number',
-      body: 'A Gmail address that claims 1,000+ people and picks Other scores 45, under the bar, so it goes to the live demo and Priya checks it first. If it turns out to be a real enterprise buyer, Priya changes Segment, assigns Aisha and says why in the Slack thread.',
+      body: 'A Gmail address that claims 1,000+ people and picks Other scores 45, under the bar, so it goes to the live demo and Priya checks it first. If it turns out to be a real enterprise buyer, Priya sets Segment to enterprise and assigns Aisha, so a no-booking task later goes to Aisha too, and she says why in the Slack thread.',
     },
     {
       title: 'Replies instead of booking',
-      body: 'Stop on Response takes them out on any reply, so no follow-up email lands on top of a conversation. The owner sees the reply in Conversations and books the time. An out-of-office reply stops the run too, which is fine here: the owner still has the contact, the alert and the card.',
+      body: 'Stop on Response takes them out on a reply to either email, so no follow-up lands on top of a conversation. The owner answers in Conversations, books the time and moves the card to Demo Booked by hand, because the run that would have moved it has ended. An out-of-office reply stops the run too; the owner still has the alert, the card and the conversation. If the reply is a no, the owner turns on DND for email, so the follow-up\'s promise holds in every workflow, not just this one.',
     },
     {
       title: 'Friday night request',
       body: "The invite, the alert and the Slack post go out at once, because they answer a request made seconds ago. The no-booking follow-up waits for the Advance Window, 9 AM Monday in the contact's time zone, so the task and the email land in a working day.",
     },
     {
-      title: 'Books late',
-      body: "A booking after the first day still counts for another week: the second wait sends it to the same Update Opportunity step. After that, the owner moves the card by hand, and the task is already on their list.",
+      title: 'Books late, or asks twice',
+      body: 'A booking in the week after the follow-up still moves the card through the same Update Opportunity step. After that the owner moves it by hand, and the task is already on their list. The opposite case: someone with a demo already on the calendar submits the form again after their first run has finished. The new run clears demo-booked, so a day later they would get a follow-up they do not need. The second Slack post is the owner\'s cue to remove them from this workflow by hand.',
     },
     {
-      title: 'A customer fills in the form',
-      body: 'Create Opportunity makes nothing, because duplicates are off and they already have a card, and a Closed Won card never moves back to Demo Booked. The contact does move to the rep for this conversation, so the SOP says to loop in Leo and hand the contact back to him afterwards.',
+      title: 'Someone who already has a card',
+      body: "Find Opportunity looks for an open card first. A trial that 03 · Product · PQL Alert already put in Trial Sales-Assist keeps that card, no second one appears, and a booking never drags it back to Demo Booked. A lead whose last card was marked Lost gets a fresh one in Demo Requested. A customer's card is Won, not open, so an expansion request gets its own card, which is right, but routing also moves the contact from Leo to the rep. The SOP says the rep hands the contact back to Leo after the demo.",
     },
     {
       title: 'A quote in a company name',
@@ -595,14 +636,14 @@ export const demoRequest: Automation = {
     },
   ],
   qa: [
-    'One test contact per size band plus a Gmail address: Fit Score and Segment match the code, the right rep owns the contact, and the card is on their board in Demo Requested',
+    'One test contact per size band plus a Gmail address: Fit Score and Segment match the code, the right rep owns the contact, and one card sits in Demo Requested with that rep as its owner',
+    'Execution Logs for a new contact: Find Opportunity takes Opportunity Not Found once, Create Opportunity runs once, and the Go To comes back to Opportunity Found, with no loop',
+    'A test contact with a Lost card gets a new card in Demo Requested; one with an open card in Trial Sales-Assist gets no second card, and a booking leaves it where it is',
     'The Slack post shows segment, fit, owner, source and UTM, and no email or phone',
-    "Book from the thank-you page as a mid-market test contact: only Ben's times show, 01a adds demo-booked, the card moves to Demo Booked and no task appears",
-    'Leave a test contact unbooked: at the next weekday business hours the right rep gets the task and the follow-up goes out from that rep',
+    "Book from the thank-you page as a mid-market test contact: only Ben's times show, 01a adds demo-booked, the card moves to Demo Booked and no task appears. A rep booking for another test contact from the contact record gets it tagged too",
+    'Leave a test contact unbooked: at the next weekday business hours the right rep gets the task and the follow-up goes out from that rep, with the postal address and the unsubscribe link in the footer',
     'Reply to the invite email: Enrollment History shows the contact left the workflow, and no follow-up is sent',
-    "Have a rep book a demo on a test contact's behalf: 01a's Appointment Status trigger tags them and the wait releases",
-    'Submit the form twice in a row: one enrollment, one card, one invite email',
-    'Every merge field renders in Gmail, Outlook, the in-app notification and Slack',
+    'Submit the form twice in a row: one enrollment, one card, one invite email. Every merge field and the trigger link render in Gmail, Outlook, the in-app notification and Slack',
   ],
   snippets: [
     {
@@ -632,11 +673,13 @@ export const demoRequest: Automation = {
     'If/Else',
     'Assign To User',
     'Send Email',
+    'Trigger Links',
+    'Find Opportunity',
     'Create Opportunity',
     'Internal Notification',
     'Custom Webhook',
     'Go To',
-    'Wait · Specific conditions',
+    'Wait · Specific conditions to be met',
     'Wait · Advance Window',
     'Update Opportunity',
     'Add Task',

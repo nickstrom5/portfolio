@@ -27,8 +27,11 @@ export const business: Business = {
     location: {
       name: 'Crewlo',
       phone: '(415) 555-0140',
-      address: '548 Market St, Suite 400, San Francisco, CA',
+      address: '548 Market St, Suite 400',
       city: 'San Francisco',
+      state: 'CA',
+      postal_code: '94104',
+      full_address: '548 Market St, Suite 400, San Francisco, CA 94104',
       website: 'crewlo.example',
     },
     users: {
@@ -74,7 +77,8 @@ export const business: Business = {
     job_role: 'Role',
     segment: 'Segment',
     fit_score: 'Fit score',
-    sms_consent: 'SMS consent',
+    sms_consent: 'SMS consent (service)',
+    sms_marketing_consent: 'SMS consent (offers)',
     plan: 'Plan',
     trial_end: 'Trial ends',
     pql_score: 'Product score',

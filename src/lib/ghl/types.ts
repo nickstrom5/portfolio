@@ -25,6 +25,7 @@ export type EventType =
   | 'tag_added'
   | 'review_left'
   | 'survey_submitted'
+  | 'review_clicked'
   | 'form_submitted'
   | 'invoice_paid'
   | 'payment_failed'
@@ -46,6 +47,8 @@ export interface ScenarioEvent {
   label?: string;
   /** For replies: the channel they came in on. Default sms. */
   channel?: 'sms' | 'email';
+  /** Writes the event's value to this custom field (e.g. a survey rating landing in "satisfaction"). */
+  field?: string;
 }
 
 export type DndChannel = 'sms' | 'email' | 'calls';
@@ -65,6 +68,8 @@ export interface Contact {
   email: string;
   /** Shown only; the sample account runs on one time zone. */
   timezone?: string;
+  /** Street address, for {{contact.address1}} and {{contact.full_address}}. */
+  address?: string;
   source?: string;
   tags: string[];
   dnd: Partial<Record<DndChannel, boolean>>;
@@ -149,6 +154,7 @@ export type ActionKind =
   | 'charge'
   | 'course_access'
   | 'event_date'
+  | 'follower'
   | 'ai';
 
 export interface ActionNode {
@@ -201,6 +207,12 @@ export interface WaitNode {
    * between these hours ("HH:MM", contact's time zone).
    */
   window?: { start: string; end: string; days: number[] };
+  /**
+   * For appointment-relative waits: GHL's "If this date has already passed"
+   * option. continue (default) moves on; skip_outbound skips Email, SMS, Call
+   * and Voicemail steps until the next wait; exit removes the contact.
+   */
+  ifPassed?: 'continue' | 'skip_outbound' | 'exit';
   /** Optional two-way split after an event wait: met vs. timed out. */
   branches?: { met: { label: string; nodes: Step[] }; timeout: { label: string; nodes: Step[] } };
 }
@@ -220,11 +232,16 @@ export interface GoalNode {
   title: string;
   label?: string;
   event: EventType;
-  /** Optional event value the goal must match, e.g. a tag name. */
-  value?: string | number;
+  /** Event value the goal must match, e.g. a tag name. An array matches any of them. */
+  value?: string | number | (string | number)[];
   summary: string;
-  /** What happens if the contact reaches this step without meeting the goal ("Continue anyway" / "End this workflow"). */
-  ifNotMet: 'continue' | 'end';
+  /**
+   * If the contact reaches this step without meeting the goal: "Continue
+   * anyway", "End this workflow" or "Wait until the goal is met" (bounded by
+   * `waitMinutes` in the simulator, default 30 days).
+   */
+  ifNotMet: 'continue' | 'end' | 'wait';
+  waitMinutes?: number;
 }
 
 /** GHL's Go To action: continue from another step in the same workflow. */

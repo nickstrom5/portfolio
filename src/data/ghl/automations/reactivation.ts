@@ -3,6 +3,8 @@ import { env } from '../business';
 
 const DAY = 1440;
 const WEEKDAYS = [0, 1, 2, 3, 4];
+/** Text 1 only goes out Monday to Wednesday, so the 2-day reply wait always ends on a weekday. */
+const MON_TO_WED = [0, 1, 2];
 
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
@@ -16,7 +18,7 @@ const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
  */
 const OPT_OUT = ['stop texting', 'stop messaging', 'stop contacting', 'please stop', 'remove me', 'take me off', 'unsubscribe', 'opt out', 'opt-out', 'wrong number', "don't text", 'do not text', 'no more texts', 'leave me alone', 'revoke'];
 const YES = ['yes', 'yeah', 'yep', 'sure', 'interested', 'still on', 'come out', 'stop by', 'take a look', 'quote', 'call me', 'book'];
-const NO = ['no', 'not', 'nope', 'maybe', "don't", 'already', 'sold', 'moved', 'next year', 'later', 'someone else', 'another company', 'went with', 'all set', 'sorted'];
+const NO = ['no', 'not', 'nope', 'maybe', "don't", 'already', 'sold', 'moved', 'next year', 'later', 'someone else', 'another company', 'went with', 'all set', 'taken care of', 'sorted'];
 
 /** First name of the contact's owner, for logs. */
 const owner = (c: Contact) => (c.assignedTo && env.users[c.assignedTo]?.first_name) || 'the assigned estimator';
@@ -42,7 +44,7 @@ const S = {
   optOut: at(1, 10, 45),
   notNow: at(2, 11, 30),
   emailOnly: at(2, 10, 30),
-  unclear: at(3, 10, 0),
+  unclear: at(0, 13, 40),
   silent: at(3, 16, 45),
 };
 
@@ -53,6 +55,7 @@ Instructions:
   their list this year. Their reply: {{message.body}}
   Pick the branch that matches what they want. If the reply asks us to
   stop in any way, pick Opt-out, even if it also says something else.
+  "Stop by" or "stop over" means a visit, not an opt-out.
 
 Additional context:
   Harbor & Pine Roofing is a roofing company in the Chicago suburbs.
@@ -62,7 +65,8 @@ Additional context:
 Branches:
   Opt-out         Asks us to stop texting or to remove them, says it is
                   the wrong number, or objects to being contacted.
-                  When in doubt, pick this one.
+                  If you cannot tell whether they want us to stop,
+                  pick this one.
   Interested      Says yes, or asks for an inspection, a visit, a price
                   or a call.
   Not now         Says no, not this year, maybe later, or the roof is
@@ -78,8 +82,9 @@ const smartList = `Smart List: Reactivation 2026
   DND all              Disabled
   Assigned user        is not empty
 
-Then, on a weekday after 10 AM:
-  Select all  >  Add Tag  >  reactivate-2026`;
+Then, any day:
+  Select all  >  Add Tag  >  reactivate-2026
+  (07's start wait decides when the first text goes out)`;
 
 export const reactivation: Automation = {
   id: 'reactivation',
@@ -90,16 +95,16 @@ export const reactivation: Automation = {
   problem:
     'Years of old leads and undecided estimates sat in the CRM, and nobody had time to call through them. Texting the whole list at once would have risked the phone number, reached people who never agreed to offers, and missed opt-outs written as "please stop texting me" instead of STOP.',
   evidence: {
-    text: 'Under the FCC consent-revocation rules in force since April 11, 2025, a consumer can revoke consent to robocalls and robotexts by any reasonable means, and the revocation must be honoured within 10 business days. Replies such as "stop", "quit", "end", "revoke", "opt out", "cancel" or "unsubscribe" count as revocation by definition.',
+    text: 'Under the FCC consent-revocation rules in force since April 11, 2025, a consumer can revoke consent to robocalls and robotexts by any reasonable means, and the revocation must be honored within 10 business days. Replies such as "stop", "quit", "end", "revoke", "opt out", "cancel" or "unsubscribe" count as revocation by definition.',
     source: 'FCC Report and Order FCC 24-24, adopted February 15, 2024 (published in the Federal Register as document 2024-04587)',
     href: 'https://docs.fcc.gov/public/attachments/FCC-24-24A1.pdf',
   },
   solution:
-    'One tag on a cleaned-up Smart List starts it. A Drip releases 50 contacts every 15 minutes, and the Time Window keeps sends to weekdays, 10 to 6. Contacts who ticked the offers box get two short texts from the estimator they dealt with, and everyone else gets two emails. An AI Decision Maker routes every reply. Interested homeowners go back into the pipeline on a new card, and their estimator is alerted. "Not now" gets a note. An opt-out in plain words gets SMS DND the same minute. Anything unclear goes to a person. In the simulator, keyword rules stand in for the model.',
+    'One tag on a cleaned-up Smart List starts it. A start wait lets the first text go out only Monday to Wednesday, so both texts land on weekdays. A Drip then releases 50 contacts every 15 minutes, and the Time Window keeps every send to weekdays, 10 to 6. Contacts who ticked the offers box get two short texts from the estimator they dealt with, and everyone else gets two emails. An AI Decision Maker routes every reply. Interested homeowners go back into the pipeline on a new card, and their estimator is alerted. "Not now" gets a note. An opt-out in plain words gets SMS DND the same minute. Anything unclear goes to a person. In the simulator, keyword rules stand in for the model.',
   workflow: {
     name: '07 · Nurture · Database Reactivation',
     folder: 'Nurture',
-    triggers: [{ title: 'Contact Tag', filters: ['Tag added is reactivate-2026'], label: 'Contact Tag (reactivate-2026 added)' }],
+    triggers: [{ title: 'Contact Tag', filters: ['Tag Added is reactivate-2026'], label: 'Contact Tag (reactivate-2026 added)' }],
     settings: {
       allowReEntry: false,
       stopOnResponse: false,
@@ -115,17 +120,29 @@ export const reactivation: Automation = {
         'Time Window Mon-Fri 10 AM-6 PM holds texts and emails only. Routing, DND, tags and notifications run the moment a reply arrives.',
         'Stop on Response off: the workflow routes replies itself. With it on, a reply would end the run before the Decision Maker saw it.',
         'Re-entry off. Next year the workflow is cloned with a new trigger tag, reactivate-2027.',
+        "Timezone: Contact. Old imports with no time zone fall back to the account's, Chicago, which is right for a local roofer.",
         'Allow multiple Opportunities is for opportunity-based triggers. Here the Duplicate Opportunity toggle on Create Opportunity is what matters.',
       ],
     },
     steps: [
+      {
+        id: 'start',
+        kind: 'wait',
+        title: 'Wait',
+        label: 'Start Mon-Wed',
+        mode: 'time',
+        minutes: 0,
+        window: { start: '10:00', end: '16:00', days: MON_TO_WED },
+        summary:
+          'No delay, but its Advance Window only resumes Monday to Wednesday, 10 AM to 4 PM, so text 2 always falls on a weekday and is never held over a weekend with no wait listening. It sits before the Drip, so a late-week list still leaves in batches.',
+      },
       {
         id: 'drip',
         kind: 'action',
         action: 'drip',
         title: 'Drip',
         label: 'Pace the sends',
-        summary: 'Batch size 50, interval 15 minutes. A list of 400 leaves in 8 batches over 1 hr 45 min, which protects the number and spreads the replies out so the estimators can answer them.',
+        summary: 'Batch size 50, interval 15 minutes. A list of 400 leaves in 8 batches over 1 hr 45 min, so even a 4 PM start clears the 6 PM close. It protects the number and spreads the replies out so the estimators can answer them.',
         run: () => ({ log: 'Released with its batch. Batches of 50 leave every 15 minutes, so the number never sends to the whole list at once.' }),
       },
       {
@@ -180,7 +197,7 @@ export const reactivation: Automation = {
                             label: 'Opt-out',
                             when: {
                               type: 'any',
-                              label: 'Asks us to stop texting or to remove them, or says wrong number. When in doubt, this one.',
+                              label: 'Asks us to stop texting or to remove them, or says wrong number. If it cannot tell whether they want us to stop, this one.',
                               of: [
                                 { type: 'dnd', channel: 'sms' },
                                 { type: 'reply_matches', words: OPT_OUT },
@@ -193,7 +210,7 @@ export const reactivation: Automation = {
                                 action: 'dnd',
                                 title: 'Enable/Disable DND',
                                 label: 'Texts off',
-                                summary: 'Enable, Outbound, SMS only, the minute the reply lands. A STOP keyword has already done this. A plain-words opt-out needs the workflow to do it.',
+                                summary: 'Direction Outbound, Enable, selected channel SMS, the minute the reply lands. A STOP keyword has already done this. A plain-words opt-out needs the workflow to do it.',
                                 effect: { dnd: { sms: true } },
                                 run: ({ contact }) => ({
                                   log: contact.dnd.sms
@@ -228,7 +245,7 @@ export const reactivation: Automation = {
                                 summary: 'To the owner, who is responsible for opt-outs. In-app and email.',
                                 message: {
                                   channel: 'internal',
-                                  to: '{{custom_values.owner_name}}',
+                                  to: 'Jordan Blake (particular user)',
                                   subject: 'Opt-out: {{contact.name}} asked us to stop texting',
                                   body: 'SMS DND is on, so GHL will not text them. Do not text them from your own phone either. If they asked to be removed altogether, turn on DND for all channels. The FCC allows 10 business days; this was done the same minute.',
                                 },
@@ -297,6 +314,15 @@ export const reactivation: Automation = {
                                   subject: 'Reactivation reply: {{contact.name}} is interested',
                                   body: '{{contact.first_name}} answered the 2026 check-in text and wants to talk. There is a new card at New Lead. Read the conversation, then call today: {{contact.phone}}',
                                 },
+                              },
+                              {
+                                id: 'task-call',
+                                kind: 'action',
+                                action: 'add_task',
+                                title: 'Add Task',
+                                label: 'Call back',
+                                summary: 'For the assigned estimator, due in 1 day with Skip Weekends on. A notification is easy to miss; an overdue task is not.',
+                                run: ({ contact }) => ({ log: `Task for ${owner(contact)}: call ${contact.firstName} about the reactivation reply. Due in 1 day, weekends skipped.` }),
                               },
                             ],
                           },
@@ -368,7 +394,7 @@ export const reactivation: Automation = {
                         summary: 'Same estimator. The booking link, and an easy way to say no.',
                         message: {
                           channel: 'sms',
-                          body: "Hi {{contact.first_name}}, {{user.first_name}} again. If a free roof inspection would help this spring, pick a time here: {{custom_values.booking_link}} If the roof's sorted, just reply no and I'll close this out.",
+                          body: "Hi {{contact.first_name}}, {{user.first_name}} again. If a free roof inspection would help, pick a time here: {{custom_values.booking_link}} If the roof's taken care of, just reply no and I'll close this out.",
                         },
                       },
                       {
@@ -429,7 +455,7 @@ export const reactivation: Automation = {
               message: {
                 channel: 'email',
                 subject: 'Is your roof still on your list, {{contact.first_name}}?',
-                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we are booking free roof inspections this spring. An inspection takes about 45 minutes, and you get photos of anything we find and a written estimate.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is sorted, there is no need to reply. Thanks,\n{{user.name}}\nHarbor & Pine Roofing, {{location.address}}',
+                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we can come out for a free roof inspection. It takes about 45 minutes, and you get photos of anything we find and a written estimate.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is taken care of, there is no need to reply. Thanks,\n{{user.name}}\nHarbor & Pine Roofing, {{location.address}}',
               },
             },
             { id: 'wait-4d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 4 * DAY, summary: 'Four days.' },
@@ -439,7 +465,7 @@ export const reactivation: Automation = {
               action: 'send_email',
               title: 'Send Email',
               label: 'Last note',
-              summary: 'Short, and written to read fine even to someone who already answered the first one.',
+              summary: 'Short, and written to read fine even to someone who already answered the first one. Email replies land in the estimator\'s Conversations, and the SOP says to remove the contact from 07 when answering one, so someone who wrote back does not get this.',
               message: {
                 channel: 'email',
                 subject: 'One last note about your roof',
@@ -459,7 +485,7 @@ export const reactivation: Automation = {
       start: S.interested,
       contact: oldLead('maya', 'estimate-no-decision', { fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', estimate_amount: 16200 } }),
       events: [{ at: 47, type: 'reply', value: 'Yes, still on the list. A few shingles came off this winter. Can someone stop by next week?' }],
-      expect: { outcome: 'completed', visits: ['drip', 'can-text:0', 'sms-1', 'wait-1:met', 'route:1', 'intent-yes', 'assign', 'opp', 'notify-rep'], stage: 'New Lead' },
+      expect: { outcome: 'completed', visits: ['start', 'drip', 'can-text:0', 'sms-1', 'wait-1:met', 'route:1', 'intent-yes', 'assign', 'opp', 'notify-rep', 'task-call'], stage: 'New Lead' },
     },
     {
       id: 'opt-out',
@@ -482,7 +508,7 @@ export const reactivation: Automation = {
     {
       id: 'unclear',
       label: 'Asks which house',
-      summary: 'Owns two properties and asks which one we mean. The reply fits no branch, so it goes to the Default Branch and an estimator answers it.',
+      summary: 'Tagged on a Monday afternoon. Owns two properties and asks which one we mean. The reply fits no branch, so it goes to the Default Branch and an estimator answers it.',
       start: S.unclear,
       contact: oldLead('luis', 'stl-no-response', { fields: { service_needed: 'Not sure yet' } }),
       events: [{ at: 25, type: 'reply', value: 'Is this about the rental on Elm or our place on Maple?' }],
@@ -490,12 +516,12 @@ export const reactivation: Automation = {
     },
     {
       id: 'silent',
-      label: 'Never replies',
-      summary: 'Released in the last batch on Thursday afternoon. The second text comes due on Saturday, so the Time Window holds it until Monday at 10 AM. Tagged as no response three days later.',
+      label: 'Tagged Thursday, never replies',
+      summary: 'Added to the list at 4:45 on a Thursday. The start wait holds them until Monday at 10 AM, so the second text lands on Wednesday inside the window instead of waiting out a weekend. No reply to either, so they are tagged as no response on Saturday.',
       start: S.silent,
       contact: oldLead('maya', 'stl-no-response', { fields: { service_needed: 'Storm damage', roof_age: 'Over 20 years' } }),
       events: [],
-      expect: { outcome: 'completed', visits: ['sms-1', 'wait-1:timeout', 'sms-2', 'wait-2:timeout', 'tag-no-reply'], tags: ['reactivation-no-response'] },
+      expect: { outcome: 'completed', visits: ['start', 'sms-1', 'wait-1:timeout', 'sms-2', 'wait-2:timeout', 'tag-no-reply'], tags: ['reactivation-no-response'] },
     },
     {
       id: 'email-only',
@@ -521,21 +547,20 @@ export const reactivation: Automation = {
     customValues: [
       { name: 'Booking Link', key: 'booking_link', value: 'harborpine.example/book' },
       { name: 'Office Phone', key: 'office_phone', value: '(312) 555-0142' },
-      { name: 'Owner Name', key: 'owner_name', value: 'Jordan Blake' },
     ],
   },
   build: [
     {
       title: 'Clean the list before the tag goes on',
-      body: 'The Smart List takes old leads and undecided estimates with no activity for 90 days, and leaves out anyone with an open card, anyone who opted out before and anyone on DND for all channels. Old New Lead cards from 01 were still open, so first I marked the untouched ones Abandoned in bulk, which kept those leads on the list. Everyone left has an owner, because the texts are signed with {{user.first_name}}.',
+      body: 'The Smart List takes old leads and undecided estimates with no activity for 90 days, and leaves out anyone with an open card, anyone who opted out before and anyone on DND for all channels. Old New Lead cards from 01 were still open, so first I marked the untouched ones Abandoned in bulk, which kept those leads on the list. Everyone left has an owner, because the texts are signed with {{user.first_name}}, and contacts owned by anyone who has left the company are reassigned before the tag goes on.',
     },
     {
       title: 'Consent picks the channel',
       body: 'The form has two SMS boxes: one for inspection updates and one for offers. A reactivation text is an offer, so only the second box counts. Everyone else, including old imports with no consent on record, gets email. The email template has the postal address and an unsubscribe link, which CAN-SPAM requires.',
     },
     {
-      title: 'Pace it',
-      body: 'A Drip releases 50 contacts every 15 minutes, so the number never sends to the whole list at once, and the replies arrive at a pace two estimators can handle. The workflow Time Window is Monday to Friday, 10 AM to 6 PM: inside the 8 AM to 8 PM rule, and no weekends for a marketing send. GHL\'s Drip Preview lists the batch times before publishing and warns when the Time Window shifts a batch.',
+      title: 'Pace it, and pick the start days',
+      body: 'A Drip releases 50 contacts every 15 minutes, so the number never sends to the whole list at once, and the replies arrive at a pace two estimators can handle. The workflow Time Window is Monday to Friday, 10 AM to 6 PM: inside the 8 AM to 8 PM rule, and no weekends for a marketing send. Before the Drip, a zero-minute Wait with an Advance Window (Monday to Wednesday, 10 AM to 4 PM) decides when texting starts. A reply wait only listens while it is running, so a Thursday text would time out on Saturday and hold text 2 until Monday with nothing listening in between. GHL\'s Drip Preview lists the batch times and warns when the Time Window shifts a batch. For a list much bigger than 400, I raise the batch size so the last batch still clears 6 PM.',
     },
     {
       title: 'Two short texts',
@@ -551,37 +576,37 @@ export const reactivation: Automation = {
     },
     {
       title: 'Opt-outs handled the same minute',
-      body: 'Standard opt-out keywords such as STOP switch on DND by themselves. "Please stop texting me" does not. Since April 11, 2025, the FCC has required honouring an opt-out made by any reasonable means within 10 business days, so the Opt-out branch turns on SMS DND with Enable/Disable DND, tags the contact and tells Jordan. The description tells the model to pick Opt-out when in doubt.',
+      body: 'Standard opt-out keywords such as STOP switch on DND by themselves. "Please stop texting me" does not. Since April 11, 2025, the FCC has required honoring an opt-out made by any reasonable means within 10 business days, so the Opt-out branch turns on SMS DND with Enable/Disable DND, tags the contact and tells Jordan. The branch description tells the model to pick Opt-out whenever it cannot tell whether they want us to stop, and the instructions say "stop by" is a visit.',
     },
     {
       title: 'Test, publish, report',
-      body: 'Six test contacts, one per scenario above, checked in Execution Logs before publishing, including that {{message.body}} in the Decision Maker holds the reply the wait caught. Results live in two places: Reply Intent for how the list answered, and Roofing Sales cards with source Reactivation for what it was worth. Next year I clone the workflow and change the trigger tag.',
+      body: 'Six test contacts, one per scenario above, checked in Execution Logs before publishing. The first thing I check is the Decision Maker\'s input. GHL documents {{message.body}} as the message that triggered the workflow, and this one starts from a tag, so the test has to show the reply the wait caught. If it does not, the routing moves to a small companion workflow triggered by Customer Replied (Replied to Workflow is 07, Reply Channel is SMS), where it always does. Results live in two places: Reply Intent for how the list answered, and Roofing Sales cards with source Reactivation for what it was worth. Next year I clone the workflow and change the trigger tag.',
     },
   ],
   edgeCases: [
-    { title: '"Can someone stop by?"', body: 'The carrier only acts on a reply that is exactly a keyword like STOP, and the Decision Maker reads the whole sentence, so this goes to Interested. The simulator\'s keyword rules look for phrases such as "stop texting", never the bare word, for the same reason.' },
-    { title: 'An opt-out in plain words', body: '"Please stop texting me" or "wrong number" does not trigger the keyword opt-out. The Opt-out branch switches on SMS DND at once, and Jordan decides whether they meant every channel. Missing an opt-out is a compliance problem. Misreading a yes as an opt-out loses one lead. That is why the model is told to pick Opt-out when unsure.' },
+    { title: '"Can someone stop by?"', body: 'The automatic opt-out only fires when the whole reply is a keyword such as STOP, and the Decision Maker reads the whole sentence, with an instruction that "stop by" means a visit, so this goes to Interested. The simulator\'s keyword rules look for phrases such as "stop texting", never the bare word, for the same reason.' },
+    { title: 'An opt-out in plain words', body: '"Please stop texting me" or "wrong number" does not trigger the keyword opt-out. The Opt-out branch switches on SMS DND at once, and Jordan decides whether they meant every channel. Missing an opt-out is a compliance problem. Misreading a yes as an opt-out loses one lead. That is why the model is told to pick Opt-out whenever it cannot tell, and only then: a reply it simply cannot place goes to the Default Branch and a person.' },
     { title: 'The model gets it wrong', body: 'The AI only picks a branch. It never writes to the homeowner, so a wrong call costs a phone call, not a wrong text. Interested creates a card and alerts a person. Anything it cannot place goes to the Default Branch, where a person reads it.' },
-    { title: 'Most of the list already has a card', body: 'Create Opportunity checks for duplicates by contact ID. With duplicates off it would create nothing for anyone who ever had a card, which is almost everyone here. Duplicate Opportunity is on instead, and the Smart List already leaves out open cards, so the new card is the only open one.' },
-    { title: 'List tagged after hours', body: 'The Time Window holds every text and email until 10 AM on the next weekday. The held batches then go out close together, which is what the Drip is there to prevent, so the SOP says to add the tag on a weekday after 10 AM.' },
-    { title: 'An estimator texts them by hand', body: 'GHL\'s help center warns that a manual text sent while a contact is waiting for a reply can stop the workflow from counting their reply. The wait then times out and they get the second text while already talking to the estimator. The SOP says to call instead, or remove the contact from 07 before texting from Conversations.' },
+    { title: 'Most of the list already has a card', body: 'Create Opportunity checks for duplicates by contact ID. With duplicates off it would create nothing for anyone who ever had a card, which is almost everyone here. So Duplicate Opportunity is on in the action, and Allow Multiple Opportunities per Contact is on in the account\'s opportunity settings. The Smart List leaves out open cards, so the new card is the only open one, and when they book, 03 finds the latest open card and moves that one, not the old one.' },
+    { title: 'Tagged late in the week', body: 'Without the start wait, a Thursday text times out on Saturday, the Time Window holds text 2 until Monday, and a Sunday reply lands while no wait is listening: it is never routed, and text 2 still goes out on Monday, even after "please stop texting me". The start wait holds a Thursday tag until Monday at 10 AM, so both texts land on weekdays and a wait is always listening.' },
+    { title: 'Someone picks up the conversation by hand', body: 'GHL\'s help center warns that a text sent by hand while a contact is waiting for a reply can stop the workflow from counting their reply. The wait then times out and they get text 2 while already talking to the estimator. The SOP: whoever answers someone on this list by text, email or phone removes them from 07 first, from the contact\'s Workflows tab. Booking needs no SOP, because 03 removes them.' },
   ],
   qa: [
-    'Tag a test contact at 7 PM: nothing sends until 10 AM the next weekday, and the Drip Preview shows the shift',
-    'Reply "Can someone stop by next week?": Reply Intent is Interested, a new New Lead card with source Reactivation sits next to the old closed one, and the estimator is alerted',
+    'Tag a test contact on a Thursday afternoon: it waits at the start step until Monday 10 AM, then leaves with its Drip batch',
+    'Reply "Can someone stop by next week?": Reply Intent is Interested, a new New Lead card with source Reactivation sits next to the old closed one, and the estimator gets the alert and a call task',
     'Reply "please stop texting me": SMS DND is on within the minute, the contact is tagged reactivation-opt-out, and Jordan is notified',
     'Reply STOP: the keyword sets DND, and the reply still routes to Opt-out and gets tagged',
     'Contact with only the service box ticked: two emails, no texts, address and unsubscribe link in the footer',
-    'No reply: the second text two days later, reactivation-no-response three days after that',
+    'No reply: the second text two days later on a weekday, reactivation-no-response three days after that',
     'Reply to the second text: the Go To runs the same routing',
-    'In Execution Logs, the Decision Maker\'s input shows the actual reply text',
+    'In Execution Logs, the Decision Maker\'s instructions show the actual reply where {{message.body}} sits, for both the first and the second text',
   ],
   snippets: [
     {
       title: 'AI Decision Maker setup',
       language: 'text',
       code: deciderSetup,
-      note: 'The branch descriptions do most of the work. {{message.body}} is the variable GHL\'s AI docs use for an incoming message; the test run confirms it holds the reply the wait caught.',
+      note: 'The branch descriptions do most of the work. GHL documents {{message.body}} as the message that triggered the workflow. This workflow starts from a tag, so the first test run has to show the reply the wait caught; if it does not, the same setup moves to a companion workflow triggered by Customer Replied (Replied to Workflow is 07).',
     },
     {
       title: 'Campaign Smart List',
@@ -590,5 +615,5 @@ export const reactivation: Automation = {
       note: 'Open cards are excluded, so nobody in the middle of a deal is asked whether their roof is still on their list.',
     },
   ],
-  features: ['Contact Tag', 'Smart Lists', 'Drip', 'If/Else', 'Send SMS', 'Wait · The contact to reply', 'AI Decision Maker', 'Enable/Disable DND', 'Update Contact Field', 'Add Contact Tag', 'Internal Notification', 'Assign To User', 'Create Opportunity', 'Add Note', 'Go To', 'Send Email', 'Time Window'],
+  features: ['Contact Tag', 'Smart Lists', 'Wait · Advance Window', 'Drip', 'If/Else', 'Send SMS', 'Wait · The contact to reply', 'AI Decision Maker', 'Enable/Disable DND', 'Update Contact Field', 'Add Contact Tag', 'Internal Notification', 'Assign To User', 'Create Opportunity', 'Add Task', 'Add Note', 'Go To', 'Send Email', 'Time Window'],
 };
