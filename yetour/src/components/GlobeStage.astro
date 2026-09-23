@@ -1,0 +1,133 @@
+---
+/**
+ * The tour's stage motif: a spinning wireframe sphere over a truss.
+ * Pure SVG + CSS, no assets. Meridians "rotate" by animating scaleX through
+ * zero, which is what an orthographic projection of a spinning globe does.
+ */
+interface Props {
+  /** Number of meridians. */
+  lines?: number;
+  /** Seconds per rotation. */
+  speed?: number;
+  /** Draw the stage truss and light beams beneath the sphere. */
+  rig?: boolean;
+  /** Suffix for this instance's gradient ids — two globes can share a page. */
+  uid?: string;
+  class?: string;
+}
+
+const { lines = 14, speed = 26, rig = true, uid = 'a', class: cls = '' } = Astro.props;
+
+const R = 268;
+const CX = 400;
+const CY = 392;
+const TILT = 0.24;
+
+const lats = [-64, -48, -32, -16, 0, 16, 32, 48, 64].map((deg) => {
+  const a = (deg * Math.PI) / 180;
+  return { y: CY - R * Math.sin(a) * 0.86, rx: R * Math.cos(a), ry: R * Math.cos(a) * TILT };
+});
+
+const meridians = Array.from({ length: lines }, (_, i) => ({
+  delay: -(i / lines) * speed,
+  key: i,
+}));
+---
+
+<svg
+  class={`globe ${cls}`}
+  viewBox="0 0 800 800"
+  role="img"
+  aria-label="The tour's spherical stage: a rotating wireframe globe suspended over a lighting truss"
+  style={`--spin:${speed}s`}
+>
+  <defs>
+    <radialGradient id={`gs-core-${uid}`} cx="38%" cy="30%" r="78%">
+      <stop offset="0%" stop-color="#2b3138" stop-opacity="0.95" />
+      <stop offset="52%" stop-color="#0e1114" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#000" stop-opacity="0.95" />
+    </radialGradient>
+    <radialGradient id={`gs-halo-${uid}`} cx="50%" cy="50%" r="50%">
+      <stop offset="62%" stop-color="var(--ye-accent, #efece4)" stop-opacity="0" />
+      <stop offset="86%" stop-color="var(--ye-accent, #efece4)" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="var(--ye-accent, #efece4)" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id={`gs-beam-${uid}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--ye-accent, #efece4)" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="var(--ye-accent, #efece4)" stop-opacity="0" />
+    </linearGradient>
+    <clipPath id={`gs-clip-${uid}`}>
+      <circle cx={CX} cy={CY} r={R} />
+    </clipPath>
+  </defs>
+
+  <circle cx={CX} cy={CY} r={R * 1.5} fill={`url(#gs-halo-${uid})`} />
+
+  {
+    rig && (
+      <g class="rig">
+        <path d={`M${CX - 250} ${CY + R + 96} L${CX - 96} ${CY + 40} L${CX + 96} ${CY + 40} L${CX + 250} ${CY + R + 96} Z`} fill={`url(#gs-beam-${uid})`} />
+        <path d={`M${CX - 330} ${CY + R + 110} H${CX + 330}`} stroke="#2c3238" stroke-width="3" />
+        <path d={`M${CX - 330} ${CY + R + 122} H${CX + 330}`} stroke="#1b2024" stroke-width="2" />
+        {Array.from({ length: 13 }, (_, i) => {
+          const x = CX - 318 + i * 53;
+          return <path d={`M${x} ${CY + R + 110} l26 12 M${x + 26} ${CY + R + 110} l-26 12`} stroke="#22282e" stroke-width="1.6" />;
+        })}
+      </g>
+    )
+  }
+
+  <circle cx={CX} cy={CY} r={R} fill={`url(#gs-core-${uid})`} />
+
+  <g clip-path={`url(#gs-clip-${uid})`} fill="none" stroke="var(--ye-accent, #efece4)" stroke-width="1.15" opacity="0.5">
+    {lats.map((l) => <ellipse cx={CX} cy={l.y} rx={l.rx} ry={Math.max(l.ry, 0.8)} />)}
+    <g class="meridians">
+      {meridians.map((m) => (
+        <ellipse
+          class="mer"
+          cx={CX}
+          cy={CY}
+          rx={R}
+          ry={R}
+          style={`animation-delay:${m.delay}s;transform-origin:${CX}px ${CY}px`}
+        />
+      ))}
+    </g>
+  </g>
+
+  <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--ye-accent, #efece4)" stroke-width="2" opacity="0.75" />
+  <circle cx={CX} cy={CY} r={R + 26} fill="none" stroke="var(--ye-accent, #efece4)" stroke-width="1" opacity="0.18" stroke-dasharray="3 13" />
+  <ellipse cx={CX} cy={CY} rx={R + 62} ry={(R + 62) * TILT} fill="none" stroke="var(--ye-accent, #efece4)" stroke-width="1" opacity="0.22" />
+</svg>
+
+<style>
+  .globe {
+    width: 100%;
+    height: auto;
+  }
+  .mer {
+    animation: mer-spin var(--spin, 26s) linear infinite;
+  }
+  @keyframes mer-spin {
+    0% {
+      transform: scaleX(1);
+    }
+    25% {
+      transform: scaleX(0.001);
+    }
+    50% {
+      transform: scaleX(-1);
+    }
+    75% {
+      transform: scaleX(0.001);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mer {
+      animation: none;
+    }
+  }
+</style>

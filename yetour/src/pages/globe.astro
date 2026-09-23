@@ -1,0 +1,291 @@
+---
+import Layout from '@/layouts/Base.astro';
+import VideoEmbed from '@/components/VideoEmbed.astro';
+import { url } from '@/lib/url';
+import { globe, specs, quotes, globeSources } from '@/data/globe';
+import { shows, shortPlace, longDate } from '@/data/tour';
+import { tourStills } from '@/lib/stills';
+
+const venues = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) => s.venue)).size;
+const gallery = tourStills(shows);
+const filmed = shows.filter((s) => s.videos?.length);
+const unfilmed = shows.filter((s) => s.status === 'played' && !s.videos?.length);
+const hero = gallery.find((g) => g.show.slug === 'istanbul-2026-05-30') ?? gallery[0]!;
+
+const jsonLd = [
+  {
+    '@type': 'CreativeWork',
+    name: 'The Globe Stage',
+    alternateName: globe.alsoKnown,
+    description:
+      'The spherical stage and screen at the centre of the 2026 Ye Live Concert Tour, estimated at over 50 feet in diameter.',
+    dateCreated: '2026',
+    creator: [
+      { '@type': 'Person', name: 'Ye', alternateName: 'Kanye West' },
+      { '@type': 'Person', name: 'Aus Taylor', jobTitle: 'Production designer' },
+    ],
+    contributor: { '@type': 'Person', name: 'John McGuire', jobTitle: 'Lighting designer' },
+    genre: 'Concert production design',
+  },
+];
+---
+
+<Layout
+  title="The Globe"
+  description="The 50-foot spinning sphere at the centre of Ye's 2026 tour: who designed it, how it is lit, photographed at every filmed date, and the full-show film."
+  accent="#4a8bff"
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <div class="hero-bg hero-shot" aria-hidden="true">
+      <img src={hero.src} alt="" width="1280" height="720" fetchpriority="high" decoding="async" data-yt={hero.video} />
+    </div>
+    <div class="hero-fade" aria-hidden="true"></div>
+    <div class="wrap hero-in">
+      <p class="eyebrow">{globe.designers} {'·'} Lighting by {globe.lighting}</p>
+      <h1 class="wordmark" style="font-size:clamp(62px,18vw,196px)">
+        THE GLOBE
+        <small>A 50-FOOT SPHERE THAT IS ALSO THE STAGE AND THE SCREEN</small>
+      </h1>
+      <p class="hero-sub">
+        It debuted on 1 April 2026 at SoFi Stadium on a night billed as "Ye: The Homecoming", and it has
+        been to {venues} venues across three continents since. {gallery.length} of those nights were filmed
+        end to end. Nobody has said how it works.
+      </p>
+      <div class="hero-cta">
+        <a class="btn-ye solid" href="#looks">The globe at every show</a>
+        <a class="btn-ye" href="#film">Full-show film</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">01 {'—'} What is known</span>
+          <h2>The object</h2>
+        </div>
+        <p>Everything below is from published reporting. The last line is the important one.</p>
+      </div>
+      <dl class="facts">
+        {specs.map((f) => <div class="fact"><dt>{f.term}</dt><dd style="font-size:15px;font-weight:500;line-height:1.55">{f.body}</dd></div>)}
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap two-col">
+      <div>
+        <span class="rule-num">02 {'—'} Where it came from</span>
+        <h2 style="font-size:clamp(28px,4.4vw,46px)">Return and revival</h2>
+        <div class="prose" style="margin-top:22px">
+          <p>
+            Ye has framed the stage as an idea about coming back rather than a piece of engineering. The
+            brief, in his words, was the feeling of standing on top of the world after everything we have
+            been through {'—'} which is why opening night put him literally on top of a demi-globe,
+            tethered at its apex, in a stadium twenty minutes from where he used to live.
+          </p>
+          <p>
+            Aus Taylor, the production designer who built it with him, has been almost aggressively modest
+            about his own part: "just a vessel." Between them they replaced the two things every stadium
+            show has {'—'} a stage at one end and a screen behind it {'—'} with a single object in
+            the middle that is both.
+          </p>
+          <p>
+            The lighting is John McGuire's. That matters more than it sounds: a sphere has no flat plane to
+            wash, so the rig has to model a curved surface from above and behind while the surface itself is
+            projecting. Much of what changes across a set is a lighting decision, not a video one.
+          </p>
+          <p>
+            What nobody outside the production has said is how any of it is rigged, driven or projected.
+            That silence looks deliberate, and it is treated here as a fact about the tour rather than a gap
+            to fill in with a guess.
+          </p>
+        </div>
+      </div>
+      <div style="display:grid;gap:18px;align-content:start">
+        {
+          quotes.map((q) => (
+            <blockquote class="panel" style="margin:0">
+              <p style="margin:0;font-family:var(--ye-display);font-weight:700;font-size:21px;line-height:1.35;color:var(--ye-bone)">
+                {'“'}{q.text}{'”'}
+              </p>
+              <footer style="margin-top:14px;font-family:var(--ye-mono);font-size:11.5px;letter-spacing:0.14em;color:var(--ye-dust)">
+                {'—'} {q.who}
+              </footer>
+            </blockquote>
+          ))
+        }
+        <div class="notice">
+          <div>
+            <b>Where the pictures come from</b>
+            Ye livestreamed Istanbul himself, and most of the rest of the tour has been filmed end to end
+            from the floor. Every photograph on this site is a frame from one of those uploads, served by
+            YouTube and linked back to the video it came from.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="looks" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">03 {'—'} Gallery</span>
+          <h2>The globe at every show</h2>
+        </div>
+        <p>
+          One frame per filmed date, {gallery.length} in all. Each opens that night's page; the stills on
+          those pages come from the same upload.
+        </p>
+      </div>
+      <div class="gallery">
+        {
+          gallery.map((still) => (
+            <figure class="plate reveal">
+              <a href={url(`/shows/${still.show.slug}/`)}>
+                <img
+                  class="still"
+                  src={still.src}
+                  alt={still.alt}
+                  width="1280"
+                  height="720"
+                  loading="lazy"
+                  decoding="async"
+                  data-yt={still.video}
+                />
+              </a>
+              <figcaption>
+                <strong style="display:block;font-family:var(--ye-display);font-size:15px;color:var(--ye-bone);letter-spacing:0;text-transform:none;margin-bottom:5px">
+                  {shortPlace(still.show)}
+                </strong>
+                <span style="text-transform:none;letter-spacing:0;font-family:var(--ye-body);font-size:13px;color:var(--ye-ash)">
+                  {longDate(still.show.date)} {'·'} {still.show.venue}
+                </span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+      {
+        unfilmed.length > 0 && (
+          <div class="notice" style="margin-top:22px">
+            <div>
+              <b>Not every night is here</b>
+              {unfilmed.length} played {unfilmed.length === 1 ? 'date has' : 'dates have'} no full-length
+              upload this archive can vouch for, and the dates still to come have not happened yet. Those
+              pages carry drawings instead, and say so.
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="sec" id="film" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">04 {'—'} Film</span>
+          <h2>See it move</h2>
+        </div>
+        <p>
+          Full-length uploads from {filmed.length} of the {shows.length} dates. Nothing loads from YouTube
+          until you press play.
+        </p>
+      </div>
+      <div class="gallery">
+        {
+          filmed.map((show) => (
+            <VideoEmbed
+              videoId={show.videos![0]!.id}
+              title={`${shortPlace(show)} — ${show.videos![0]!.label}`}
+              where={`${show.venue} · ${longDate(show.date)}`}
+              note={show.headline}
+              accent="#4a8bff"
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="rule-num">05 {'—'} Provenance</span>
+          <h2>Sources</h2>
+        </div>
+        <p>Every claim on this page traces back to one of these.</p>
+      </div>
+      <ul class="srcs">
+        {globeSources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.label}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <nav class="pager" aria-label="Elsewhere">
+    <a href={url('/')}>
+      <span>{'←'} Back</span><b>All dates</b><i>Where the globe has been</i>
+    </a>
+    <a class="next" href={url('/andre/')}>
+      <span>Next {'→'}</span><b>André Troutman</b><i>The talk box at the front of it</i>
+    </a>
+  </nav>
+</Layout>
+
+<style>
+  .hero-shot {
+    overflow: hidden;
+  }
+
+  .hero-shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.4;
+    filter: saturate(0.85) contrast(1.05);
+  }
+
+  .still {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    background: #0b0d0f;
+    transition: opacity 0.3s;
+  }
+
+  .plate a:hover .still,
+  .plate a:focus-visible .still {
+    opacity: 0.82;
+  }
+
+  [data-broken] .still,
+  [data-broken] img {
+    visibility: hidden;
+  }
+
+  [data-broken] {
+    background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
+  }
+</style>
+
+<script>
+  // A frame that will not load should leave a plate, not a broken icon.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
+    img.addEventListener('error', () => {
+      if (img.src.includes('maxresdefault') && !img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+        return;
+      }
+      (img.closest('.plate') ?? img.parentElement)?.setAttribute('data-broken', '');
+    });
+  }
+</script>
