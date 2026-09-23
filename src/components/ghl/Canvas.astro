@@ -37,6 +37,7 @@ const settings = [
   { k: 'Timezone', v: s.timezone === 'contact' ? 'Contact' : 'Account' },
   s.allowMultipleOpportunities !== undefined && { k: 'Multiple opportunities', v: s.allowMultipleOpportunities ? 'Allowed' : 'Off' },
 ].filter(Boolean) as { k: string; v: string }[];
+const noteCount = (s.notes?.length ?? 0) + (s.exits?.length ?? 0);
 ---
 
 <figure class="g-canvas" data-canvas={`${caseId}:${a.id}`} aria-label={`Workflow: ${wf.name}, ${countSteps(wf.steps)} steps`}>
@@ -50,11 +51,14 @@ const settings = [
       <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
     ))}
   </dl>
-  {((s.notes && s.notes.length > 0) || (s.exits && s.exits.length > 0)) && (
-    <ul class="g-settings-notes">
-      {s.notes?.map((n) => <li>{n}</li>)}
-      {s.exits?.map((x) => <li><strong>Leaves early:</strong> {x.by}</li>)}
-    </ul>
+  {noteCount > 0 && (
+    <details class="g-settings-more">
+      <summary>Why these settings{s.exits?.length ? ', and when it stops early' : ''} <span class="g-count">({noteCount})</span></summary>
+      <ul class="g-settings-notes">
+        {s.notes?.map((n) => <li>{n}</li>)}
+        {s.exits?.map((x) => <li><strong>Leaves early:</strong> {x.by}</li>)}
+      </ul>
+    </details>
   )}
   <div class="g-canvas-body">
     <div class="g-triggers">
