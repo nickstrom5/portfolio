@@ -150,11 +150,26 @@
   margin: 0;
   font-weight: 600;
 }
-.g-settings-notes {
-  margin: 0;
-  padding: 0.55rem 1rem 0.65rem 2rem;
+.g-settings-more {
   border-bottom: 1px solid var(--border);
   background: var(--bg-elev);
+}
+.g-settings-more > summary {
+  cursor: pointer;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.g-settings-more > summary:hover {
+  color: var(--text);
+}
+.g-settings-more .g-count {
+  font-weight: 400;
+}
+.g-settings-notes {
+  margin: 0;
+  padding: 0 1rem 0.65rem 2rem;
   font-size: 0.82rem;
   color: var(--text-muted);
   display: grid;
