@@ -61,7 +61,7 @@ function score(p: Snapshot) {
   const plural = (k: number, w: string) => `${k} ${w}${k === 1 ? '' : 's'}`;
   const seats = invited + 1;
   return {
-    parts: { ...parts, habit },
+    parts: { ...parts, habit } as Record<string, number>,
     out: {
       pql_score,
       seats,

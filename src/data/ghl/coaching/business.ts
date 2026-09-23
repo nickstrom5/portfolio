@@ -35,8 +35,11 @@ export const business: Business = {
     location: {
       name: 'Trailhead Career Coaching',
       phone: '(312) 555-0130',
-      address: '222 W Merchandise Mart Plaza, Suite 1200, Chicago, IL',
+      address: '222 W Merchandise Mart Plaza, Suite 1200',
       city: 'Chicago',
+      state: 'IL',
+      postal_code: '60654',
+      full_address: '222 W Merchandise Mart Plaza, Suite 1200, Chicago, IL 60654',
       website: 'trailheadcareers.example',
     },
     users: {
@@ -81,8 +84,8 @@ export const business: Business = {
   fieldLabels: {
     current_role: 'Current role',
     goal: 'Goal',
-    sms_consent: 'SMS consent',
-    sms_marketing_consent: 'Marketing texts',
+    sms_consent: 'SMS consent (service)',
+    sms_marketing_consent: 'SMS consent (offers)',
     workshop_date: 'Workshop',
     attended: 'Attended live',
     purchase: 'Purchase',

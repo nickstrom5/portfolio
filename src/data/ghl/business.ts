@@ -23,8 +23,11 @@ export const env: MergeEnv = {
   location: {
     name: 'Harbor & Pine Roofing',
     phone: '(312) 555-0142',
-    address: '1200 W Lake St, Oak Park, IL',
+    address: '1200 W Lake St',
     city: 'Oak Park',
+    state: 'IL',
+    postal_code: '60302',
+    full_address: '1200 W Lake St, Oak Park, IL 60302',
     website: 'harborpine.example',
   },
   users: {
@@ -38,6 +41,7 @@ export const env: MergeEnv = {
     office_phone: '(312) 555-0142',
     booking_link: 'harborpine.example/book',
     review_link: 'harborpine.example/review',
+    feedback_link: 'harborpine.example/how-did-we-do',
     financing_link: 'harborpine.example/financing',
     referral_link: 'harborpine.example/refer',
     warranty_link: 'harborpine.example/warranty',
@@ -76,7 +80,8 @@ export const sampleContact: Contact = {
 export const fieldLabels: Record<string, string> = {
   service_needed: 'Service needed',
   roof_age: 'Roof age',
-  sms_consent: 'SMS consent',
+  sms_consent: 'SMS consent (service)',
+  sms_marketing_consent: 'SMS consent (offers)',
   lead_score: 'Lead score',
   call_priority: 'Call priority',
   utm_source: 'UTM source',

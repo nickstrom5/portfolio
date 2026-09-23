@@ -50,6 +50,11 @@ const settings = [
       <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
     ))}
   </dl>
+  {s.notes && s.notes.length > 0 && (
+    <ul class="g-settings-notes">
+      {s.notes.map((n) => <li>{n}</li>)}
+    </ul>
+  )}
   <div class="g-canvas-body">
     <div class="g-triggers">
       <span class="g-kind">{wf.triggers.length > 1 ? 'Workflow triggers' : 'Workflow trigger'}</span>

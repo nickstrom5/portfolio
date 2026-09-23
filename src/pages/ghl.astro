@@ -57,18 +57,18 @@ const find = (ref: string) => {
 const compliance = [
   {
     title: 'A2P-ready opt-in',
-    body: 'Every landing page has separate consent boxes for service texts and for offers, unticked and optional. The same wording goes into the A2P 10DLC campaign registration, and the first text names the business and says how to opt out.',
-    where: ['roofing/speed-to-lead', 'saas/demo-request', 'coaching/webinar'],
+    body: 'Every landing page has separate consent boxes for service texts and for offers, unticked and optional. The same wording goes into the A2P 10DLC campaign registration, along with the missed-call text-back, where the caller starts the conversation. Every first text names the business and says how to opt out.',
+    where: ['roofing/speed-to-lead', 'roofing/missed-call', 'saas/demo-request', 'coaching/webinar'],
   },
   {
     title: 'Quiet hours in the contact’s time zone',
     body: 'Federal rules stop solicitation texts at 9 PM, but Florida, Oklahoma and Maryland stop at 8. Follow-up and marketing texts wait for an 8 AM to 8 PM window in the contact’s time zone.',
-    where: ['roofing/speed-to-lead', 'roofing/reactivation', 'coaching/cart-recovery'],
+    where: ['roofing/speed-to-lead', 'roofing/missed-call', 'roofing/reactivation', 'coaching/cart-recovery'],
   },
   {
     title: 'Opt-outs by any reasonable means',
-    body: 'STOP and the other standard keywords switch on SMS DND automatically. “Please stop texting me” does not, and since April 11, 2025 the FCC requires honoring it too, within 10 business days. The reactivation workflow catches it and switches DND on.',
-    where: ['roofing/reactivation'],
+    body: 'STOP and the other standard keywords switch on SMS DND automatically. “Please stop texting me” does not, and since April 11, 2025 the FCC requires honoring it too, within 10 business days. The reactivation workflow catches it and switches DND on; where a person reads every reply, as with missed calls, the alert tells them to do it the same day.',
+    where: ['roofing/missed-call', 'roofing/reactivation'],
   },
   {
     title: 'No review gating',
@@ -99,7 +99,7 @@ const compliance = [
 
 const audit = [
   { title: 'Loops', body: 'A workflow triggered by a tag that adds the same tag, or two workflows that trigger each other. Fix with trigger filters, re-entry off and an explicit Remove from Workflow.' },
-  { title: 'Double texts', body: 'Allow Re-entry on with no dedupe, so a double form submit sends everything twice. Fix with re-entry off, or a tag guard at the top.' },
+  { title: 'Double texts', body: 'GHL will not add a contact who is already active in a workflow, so the duplicates come later: re-entry on and a second form submit next week, or a trigger that fires more than once, like Call Details with no status filter, which fires for each call. Fix with trigger filters, a tag or field check at the top, or re-entry off where one pass is enough.' },
   { title: 'Stop on Response surprises', body: 'It ends the run on any response to the workflow’s messages, out-of-office auto-replies included. Keep it where any reply should reach a person; use a reply wait with timeout branches where the answer matters.' },
   { title: 'The wrong clock', body: 'Workflows set to the account time zone while contacts span several, and imported contacts with no time zone at all. Quiet hours only work in the recipient’s time.' },
   { title: 'Duplicate opportunities', body: 'Two cards per lead because duplicates are allowed. Fix the setting, then merge the pipeline so reporting can be trusted again.' },
