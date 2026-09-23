@@ -8,7 +8,7 @@ export const landing: LandingPage = {
     colors: { primary: '#312e81', primaryDark: '#1e1b4b', bg: '#f5f6fb', accent: '#22c55e', accentInk: '#052e12', ink: '#171a2b', muted: '#565b73', logo: '#a5b4fc' },
   },
   kicker: 'Scheduling and dispatch for field-service teams',
-  headline: 'Schedule every crew in half the time.',
+  headline: 'One live schedule for every crew.',
   sub: 'See how Crewlo turns a whiteboard and a group chat into one live schedule your techs can see on their phones. A 30-minute demo, tailored to how your team works.',
   points: ['Drag-and-drop dispatch board', 'Works with QuickBooks and Google Calendar', 'Free 14-day trial after the demo'],
   formTitle: 'Book a demo',

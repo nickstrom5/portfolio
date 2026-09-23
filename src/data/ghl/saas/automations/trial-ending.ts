@@ -1,23 +1,21 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
-import { formatClock, formatDay } from '@/lib/ghl/engine';
+import { formatClock, formatDay, minutesAtDate } from '@/lib/ghl/engine';
 import { business } from '../business';
 
 const DAY = 1440;
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
-/** Monday 2 March 2026, 00:00: the sample week the scenarios are written in. */
-const BASE = Date.UTC(2026, 2, 2);
 
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
 const api = business.env.customValues.api_base;
-const company = (c: Contact) => String(c.fields.company_name ?? c.fields.company ?? 'their company');
+const company = (c: Contact) => String(c.fields.company ?? 'their company');
 const name = (c: Contact) => `${c.firstName} ${c.lastName}`;
 
-/** Trial Ends (MM-DD-YYYY) as minutes after the start of the sample week: the start of that day. */
+/** Trial Ends (MM-DD-YYYY) as simulated minutes: the start of that day on the current timeline. */
 function trialEndsAt(c: Contact): number | undefined {
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(c.fields.trial_end ?? ''));
-  return m ? (Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2])) - BASE) / 60000 : undefined;
+  return m ? minutesAtDate(Number(m[3]), Number(m[1]), Number(m[2])) : undefined;
 }
 
 /** Math Operation on a Date field: MM-DD-YYYY plus n days, written back as MM-DD-YYYY. */
@@ -48,14 +46,13 @@ Headers         Content-Type: application/json
 Raw Body        ${extensionBody.replace(/\n\s*/g, ' ')}
 
 What the app answers
-200  {"workspace_id": "ws_3LX8TD", "trial_end": "2026-03-25", "extended_days": 7}
+200  {"workspace_id": "ws_3LX8TD", "extended_days": 7, "trial_end": "YYYY-MM-DD"}
 409  {"error": "already_extended"}    one extension per trial, whatever GHL sends
 404  {"error": "workspace_not_found"}`;
 
 const subscriptionPayload = `{
   "event": "subscription.created",
   "event_id": "evt_01JPB6W3N8TQ5R2K7Y4MZC9DXE",
-  "occurred_at": "2026-03-16T18:25:41Z",
   "email": "rachel@brightlinehvac.example",
   "workspace_id": "ws_7Q2M9K",
   "plan": "standard-monthly",
@@ -98,7 +95,7 @@ export const trialEnding: Automation = {
       exits: [
         {
           event: 'opportunity_won',
-          by: "05 · Sales · Closed-Won to Onboarding: when a New Business deal is marked Won, its Remove from Workflow step takes the contact out of 02 and 04, then removes the trial tag. It runs before 05 adds customer, so a sales win leaves quietly instead of reaching this workflow's goal, and Leo hears about it from 05.",
+          by: "05 · Sales · Closed-Won to Onboarding, when a New Business deal is marked Won. It adds customer first, so a trial waiting here lands on this workflow's goal and Leo gets the in-app note. Its next step, Remove from Workflow, then takes the contact out of 02 and 04, ending whatever is left of this run, and the step after that removes the trial tag.",
         },
       ],
       notes: [
@@ -158,7 +155,7 @@ export const trialEnding: Automation = {
                   channel: 'email',
                   subject: 'Your Crewlo trial ends in 3 days',
                   body:
-                    "Hi {{contact.first_name}},\n\nYour team is running jobs through Crewlo, and your trial ends in 3 days. To keep dispatching without a break, pick a plan before then.\n\nCrewlo is {{custom_values.price_per_seat}}, and you only pay for the users you keep. Users in your workspace today: {{contact.seats}}. Choose a plan under Settings > Billing in {{custom_values.app_url}}. What each plan includes: {{custom_values.pricing_link}}\n\nIf you need annual billing, a quote or a purchase order, reply to this email and I will set it up with our sales team.\n\nLeo Park\nCustomer Success, Crewlo" +
+                    "Hi {{contact.first_name}},\n\nYour team is running jobs through Crewlo, and your trial ends in 3 days. To keep dispatching without a break, pick a plan before then.\n\nCrewlo is {{custom_values.price_per_seat}}, and you only pay for the users you keep. Users in your workspace today, counting you and everyone you have invited: {{contact.seats}}. Choose a plan under Settings > Billing in {{custom_values.app_url}}. What each plan includes: {{custom_values.pricing_link}}\n\nIf you need annual billing, a quote or a purchase order, reply to this email and I will set it up with our sales team.\n\nLeo Park\nCustomer Success, Crewlo" +
                     footer,
                 },
               },
@@ -238,7 +235,7 @@ export const trialEnding: Automation = {
                 value: 'customer',
                 ifNotMet: 'end',
                 summary:
-                  'Contact Tag Added or Removed, watching for customer to be added. 04a · Subscription Created adds it when the app posts subscription.created, a self-serve upgrade. The contact moves here from wherever they are, any branch included, so paying skips every email, task and tag still ahead. Reached without it: End this workflow.',
+                  'Contact Tag Added or Removed, watching for customer to be added. 04a · Product · Subscription Created adds it when the app posts subscription.created, a self-serve upgrade, and 05 · Sales · Closed-Won to Onboarding adds it on a sales win, one step before it removes the contact from this workflow. The contact moves here from wherever they are, any branch included, so paying skips every email, task and tag still ahead. Reached without it: End this workflow.',
               },
               {
                 id: 'notify-paid',
@@ -251,7 +248,7 @@ export const trialEnding: Automation = {
                   channel: 'internal',
                   to: 'Leo Park',
                   subject: 'Now a customer: {{contact.company_name}}',
-                  body: '{{contact.name}} is a paying customer now (seats on record: {{contact.seats}}), so no more trial emails go out from 04 · Trial Ending. If a last-day call task is open for them, close it.',
+                  body: '{{contact.name}} is a paying customer now (seats on record: {{contact.seats}}), so no more trial emails go out from 04 · Product · Trial Ending. If a last-day call task is open for them, close it.',
                 },
               },
             ],
@@ -540,13 +537,13 @@ export const trialEnding: Automation = {
         type: 'Date',
         note: 'Written by 02 from trial.started as MM-DD-YYYY. The trigger counts back from it, Event Start Date anchors the waits to it, and the Math Operation here moves it on an extension. Empty means no reminder.',
       },
-      { name: 'Seats', key: 'seats', type: 'Number', note: 'Written by 03 from each daily usage snapshot: people invited plus the owner. 04a updates it to the seats paid for.' },
+      { name: 'Seats', key: 'seats', type: 'Number', note: 'Written by 03 from each daily usage.snapshot while the plan is trial: people invited plus the owner, the number the pricing email quotes. Once paid, 04a writes the seats bought in the app, or the AE the seats sold (05).' },
       { name: 'Workspace ID', key: 'workspace_id', type: 'Single line', note: "The app's ID for the workspace. Goes into the path of the extension call." },
     ],
     tags: [
       { name: 'trial', note: 'Trigger filter: the trigger can require a tag but not exclude one, so this is the gate. Added by 02; 04a removes it on subscription.created and 05 when a deal is won, so customers never get a trial reminder' },
       { name: 'activated', note: 'Picks the branch. Added by 02a when the first job reaches a tech' },
-      { name: 'customer', note: 'The goal. Added by 04a from subscription.created. 05 adds it too, after it has taken the contact out of this workflow' },
+      { name: 'customer', note: 'The goal. Added by 04a from subscription.created, and by 05 on a sales win one step before it removes the contact from this workflow, so both land on the goal' },
       { name: 'trial-extended', note: 'This trial has had its one extension. Added here after the API call; 02 clears it when a new trial starts' },
       { name: 'trial-expired', note: 'The trial ran out without a plan. 02 clears it when a new trial starts' },
     ],
@@ -581,7 +578,7 @@ export const trialEnding: Automation = {
     },
     {
       title: 'One goal: paid',
-      body: 'GHL allows one Goal Event per workflow, so it is the one that matters: Contact Tag Added or Removed, watching for customer to be added. The app posts subscription.created to 04a · Subscription Created, which finds the contact, adds customer and removes trial. A deal won in sales takes the contact out through 05 before 05 adds customer, so Leo hears about that one from 05. The goal sits after the last-day steps with End this workflow, and a contact who pays in any branch moves to it, so paying skips everything that is left.',
+      body: "GHL allows one Goal Event per workflow, so it is the one that matters: Contact Tag Added or Removed, watching for customer to be added. The app posts subscription.created to 04a · Product · Subscription Created, which finds the contact with Create/Update Contact (Plan and Seats mapped), adds customer and removes trial. A deal won in sales gets the same tag from 05, one step before 05's Remove from Workflow, so both kinds of payment land here and Leo gets the same note. The goal sits after the last-day steps with End this workflow, and a contact who pays in any branch moves to it, so paying skips everything that is left.",
     },
     {
       title: 'Email only, on purpose',
@@ -595,7 +592,7 @@ export const trialEnding: Automation = {
   edgeCases: [
     {
       title: 'Pays, signs or is already with sales',
-      body: "04a and 05 remove the trial tag, so Has Tag: trial keeps paying customers out. If they pay in the app while in the workflow, the Goal Event moves them to the goal from wherever they are, extension path included, and Leo hears about it. A deal won in sales takes them out through 05 instead. A trial that 03 sent to an account executive still gets the pricing email, which quotes the public price and routes quotes to a reply; Leo's last-day task says the call belongs to the AE if the deal is open.",
+      body: "04a and 05 remove the trial tag, so Has Tag: trial keeps paying customers out. If they pay while in the workflow, the Goal Event moves them to the goal from wherever they are, extension path included, and Leo gets the in-app note. That holds for a deal won in sales too: 05 adds customer first, then removes the contact from 02 and 04, then removes trial, so its removal only ends what the goal has left. A trial that 03 sent to an account executive still gets the pricing email, which quotes the public price and routes quotes to a reply; Leo's last-day task says the call belongs to the AE if the deal is open.",
     },
     {
       title: 'Clicks late, twice, or from a forwarded email',
@@ -615,13 +612,13 @@ export const trialEnding: Automation = {
     },
     {
       title: 'The same company starts a new trial next year',
-      body: 'trial-extended and trial-expired describe one trial, so they have to come off when a new trial starts. The Remove Contact Tag step at the top of 02 · Trial Onboarding clears them along with activated. Otherwise the new trial would be treated as already extended.',
+      body: 'trial-extended and trial-expired describe one trial, so they have to come off when a new trial starts. The Remove Contact Tag step at the top of 02 · Product · Trial Onboarding clears them along with activated, pql-alerted and pql-tip-sent. Otherwise the new trial would be treated as already extended.',
     },
   ],
   qa: [
     'Activated test contact with Trial Ends 3 days out: enters that day, Enrollment History shows the hour, and the pricing email shows the price and the right user count',
-    'Trial Ends 3 days from today but last year: does not enter. Trial Ends of January 2: enters on December 30 with year matching on',
-    'Contact tagged customer without trial: does not enter. Win a test deal for a contact waiting here: Enrollment History shows 05 removed it, no goal note fires, trial comes off and no reminder follows',
+    'Trial Ends 3 days from today but last year: does not enter. Trial Ends on January 2: check it still enters on December 30 with year matching on, since the article reads as if the year must match the current one',
+    'Contact tagged customer without trial: does not enter. Win a test deal for a contact waiting here: Execution Logs show the jump to the goal and Leo gets the in-app note, trial comes off and no reminder follows',
     'Click Extend in the test email: the staging API logs the POST with the Bearer header, Execution Logs show 200, Trial Ends moves 7 days, trial-extended is added and the confirmation arrives',
     'Add the customer tag to test contacts waiting in each branch: each jumps to the goal, Leo gets the in-app note, and nothing else sends',
     'Add a contact by hand the day before its Trial Ends: the day-before email is skipped, and the last-day task and expiry tag still come at 8 AM Pacific',
@@ -645,7 +642,7 @@ export const trialEnding: Automation = {
       title: 'subscription.created payload (feeds 04a)',
       language: 'json',
       code: subscriptionPayload,
-      note: "04a · Product · Subscription Created has its own Inbound Webhook URL. It runs Create/Update Contact on the email, updates Plan and Seats, adds customer and removes trial. The customer tag is what this workflow's goal listens for.",
+      note: "04a · Product · Subscription Created has its own Inbound Webhook URL. Create/Update Contact finds the contact by email and maps Plan and Seats, then Add Contact Tag adds customer and Remove Contact Tag removes trial. It does not remove anyone from 02: a team that pays before dispatching a job still needs the onboarding emails. The customer tag is what this workflow's goal listens for.",
     },
   ],
   features: [

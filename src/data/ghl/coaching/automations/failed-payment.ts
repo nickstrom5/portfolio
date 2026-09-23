@@ -19,9 +19,9 @@ const taskDue = (now: number) => formatClock(nextWeekdayAt(now, 10 * 60));
 /** The two channels the workflow can use for this contact right now. */
 const reach = (c: Contact) => ({ text: c.fields.sms_consent === 'Yes' && !c.dnd.sms, email: !c.dnd.email });
 
-/** A student on the payment plan, as 03 · Course Onboarding left them: card at Customer and Won, Jules as owner, purchase fields set. */
+/** A student on the payment plan, as 03 · Students · Course Onboarding left them: course card at Customer and Won, Jules as owner, purchase fields set. */
 const student = (fields: Contact['fields'], extra: Partial<Contact> = {}): Partial<Contact> => ({
-  opportunity: { pipeline: 'Enrollment', stage: 'Customer', status: 'won', value: 497 },
+  opportunity: { pipeline: 'Enrollment', stage: 'Customer', status: 'won', value: 497, name: 'Marcus Lee · Career Pivot Blueprint' },
   assignedTo: 'jules',
   fields: { purchase: 'Career Pivot Blueprint', payment_plan: 'Yes', ...fields },
   ...extra,
@@ -100,7 +100,8 @@ Settings    Allow Re-entry on · Stop on Response off
 04a · Billing · Replies to Sasha
   Trigger   Customer Replied
             Replied to Workflow is 04 · Billing · Failed Payment Recovery
-  Action    Internal Notification, In-App, to Sasha Kim
+  Action    Internal Notification, Type Notification (in-app),
+            To User Type Particular Users: Sasha Kim
   Why       Replies land in Conversations under the owner, Jules. Sasha
             answers billing, so every reply to 04 pings her too.`;
 
@@ -145,7 +146,10 @@ export const failedPayment: Automation = {
         'Stop on Response off: a reply like "I will fix it tonight" must not end the run whose goal restores access. Replies land in Conversations under the owner, still Jules from 03, so a one-step helper, 04a · Billing · Replies to Sasha (Customer Replied, Replied to Workflow is 04), sends Sasha an in-app notification for each one.',
         'Allow Re-entry on: the last installment can fail after an earlier one was recovered, and that is a new run. A retry that fails during a run, or a later installment that fails while an unpaid student waits at the goal, starts nothing new, because GHL never enrolls a contact who is still active.',
         'One Goal Event per workflow is a GHL limit. It sits after the hand-off, on the path that holds every message, and it is set to Wait until the goal is met, so a payment on day 3 or day 40 ends recovery the same way. The three If/Else splits before it reach it through that path or a Go To.',
-        'Sender Details: From Name "Sasha at Trailhead Career Coaching". Billing emails come from the person who handles billing, not from a no-reply address.',
+        'Sender Details: From Name "Sasha at Trailhead Career Coaching". Billing emails come from the person who handles billing, not from a no-reply address. Every email ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on.',
+        'Email DND does the gating here, and GHL only sets it by itself for an unsubscribe, a spam complaint or a permanent bounce. An account-wide, one-step helper workflow (trigger Email Events, Event is Bounced; action Enable/Disable DND, Outbound, Email), the build GHL’s help center describes, covers soft bounces too, so every check on Email DND here also catches an address that bounces.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. This workflow moves no card: a failed installment is a billing problem, not a lost sale, so the course card stays Customer, Won, and Sasha’s Smart List is the billing view.',
+        'When access pauses, this workflow removes the contact from 03 and 06, so no "log in", story or coaching email reaches someone who cannot open the course. Both list it as an exit.',
       ],
     },
     steps: [
@@ -178,7 +182,7 @@ export const failedPayment: Automation = {
                 action: 'add_task',
                 title: 'Add Task',
                 label: 'Call, email is off',
-                summary: 'Assign To Sasha Kim, Due In 1 day at 10:00 AM, Skip Weekends on. Email carries every reminder here, so without it a person calls within a working day instead of waiting for day 5.',
+                summary: 'Assign To Sasha Kim, Due In 1 day, Due Time 10:00 AM, Skip Weekends on. Email carries every reminder here, so without it a person calls within a working day instead of waiting for day 5.',
                 run: ({ contact, now }) => {
                   const can = reach(contact);
                   return {
@@ -299,10 +303,10 @@ Sasha${footer}`,
                       action: 'internal_notification',
                       title: 'Internal Notification',
                       label: 'Tell Sasha',
-                      summary: 'Type In-App, To User Type Particular Users: Sasha Kim, Redirect Page: the contact record. The facts she needs before she reaches out.',
+                      summary: 'Type Notification (in-app), To User Type Particular Users: Sasha Kim, Redirect Page: the contact record. The facts she needs before she reaches out.',
                       message: {
                         channel: 'internal',
-                        to: 'Sasha Kim (In-App, Particular Users)',
+                        to: 'Sasha Kim (Notification, Particular Users)',
                         subject: 'Still unpaid on day 5: {{contact.name}}',
                         body: 'The {{custom_values.course_name}} installment failed 5 days ago and is still open. Payment plan: {{contact.payment_plan}}. Course progress: {{contact.course_progress}}. Pause date: {{contact.access_pause_date}}, the date the day-5 email names (nothing pauses for a contact on Email DND, who could not get it). {{contact.phone}}, {{contact.email}}. A check-in task is on your list.',
                       },
@@ -313,7 +317,7 @@ Sasha${footer}`,
                       action: 'add_task',
                       title: 'Add Task',
                       label: 'Personal check-in',
-                      summary: 'Assign To Sasha Kim, Due In 1 day at 10:00 AM, Skip Weekends on. One call or personal message, as a person, before anything pauses.',
+                      summary: 'Assign To Sasha Kim, Due In 1 day, Due Time 10:00 AM, Skip Weekends on. One call or personal message, as a person, before anything pauses.',
                       run: ({ contact, now }) => {
                         const can = reach(contact);
                         const how = can.email
@@ -356,10 +360,10 @@ Sasha${footer}`,
                               action: 'internal_notification',
                               title: 'Internal Notification',
                               label: 'Not paused, Sasha decides',
-                              summary: 'Type In-App to Sasha Kim. Access is never paused on a date the student was not told, and the "access paused" email would be skipped too.',
+                              summary: 'Type Notification (in-app), To User Type Particular Users: Sasha Kim. Access is never paused on a date the student was not told, and the "access paused" email would be skipped too.',
                               message: {
                                 channel: 'internal',
-                                to: 'Sasha Kim (In-App, Particular Users)',
+                                to: 'Sasha Kim (Notification, Particular Users)',
                                 subject: 'Day 10, not paused because email is off: {{contact.name}}',
                                 body: 'The {{custom_values.course_name}} installment is still open, but Email DND is on, so the day-5 email naming {{contact.access_pause_date}} never reached them. Access stays on. Call {{contact.phone}} and agree what happens next; pause access by hand only after you have told them the date. A payment still ends 04 on its own.',
                               },
@@ -391,8 +395,23 @@ Sasha${footer}`,
                             action: 'add_tag',
                             title: 'Add Contact Tag',
                             label: 'access-paused',
-                            summary: 'Read by the If/Else after the goal, and by anyone asking why a student cannot log in.',
+                            summary: 'Read by the If/Else after the goal, by 06 before its coaching invitation, and by anyone asking why a student cannot log in.',
                             effect: { addTags: ['access-paused'] },
+                          },
+                          {
+                            id: 'stop-students',
+                            kind: 'action',
+                            action: 'remove_from_workflow',
+                            title: 'Remove from Workflow',
+                            label: 'Stop 03 and 06',
+                            summary:
+                              'Another Workflow: 03 · Students · Course Onboarding and 06 · Students · Completion, Testimonial and Upgrade. Neither may send a "log in" nudge, a story request or a coaching invitation to someone who cannot open the course. Most paused students are in neither: 03 ends about two weeks after purchase.',
+                            run: ({ contact }) => ({
+                              log:
+                                contact.fields.course_progress === 'Completed'
+                                  ? 'Removed from 06 if the graduate is still in it. 03 finished long ago.'
+                                  : 'Removed from 03 and 06 if they are in either. For this student neither is running: 03 ended about two weeks after purchase, and 06 starts only when they finish.',
+                            }),
                           },
                           {
                             id: 'email-paused',
@@ -417,12 +436,12 @@ Sasha${footer}`,
                             action: 'internal_notification',
                             title: 'Internal Notification',
                             label: 'Hand to a person',
-                            summary: 'Type In-App to Sasha Kim. Only someone who has not paid reaches this step: a payment skips past it to the goal.',
+                            summary: 'Type Notification (in-app), To User Type Particular Users: Sasha Kim. Only someone who has not paid reaches this step: a payment skips past it to the goal.',
                             message: {
                               channel: 'internal',
-                              to: 'Sasha Kim (In-App, Particular Users)',
+                              to: 'Sasha Kim (Notification, Particular Users)',
                               subject: 'Access paused two weeks, still unpaid: {{contact.name}}',
-                              body: 'Access has been paused since {{contact.access_pause_date}}. Before the next installment comes due, decide with Morgan whether to pause the plan (Payments > Subscriptions, Pause) or cancel it, so a card that already failed is not charged again. 04 keeps waiting at its goal: if they pay, access comes back on its own. If the plan is cancelled unpaid, remove them from 04 on the contact record.',
+                              body: 'Access has been paused since {{contact.access_pause_date}}. Before the next installment comes due, decide with Morgan whether to pause the plan (Payments > Subscriptions, Pause) or cancel it, so a card that already failed is not charged again. 04 keeps waiting at its goal: if they pay, access comes back on its own. If the plan is canceled unpaid, remove them from 04 on the contact record.',
                             },
                           },
                           {
@@ -578,7 +597,7 @@ Sasha${footer}`,
       ],
       expect: {
         outcome: 'ended',
-        visits: ['sms-notice', 'email-notice', 'email-d2', 'email-d5', 'notify-d5', 'task-d5', 'pause-check:else', 'revoke', 'tag-paused', 'email-paused', 'wait-restore', 'notify-final', 'goal-paid'],
+        visits: ['sms-notice', 'email-notice', 'email-d2', 'email-d5', 'notify-d5', 'task-d5', 'pause-check:else', 'revoke', 'tag-paused', 'stop-students', 'email-paused', 'wait-restore', 'notify-final', 'goal-paid'],
         tags: ['payment-failed', 'access-paused'],
       },
     },
@@ -632,7 +651,7 @@ Sasha${footer}`,
     ],
     tags: [
       { name: 'payment-failed', note: 'Added on entry, removed on payment. Sasha’s "Billing recovery" Smart List is everyone who has it, and 06 holds back the coaching invitation while it is on.' },
-      { name: 'access-paused', note: 'Added when access pauses, removed when it comes back. The If/Else after the goal reads it.' },
+      { name: 'access-paused', note: 'Added when access pauses, removed when it comes back. The If/Else after the goal reads it, and 06 holds back its coaching invitation while it is on.' },
     ],
     customValues: [
       { name: 'Update Card Link', key: 'update_card_link', value: 'trailheadcareers.example/billing' },
@@ -653,7 +672,7 @@ Sasha${footer}`,
     },
     {
       title: 'Trigger on the charge, not the subscription',
-      body: 'Payment Received with Payment status Failed, Transaction type Customer not present/subscription transaction, and Global Product Career Pivot Blueprint at the plan price. There is no Payment Source filter, because the plan also sells through a payment link and 03 onboards those buyers too. The Subscription trigger reacts to status changes like Overdue or Unpaid, not to each charge. A decline on the first payment is a Customer present/first transaction that the buyer sees on the checkout page, and 02 · Checkout Recovery follows it up.',
+      body: 'Payment Received with Payment status Failed, Transaction type Customer not present/subscription transaction, and Global Product Career Pivot Blueprint at the plan price. There is no Payment Source filter, because the plan also sells through a payment link and 03 onboards those buyers too. The Subscription trigger reacts to status changes like Overdue or Unpaid, not to each charge. A decline on the first payment is a Customer present/first transaction that the buyer sees on the checkout page, and 02 · Sales · Checkout Recovery follows it up.',
     },
     {
       title: 'Consent and DND before the first message',
@@ -669,11 +688,11 @@ Sasha${footer}`,
     },
     {
       title: 'Copy a stressed person can read',
-      body: 'Every message says what happened, what it means for them, how to fix it and how to reach a person. They come from Sasha by name through Sender Details, with no fees, no countdowns and no red warnings. None carries an offer, which keeps them transactional under CAN-SPAM, and they still end with the postal address. The Update Card Link custom value is Trailhead’s billing page: it sends them to the open invoice GHL emailed, where a new card becomes the card on file, and to Sasha. Links, prices and the support address are all custom values, so the copy never hard-codes them.',
+      body: 'Every message says what happened, what it means for them, how to fix it and how to reach a person. They come from Sasha by name through Sender Details, with no fees, no countdowns and no red warnings. None carries an offer, which keeps them transactional under CAN-SPAM, and they still end with the business name, the postal address and the unsubscribe link. The Update Card Link custom value is Trailhead’s billing page: it sends them to the open invoice GHL emailed, where a new card becomes the card on file, and to Sasha. Links, prices and the support address are all custom values, so the copy never hard-codes them.',
     },
     {
       title: 'Test with declines, then publish',
-      body: 'Square Test Mode, connected to a Square sandbox account, with test cards that decline. One test contact per scenario, and a copy of the workflow with the waits cut to minutes. I checked every run in the Execution Logs and Enrollment History, and paused and restored access on a test student in the client portal, before publishing the real one.',
+      body: 'Square Test Mode, connected to a Square sandbox account, with test cards that decline. One test contact per scenario, and a copy of the workflow with the waits cut to minutes. I checked every run in the Execution Logs and Enrollment History, paused and restored access on a test student in the client portal, and checked that the pause took a test student out of 03 and 06, before publishing the real one.',
     },
   ],
   edgeCases: [
@@ -745,6 +764,7 @@ Sasha${footer}`,
     'Wait',
     'Internal Notification',
     'Course Revoke Offer',
+    'Remove from Workflow',
     'Goal Event',
     'Remove Contact Tag',
     'Course Grant Offer',

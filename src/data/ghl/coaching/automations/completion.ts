@@ -6,7 +6,7 @@ const WEEKDAYS = [0, 1, 2, 3, 4];
 /** Minutes after Monday 00:00 of the sample week (Mon Mar 2 2026). */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
-/** Tags 03 · Course Onboarding leaves on a student who needed a push. A graduate should not stay on those lists. */
+/** Tags 03 · Students · Course Onboarding leaves on a student who needed a push. A graduate should not stay on those lists. */
 const STALL_TAGS = ['course-stalled', 'course-not-started'];
 
 /**
@@ -159,6 +159,18 @@ export const completion: Automation = {
       stopOnResponse: false,
       timezone: 'contact',
       senderName: 'Morgan Hale',
+      exits: [
+        {
+          event: 'survey_submitted',
+          value: 'Coaching Application',
+          by: 'A graduate whose own coaching application scores under 70 gets 05 · Sales · Coaching Application’s "not yet" email, and 05’s Remove from Workflow takes them out of this workflow, so no coaching invitation follows it days later.',
+        },
+        {
+          event: 'tag_added',
+          value: 'access-paused',
+          by: '04 · Billing · Failed Payment Recovery pauses course access on day 10 of an unpaid installment, tags access-paused and removes the contact from this workflow, so no story request or coaching invitation goes to someone who cannot open the course.',
+        },
+      ],
       notes: [
         'Trigger: Product Completed, Product is any of Career Pivot Blueprint. It fires when the whole course is complete, not a module (that is Category Completed) or a lesson. The course keeps its own Course Completion Certificate, which goes out at the same moment, so this workflow never uses Issue Certificate and nobody gets two.',
         'Auto-Complete Lessons is off for this course in its Learner Experience Controls. It is on by default and marks a text lesson complete when the learner moves forward, so clicking Next through the course would count as finishing it and start this workflow for someone who skimmed.',
@@ -168,6 +180,8 @@ export const completion: Automation = {
         'No workflow Time Window: the congratulations should arrive while they are still looking at the last lesson, even at 11 PM. The two later emails wait for weekday hours with Advance Windows instead, so replies reach Jules and Devon during the working day.',
         'Sender Details: From Name Morgan Hale, From Email morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not the assigned user, because the owner is Jules for most graduates and Devon for anyone who applied with a score of 70 or more.',
         'Every email ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on, so the footer carries the unsubscribe link. The invitation is a commercial email under CAN-SPAM; the other two carry the same footer so nothing depends on classifying them.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. This workflow moves no card: a graduate’s course card is already Won, and an applicant’s coaching card belongs to Devon and 05.',
+        'No "log in" nudge goes to someone whose access is paused: the congratulations, the only email here with the portal link, goes the minute Product Completed fires, which takes working access, and 04 removes a contact from this workflow when it pauses access.',
       ],
     },
     steps: [
@@ -230,7 +244,7 @@ export const completion: Automation = {
                   'Type Notification (in-app), To User Type Particular Users: Jules Ortega, Redirect Page: the contact. Particular Users, not Assigned User, because a graduate who applied is owned by Devon, and this is a student-success question. No email or text to the student.',
                 message: {
                   channel: 'internal',
-                  to: 'Jules Ortega (Particular Users)',
+                  to: 'Jules Ortega (Notification, Particular Users)',
                   subject: 'Graduate on Email DND: {{contact.name}}',
                   body: '{{contact.first_name}} finished {{custom_values.course_name}}, but Email DND is on, so no congratulations, story request or coaching invitation went out. If the address bounced, for example after a job change, ask for a new one next time you talk. If they unsubscribed, leave it.',
                 },
@@ -288,7 +302,7 @@ export const completion: Automation = {
                       summary: 'Type Email, To User Type Particular Users: Devon Brooks. 70 is the same line 05 uses, so everyone here has been through Devon: booked, followed up or a client. No invitation to apply again; Devon gets something better to open the next call with.',
                       message: {
                         channel: 'internal',
-                        to: 'Devon Brooks (Particular Users)',
+                        to: 'Devon Brooks (Email, Particular Users)',
                         subject: 'Your applicant finished the course: {{contact.name}}',
                         body: '{{contact.name}} just finished {{custom_values.course_name}}. They applied for {{custom_values.coaching_name}} earlier (Application Score {{contact.application_score}}), so they did not get the coaching invitation.\n\nWorth a mention in your next conversation with them.',
                       },
@@ -299,9 +313,10 @@ export const completion: Automation = {
                   label: 'Payment failing or no email',
                   when: {
                     type: 'any',
-                    label: 'Contact Tag includes payment-failed, OR the contact is DND for Email',
+                    label: 'Contact Tag includes payment-failed, OR Contact Tag includes access-paused, OR the contact is DND for Email',
                     of: [
                       { type: 'tag', has: 'payment-failed' },
+                      { type: 'tag', has: 'access-paused' },
                       { type: 'dnd', channel: 'email' },
                     ],
                   },
@@ -354,7 +369,7 @@ export const completion: Automation = {
                               'Type Email, To User Type Particular Users: Devon Brooks, the moment they click. Role, goal and contact details, and a plain reminder that a click is not an application yet.',
                             message: {
                               channel: 'internal',
-                              to: 'Devon Brooks (Particular Users)',
+                              to: 'Devon Brooks (Email, Particular Users)',
                               subject: 'Graduate clicked Apply: {{contact.name}}',
                               body: '{{contact.name}} finished {{custom_values.course_name}} and clicked Apply in the coaching invitation. That is interest, not an application yet.\n\nCurrent role: {{contact.current_role}}\nGoal: {{contact.goal}}\nEmail: {{contact.email}}\nPhone: {{contact.phone}}\n\nIf no application has come in after two business days, a short personal note from you is welcome. This is a graduate, not a cold lead.',
                             },
@@ -427,7 +442,7 @@ export const completion: Automation = {
       id: 'ignores',
       label: 'Finishes, never clicks',
       summary:
-        'Applied for coaching in January, a month into the course; 05 scored it 45 and said to finish the course first. Stalled after the skills inventory, came back and finished on a Monday. Gets the invitation 05 promised, opens it, never clicks Apply.',
+        'Applied for coaching two months ago, a month into the course; 05 scored it 45 and said to finish the course first. Stalled after the skills inventory, came back and finished on a Monday. Gets the invitation 05 promised, opens it, never clicks Apply.',
       start: at(0, 12, 50),
       contact: graduate({ current_role: 'Individual contributor', goal: 'A new role', application_score: 45 }, ['workshop-replay', 'not-a-fit-yet', 'course-stalled']),
       events: [{ at: at(7, 21, 15) - at(0, 12, 50), type: 'email_opened', label: 'Opens the coaching invitation. An open is not a click, so the wait keeps waiting' }],
@@ -478,7 +493,7 @@ export const completion: Automation = {
           at: at(8, 5, 12) - at(1, 18, 40),
           type: 'tag_added',
           value: 'payment-failed',
-          label: 'Third $179 installment declines. 04 · Billing starts and tags payment-failed',
+          label: 'Third $179 installment declines. 04 · Billing · Failed Payment Recovery starts and tags payment-failed',
         },
       ],
       expect: {
@@ -491,14 +506,14 @@ export const completion: Automation = {
   dataModel: {
     customFields: [
       { name: 'Course Progress', key: 'course_progress', type: 'Dropdown (single)', note: 'Not started · Started · Skills inventory done · Completed. 03 writes the first three; this workflow writes Completed' },
-      { name: 'Application Score', key: 'application_score', type: 'Number', note: 'Written by 05 · Coaching Application. 70 or more means Devon has them, so no invitation; under 70 means 05 said "finish the course first", so they get one' },
+      { name: 'Application Score', key: 'application_score', type: 'Number', note: 'Written by 05 · Sales · Coaching Application. 70 or more means Devon has them, so no invitation; under 70 means 05 said "finish the course first", so they get one' },
       { name: 'Current Role / Goal', key: 'current_role', type: 'Dropdown (single) ×2', note: 'From the workshop form. Quoted in Devon’s email, so a follow-up starts with context' },
     ],
     tags: [
-      { name: 'alumni', note: 'Finished and not in the coaching funnel: no click on Apply, Email DND, or a failing payment. Gets new workshops and courses through email campaigns' },
+      { name: 'alumni', note: 'Finished and not in the coaching funnel: no click on Apply, Email DND, a failing payment or paused access. Gets new workshops and courses through email campaigns' },
       { name: 'upgrade-clicked', note: 'Clicked Apply in the coaching invitation. Devon’s Smart List; the application in 05 is the real signal' },
       { name: 'course-stalled / course-not-started', note: 'From 03. Removed here the moment they finish' },
-      { name: 'payment-failed', note: 'From 04 · Billing. Read here: no coaching invitation while a payment is failing' },
+      { name: 'payment-failed / access-paused', note: 'From 04 · Billing · Failed Payment Recovery. Read here: no coaching invitation while a payment is failing or access is paused' },
       { name: 'not-a-fit-yet', note: 'From 05. Left alone here, because Morgan and Devon review that list monthly. It does not block the invitation: for a student it meant "finish the course, then apply again"' },
     ],
     customValues: [
@@ -532,7 +547,7 @@ export const completion: Automation = {
     },
     {
       title: 'Check before each ask',
-      body: 'An If/Else on Email DND sits right before the story request, so it also catches an address that bounced or unsubscribed after the congratulations, and tells Jules in-app. A second If/Else before the invitation reads Application Score at the same line of 70 that 05 uses, then the payment-failed tag from 04 and Email DND again, for anyone who unsubscribed from the story request. Every no-invitation path reuses the one alumni step with Go To.',
+      body: 'An If/Else on Email DND sits right before the story request, so it also catches an address that bounced or unsubscribed after the congratulations, and tells Jules in-app. A second If/Else before the invitation reads Application Score at the same line of 70 that 05 uses, then the payment-failed and access-paused tags from 04 and Email DND again, for anyone who unsubscribed from the story request. Every no-invitation path reuses the one alumni step with Go To.',
     },
     {
       title: 'Track the Apply click',
@@ -558,11 +573,11 @@ export const completion: Automation = {
     },
     {
       title: 'Already applied, or told "not yet"',
-      body: 'Application Score is written by 05 on every application. At 70 or more the graduate is already Devon’s, booked, followed up or a client, so there is no invitation to apply again; Devon gets a note that they finished, a better opener for the next call than another form. Under 70, 05 told a student to finish the course and then apply again, so finishing is exactly when they get the invitation. The rare clash is a graduate who applies on their own in the week before the invitation and scores under 70: 05’s "not yet" and this invitation would land days apart. Nothing on the record here can tell that "not yet" from January’s, so the fix sits where the "not yet" is sent: a Remove from Workflow step in 05 that takes a graduate out of this one.',
+      body: 'Application Score is written by 05 on every application. At 70 or more the graduate is already Devon’s, booked, followed up or a client, so there is no invitation to apply again; Devon gets a note that they finished, a better opener for the next call than another form. Under 70, 05 told a student to finish the course and then apply again, so finishing is exactly when they get the invitation. The rare clash is a graduate who applies on their own in the week before the invitation and scores under 70: 05’s "not yet" and this invitation would land days apart. Nothing on the record here can tell that "not yet" from an earlier one, so the fix sits where the "not yet" is sent: a Remove from Workflow step in 05 that takes a graduate out of this one.',
     },
     {
       title: 'A payment is failing',
-      body: 'If 04 · Billing has tagged payment-failed by the time the invitation is due, no coaching pitch goes out while Sasha is asking them to update a card. The check runs at that moment, not at entry, so a card that failed after they finished still counts. They become alumni and stay alumni after the card is fixed: coaching reaches them through the alumni emails, not a one-off pitch after a billing scare.',
+      body: 'If 04 · Billing · Failed Payment Recovery has tagged payment-failed by the time the invitation is due, no coaching pitch goes out while Sasha is asking them to update a card. The check runs at that moment, not at entry, so a card that failed after they finished still counts. They become alumni and stay alumni after the card is fixed: coaching reaches them through the alumni emails, not a one-off pitch after a billing scare. If 04 goes on to pause access, it removes them from this workflow, and access-paused is in the same condition in case a person took payment-failed off by hand.',
     },
     {
       title: 'A click is not an application',

@@ -1,30 +1,15 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
+import { dateFieldValue, formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
 
 const DAY = 1440;
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
 const WEEKDAYS = [0, 1, 2, 3, 4];
-/** Monday 2 March 2026, 00:00: the sample week the simulator runs in. */
-const BASE = Date.UTC(2026, 2, 2);
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const WEEKDAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
-const dateOf = (day: number) => new Date(BASE + day * DAY * 60000);
-
-/** MM-DD-YYYY, the format the app sends trial_end in. */
-function mdy(min: number): string {
-  const d = dateOf(Math.floor(min / DAY));
-  return `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}-${d.getUTCFullYear()}`;
-}
 
 /** Add Task with Due In 1 day and Skip Weekends on: the next weekday. */
-function dueDate(now: number): string {
-  let day = Math.floor(now / DAY) + 1;
-  while (day % 7 >= 5) day++;
-  const d = dateOf(day);
-  return `${WEEKDAY[day % 7]}, ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
-}
+const dueDate = (now: number) => formatDay(nextWeekdayAt(now, 0));
 
 /** "a", "a and b", "a, b and c". */
 const list = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
@@ -52,12 +37,11 @@ const TRIALS: Record<string, { company: string; workspace_id: string; existing: 
 const trialOf = (c: Contact) => TRIALS[c.email] ?? { company: String(c.fields.company ?? ''), workspace_id: 'ws_TEST01', existing: false };
 
 /** The onboarding tips and offers are treated as commercial: postal address here, unsubscribe link in the template footer. */
-const footer = '\n\n{{location.name}}, {{location.address}}';
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
 
 const payload = `{
   "event": "trial.started",
   "event_id": "evt_01JNR3D8Q6ZK4M7T2W9XB5C1HA",
-  "occurred_at": "2026-03-03T15:40:12Z",
   "email": "rachel@brightlinehvac.example",
   "first_name": "Rachel",
   "last_name": "Okafor",
@@ -65,7 +49,7 @@ const payload = `{
   "company": "Brightline HVAC",
   "workspace_id": "ws_7Q2M9K",
   "plan": "trial",
-  "trial_end": "03-17-2026"
+  "trial_end": "MM-DD-YYYY"
 }`;
 
 const mapping = `Create/Update Contact field    Value from the Inbound Webhook Trigger group
@@ -73,19 +57,18 @@ Email                          {{inboundWebhookRequest.body.email}}
 First Name                     {{inboundWebhookRequest.body.first_name}}
 Last Name                      {{inboundWebhookRequest.body.last_name}}
 Phone                          {{inboundWebhookRequest.body.phone}}
-Business Name (standard)       {{inboundWebhookRequest.body.company}}
+Company Name (standard)        {{inboundWebhookRequest.body.company}}
 Plan (custom)                  {{inboundWebhookRequest.body.plan}}
 Trial Ends (custom, Date)      {{inboundWebhookRequest.body.trial_end}}
 Workspace ID (custom)          {{inboundWebhookRequest.body.workspace_id}}
 
-Not mapped: event, event_id, occurred_at. The app logs event_id
-next to the ID GHL returns for each request, and that ID finds
-the request again in the trigger's Mapping Reference list.`;
+Not mapped: event and event_id. The app logs event_id next to
+the ID GHL returns for each request, and that ID finds the
+request again in the trigger's Mapping Reference list.`;
 
 const activationPayload = `{
   "event": "workspace.activated",
   "event_id": "evt_01JNV7P2K9DQ3F8M4X6RT0B2ZC",
-  "occurred_at": "2026-03-05T20:15:03Z",
   "email": "rachel@brightlinehvac.example",
   "workspace_id": "ws_7Q2M9K",
   "rule": "first_job_dispatched"
@@ -120,7 +103,7 @@ export const trialOnboarding: Automation = {
       exits: [
         {
           event: 'opportunity_won',
-          by: "05 · Sales · Closed-Won to Onboarding: its Remove from Workflow step takes the contact out of 02 and 04 when a New Business deal is marked Won, so a signed customer gets Leo's kickoff instead of trial nudges.",
+          by: "05 · Sales · Closed-Won to Onboarding, when a New Business deal is marked Won: right after it adds customer, its Remove from Workflow step takes the contact out of 02 and 04, so a signed customer gets Leo's kickoff instead of trial nudges. A self-serve payment (04a) does not remove anyone from 02.",
         },
       ],
       notes: [
@@ -140,14 +123,14 @@ export const trialOnboarding: Automation = {
         title: 'Create/Update Contact',
         label: 'Map the payload',
         summary:
-          'GHL opens this step after an Inbound Webhook trigger. It updates the contact with this email, or creates one, and maps name, phone, Business Name, Plan, Trial Ends and Workspace ID from the payload.',
+          'GHL opens this step after an Inbound Webhook trigger. It updates the contact with this email, or creates one, and maps name, phone, Company Name, Plan, Trial Ends and Workspace ID from the payload.',
         run: ({ contact, now }) => {
           const p = trialOf(contact);
-          const trial_end = mdy(now + 14 * DAY);
+          const trial_end = dateFieldValue(now + 14 * DAY);
           const found = p.existing ? `Found the existing contact for ${contact.email} and updated it` : `No contact with ${contact.email} yet, so it created one`;
           return {
-            effect: { fields: { company: p.company, company_name: p.company, plan: 'trial', trial_end, workspace_id: p.workspace_id } },
-            log: `${found}: Business Name ${p.company}, Plan trial, Trial Ends ${trial_end}, Workspace ID ${p.workspace_id}.`,
+            effect: { fields: { company: p.company, plan: 'trial', trial_end, workspace_id: p.workspace_id } },
+            log: `${found}: Company Name ${p.company}, Plan trial, Trial Ends ${trial_end}, Workspace ID ${p.workspace_id}.`,
           };
         },
         code: { language: 'json', source: payload },
@@ -158,7 +141,7 @@ export const trialOnboarding: Automation = {
         action: 'add_tag',
         title: 'Add Contact Tag',
         label: 'trial',
-        summary: 'Marks everyone who has started a trial. 04 · Trial Ending filters on it, and 04a takes it off when they pay.',
+        summary: 'Marks everyone who has started a trial. 04 · Product · Trial Ending filters on it; 04a takes it off on a self-serve payment and 05 on a sales win.',
         effect: { addTags: ['trial'] },
       },
       {
@@ -272,7 +255,7 @@ export const trialOnboarding: Automation = {
                 title: 'Add Task',
                 label: 'Leo checks in',
                 summary:
-                  'Assigned to Leo Park, Due In 1 day with Skip Weekends on. The description has the workspace ID and phone, and says what to check before calling: a reply in Conversations, the activated and customer tags, and whether an account executive owns an open deal.',
+                  'Assign To Leo Park, Due In 1 day, Skip Weekends on. The description has the workspace ID and phone, and says what to check before calling: a reply in Conversations, the activated and customer tags, and whether an account executive owns an open deal.',
                 run: ({ contact, now }) => ({
                   log: `Task for Leo Park, due ${dueDate(now)}: "Trial not activated: ${contact.fields.company}". Workspace ${contact.fields.workspace_id} has not sent a job to a tech yet, and the set-up offer email goes out now. Before calling ${contact.phone}, check Conversations for a reply and the record for the activated and customer tags. If an account executive owns an open deal, the call is theirs.`,
                 }),
@@ -310,7 +293,7 @@ export const trialOnboarding: Automation = {
                 value: 'activated',
                 ifNotMet: 'end',
                 summary:
-                  'Contact Tag Added or Removed, watching for activated to be added. 02a · Product · Workspace Activated adds it when the app reports the first job sent to a tech. Reached without it: End this workflow, and 04 · Trial Ending picks the trial up 3 days before Trial Ends.',
+                  'Contact Tag Added or Removed, watching for activated to be added. 02a · Product · Workspace Activated adds it when the app reports the first job sent to a tech. Reached without it: End this workflow, and 04 · Product · Trial Ending picks the trial up 3 days before Trial Ends.',
               },
               {
                 id: 'wait-next',
@@ -350,7 +333,7 @@ export const trialOnboarding: Automation = {
               title: 'Add Task',
               label: 'Leo welcomes them by phone',
               summary:
-                'None of the onboarding emails could send, so a person takes over on day 0. Assigned to Leo Park, Due In 1 day with Skip Weekends on. The description says to call unless calls are on DND too, and to change DND only if the contact asks.',
+                'None of the onboarding emails could send, so a person takes over on day 0. Assign To Leo Park, Due In 1 day, Skip Weekends on. The description says to call unless calls are on DND too, and to change DND only if the contact asks.',
               run: ({ contact, now }) => ({
                 log: `Task for Leo Park, due ${dueDate(now)}: "New trial, email is off: ${contact.firstName} ${contact.lastName}, ${contact.fields.company}". Email DND is on, so no onboarding email will send. Call ${contact.phone} to welcome them and offer the set-up session, unless calls are on DND too. Change DND only if they ask, and note that they did.`,
               }),
@@ -441,7 +424,7 @@ export const trialOnboarding: Automation = {
         timezone: 'America/Denver',
         source: 'Crewlo app signup',
         tags: ['trial', 'activated', 'pql-tip-sent', 'trial-expired'],
-        fields: { company: 'Brooks Electric', plan: 'trial', trial_end: '04-21-2025', workspace_id: 'ws_2DK6PM' },
+        fields: { company: 'Brooks Electric', plan: 'trial', workspace_id: 'ws_2DK6PM' },
       },
       events: [{ at: at(9, 11, 30) - at(6, 20, 15), type: 'tag_added', value: 'activated', label: 'Added by 02a: first job dispatched in the new workspace' }],
       expect: { outcome: 'goal', visits: ['untag', 'email-welcome', 'wait-d1', 'email-invite', 'goal-activated', 'email-next'], tags: ['trial', 'activated'] },
@@ -449,13 +432,13 @@ export const trialOnboarding: Automation = {
   ],
   dataModel: {
     customFields: [
-      { name: 'Business Name', key: 'company_name', type: 'Standard field', note: "From the payload's company. Merges as contact.company_name" },
-      { name: 'Plan', key: 'plan', type: 'Single line', note: 'The app sends "trial" here. Single line, so a new plan name never fails a dropdown match.' },
+      { name: 'Company Name', key: 'company_name', type: 'Standard field', note: "From the payload's company. Merges as {{contact.company_name}}, the same field the demo form's Company fills" },
+      { name: 'Plan', key: 'plan', type: 'Single line', note: 'trial here, from trial.started. Once paid, 04a (self-serve) or the AE before marking Won (05) writes standard-monthly or standard-annual. Single line, so a new plan name never fails a dropdown match.' },
       { name: 'Trial Ends', key: 'trial_end', type: 'Date', note: 'Sent as MM-DD-YYYY, a format GHL documents for writing values into Date fields. 04 counts back from it' },
       { name: 'Workspace ID', key: 'workspace_id', type: 'Single line', note: "The app's ID for the workspace. Workflows that call the app back send it." },
     ],
     tags: [
-      { name: 'trial', note: 'Has started a trial. Added here; 04 filters on it and 04a removes it on payment' },
+      { name: 'trial', note: 'Has started a trial. Added here; 04 filters on it, and 04a (self-serve payment) or 05 (sales win) removes it' },
       { name: 'activated', note: 'Activated this trial. Added by 02a · Product · Workspace Activated; the goal listens for it' },
       { name: 'pql-alerted', note: 'Set by 03 once per trial. Cleared here when a new trial starts' },
       { name: 'pql-tip-sent', note: 'Set by 03 once per trial. Cleared here when a new trial starts' },
@@ -483,7 +466,7 @@ export const trialOnboarding: Automation = {
     },
     {
       title: 'Data model and deduplication',
-      body: 'Custom fields for Plan, Trial Ends and Workspace ID; the company goes to the standard Business Name field. Under Contact Deduplication Preferences, Allow Duplicate Contact is off and Find Existing Contacts Based On is Email. That article names Forms, Zapier, Facebook and Instagram, not workflow actions, so the test plan checks that a demo request and a later trial land on one record.',
+      body: 'Custom fields for Plan, Trial Ends and Workspace ID; the company goes to the standard Company Name field. Under Contact Deduplication Preferences, Allow Duplicate Contact is off and Find Existing Contacts Based On is Email. That article names Forms, Zapier, Facebook and Instagram, not workflow actions, so the test plan checks that a demo request and a later trial land on one record.',
     },
     {
       title: 'One trial, one set of tags',
@@ -521,7 +504,7 @@ export const trialOnboarding: Automation = {
     },
     {
       title: 'Signs during the trial',
-      body: "A deal marked Won fires 05 · Sales · Closed-Won to Onboarding, whose Remove from Workflow step takes the contact out of 02 and 04, so Leo's kickoff replaces the trial emails. A self-serve upgrade does not take them out: a team that has paid but not dispatched a job still needs the invite and set-up help, and Leo's task says to check for the customer tag first.",
+      body: "A deal marked Won fires 05 · Sales · Closed-Won to Onboarding, which adds customer and then takes the contact out of 02 and 04 with Remove from Workflow, so Leo's kickoff replaces the trial emails. A self-serve payment does not: 04a · Product · Subscription Created only adds customer and removes trial, because a team that has paid but not dispatched a job still needs the invite and set-up help, and gets no kickoff from 05. Leo's day-5 task says to check for the customer tag first.",
     },
     {
       title: 'New contact, no time zone',
@@ -529,12 +512,12 @@ export const trialOnboarding: Automation = {
     },
   ],
   qa: [
-    'Send a staging trial.started for a new email and for one that already exists: one contact each, with name, Business Name, Plan, Trial Ends as a real date and Workspace ID',
+    'Send a staging trial.started for a new email and for one that already exists: one contact each, with name, Company Name, Plan, Trial Ends as a real date and Workspace ID',
     'Send the same event twice while the contact is in the workflow: one enrollment and one welcome email',
     'Fire workspace.activated for a waiting test contact: Execution Logs show the jump to the goal, and no more nudges send',
     'Test copy with minute-long waits and no activation: Leo gets the day-5 task, the offer email sends, and the goal ends the run',
     'Contacts with Email DND and with DND on all channels: no emails, and Leo has a welcome-call task due the next weekday',
-    'A finished test contact carrying activated, pql-alerted, trial-extended and trial-expired re-enters: all four are gone, and adding activated again fires the goal on this second enrollment',
+    'A finished test contact carrying activated, pql-alerted, pql-tip-sent, trial-extended and trial-expired re-enters: all five are gone, and adding activated again fires the goal on this second enrollment',
     'Mark a test deal Won: Execution Logs show Removed by External Workflow Action, and no more trial emails send',
     'Every link and merge field renders in Gmail and Outlook, the four commercial emails show the postal address and unsubscribe link, and replies land in Conversations for Leo',
   ],
@@ -543,7 +526,7 @@ export const trialOnboarding: Automation = {
       title: 'trial.started payload',
       language: 'json',
       code: payload,
-      note: "POSTed by the app to this workflow's Inbound Webhook URL when a workspace is created. JSON is the only format the trigger accepts. event_id is there so a run can be traced back to the app's own logs.",
+      note: "POSTed by the app to this workflow's Inbound Webhook URL when a workspace is created. JSON is the only format the trigger accepts. trial_end carries the trial's last day as MM-DD-YYYY, and event_id lets a run be traced back to the app's own logs.",
     },
     {
       title: 'Create/Update Contact mapping',

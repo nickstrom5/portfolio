@@ -10,9 +10,9 @@ import { nextDayAt } from '@/lib/ghl/engine';
 /** The free workshop runs every Thursday at 7 PM (contact's time zone in the sample). */
 export const WORKSHOP = { dow: 3, minute: 19 * 60, lengthMinutes: 60 };
 
-/** The next workshop at least two hours after `from`, as the Event Start Date step would set it. */
+/** The next Thursday 7 PM still ahead of `from`, as Event Start Date (Specific Day, by day of the week) sets it. */
 export function nextWorkshop(from: number): number {
-  return nextDayAt(from, WORKSHOP.dow, WORKSHOP.minute, 120);
+  return nextDayAt(from, WORKSHOP.dow, WORKSHOP.minute);
 }
 
 export const business: Business = {
@@ -62,6 +62,7 @@ export const business: Business = {
       call_booking_link: 'trailheadcareers.example/strategy-call',
       testimonial_link: 'trailheadcareers.example/share',
       founder_first_name: 'Morgan',
+      workshop_room_url: 'trailheadcareers.example/live-room',
     },
     triggerLinks: {
       join: 'trailheadcareers.example/l/join',

@@ -12,7 +12,7 @@ const { users, customValues } = business.env;
 
 /** Full name of the contact's owner at that point in the run: the AE until Assign To User hands the contact to Leo. */
 const owner = (c: Contact) => (c.assignedTo && users[c.assignedTo]?.name) || 'the account executive';
-const companyOf = (c: Contact) => String(c.fields.company_name ?? c.fields.company ?? `${c.firstName} ${c.lastName}`);
+const companyOf = (c: Contact) => String(c.fields.company ?? `${c.firstName} ${c.lastName}`);
 
 /** Add Task with Due In 1 day and Skip Weekends on: the next weekday. */
 const due = (now: number) => formatDay(nextWeekdayAt(now, 0));
@@ -29,7 +29,7 @@ const toLeo = ({ contact }: { contact: Contact }) =>
  * hand-off note shows the same time the booking did.
  */
 const KICKOFF: Record<string, number> = {
-  'rachel@brightlinehvac.example': at(3, 14, 0),
+  'maya@brennanheating.example': at(3, 14, 0),
   'nadia@greenwaylawn.example': at(4, 9, 30),
   'tnovak@lakeshoreclean.example': at(8, 10, 0),
 };
@@ -83,7 +83,7 @@ Action
 
 Why a helper: appointment merge fields only resolve in a workflow with an
 appointment trigger, and If/Else only offers appointment conditions there.
-05 · Closed-Won to Onboarding is triggered by the deal, so it cannot see the
+05 · Sales · Closed-Won to Onboarding is triggered by the deal, so it cannot see the
 booking. It waits for Kickoff Date to fill instead. The second trigger
 catches a kickoff that Leo or the AE books for the customer, and GHL treats
 a reschedule as a new appointment, so Kickoff Date follows the new time.`;
@@ -125,7 +125,7 @@ export const closedWon: Automation = {
       timezone: 'contact',
       senderName: 'Leo Park, Crewlo',
       notes: [
-        'Allow multiple Opportunities on: the unit of work here is the deal. A first deal, an expansion next spring and a company coming back after cancelling each need their own provisioning call and #wins post. With the toggle off, GHL enters the contact only for the first opportunity that meets the trigger, so a later deal would never provision, with no error anywhere. With it on, each contact and deal pair is its own run, and later edits to the deal do not restart it.',
+        'Allow multiple Opportunities on: the unit of work here is the deal. A first deal, an expansion next spring and a company coming back after canceling each need their own provisioning call and #wins post. With the toggle off, GHL enters the contact only for the first opportunity that meets the trigger, so a later deal would never provision, with no error anywhere. With it on, each contact and deal pair is its own run, and later edits to the deal do not restart it.',
         "Allow Re-entry on, for the same reason: every later deal comes from a contact who has been through this workflow before. While a deal's run is still active, marking it Won again does not start a second one. A deal reopened and marked Won again after its run has finished does run again, and that is safe: the provisioning call sets the plan and seats rather than adding to them, the customer tag sends the run down the expansion path, so no second welcome goes out, and the only visible repeat is a second #wins post.",
         "Stop on Response off: a reply to Leo's welcome is usually a question or a time that suits them. Leo answers in Conversations and books the call himself; 05a counts a booking made by a user, so the wait releases as if they had booked. Ending the run on a reply would lose the tag, the note and the chase for someone who then goes quiet.",
         "No workflow Time Window: the upgrade and #wins cannot wait for business hours, and the welcome email answers a signature from minutes ago. The chase has its own Advance Window, weekdays 9 AM to 5 PM in the contact's time zone, which also keeps the one text inside 8 AM to 8 PM. A contact with no time zone falls back to the account's.",
@@ -202,7 +202,7 @@ export const closedWon: Automation = {
                   channel: 'internal',
                   to: 'Leo Park',
                   subject: 'Expansion won: {{contact.company_name}}, now {{contact.seats}} seats',
-                  body: '{{user.name}} closed more business with {{contact.company_name}}: {{contact.seats}} seats on {{contact.plan}} from today. The provisioning request has gone to the app, and the contact is back with you; the deal stays with {{user.first_name}}. They are already a customer, so no welcome email or kickoff invite went out. If the new seats are a new team or location that needs training, book it with {{contact.first_name}} yourself. If they are coming back after cancelling, run the kickoff as for a new customer.',
+                  body: '{{user.name}} closed more business with {{contact.company_name}}: {{contact.seats}} seats on {{contact.plan}} from today. The provisioning request has gone to the app, and the contact is back with you; the deal stays with {{user.first_name}}. They are already a customer, so no welcome email or kickoff invite went out. If the new seats are a new team or location that needs training, book it with {{contact.first_name}} yourself. If they are coming back after canceling, run the kickoff as for a new customer.',
                 },
               },
               {
@@ -212,7 +212,7 @@ export const closedWon: Automation = {
                 title: 'Assign To User',
                 label: 'Back to Leo',
                 summary:
-                  "Leo Park, Only Apply to Unassigned Contacts off. 01 routes an expansion request to an AE, and its SOP has the rep hand the contact back after the demo; this does it for them. The expansion deal stays with the AE. The branch ends here.",
+                  "Leo Park, Only Apply to Unassigned Contacts off. 01 moved the contact to a rep for the expansion demo; this hands it back on the win, so nobody has to remember to. The expansion deal stays with the AE. The branch ends here.",
                 run: toLeo,
               },
             ],
@@ -240,7 +240,7 @@ export const closedWon: Automation = {
               summary:
                 'Another Workflow, with 02 · Product · Trial Onboarding and 04 · Product · Trial Ending picked in the dropdown, so whatever is left of either ends now. Contacts in neither workflow are not affected.',
               run: ({ contact }) => ({
-                log: `Takes ${contact.firstName} ${contact.lastName} out of 02 · Trial Onboarding and 04 · Trial Ending if the contact is active in either, so no trial email goes out after the signature.`,
+                log: `Takes ${contact.firstName} ${contact.lastName} out of 02 · Product · Trial Onboarding and 04 · Product · Trial Ending if the contact is active in either, so no trial email goes out after the signature.`,
               }),
             },
             {
@@ -304,7 +304,7 @@ export const closedWon: Automation = {
               title: 'Assign To User',
               label: 'Leo Park',
               summary:
-                'One user, Only Apply to Unassigned Contacts off, so the contact moves from the AE to the CSM and replies land with Leo. Allow different owners for contacts and its opportunities is on in Settings, which 03 relies on as well, so the won deal keeps the AE as its owner for win reports, and the sub-setting that updates the opportunity follower when the contact owner changes makes Leo a follower of the deal.',
+                'One user, Only Apply to Unassigned Contacts off, so the contact moves from the AE to the CSM and replies land with Leo. Allow different owners for contacts and its opportunities is on in Settings, which 01 and 03 rely on as well, so the won deal keeps the AE as its owner for win reports, and the sub-setting that updates the opportunity follower when the contact owner changes makes Leo a follower of the deal.',
               run: toLeo,
             },
             {
@@ -479,23 +479,27 @@ export const closedWon: Automation = {
       id: 'books',
       label: 'Books the kickoff the next morning',
       summary:
-        "Rachel's team signs the annual plan with Ben on Tuesday morning. Her trial ends next Tuesday, so with the trial tag left on, 04 would have told her on Saturday that it was ending. The tag comes off, the workspace is upgraded, #wins hears about it, and she books a kickoff with Leo from his welcome email the next morning.",
+        "Maya's team signs the annual plan with Ben on Tuesday morning. Her trial ends next Tuesday, so with the trial tag left on, 04 would have told her on Saturday that it was ending. The tag comes off, the workspace is upgraded, #wins hears about it, and she books a kickoff with Leo from his welcome email the next morning.",
       start: at(1, 11, 20),
       contact: {
+        firstName: 'Maya',
+        lastName: 'Brennan',
+        email: 'maya@brennanheating.example',
+        phone: '(614) 555-0118',
+        timezone: 'America/New_York',
         source: 'Website demo form',
         tags: ['trial', 'activated', 'pql-alerted'],
         assignedTo: 'ben',
-        opportunity: { pipeline: 'New Business', stage: 'Closed Won', status: 'won', value: 6264, name: 'Brightline HVAC' },
+        opportunity: { pipeline: 'New Business', stage: 'Closed Won', status: 'won', value: 6264, name: 'Brennan Heating & Air' },
         fields: {
-          company: 'Brightline HVAC',
-          company_name: 'Brightline HVAC',
+          company: 'Brennan Heating & Air',
           company_size: '11-50',
           job_role: 'Operations or dispatch',
           segment: 'mid-market',
           sms_consent: 'Yes',
           plan: 'standard-annual',
           seats: 18,
-          workspace_id: 'ws_7Q2M9K',
+          workspace_id: 'ws_6FJ2NA',
           trial_end: '03-10-2026',
         },
       },
@@ -504,7 +508,7 @@ export const closedWon: Automation = {
           at: at(2, 8, 50) - at(1, 11, 20),
           type: 'appointment_booked',
           value: 'Kickoff Call',
-          appointmentAt: KICKOFF['rachel@brightlinehvac.example'] - at(1, 11, 20),
+          appointmentAt: KICKOFF['maya@brennanheating.example'] - at(1, 11, 20),
           label: "Picks Thursday 2 PM on Leo's Kickoff Call calendar. 05a copies the start time into Kickoff Date.",
         },
       ],
@@ -533,7 +537,6 @@ export const closedWon: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Trial Sales-Assist', status: 'won', value: 4872, name: 'Greenway Lawn & Landscape · 14 seats' },
         fields: {
           company: 'Greenway Lawn & Landscape',
-          company_name: 'Greenway Lawn & Landscape',
           company_size: '11-50',
           sms_consent: 'Yes',
           plan: 'standard-monthly',
@@ -577,7 +580,6 @@ export const closedWon: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 15312, name: 'Harlow Mechanical Group' },
         fields: {
           company: 'Harlow Mechanical Group',
-          company_name: 'Harlow Mechanical Group',
           company_size: '201-1,000',
           job_role: 'Operations or dispatch',
           segment: 'enterprise',
@@ -613,7 +615,6 @@ export const closedWon: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 10440, name: 'Lakeshore Commercial Cleaning' },
         fields: {
           company: 'Lakeshore Commercial Cleaning',
-          company_name: 'Lakeshore Commercial Cleaning',
           company_size: '51-200',
           job_role: 'Operations or dispatch',
           segment: 'mid-market',
@@ -657,7 +658,6 @@ export const closedWon: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 2436, name: 'Chen Mechanical · +7 seats' },
         fields: {
           company: 'Chen Mechanical',
-          company_name: 'Chen Mechanical',
           company_size: '11-50',
           segment: 'mid-market',
           sms_consent: 'Yes',
@@ -723,7 +723,7 @@ export const closedWon: Automation = {
     },
     {
       title: 'Hand the account to Leo, keep the deal with the AE',
-      body: "Allow different owners for contacts and its opportunities is on in Settings, with the sub-setting that updates the opportunity follower when the contact owner changes. 03 depends on the same setting and moves cards with Add Owner to Opportunity. Assign To User then moves the contact to Leo, the won deal stays with the AE for win reports, and Leo follows the deal. The #wins post, Leo's notification, his prep task and the welcome email all run before the reassignment, because {{user.name}} still names the AE at that point. An expansion goes back to Leo the same way, which is the hand-back 01's SOP asks reps for.",
+      body: "Allow different owners for contacts and its opportunities is on in Settings, with the sub-setting that updates the opportunity follower when the contact owner changes. 01 and 03 depend on the same setting and move open cards with Add Owner to Opportunity. Assign To User then moves the contact to Leo, the won deal stays with the AE for win reports, and Leo follows the deal. The #wins post, Leo's notification, his prep task and the welcome email all run before the reassignment, because {{user.name}} still names the AE at that point. An expansion goes back to Leo the same way, since 01 gave the contact to a rep for the demo.",
     },
     {
       title: 'Wait for a booking the workflow cannot see',
@@ -753,7 +753,7 @@ export const closedWon: Automation = {
     },
     {
       title: 'An existing customer buys more, or comes back',
-      body: "Expansion requests reach New Business through 01, which also moves the contact to an AE for the demo. The customer tag sends the won deal down the expansion path: the workspace is set to the new total, #wins hears about it, the contact goes back to Leo, and Leo gets an email instead of the customer getting a second welcome. A company coming back after cancelling still has the tag, so it takes the same path, and Leo's email tells him to run the kickoff by hand.",
+      body: "Expansion requests reach New Business through 01, which also moves the contact to an AE for the demo. The customer tag sends the won deal down the expansion path: the workspace is set to the new total, #wins hears about it, the contact goes back to Leo, and Leo gets an email instead of the customer getting a second welcome. A company coming back after canceling still has the tag, so it takes the same path, and Leo's email tells him to run the kickoff by hand.",
     },
     {
       title: 'Two deals at once, or the same deal won twice',
