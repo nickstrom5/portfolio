@@ -112,15 +112,15 @@ const process = [
   { title: 'Watch it', body: 'Trigger Statistics and Execution Logs checked in the first week, then monthly. Errors fixed before anyone notices them.' },
 ];
 
-const title = 'GoHighLevel case studies';
-const description = `Three GoHighLevel case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and live landing pages.`;
+const title = 'GoHighLevel automation case studies';
+const description = 'Three GoHighLevel automation case studies you can test: a local roofer, a SaaS company and an online coach, each with working workflows and a live landing page.';
 ---
 
 <Base title={title} description={description}>
   <section class="gx-hero">
     <div class="container">
       <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-      <h1>Three businesses. {all.length} GoHighLevel workflows. Run every one.</h1>
+      <h1>Three businesses. Working GoHighLevel workflows. Run every one.</h1>
       <p class="lede">
         Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments. Each has a working landing page, a set of connected workflows and the notes behind every decision. Every workflow runs in a simulator on this page, on sample contacts or on you.
       </p>
@@ -156,7 +156,7 @@ const description = `Three GoHighLevel case studies you can test: a local roofer
             <span class="gx-switch-kicker">Case study {i + 1} · {c.business.industry}</span>
             <span class="gx-switch-name">{c.business.name}</span>
             <span class="gx-switch-blurb">{c.business.blurb}</span>
-            <span class="gx-switch-meta">{c.automations.length} workflows · a working landing page</span>
+            <span class="gx-switch-meta">{c.automations.length} workflow{c.automations.length === 1 ? '' : 's'} · a working landing page</span>
           </button>
         ))}
       </div>

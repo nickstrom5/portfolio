@@ -82,8 +82,9 @@ for (const p of pages) {
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
+  if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
 }
-for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/nick.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
+for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
 }
 

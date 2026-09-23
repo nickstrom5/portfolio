@@ -3,6 +3,7 @@ import '@/styles/global.css';
 import Nav from '@/components/Nav.astro';
 import Footer from '@/components/Footer.astro';
 import { site } from '@/data/site';
+import { ids, personNode, websiteNode } from '@/lib/schema';
 
 interface Props {
   title?: string;
@@ -14,6 +15,12 @@ interface Props {
   /** Extra JSON-LD objects merged into the page graph. */
   jsonLd?: Record<string, unknown>[];
   ogType?: 'website' | 'article' | 'profile';
+  /** schema.org type of this page's WebPage node. */
+  pageType?: 'WebPage' | 'ProfilePage';
+  /** Extra properties merged into the WebPage node. */
+  pageProps?: Record<string, unknown>;
+  /** Breadcrumb trail after Home; the last item is the current page. */
+  breadcrumbs?: { name: string; path: string }[];
 }
 
 const {
@@ -23,58 +30,47 @@ const {
   noindex = false,
   jsonLd = [],
   ogType = 'website',
+  pageType = 'WebPage',
+  pageProps = {},
+  breadcrumbs,
 } = Astro.props;
 
-const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.role}`;
+// A page may pass a full title that already names Nick; otherwise the name is appended.
+const fullTitle = title ? (title.includes(site.name) ? title : `${title} · ${site.name}`) : `${site.name} · Freelance project manager and operations lead`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const sameAs = Object.values(site.links).filter((l) => l && !l.includes('REPLACE'));
+const crumbs = breadcrumbs && [{ name: 'Home', path: '/' }, ...breadcrumbs];
 
 const graph = [
+  websiteNode(),
+  personNode(),
   {
-    '@type': 'WebSite',
-    '@id': `${site.url}/#website`,
-    url: `${site.url}/`,
-    name: site.name,
-    description: site.tagline,
-    inLanguage: 'en-US',
-    publisher: { '@id': `${site.url}/#person` },
-  },
-  {
-    '@type': 'Person',
-    '@id': `${site.url}/#person`,
-    name: site.name,
-    alternateName: ['Nicholas Soderstrom', 'Nick S.'],
-    givenName: 'Nick',
-    familyName: 'Soderstrom',
-    jobTitle: `Freelance ${site.role.toLowerCase()}`,
-    description: site.tagline,
-    url: `${site.url}/`,
-    email: `mailto:${site.email}`,
-    image: new URL(site.photo, Astro.site).href,
-    address: { '@type': 'PostalAddress', addressLocality: 'Chicago', addressRegion: 'IL', addressCountry: 'US' },
-    sameAs,
-    knowsAbout: [
-      'Project management',
-      'Operations management',
-      'Microsoft 365',
-      'CRM automation',
-      'Executive support',
-      'Webinar production',
-      'AI-assisted software development',
-    ],
-  },
-  {
-    '@type': 'WebPage',
+    '@type': pageType,
     '@id': `${canonical.href}#webpage`,
     url: canonical.href,
     name: fullTitle,
     description,
-    isPartOf: { '@id': `${site.url}/#website` },
-    about: { '@id': `${site.url}/#person` },
+    isPartOf: { '@id': ids.website },
+    about: { '@id': ids.person },
     inLanguage: 'en-US',
+    ...(crumbs ? { breadcrumb: { '@id': `${canonical.href}#breadcrumb` } } : {}),
+    ...pageProps,
   },
+  ...(crumbs
+    ? [
+        {
+          '@type': 'BreadcrumbList',
+          '@id': `${canonical.href}#breadcrumb`,
+          itemListElement: crumbs.map((c, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: c.name,
+            item: new URL(c.path, Astro.site).href,
+          })),
+        },
+      ]
+    : []),
   ...jsonLd,
 ];
 ---
@@ -90,6 +86,8 @@ const graph = [
     <link rel="canonical" href={canonical} />
     {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="icon" href={`${base}/favicon-96x96.png`} type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
     <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
     <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />

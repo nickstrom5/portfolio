@@ -12,6 +12,7 @@ source: 'personal'
 links:
   live: 'https://launchneat.com'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The idea

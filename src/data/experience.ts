@@ -92,4 +92,6 @@ export const roles: Role[] = experience
     return endB - endA || Number(b.start) - Number(a.start);
   });
 
-export const education = [{ school: 'DePaul University', location: 'Chicago, IL' }];
+export const education = [
+  { school: 'DePaul University', location: 'Chicago, IL', url: 'https://www.depaul.edu/', sameAs: 'https://en.wikipedia.org/wiki/DePaul_University' },
+];

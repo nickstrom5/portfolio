@@ -6,7 +6,7 @@ import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="AI / Projects" description="Clam, Good Walk, LaunchNeat and this website: projects built by directing AI, shown as scroll-through stories.">
+<Base title="AI-built apps and websites" description="iPhone apps and websites Nick Soderstrom built by directing AI: Good Walk, Clam, SignalRig, LaunchNeat and this site, each shown as a scroll-through story.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI / Projects</span>
@@ -71,7 +71,7 @@ import { url } from '@/lib/url';
               {p.links.map((l) => (
                 <a class={l.primary ? 'btn btn-primary' : 'btn btn-secondary'} href={l.href.startsWith('/') ? url(l.href) : l.href} target={l.href.startsWith('/') ? undefined : '_blank'} rel={l.href.startsWith('/') ? undefined : 'noopener'}>{l.label}</a>
               ))}
-              {p.caseStudy && <a class="btn btn-secondary" href={url(`/work/${p.caseStudy}`)}>Case study</a>}
+              {p.caseStudy && <a class="btn btn-secondary" href={url(`/work/${p.caseStudy}`)}>{p.name} case study</a>}
             </div>
             <p class="status muted">{p.status}</p>
           </div>
@@ -90,7 +90,7 @@ import { url } from '@/lib/url';
           <div class="browser" data-reveal>
             <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
             <a href={p.siteShot.url} target="_blank" rel="noopener">
-              <img src={url(p.siteShot.desktop)} alt={`${p.name} website`} loading="lazy" width="1440" height="900" />
+              <img src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} loading="lazy" width="1440" height="900" />
             </a>
           </div>
           <p class="caption muted">{p.siteShot.caption}</p>

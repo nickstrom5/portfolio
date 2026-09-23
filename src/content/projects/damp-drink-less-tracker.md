@@ -12,6 +12,7 @@ source: 'personal'
 links:
   live: 'https://usedamp.app'
 placeholder: false
+published: 2026-09-20
 ---
 
 ## An AI experiment

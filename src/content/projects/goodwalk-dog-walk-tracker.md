@@ -11,6 +11,7 @@ featured: false
 source: 'personal'
 links: {}
 placeholder: false
+published: 2026-09-20
 ---
 
 ## The idea

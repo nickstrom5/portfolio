@@ -12,6 +12,8 @@ source: 'personal'
 links:
   live: 'https://getclam.app'
 placeholder: false
+published: 2026-09-18
+updated: 2026-09-20
 ---
 
 ## An AI experiment

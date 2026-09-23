@@ -12,6 +12,7 @@ source: 'personal'
 links:
   live: 'https://signalrig.dev'
 placeholder: false
+published: 2026-09-20
 ---
 
 ## The idea
