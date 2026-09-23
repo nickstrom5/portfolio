@@ -42,6 +42,8 @@ export class Simulator {
   private record: HTMLElement;
   private outcome: HTMLElement;
   private runBtn: HTMLButtonElement;
+  private announce: HTMLElement | null;
+  private recDot: HTMLElement | null;
   private timer: number | undefined;
   private override: Partial<Contact> | undefined;
   /** One-off start time and events, used by the landing-page demo. */
@@ -61,6 +63,29 @@ export class Simulator {
     this.record = root.querySelector('[data-record]')!;
     this.outcome = root.querySelector('[data-outcome]')!;
     this.runBtn = root.querySelector('[data-run]')!;
+    this.announce = root.querySelector('[data-announce]');
+    this.recDot = root.querySelector('[data-rec-dot]');
+
+    // Execution log / contact record tabs.
+    const views = [...root.querySelectorAll<HTMLButtonElement>('[data-view]')];
+    const show = (v: string, focus: boolean) => {
+      views.forEach((b) => {
+        const on = b.dataset.view === v;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+        if (on && focus) b.focus();
+      });
+      root.querySelectorAll<HTMLElement>('[data-view-panel]').forEach((p) => (p.hidden = p.dataset.viewPanel !== v));
+      if (v === 'record' && this.recDot) this.recDot.hidden = true;
+    };
+    views.forEach((b, i) => {
+      b.addEventListener('click', () => show(b.dataset.view!, false));
+      b.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        show(views[(i + 1) % views.length].dataset.view!, true);
+      });
+    });
 
     this.runBtn.addEventListener('click', () => this.run(false));
     root.querySelector('[data-instant]')?.addEventListener('click', () => this.run(true));
@@ -71,8 +96,23 @@ export class Simulator {
         this.reset();
       }),
     );
-    root.querySelector('[data-clear-override]')?.addEventListener('click', () => this.useContact(undefined));
+    root.querySelector('[data-clear-override]')?.addEventListener('click', () => {
+      this.useContact(undefined);
+      this.runBtn.focus();
+    });
     this.reset();
+  }
+
+  /** Starts an animated run after a delay; any reset or new run cancels it. */
+  runLater(ms: number) {
+    this.stop();
+    if (ms <= 0) return this.run(false);
+    this.timer = window.setTimeout(() => this.run(false), ms);
+  }
+
+  /** The execution log, for moving focus to it after scrolling here. */
+  get logElement() {
+    return this.log;
   }
 
   get scenario(): Scenario {
@@ -116,7 +156,8 @@ export class Simulator {
     this.prev = undefined;
     this.renderRecord(startContact(this.env.contact, s, this.override), false);
     this.clearCanvas();
-    this.runBtn.disabled = false;
+    if (this.recDot) this.recDot.hidden = true;
+    if (this.announce) this.announce.textContent = '';
   }
 
   private clearCanvas() {
@@ -132,13 +173,13 @@ export class Simulator {
     this.log.replaceChildren();
     this.canvas?.classList.add('is-running');
     this.root.classList.add('is-running');
+    if (this.announce) this.announce.textContent = `Running ${this.auto.name}: ${this.scenario.label}.`;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (instant || reduce) {
       trace.steps.forEach((s, i) => this.apply(s, trace, i === trace.steps.length - 1, false));
       this.finish(trace);
       return;
     }
-    this.runBtn.disabled = true;
     let i = 0;
     const tick = () => {
       const s = trace.steps[i];
@@ -180,7 +221,8 @@ export class Simulator {
       return b;
     }
     if (m.channel === 'email') {
-      const box = el('div', 'g-mail');
+      const box = el('div', `g-mail${m.direction === 'in' ? ' in' : ''}`);
+      if (m.direction === 'in') box.append(el('span', 'g-note-to', 'Email reply'));
       if (m.subject) box.append(el('span', 'g-mail-subj', m.subject));
       box.append(document.createTextNode(m.body));
       return box;
@@ -206,16 +248,18 @@ export class Simulator {
     node.classList.add('is-active');
     if (step.branch) {
       const branch = c.querySelector<HTMLElement>(`[data-branch="${step.branch}"]`);
-      branch?.classList.add('is-taken');
-      branch?.parentElement?.querySelectorAll<HTMLElement>(':scope > .g-branch').forEach((b) => {
-        if (b !== branch) b.classList.add('is-dim');
+      if (!branch) return;
+      branch.classList.add('is-taken');
+      branch.classList.remove('is-dim');
+      // A Go To can come back through a split: never dim a branch that has run.
+      branch.parentElement?.querySelectorAll<HTMLElement>(':scope > .g-branch').forEach((b) => {
+        if (b !== branch && !b.classList.contains('is-taken')) b.classList.add('is-dim');
       });
     }
   }
 
   private finish(trace: Trace) {
     this.stop();
-    this.runBtn.disabled = false;
     this.canvas?.classList.remove('is-running');
     this.canvas?.classList.add('is-ran');
     this.canvas?.querySelectorAll('.is-active').forEach((n) => n.classList.remove('is-active'));
@@ -227,12 +271,13 @@ export class Simulator {
       trace.outcome === 'completed' ? 'Workflow complete' : trace.outcome === 'goal' ? 'Goal reached, workflow complete' : trace.outcome === 'stopped' ? 'Stopped on reply' : (last?.title ?? 'Ended');
     const opp = trace.contact.opportunity;
     const parts = [
-      `${sent} message${sent === 1 ? '' : 's'} to the contact over ${formatDuration(trace.end - trace.start) || 'under a minute'}`,
+      `${sent} message${sent === 1 ? '' : 's'} to the contact over ${trace.end > trace.start ? formatDuration(trace.end - trace.start) : 'under a minute'}`,
       skipped ? `${skipped} step${skipped === 1 ? '' : 's'} skipped` : '',
       opp ? `opportunity in ${opp.stage} (${opp.status})` : '',
     ].filter(Boolean);
     this.outcome.replaceChildren(el('strong', undefined, label), document.createTextNode(parts.join(' · ')));
     this.outcome.hidden = false;
+    if (this.announce) this.announce.textContent = `${label}. ${parts.join(', ')}.`;
   }
 
   private renderRecord(c: Contact, animate: boolean) {
@@ -250,6 +295,7 @@ export class Simulator {
       const d = el('div');
       const dd = el('dd', undefined, value);
       if (changed(was, now)) {
+        if (this.recDot) this.recDot.hidden = !this.record.parentElement?.hidden;
         dd.classList.add('is-new');
         window.setTimeout(() => dd.classList.remove('is-new'), 900);
       }
@@ -272,13 +318,13 @@ export class Simulator {
     for (const tag of c.tags) {
       const li = el('li', undefined, tag);
       if (animate && prev && !prev.tags.includes(tag)) {
+        if (this.recDot) this.recDot.hidden = !this.record.parentElement?.hidden;
         li.classList.add('is-new');
         window.setTimeout(() => li.classList.remove('is-new'), 900);
       }
       tags.append(li);
     }
-    const title = el('p', 'g-rec-title', 'Contact record');
-    this.record.replaceChildren(title, head, grid, tagsTitle, tags);
+    this.record.replaceChildren(head, grid, tagsTitle, tags);
     this.prev = JSON.parse(JSON.stringify(c));
   }
 }

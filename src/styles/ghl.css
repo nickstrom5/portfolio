@@ -79,6 +79,11 @@
   --g-code-bg: #0b0e12;
 }
 
+/* Anything toggled with the hidden attribute stays hidden, whatever its display rule. */
+[hidden] {
+  display: none !important;
+}
+
 /* ---------- Workflow canvas ---------- */
 
 .g-canvas {
@@ -478,19 +483,22 @@
   }
 }
 
-/* Run state, set by the simulator. */
+/* Run state, set by the simulator. Steps that have not run lose their fill
+   and get a dashed outline; the text keeps its contrast. */
 .g-canvas.is-running .g-card,
 .g-canvas.is-ran .g-card {
-  opacity: 0.55;
+  background: transparent;
+  box-shadow: none;
+  border-style: dashed;
 }
-.g-canvas.is-running .g-triggers,
-.g-canvas.is-ran .g-triggers {
-  opacity: 0.55;
+.g-canvas .g-step.is-done > .g-card,
+.g-canvas .g-step.is-active > .g-card,
+.g-canvas .g-step.is-skipped > .g-card {
+  background: var(--bg-elev);
 }
-.g-canvas .g-triggers.is-done,
 .g-canvas .g-step.is-done > .g-card,
 .g-canvas .g-step.is-active > .g-card {
-  opacity: 1;
+  border-style: solid;
 }
 .g-step.is-done > .g-card {
   border-color: color-mix(in srgb, var(--g-ok) 55%, var(--border));
@@ -527,8 +535,15 @@
     0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent),
     0 6px 18px -8px rgb(0 0 0 / 0.25);
 }
-.g-branch.is-dim {
-  opacity: 0.4;
+.g-branch.is-dim > .g-branch-head {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--border);
+}
+.g-branch.is-dim > .g-branch-head .g-b-label::after {
+  content: ' · not taken';
+  font-weight: 600;
+  color: var(--text-muted);
 }
 .g-branch.is-taken > .g-branch-head {
   border-color: var(--g-logic);
@@ -595,6 +610,13 @@
   color: var(--text-muted);
   line-height: 1.45;
 }
+/* Only the chosen test contact shows its description, so the controls stay near the top. */
+.g-scen-opt:not(:has(input:checked)) span span {
+  display: none;
+}
+.g-scen-opt:not(:has(input:checked)) {
+  padding-block: 0.5rem;
+}
 .g-controls {
   display: flex;
   flex-wrap: wrap;
@@ -631,6 +653,38 @@
   font-size: 0.84rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+.g-views {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.g-view {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 36px;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.g-view[aria-selected='true'] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.g-view-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--g-trigger);
 }
 .g-log {
   list-style: none;
@@ -725,6 +779,10 @@
   background: var(--g-bubble-in);
   color: var(--text);
   border-bottom-left-radius: 5px;
+}
+.g-mail.in {
+  background: var(--g-bubble-in);
+  border-color: transparent;
 }
 .g-mail,
 .g-note {
@@ -1421,13 +1479,12 @@
   margin-bottom: 1rem;
 }
 .lp-slots span {
-  padding: 0.45rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid #cfc8b8;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--lp-primary-dark);
-  background: #fff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px dashed #cfc8b8;
+  font-size: 0.82rem;
+  color: var(--lp-muted);
+  background: transparent;
 }
 .lp-again {
   min-height: 36px;
@@ -1443,6 +1500,29 @@
 }
 .lp-thanks:focus {
   outline: none;
+}
+.lp :focus-visible {
+  outline-color: var(--lp-primary);
+}
+.lp-req {
+  color: var(--lp-muted);
+  font-weight: 400;
+}
+.lp-form [aria-invalid='true'] {
+  border-color: #b3261e;
+  box-shadow: 0 0 0 1px #b3261e;
+}
+.lp-slots-caption {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+}
+.lp-fine a {
+  color: inherit;
+  text-decoration: underline;
 }
 @media (max-width: 640px) {
   .lp-hero {
@@ -1505,6 +1585,7 @@
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--gutter);
     margin-inline: calc(var(--gutter) * -1);
     padding: 0.25rem var(--gutter) 0.75rem;
     scrollbar-width: thin;
@@ -1620,9 +1701,16 @@
 .gx-lab-sim {
   position: sticky;
   top: 80px;
+  /* Never taller than the screen, so the log and result stay in view while the canvas scrolls. */
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+  margin: -2px;
 }
 .gx-lab-sim .g-log {
-  max-height: min(460px, 48vh);
+  max-height: min(420px, 42vh);
 }
 @media (max-width: 960px) {
   .gx-lab {
@@ -1631,6 +1719,8 @@
   .gx-lab-sim {
     position: static;
     order: -1;
+    max-height: none;
+    overflow: visible;
   }
   .gx-lab-sim .g-log {
     max-height: 420px;
@@ -1639,21 +1729,16 @@
 
 /* Build notes */
 .gx-notes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem 2.5rem;
   margin-top: 3rem;
   padding-top: 2.5rem;
   border-top: 1px solid var(--border);
 }
-.gx-snips,
-.gx-features {
-  grid-column: 1 / -1;
+.gx-notes-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.9rem;
 }
-@media (max-width: 860px) {
-  .gx-notes {
-    grid-template-columns: 1fr;
-  }
+.gx-features {
+  margin-top: 2rem;
 }
 .gx-build-list {
   margin: 0;
@@ -2023,17 +2108,7 @@
     var(--shadow);
   background: color-mix(in srgb, var(--case-use) 7%, var(--bg-elev));
 }
-.gx-switch-tab[aria-selected='true']::after {
-  content: 'Showing';
-  position: absolute;
-  top: 0.9rem;
-  right: 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--case-use);
-}
+
 .gx-switch-kicker {
   font-size: 0.75rem;
   font-weight: 700;
@@ -2138,4 +2213,77 @@
 }
 .gx-case .gx-j:hover {
   border-color: var(--case-use);
+}
+
+/* Anchored sections clear the sticky header. */
+.gx-case [id],
+#compliance,
+#audit,
+#process,
+#cases {
+  scroll-margin-top: 84px;
+}
+
+/* ---------- Build-note tabs ---------- */
+
+.gx-note-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+.gx-note-tab {
+  min-height: 38px;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gx-note-tab:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+.gx-note-tab[aria-selected='true'] {
+  color: var(--text);
+  border-color: var(--case-use, var(--accent));
+  box-shadow: 0 0 0 1px var(--case-use, var(--accent));
+}
+.gx-note-panel .gx-edge-list,
+.gx-note-panel .gx-qa-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+.gx-note-panel .gx-build-list {
+  max-width: 80ch;
+}
+.gx-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+.gx-jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+.gx-switch-state {
+  position: absolute;
+  top: 0.9rem;
+  right: 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--case-use);
+}
+.gx-switch-tab:not([aria-selected='true']) .gx-switch-state {
+  display: none;
 }

@@ -38,7 +38,12 @@ export const roofingLanding: LandingPage = {
   trigger: 0,
   textWindow: { start: '08:00', end: '20:00', days: [0, 1, 2, 3, 4, 5, 6] },
   behaviors: [
-    { value: 'replies', label: 'Reply to the text', scenario: 'replies', events: ({ firstText }) => [{ at: firstText + 3, type: 'reply', value: 'Yes please. Tomorrow after 3 works for me.' }] },
+    {
+      value: 'replies',
+      label: 'Reply to the first message',
+      scenario: 'replies',
+      events: ({ firstText, texts }) => [{ at: firstText + 3, type: 'reply', channel: texts ? 'sms' : 'email', value: 'Yes please. Tomorrow after 3 works for me.' }],
+    },
     {
       value: 'books',
       label: 'Book from the link',

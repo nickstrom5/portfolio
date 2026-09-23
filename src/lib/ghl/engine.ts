@@ -23,8 +23,18 @@ import type {
   WorkflowSettings,
 } from './types';
 
-/** Monday 2 March 2026, 00:00. Scenario times are minutes after this. */
-const BASE = Date.UTC(2026, 2, 2);
+/**
+ * Scenario times are minutes after Monday 00:00 of a sample week. By default
+ * that is 2 March 2026 (so builds and checks are deterministic); in the
+ * browser the page moves it to the visitor's current week, so dates in the
+ * log and in messages match their calendar.
+ */
+let BASE = Date.UTC(2026, 2, 2);
+
+export function useWeekOf(date: Date): void {
+  const monday = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - ((date.getDay() + 6) % 7) * 86400000;
+  BASE = monday;
+}
 const DAY = 1440;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -301,6 +311,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   let budget = 400;
   /** Stop on Response only reacts to replies once this workflow has messaged the contact. */
   let messaged = false;
+  const apptTriggered = /appointment/i.test(wf.triggers[scenario.trigger ?? 0]?.title ?? '');
 
   const log = (s: Omit<TraceStep, 'contact' | 't'> & { t?: number }) => {
     if (--budget < 0) throw new Error(`${auto.id}/${scenario.id}: more than 400 log entries, probably a Go To loop`);
@@ -329,8 +340,8 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       case 'reply':
         lastReply = String(ev.value ?? '');
         vars.replied = true;
-        message = { channel: 'sms', direction: 'in', body: lastReply };
-        if (/^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i.test(lastReply)) {
+        message = { channel: ev.channel ?? 'sms', direction: 'in', body: lastReply };
+        if ((ev.channel ?? 'sms') === 'sms' && /^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i.test(lastReply)) {
           contact.dnd.sms = true;
           detail = detail ?? 'Opt-out keyword: SMS DND switched on automatically';
         }
@@ -397,7 +408,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
    * the time a watched event happened, if it did. Throws for goal jumps,
    * removals by another workflow and Stop on Response.
    */
-  function advanceTo(target: number, watch?: { event: EventType }): number | undefined {
+  function advanceTo(target: number, watch?: { event: EventType; value?: string | number }): number | undefined {
     while (queue.length && queue[0].at <= target) {
       const ev = queue.shift()!;
       t = Math.max(t, ev.at);
@@ -413,7 +424,13 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         log({ kind: 'stop', title: 'Stop on Response', detail: 'The contact replied to a message from this workflow, so they leave it and a person picks up the conversation.' });
         throw new Halt('stopped', ev.at);
       }
-      if (watch && ev.type === watch.event) return ev.at;
+      // GHL pulls a contact out of an appointment-triggered workflow when the appointment is cancelled or
+      // marked no-show after the run began. A change at the start minute is the trigger itself.
+      if (apptTriggered && ev.at > start && (ev.type === 'appointment_cancelled' || ev.type === 'appointment_noshow')) {
+        log({ kind: 'stop', title: 'Pulled out of this run', detail: `The appointment is now ${ev.type === 'appointment_cancelled' ? 'Cancelled' : 'No-show'}, so GHL ends this appointment's run. A status trigger can start a new one.` });
+        throw new Halt('ended', ev.at);
+      }
+      if (watch && matches(ev, watch.event, watch.value)) return ev.at;
     }
     t = Math.max(t, target);
     return undefined;
@@ -474,6 +491,12 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       if (open > t) {
         log({ kind: 'hold', nodeId: node.id, title: 'Held by the time window', detail: `Outside the workflow's time window, so this waits until ${formatClock(open)}.` });
         advanceTo(open);
+        // They may have opted out while the step was held.
+        if (contact.dnd[channel]) {
+          skipped.push(node.id);
+          log({ kind: 'skip', nodeId: node.id, title: `${node.title} skipped`, detail: `The contact opted out while this was held, so GHL does not send it.` });
+          return;
+        }
       }
     }
     let detail = node.summary;
@@ -505,6 +528,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
     visited.push(node.id);
     const title = node.label ?? (node.mode === 'time' ? `Wait ${formatDuration(node.minutes ?? 0)}` : node.title);
     if (node.mode === 'time') {
+      const at = steps.length;
       log({ kind: 'wait', nodeId: node.id, title, detail: node.summary });
       advanceTo(t + (node.minutes ?? 0));
       if (node.window) {
@@ -513,7 +537,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
           log({ kind: 'hold', nodeId: node.id, title: 'Advance Window', detail: `Only resumes inside its window, so it waits until ${formatClock(open)}.` });
           advanceTo(open);
         } else if (!node.minutes) {
-          steps[steps.length - 1].detail = `${node.summary} Inside the window, so it moves straight on.`;
+          steps[at].detail = `${node.summary} Inside the window, so it moves straight on.`;
         }
       }
       return undefined;
@@ -535,7 +559,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
     }
     // Wait for an event, with a timeout.
     log({ kind: 'wait', nodeId: node.id, title, detail: node.summary });
-    const metAt = advanceTo(t + (node.minutes ?? DAY), { event: node.event! });
+    const metAt = advanceTo(t + (node.minutes ?? DAY), { event: node.event!, value: node.value });
     const met = metAt !== undefined;
     vars[`waited_${node.id}`] = met ? 'met' : 'timeout';
     if (!node.branches) return undefined;

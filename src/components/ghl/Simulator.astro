@@ -9,6 +9,7 @@ interface Props {
   caseId: string;
 }
 const { automation: a, caseId } = Astro.props;
+const uid = `${caseId}-${a.id}`;
 ---
 
 <div class="g-sim" data-sim={a.id} data-case={caseId}>
@@ -17,14 +18,14 @@ const { automation: a, caseId } = Astro.props;
     <div class="g-scen-list">
       {a.scenarios.map((s, i) => (
         <label class="g-scen-opt">
-          <input type="radio" name={`scenario-${caseId}-${a.id}`} value={s.id} checked={i === 0} />
+          <input type="radio" name={`scenario-${uid}`} value={s.id} checked={i === 0} />
           <span><strong>{s.label}</strong><span>{s.summary}</span></span>
         </label>
       ))}
     </div>
   </fieldset>
   <p class="g-override" data-override hidden>
-    Running with your form details: <strong data-override-name></strong>. Nothing is sent or stored.
+    Running on your form details: <strong data-override-name></strong>, at your local time. Nothing is sent or stored.
     <button type="button" class="g-link" data-clear-override>Use the sample contact</button>
   </p>
   <div class="g-controls">
@@ -37,10 +38,19 @@ const { automation: a, caseId } = Astro.props;
       <span class="g-clock-now" data-clock>{formatClock(a.scenarios[0].start)}</span>
       <span class="g-clock-elapsed" data-elapsed>Not started</span>
     </div>
-    <ol class="g-log" data-log aria-label="Execution log">
-      <li class="g-log-empty">Run the workflow to see each step with its timestamp.</li>
-    </ol>
-    <p class="g-outcome" data-outcome role="status" hidden></p>
+    <div class="g-views" role="tablist" aria-label="Simulator output">
+      <button type="button" role="tab" class="g-view" id={`log-tab-${uid}`} aria-controls={`log-${uid}`} aria-selected="true" data-view="log">Execution log</button>
+      <button type="button" role="tab" class="g-view" id={`rec-tab-${uid}`} aria-controls={`rec-${uid}`} aria-selected="false" tabindex="-1" data-view="record">Contact record <span class="g-view-dot" data-rec-dot hidden aria-hidden="true"></span></button>
+    </div>
+    <div role="tabpanel" id={`log-${uid}`} aria-labelledby={`log-tab-${uid}`} data-view-panel="log">
+      <ol class="g-log" data-log tabindex="-1" aria-label="Execution log">
+        <li class="g-log-empty">Run the workflow to see each step with its timestamp.</li>
+      </ol>
+    </div>
+    <div role="tabpanel" id={`rec-${uid}`} aria-labelledby={`rec-tab-${uid}`} data-view-panel="record" hidden>
+      <div class="g-record" data-record></div>
+    </div>
+    <p class="g-outcome" data-outcome hidden></p>
+    <p class="sr-only" role="status" data-announce></p>
   </div>
-  <div class="g-screen g-record" data-record></div>
 </div>

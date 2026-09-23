@@ -242,7 +242,7 @@ export const speedToLead: Automation = {
                 action: 'add_tag',
                 title: 'Add Contact Tag',
                 label: 'stl-no-response',
-                summary: 'Marks the lead for the no-response report and for 06 · Reactivation later.',
+                summary: 'Marks the lead for the no-response report and for 07 · Database Reactivation later.',
                 effect: { addTags: ['stl-no-response'] },
               },
             ],

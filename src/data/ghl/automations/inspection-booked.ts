@@ -12,17 +12,20 @@ Office books on the calendar     Appointment Status: New, by a User   New bookin
 Estimator sets Showed            Goal Event in the running booking    Inspected + estimate task
 Estimator sets No-show           Appointment Status: No-show          No-show path
 Homeowner or office cancels      Appointment Status: Cancelled        Cancelled path
-Appointment is rescheduled       Old run ends; new time re-enters     New booking (tested)`;
+Office marks it Invalid          None (GHL ends the booking run)      Nothing is sent
+Appointment is rescheduled       Old run ends; new time re-enters     New booking (on the test list)`;
 
 const estimatorSop = `Before you leave the driveway, set the appointment status in the app.
 
 Showed    The card moves to Inspected and you get a task:
           estimate out within 24 hours.
 No-show   Wait 15 minutes and call once first. Then set No-show:
-          the homeowner gets a rebook text, you get a call-back task.
+          the homeowner gets a rebook text within a minute and
+          you get a call-back task. Check before you tap it.
 
 Never cancel a visit to tidy your calendar. Cancelled sends the
-homeowner a rebook text. Move it or ask the office instead.`;
+homeowner a rebook text. Move it or ask the office instead.
+Invalid is for spam and test bookings only. It sends nothing.`;
 
 export const inspectionBooked: Automation = {
   id: 'inspection-booked',
@@ -46,7 +49,7 @@ export const inspectionBooked: Automation = {
       { title: 'Customer Booked Appointment', filters: ['In Calendar is Roof Inspection'], label: 'Customer Booked Appointment' },
       {
         title: 'Appointment Status',
-        filters: ['In Calendar is Roof Inspection', 'Appointment Status is New', 'Modified By is User'],
+        filters: ['In Calendar is Roof Inspection', 'Appointment Status is New', 'Modified By is User: Jordan Blake, Maya Ortiz, Luis Grant'],
         label: 'Appointment Status (booked by the office)',
       },
       { title: 'Appointment Status', filters: ['In Calendar is Roof Inspection', 'Appointment Status is No-show'], label: 'Appointment Status (no-show)' },
@@ -57,7 +60,7 @@ export const inspectionBooked: Automation = {
       stopOnResponse: false,
       timezone: 'contact',
       notes: [
-        'Allow Re-entry on: GHL says a rescheduled appointment re-enters only with it on. Appointment workflows take one entry per appointment either way.',
+        'Allow Re-entry on: every new appointment gets its own run whatever this says, but GHL says a rescheduled appointment re-enters only with it on, and the No-show and Cancelled runs are also a second entry for an appointment that already had one.',
         'Stop on Response off: a reply like "see you Tuesday" must not cancel the reminders. Replies still land in Conversations.',
         'No workflow Time Window: it would hold the booking confirmation too. The two rebook texts have their own 8 AM to 8 PM Advance Window.',
         'Cancelled and No-show end the run a booking started (GHL rule), so triggers 3 and 4 start a new run on the rebook path.',
@@ -79,7 +82,7 @@ export const inspectionBooked: Automation = {
         label: 'Let the record settle',
         mode: 'time',
         minutes: 1,
-        summary: "One minute, so the appointment is fully saved before anything reads it. GHL's own reminder guide does the same for Zoom links. The status check below runs after it.",
+        summary: "One minute, as GHL's race-condition guide advises. The calendar saves the appointment, its status and the estimator it assigns in the same second the trigger fires, and every step below reads them.",
       },
       {
         id: 'find-opp',
@@ -107,7 +110,7 @@ export const inspectionBooked: Automation = {
                         action: 'update_opportunity',
                         title: 'Update Opportunity',
                         label: 'Back to Contacted',
-                        summary: 'Roofing Sales › Contacted, with Allow Opportunity to Move to Any Previous Stage on. The card says "needs rebooking", not "booked".',
+                        summary: 'Roofing Sales › Contacted, with Allow Opportunity to Move to Any Previous Stage on. Safe because only first inspections go on this calendar. The card now says "needs rebooking", not "booked".',
                         effect: { opportunity: { stage: 'Contacted', status: 'open' } },
                       },
                       {
@@ -185,7 +188,7 @@ export const inspectionBooked: Automation = {
                           channel: 'internal',
                           to: '{{user.name}} (assigned user)',
                           subject: 'Inspection cancelled: {{contact.name}}',
-                          body: 'The {{appointment.only_start_date}} {{appointment.only_start_time}} visit is cancelled. The card is back in Contacted and a rebook text goes out between 8 AM and 8 PM. Worth a call: {{contact.phone}}',
+                          body: 'The visit on {{appointment.only_start_date}} at {{appointment.only_start_time}} is cancelled. The card is back in Contacted and a rebook text goes out between 8 AM and 8 PM. Worth a call: {{contact.phone}}',
                         },
                       },
                       {
@@ -231,7 +234,7 @@ export const inspectionBooked: Automation = {
                       action: 'update_opportunity',
                       title: 'Update Opportunity',
                       label: 'Inspection Booked',
-                      summary: 'Roofing Sales › Inspection Booked. Backward moves stay off here, so a deal already at Estimate Sent is not dragged back by a second visit.',
+                      summary: 'Roofing Sales › Inspection Booked. Backward moves stay off here, so a card someone already moved past Inspection Booked stays where it is.',
                       effect: { opportunity: { stage: 'Inspection Booked', status: 'open' } },
                     },
                     {
@@ -256,7 +259,7 @@ export const inspectionBooked: Automation = {
                       message: {
                         channel: 'email',
                         subject: 'Your roof inspection: {{appointment.only_start_date}} at {{appointment.only_start_time}}',
-                        body: 'Hi {{contact.first_name}},\n\nYour free roof inspection is booked for {{appointment.only_start_date}} at {{appointment.only_start_time}}. {{user.name}} will come to you.\n\nWhat to expect:\n- It takes about 45 minutes.\n- We check the shingles, flashing, vents and gutters, and the attic if you are happy for us to go up.\n- At the end, {{user.first_name}} walks you through the photos. Your written estimate follows within 24 hours.\n\nAdd it to your calendar: {{appointment.add_to_google_calendar}}\nNeed a different time? {{appointment.reschedule_link}}\n\nQuestions? Call us at {{custom_values.office_phone}}.\n\nHarbor & Pine Roofing',
+                        body: "Hi {{contact.first_name}},\n\nYour free roof inspection is booked for {{appointment.only_start_date}} at {{appointment.only_start_time}}. {{user.name}} will meet you at the property.\n\nWhat to expect:\n- It takes about 45 minutes, and someone needs to be home.\n- We check the shingles, flashing, vents and gutters, and the attic if you're OK with us taking a look.\n- At the end, {{user.first_name}} walks you through the photos. Your written estimate follows within 24 hours.\n\nAdd it to your calendar: {{appointment.add_to_google_calendar}}\nNeed a different time? {{appointment.reschedule_link}}\n\nQuestions? Call us at {{custom_values.office_phone}}.\n\nHarbor & Pine Roofing",
                       },
                     },
                     {
@@ -287,7 +290,7 @@ export const inspectionBooked: Automation = {
                       label: '1 hour before',
                       mode: 'before_appointment',
                       offset: 60,
-                      summary: 'An upcoming appointment: 1 hour before it starts. Slots begin at 9 AM, so this never lands before 8 AM.',
+                      summary: 'An upcoming appointment: 1 hour before it starts, with the same past-date setting. Slots begin at 9 AM, so this never lands before 8 AM.',
                     },
                     {
                       id: 'sms-1h',
@@ -308,7 +311,7 @@ export const inspectionBooked: Automation = {
                       label: '3 hours after the start',
                       mode: 'after_appointment',
                       offset: 180,
-                      summary: 'An upcoming appointment: 3 hours after it starts. Time for the visit and for the estimator to set the status. Showed cuts this short.',
+                      summary: 'An upcoming appointment: 3 hours after it starts, and Continue to next action if that has passed. Time for the visit and for the estimator to set the status. Showed cuts this short.',
                     },
                     {
                       id: 'goal-showed',
@@ -335,7 +338,7 @@ export const inspectionBooked: Automation = {
                               action: 'update_opportunity',
                               title: 'Update Opportunity',
                               label: 'Inspected',
-                              summary: 'Roofing Sales › Inspected. The board shows who is waiting for an estimate.',
+                              summary: 'Roofing Sales › Inspected, backward moves off. The board shows who is waiting for an estimate.',
                               effect: { opportunity: { stage: 'Inspected', status: 'open' } },
                             },
                             {
@@ -359,12 +362,12 @@ export const inspectionBooked: Automation = {
                             action: 'internal_notification',
                             title: 'Internal Notification',
                             label: 'Set the status',
-                            summary: 'Show rates in reporting are only as good as the statuses, so an unset one gets chased the same day.',
+                            summary: 'Show rates in reporting are only as good as the statuses, so an unset one gets chased the same day. No-show set after this still sends the rebook text, because that trigger fires on the change.',
                             message: {
                               channel: 'internal',
                               to: '{{user.name}} (assigned user)',
                               subject: 'Set the status: {{contact.name}}',
-                              body: 'The {{appointment.only_start_date}} {{appointment.only_start_time}} inspection has no outcome yet. Set Showed or No-show on the appointment. No-show sends the rebook text. If they showed, move the card to Inspected and send the estimate as usual.',
+                              body: 'The inspection on {{appointment.only_start_date}} at {{appointment.only_start_time}} has no status yet. Set Showed or No-show on the appointment; No-show sends the rebook text. If they showed, move the card to Inspected and send the estimate as usual.',
                             },
                           },
                         ],
@@ -385,7 +388,7 @@ export const inspectionBooked: Automation = {
               action: 'create_opportunity',
               title: 'Create Opportunity',
               label: 'New card',
-              summary: 'Roofing Sales › New Lead, source Roof Inspection calendar. Duplicate Opportunity on, so a past customer with a closed deal still gets a new card.',
+              summary: 'Roofing Sales › New Lead, source Roof Inspection calendar. Duplicate Opportunity on, and multiple opportunities per contact allowed in the account, so a past customer with a closed deal still gets a new card.',
               effect: { opportunity: { pipeline: 'Roofing Sales', stage: 'New Lead', status: 'open' } },
             },
             {
@@ -393,7 +396,7 @@ export const inspectionBooked: Automation = {
               kind: 'goto',
               title: 'Go To',
               target: 'find-opp',
-              summary: 'A created opportunity is not in context for later updates, so the contact goes back through Find Opportunity, which now finds it.',
+              summary: 'A created opportunity is not in context for later updates, so the contact goes back through Find Opportunity, which now finds it. This only loops if Create makes nothing, which is why the account setting above is on the build checklist.',
             },
           ],
         },
@@ -404,7 +407,7 @@ export const inspectionBooked: Automation = {
     {
       id: 'shows',
       label: 'Books online, shows up',
-      summary: 'Books from the link in the first text on Monday evening. Maya marks Showed at the end of the Wednesday visit.',
+      summary: "Books Monday evening from the link in 01's first text and answers the confirmation, which does not stop the reminders. Maya marks Showed at the end of the Wednesday visit.",
       start: 19 * 60 + 42,
       trigger: 0,
       appointment: { at: 2 * DAY + 10 * 60 - (19 * 60 + 42) },
@@ -413,7 +416,10 @@ export const inspectionBooked: Automation = {
         opportunity: { pipeline: 'Roofing Sales', stage: 'New Lead', status: 'open' },
         fields: { service_needed: 'Leak or repair', roof_age: '10-20 years', sms_consent: 'Yes' },
       },
-      events: [{ at: 2 * DAY + 10 * 60 + 52 - (19 * 60 + 42), type: 'appointment_showed', label: 'Maya set it from the mobile app at the end of the visit' }],
+      events: [
+        { at: 9, type: 'reply', value: 'Great, see you Wednesday. You can park in the driveway.' },
+        { at: 2 * DAY + 10 * 60 + 52 - (19 * 60 + 42), type: 'appointment_showed', label: 'Maya set it from the mobile app at the end of the visit' },
+      ],
       expect: { outcome: 'goal', visits: ['sms-confirm', 'email-confirm', 'sms-24h', 'sms-1h', 'goal-showed', 'if-showed:0', 'task-estimate'], stage: 'Inspected' },
     },
     {
@@ -485,19 +491,19 @@ export const inspectionBooked: Automation = {
   build: [
     {
       title: 'Calendar first',
-      body: "Roof Inspection calendar: 45-minute visits, Monday to Saturday, 9 AM to 5 PM, with Allow Rescheduling and Allow Cancellation on. I turned off the calendar's own booking, reminder and cancellation emails to the homeowner so they hear from one place, this workflow. The estimator's own booking alert stays on.",
+      body: "Roof Inspection is a Round Robin calendar for Maya and Luis: 45-minute visits, Monday to Saturday, 9 AM to 5 PM. Assign Contacts to Their Respective Calendar Team Members is on, so the estimator named in every message is the one who is coming (01's round robin picks who calls; the calendar picks who visits), and a contact's future appointments stay with that estimator. Cancellation and rescheduling are allowed, so both links ride in the calendar invite. The calendar's own emails to the homeowner are off, so they hear from one place. Only first inspections go on this calendar; estimate walk-throughs use the estimators' own calendars.",
     },
     {
       title: 'Four triggers, one workflow',
-      body: 'Customer Booked Appointment catches bookings from the link. Appointment Status: New with Modified By set to User catches bookings the office makes, and the Modified By filter keeps a link booking from matching both. Two more Appointment Status triggers, No-show and Cancelled, bring the contact back in for the rebook paths.',
+      body: 'Customer Booked Appointment catches bookings from the link. Appointment Status: New, with Modified By set to the three people who book (Jordan, Maya and Luis), catches bookings the office makes; a link booking is Modified By Customer, so it never matches both. Two more Appointment Status triggers, No-show and Cancelled, bring the contact back in for the rebook paths.',
     },
     {
       title: 'Build around the cancellation rule',
-      body: 'GHL pulls a contact out of an appointment workflow when that appointment is cancelled or marked No-show. A No-show branch at the end of the reminders would never run, because the run is already over. So those statuses start a new run, and an If/Else near the top reads the status and picks the path.',
+      body: 'GHL pulls a contact out of an appointment workflow when that appointment is cancelled or marked No-show, so a No-show branch at the end of the reminders would never run. Those statuses start a new run instead, and an If/Else near the top reads the status and picks the path. The first thing I verify in a live account is that GHL removes only the booking run, not the new run for the same appointment. If it removed both, triggers 3 and 4 and the two rebook paths would move to a small workflow of their own, unchanged.',
     },
     {
       title: 'Find the deal before updating it',
-      body: 'An appointment trigger carries no opportunity, and Update Opportunity is skipped when it has none. Find Opportunity picks the latest open deal in Roofing Sales. If there is none, Create Opportunity makes one, and a Go To sends the contact back through Find, because a card created earlier in the run is not in context for later updates.',
+      body: 'An appointment trigger carries no opportunity, and Update Opportunity is skipped when it has none. Find Opportunity picks the latest open deal in Roofing Sales. If there is none, Create Opportunity makes one and a Go To sends the contact back through Find, because a card created in the run is not in context for later updates. That loop is only safe if Create always creates, so Duplicate Opportunity is on in the action and the account allows multiple opportunities per contact.',
     },
     {
       title: 'Reminders tied to the appointment',
@@ -508,22 +514,22 @@ export const inspectionBooked: Automation = {
       body: 'GHL allows one Goal Event per workflow. I used it for Showed: when the estimator sets it from the mobile app, the contact jumps from the post-visit wait straight to the Inspected stage and the estimate task. If nothing is set three hours after the start, the estimator gets a nudge.',
     },
     {
-      title: 'Settings on purpose',
-      body: 'Allow Re-entry on, because GHL says a rescheduled appointment only re-enters with it on. Stop on Response off, because "see you Tuesday" should not cancel the reminders. No workflow time window, because it would also hold the booking confirmation; the two rebook texts get their own 8 AM to 8 PM Advance Window.',
+      title: 'Settings and consent',
+      body: 'Allow Re-entry on, for reschedules and for the second run a No-show or Cancelled starts. Stop on Response off, because "see you Tuesday" should not cancel the reminders. No workflow time window, because it would hold the booking confirmation too; the rebook texts get their own 8 AM to 8 PM window. Every text is about a visit the homeowner booked, with no offers. The booking form says appointment texts will follow, the first one carries the opt-out line, and anyone who says no to texts on the phone gets SMS DND from the office, which leaves them the emails.',
     },
     {
       title: 'Test with real bookings',
-      body: 'On a test contact I book through the link, book as staff, reschedule, cancel from the invite, and set Showed and No-show, then read Enrollment History and Execution Logs after each: one run per booking, the old run removed on a cancel, the right path after it. Then the status map and the estimator card below go to the office.',
+      body: 'On a test contact I book through the link, book as staff, reschedule from the link and from the calendar, cancel from the invite, and set Showed and No-show, reading Enrollment History and Execution Logs after each: one run per booking, the booking run removed on a cancel, the Cancelled run still going, the right path after it. Then the status map and the estimator card below go to the office.',
     },
   ],
   edgeCases: [
     {
       title: 'Cancels during the reminders',
-      body: 'GHL ends the booking run as soon as the status changes, so no reminder follows a cancellation. The Cancelled trigger starts a new run: the card goes back to Contacted, the estimator is told at once, and the rebook text waits until 8 AM if they cancelled at night.',
+      body: 'GHL ends the booking run the moment the status changes, so no reminder follows a cancellation. The Cancelled trigger starts a new run: the card goes back to Contacted, the estimator is told at once, and the rebook text waits for 8 AM if they cancelled at night. Invalid, for spam bookings, ends the run the same way and sends nothing.',
     },
     {
       title: 'Reschedules instead',
-      body: "A new time also pulls the contact out of the old run. GHL's docs say the new time re-enters only when a trigger matches it and Allow Re-entry is on. Re-entry is on, and rescheduling from the link and from the calendar are both on the test list, because a reschedule that does not re-enter gets no reminders.",
+      body: "GHL's Appointment Status FAQ says a rescheduled appointment is treated as a new one and re-enters from the beginning, so it gets a fresh confirmation and new reminders. An office reschedule matches trigger 2. A homeowner's reschedule is Modified By Customer, which trigger 2 skips on purpose, so it relies on Customer Booked Appointment firing for it. That is the first item on the test list; if it does not fire, trigger 2 also gets Modified By Customer and a new link booking is re-tested for a double entry.",
     },
     {
       title: 'Books for tomorrow morning',
@@ -531,25 +537,25 @@ export const inspectionBooked: Automation = {
     },
     {
       title: 'No opportunity yet',
-      body: 'Someone who phoned the office and was booked on the spot has no card. Find Opportunity takes Not Found, Create Opportunity adds one, and the Go To runs Find again. Duplicate Opportunity is on in Create, so a past customer with a closed deal still gets a new card and the second Find has one to find.',
+      body: 'Someone who phoned the office and was booked on the spot has no card. Find Opportunity takes Not Found, Create Opportunity adds one, and the Go To runs Find again. A past customer whose only card is Won gets a new card as well, so the old job stays in the revenue report.',
     },
     {
-      title: 'Estimator forgets the status',
-      body: 'Three hours after the start, a notification asks for Showed or No-show. Setting No-show later still sends the rebook text, because that trigger fires whenever the status changes.',
+      title: 'Estimator forgets the status, or sets the wrong one',
+      body: 'Three hours after the start, a notification asks for Showed or No-show, and No-show set later still sends the rebook text. A wrong No-show is worse: the homeowner is texted within a minute, and changing it to Showed starts nothing because the booking run has ended. The SOP says to check before tapping, and the card is then fixed by hand.',
     },
     {
-      title: 'Texts are off',
-      body: 'A contact who replied STOP is DND for SMS, and GHL skips every text. The confirmation email still goes, with an Add to Google Calendar link so their own calendar does the reminding.',
+      title: 'Texts are off, or the reply is "Cancel"',
+      body: 'A contact on SMS DND gets every email and no texts; the confirmation email has an Add to Google Calendar link so their own calendar does the reminding. A homeowner who answers a reminder with just "Cancel" ends up there too: CANCEL is a carrier opt-out keyword, so SMS DND goes on and the visit stays booked. That is why no message asks for a reply to cancel. The reply still shows in the estimator\'s Conversations, so they can call.',
     },
   ],
   qa: [
-    'Book through the link: one confirmation text, one email, and one run in Enrollment History, not two',
-    'Book on the calendar as staff: the same messages, through the Appointment Status trigger',
+    'Book through the link: one text, one email and one run in Enrollment History; the text names the estimator on the appointment, and replying "see you then" does not stop the reminders',
+    'Book on the calendar as staff: the same messages through the Appointment Status trigger, and still one run',
     'Book less than 24 hours ahead: no day-before text, and the 1-hour reminder still sends',
-    'Cancel from the invite mid-reminders: the booking run shows as removed, no more reminders, and a 10 PM cancel gets its rebook text at 8 AM',
-    'Set No-show: the card moves back to Contacted, the tag and the task appear, and one rebook text goes out',
-    'Set Showed during the post-visit wait: the contact jumps to the goal, the card moves to Inspected, and the estimate task is due in a day',
-    'Contact with no opportunity: exactly one new card, Find Opportunity twice in Execution Logs, then the card moves to Inspection Booked',
+    'Cancel from the invite mid-reminders: the booking run shows as removed, a new Cancelled run starts and is not removed with it, and a 10 PM cancel gets its rebook text at 8 AM',
+    'Reschedule from the link and from the calendar: the old run ends, and the new time gets a fresh confirmation and reminders',
+    'Set No-show on one booking and Showed on another: Contacted, tag, task and one rebook text for the first; Inspected and an estimate task due in a day for the second',
+    'A contact with no opportunity and one with only a Won card: exactly one new card each, Find Opportunity twice in Execution Logs, then Inspection Booked',
     'Every appointment merge field (date, time, reschedule link, Add to Google Calendar) renders on a real phone and in Gmail and Outlook',
   ],
   snippets: [
@@ -557,6 +563,7 @@ export const inspectionBooked: Automation = {
     { title: 'Estimator card (SOP)', language: 'text', code: estimatorSop, note: 'Statuses drive the pipeline, the texts and the show-rate report, so the SOP is about setting them, not about the workflow.' },
   ],
   features: [
+    'Round Robin calendar',
     'Customer Booked Appointment',
     'Appointment Status',
     'Remove from Workflow',

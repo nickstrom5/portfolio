@@ -49,6 +49,11 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
         </ul>
       </div>
       <p class="gx-disclaimer">{b.disclaimer}</p>
+      <ul class="gx-jump" aria-label={`Jump to a part of the ${b.name} case study`}>
+        <li><a href={`#${b.id}-journey`} data-open-auto={`${b.id}-journey`}>The system</a></li>
+        <li><a href={`#${b.id}-demo`} data-open-auto={`${b.id}-demo`}>The landing page</a></li>
+        <li><a href={`#${b.id}-workflows`} data-open-auto={`${b.id}-workflows`}>The workflows</a></li>
+      </ul>
     </div>
   </header>
 
