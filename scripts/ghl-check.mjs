@@ -13,17 +13,23 @@
  */
 import { build } from 'esbuild';
 
-// With a file argument, check only the automations that file exports.
-const only = process.argv[2];
-const entry = only
-  ? `export { sampleContact, env } from './src/data/ghl/business.ts'; export { simulate } from './src/lib/ghl/engine.ts'; import * as m from './${only.replace(/^\.\//, '')}'; export const automations = Object.values(m).filter((v) => v && typeof v === 'object' && 'workflow' in v);`
-  : "export * from './src/data/ghl/index.ts'; export { simulate } from './src/lib/ghl/engine.ts';";
+// With a file argument, check only the automations that file exports, against
+// the sub-account in the folder above it (src/data/ghl/<case>/business.ts).
+const only = process.argv[2]?.replace(/^\.\//, '');
+let entry;
+if (only) {
+  const caseDir = only.split('/').slice(0, -2).join('/');
+  const legacy = caseDir === 'src/data/ghl';
+  const biz = legacy
+    ? `import { env, sampleContact } from './${caseDir}/business.ts'; const business = { id: 'roofing', env, sampleContact };`
+    : `import { business } from './${caseDir}/business.ts';`;
+  entry = `${biz} export { simulate } from './src/lib/ghl/engine.ts'; import * as m from './${only}';
+    export const cases = [{ business, landing: null, automations: Object.values(m).filter((v) => v && typeof v === 'object' && 'workflow' in v) }];`;
+} else {
+  entry = "export { cases } from './src/data/ghl/index.ts'; export { simulate } from './src/lib/ghl/engine.ts';";
+}
 const out = await build({
-  stdin: {
-    contents: entry,
-    resolveDir: process.cwd(),
-    loader: 'ts',
-  },
+  stdin: { contents: entry, resolveDir: process.cwd(), loader: 'ts' },
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -31,7 +37,7 @@ const out = await build({
   logLevel: 'silent',
 });
 const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
-const { automations, sampleContact, env, simulate } = mod;
+const { cases, simulate } = mod;
 
 const problems = [];
 const warnings = [];
@@ -58,11 +64,21 @@ function smsSegments(text) {
   return text.length <= 70 ? 1 : Math.ceil(text.length / 67);
 }
 
+let automationCount = 0;
+for (const { business, landing, automations } of cases) {
+const { env, sampleContact } = business;
 const ids = new Set();
+if (landing) {
+  const fed = automations.find((a) => a.id === landing.feeds);
+  if (!fed) problems.push(`${business.id}: landing page feeds missing automation ${landing.feeds}`);
+  else for (const b of landing.behaviors) if (!fed.scenarios.some((sc) => sc.id === b.scenario)) problems.push(`${business.id}: landing behavior ${b.value} uses missing scenario ${b.scenario} in ${fed.id}`);
+  for (const id of Object.keys(business.handoff)) if (automations.length && !automations.some((a) => a.id === id)) problems.push(`${business.id}: journey map mentions missing automation ${id}`);
+}
 for (const a of automations) {
-  if (ids.has(a.id)) problems.push(`duplicate automation id ${a.id}`);
+  automationCount++;
+  if (ids.has(a.id)) problems.push(`${business.id}: duplicate automation id ${a.id}`);
   ids.add(a.id);
-  const where = (m) => `${a.id}: ${m}`;
+  const where = (m) => `${business.id}/${a.id}: ${m}`;
 
   // Structure.
   const nodeIds = new Set();
@@ -126,10 +142,11 @@ for (const a of automations) {
   for (const n of nodes) if (!seen.has(n)) problems.push(where(`step ${n} is never reached by any scenario`));
   for (const k of branchKeys) if (!seen.has(k)) problems.push(where(`branch ${k} is never taken by any scenario`));
 }
+}
 
 for (const w of warnings) console.log('warn: ' + w);
 if (problems.length) {
   console.log('GHL check FAILED:\n' + problems.map((p) => '  - ' + p).join('\n'));
   process.exit(1);
 }
-console.log(`GHL check clean: ${automations.length} automations, ${runs} scenario runs, every step and branch reached.`);
+console.log(`GHL check clean: ${cases.length} case${cases.length === 1 ? '' : 's'}, ${automationCount} automations, ${runs} scenario runs, every step and branch reached.`);

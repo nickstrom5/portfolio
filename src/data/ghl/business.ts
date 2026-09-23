@@ -3,7 +3,7 @@
  * people, phone numbers and links are fictional: 555-01xx numbers are
  * reserved for fiction and .example domains cannot resolve.
  */
-import type { Contact } from '@/lib/ghl/types';
+import type { Business, Contact } from '@/lib/ghl/types';
 import type { MergeEnv } from '@/lib/ghl/engine';
 
 export const business = {
@@ -85,4 +85,31 @@ export const fieldLabels: Record<string, string> = {
   job_date: 'Job date',
   satisfaction: 'Satisfaction',
   reply_intent: 'Reply intent',
+};
+
+/** The roofing company as a case study (the exports above stay for the workflow files). */
+export const roofingBusiness: Business = {
+  id: 'roofing',
+  name: business.name,
+  industry: 'Residential roofing',
+  area: 'Chicago suburbs',
+  blurb: 'A local roofer that lives on the phone: speed to lead, missed calls, inspections, estimates, reviews.',
+  intro:
+    'Harbor & Pine is a local roofing company with two estimators, an office manager and a production crew. Leads came from the website, Facebook and the phone, and too many went cold before anyone called back. The owner needed every lead answered in seconds, inspections that people actually show up to, estimates that get a decision, a clean hand-off to the crew, and reviews from every finished job.',
+  disclaimer: business.disclaimer,
+  pipeline,
+  team,
+  env,
+  sampleContact,
+  fieldLabels,
+  handoff: {
+    'speed-to-lead': 'New Lead, then a person on reply',
+    'missed-call': 'New Lead from a missed call',
+    'inspection-booked': 'Inspection Booked → Inspected',
+    'estimate-follow-up': 'Estimate Sent → Won',
+    'job-handoff': 'Job Scheduled → Job Complete',
+    'reviews-referrals': 'Review and referral asks',
+    reactivation: 'Old leads back to New Lead',
+  },
+  tint: { light: '#1d6b4f', dark: '#6fd1a6' },
 };

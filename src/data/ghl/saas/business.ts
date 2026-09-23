@@ -1,0 +1,94 @@
+/**
+ * Case study 2: a B2B software company that runs its marketing and sales
+ * ops in GHL, fed by its own product over webhooks. Fictional company,
+ * people, numbers and links (555-01xx numbers are reserved for fiction;
+ * .example domains cannot resolve).
+ */
+import type { Business } from '@/lib/ghl/types';
+
+export const business: Business = {
+  id: 'saas',
+  name: 'Crewlo',
+  industry: 'B2B software (SaaS)',
+  area: 'Remote team, customers in the US and Canada',
+  blurb: 'A software company whose product talks to GHL: demo routing, trial onboarding from product events, lead scoring and hand-offs.',
+  intro:
+    'Crewlo sells scheduling and dispatch software to field-service companies, with a 14-day free trial and a sales team for larger accounts. The growth lead needed demo requests routed to the right rep in seconds, trial emails driven by what people actually do in the product, a signal when a trial is worth a sales call, and a clean hand-off from closed deal to onboarding. The app sends events to GHL over Inbound Webhooks, and GHL calls the app back to extend trials and provision accounts.',
+  disclaimer: 'Crewlo is a fictional software company. The people, phone numbers, prices, events and links are samples.',
+  pipeline: { name: 'New Business', stages: ['Demo Requested', 'Demo Booked', 'Trial Sales-Assist', 'Demo Held', 'Proposal', 'Closed Won', 'Onboarding'] },
+  team: [
+    { key: 'hana', name: 'Hana Ito', role: 'Growth lead (owns GHL)' },
+    { key: 'priya', name: 'Priya Shah', role: 'Sales development rep' },
+    { key: 'ben', name: 'Ben Carter', role: 'Account executive, mid-market' },
+    { key: 'aisha', name: 'Aisha Rahman', role: 'Account executive, enterprise' },
+    { key: 'leo', name: 'Leo Park', role: 'Customer success manager' },
+  ],
+  env: {
+    location: {
+      name: 'Crewlo',
+      phone: '(415) 555-0140',
+      address: '548 Market St, Suite 400, San Francisco, CA',
+      city: 'San Francisco',
+      website: 'crewlo.example',
+    },
+    users: {
+      hana: { name: 'Hana Ito', first_name: 'Hana', phone: '(415) 555-0141', email: 'hana@crewlo.example' },
+      priya: { name: 'Priya Shah', first_name: 'Priya', phone: '(415) 555-0143', email: 'priya@crewlo.example' },
+      ben: { name: 'Ben Carter', first_name: 'Ben', phone: '(415) 555-0145', email: 'ben@crewlo.example' },
+      aisha: { name: 'Aisha Rahman', first_name: 'Aisha', phone: '(415) 555-0147', email: 'aisha@crewlo.example' },
+      leo: { name: 'Leo Park', first_name: 'Leo', phone: '(415) 555-0149', email: 'leo@crewlo.example' },
+    },
+    customValues: {
+      company_name: 'Crewlo',
+      app_url: 'app.crewlo.example',
+      demo_link: 'crewlo.example/demo',
+      group_demo_link: 'crewlo.example/live-demo',
+      help_center: 'help.crewlo.example',
+      pricing_link: 'crewlo.example/pricing',
+      kickoff_link: 'crewlo.example/kickoff',
+      trial_length: '14 days',
+      price_per_seat: '$29 per user per month',
+      support_email: 'support@crewlo.example',
+      api_base: 'https://api.crewlo.example/v1',
+    },
+    triggerLinks: {
+      extend_trial: 'crewlo.example/l/extend-trial',
+      book_demo: 'crewlo.example/l/book-demo',
+      referral: 'crewlo.example/l/refer',
+    },
+  },
+  sampleContact: {
+    firstName: 'Rachel',
+    lastName: 'Okafor',
+    phone: '(614) 555-0192',
+    email: 'rachel@brightlinehvac.example',
+    timezone: 'America/New_York',
+    source: 'Website demo form',
+    tags: [],
+    dnd: {},
+    fields: {},
+  },
+  fieldLabels: {
+    company: 'Company',
+    company_size: 'Company size',
+    job_role: 'Role',
+    segment: 'Segment',
+    fit_score: 'Fit score',
+    sms_consent: 'SMS consent',
+    plan: 'Plan',
+    trial_end: 'Trial ends',
+    pql_score: 'Product score',
+    seats: 'Seats',
+    nps: 'NPS',
+    workspace_id: 'Workspace ID',
+  },
+  handoff: {
+    'demo-request': 'Demo Requested → right rep, booked',
+    'trial-onboarding': 'Trial signup → activated',
+    'pql-alert': 'Active trial → Trial Sales-Assist',
+    'trial-ending': 'Trial ending → paid or extended',
+    'closed-won': 'Closed Won → Onboarding',
+    'nps-health': 'NPS → saved, heard or referred',
+  },
+  tint: { light: '#4338ca', dark: '#a5b4fc' },
+};

@@ -7,26 +7,28 @@ import Icon from './Icon.astro';
 
 interface Props {
   automation: Automation;
+  caseId: string;
   hidden?: boolean;
 }
-const { automation: a, hidden = false } = Astro.props;
+const { automation: a, caseId, hidden = false } = Astro.props;
 const dm = a.dataModel;
+const uid = `${caseId}-${a.id}`;
 ---
 
-<article class="gx-panel" id={a.id} role="tabpanel" aria-labelledby={`tab-${a.id}`} hidden={hidden} data-panel={a.id}>
+<article class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
   <header class="gx-panel-head">
     <span class="eyebrow">{a.number} · {a.kicker}</span>
-    <h3>{a.name}</h3>
+    <h4>{a.name}</h4>
     <p class="gx-tagline">{a.tagline}</p>
   </header>
 
   <div class="gx-ps">
     <div>
-      <h4>The problem</h4>
+      <h5>The problem</h5>
       <p>{a.problem}</p>
     </div>
     <div>
-      <h4>What I built</h4>
+      <h5>What I built</h5>
       <p>{a.solution}</p>
     </div>
   </div>
@@ -39,16 +41,16 @@ const dm = a.dataModel;
 
   <div class="gx-lab">
     <div class="gx-lab-canvas">
-      <Canvas automation={a} />
+      <Canvas automation={a} caseId={caseId} />
     </div>
     <div class="gx-lab-sim">
-      <Simulator automation={a} />
+      <Simulator automation={a} caseId={caseId} />
     </div>
   </div>
 
   <div class="gx-notes">
-    <section class="gx-build" aria-labelledby={`build-${a.id}`}>
-      <h4 id={`build-${a.id}`}>How I built it</h4>
+    <section class="gx-build" aria-labelledby={`build-${uid}`}>
+      <h5 id={`build-${uid}`}>How I built it</h5>
       <ol class="gx-build-list">
         {a.build.map((b) => (
           <li><strong>{b.title}.</strong> {b.body}</li>
@@ -56,8 +58,8 @@ const dm = a.dataModel;
       </ol>
     </section>
 
-    <section class="gx-model" aria-labelledby={`model-${a.id}`}>
-      <h4 id={`model-${a.id}`}>Data model</h4>
+    <section class="gx-model" aria-labelledby={`model-${uid}`}>
+      <h5 id={`model-${uid}`}>Data model</h5>
       {dm.customFields && dm.customFields.length > 0 && (
         <div class="gx-table-wrap">
           <table class="gx-table">
@@ -86,8 +88,8 @@ const dm = a.dataModel;
       )}
     </section>
 
-    <section class="gx-edges" aria-labelledby={`edges-${a.id}`}>
-      <h4 id={`edges-${a.id}`}>Edge cases it handles</h4>
+    <section class="gx-edges" aria-labelledby={`edges-${uid}`}>
+      <h5 id={`edges-${uid}`}>Edge cases it handles</h5>
       <ul class="gx-edge-list">
         {a.edgeCases.map((e) => (
           <li><strong>{e.title}</strong><span>{e.body}</span></li>
@@ -95,8 +97,8 @@ const dm = a.dataModel;
       </ul>
     </section>
 
-    <section class="gx-qa" aria-labelledby={`qa-${a.id}`}>
-      <h4 id={`qa-${a.id}`}>Test plan before publishing</h4>
+    <section class="gx-qa" aria-labelledby={`qa-${uid}`}>
+      <h5 id={`qa-${uid}`}>Test plan before publishing</h5>
       <ul class="gx-qa-list">
         {a.qa.map((q) => (
           <li><Icon name="check" size={16} /><span>{q}</span></li>
@@ -105,13 +107,13 @@ const dm = a.dataModel;
     </section>
 
     {a.snippets && a.snippets.length > 0 && (
-      <section class="gx-snips" aria-labelledby={`snips-${a.id}`}>
-        <h4 id={`snips-${a.id}`}>Copy-ready pieces</h4>
+      <section class="gx-snips" aria-labelledby={`snips-${uid}`}>
+        <h5 id={`snips-${uid}`}>Copy-ready pieces</h5>
         <div class="gx-snip-grid">
           {a.snippets.map((sn) => (
             <div class="g-snippet">
               <div class="g-snippet-head">
-                <h5>{sn.title}</h5>
+                <h6>{sn.title}</h6>
                 <button type="button" class="g-copy" data-copy><Icon name="copy" size={15} /><span>Copy</span></button>
               </div>
               <pre><code>{sn.code}</code></pre>

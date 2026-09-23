@@ -1,21 +1,20 @@
 ---
 /**
- * /ghl/ — GoHighLevel automations and landing page, as working demos.
- * Content lives in src/data/ghl; the simulator is src/lib/ghl. Run
- * `npm run ghl:check` after editing an automation.
+ * /ghl/ — GoHighLevel case studies: three businesses, each a sample
+ * sub-account with a working landing page and its workflows. Content lives
+ * in src/data/ghl; the simulator is src/lib/ghl. Run `npm run ghl:check`
+ * after editing a workflow.
  */
 import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
-import LandingDemo from '@/components/ghl/LandingDemo.astro';
-import AutomationPanel from '@/components/ghl/AutomationPanel.astro';
-import Icon from '@/components/ghl/Icon.astro';
-import { automations, business, env, sampleContact, team } from '@/data/ghl';
+import CaseStudyView from '@/components/ghl/CaseStudy.astro';
+import { cases } from '@/data/ghl';
 import { countSteps, simulate } from '@/lib/ghl/engine';
 import type { Step } from '@/lib/ghl/types';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
-// Every number in the hero is computed from the data by running the simulator at build time.
+// Every number in the hero is computed from the data, by running the simulator at build time.
 let branches = 0;
 const walk = (list: Step[]) =>
   list.forEach((s) => {
@@ -29,64 +28,62 @@ const walk = (list: Step[]) =>
       walk(s.branches.timeout.nodes);
     }
   });
-automations.forEach((a) => walk(a.workflow.steps));
-const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
-const scenarios = automations.reduce((n, a) => n + a.scenarios.length, 0);
+const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));
+all.forEach(({ a }) => walk(a.workflow.steps));
 const taken = new Set<string>();
-for (const a of automations) for (const s of a.scenarios) simulate(a, s, sampleContact, env).visited.forEach((v) => v.includes(':') && taken.add(`${a.id}/${v}`));
+for (const { c, a } of all) {
+  for (const s of a.scenarios) simulate(a, s, c.business.sampleContact, c.business.env).visited.forEach((v) => v.includes(':') && taken.add(`${c.business.id}/${a.id}/${v}`));
+}
 const stats = [
-  { value: String(automations.length), label: 'Connected workflows' },
-  { value: String(steps), label: 'Workflow steps' },
-  { value: String(scenarios), label: 'Test contacts you can run' },
+  { value: String(all.length), label: 'Working workflows' },
+  { value: String(all.reduce((n, { a }) => n + countSteps(a.workflow.steps), 0)), label: 'Workflow steps' },
+  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test contacts you can run' },
   { value: `${taken.size}/${branches}`, label: 'Branches reached by a test' },
 ];
 
-/** What each workflow hands to the next, for the journey map. */
-const handoff: Record<string, string> = {
-  'speed-to-lead': 'New Lead, then a person on reply',
-  'missed-call': 'New Lead from a missed call',
-  'inspection-booked': 'Inspection Booked → Inspected',
-  'estimate-follow-up': 'Estimate Sent → Won',
-  'job-handoff': 'Job Scheduled → Job Complete',
-  'reviews-referrals': 'Review and referral asks',
-  reactivation: 'Old leads back to New Lead',
+/** Links to workflows by "case/automation"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, aid] = ref.split('/');
+  const c = cases.find((x) => x.business.id === cid);
+  const a = c?.automations.find((x) => x.id === aid);
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.business.name} ${a.number} · ${a.name}` } : undefined;
 };
-
-const landingNotes = [
-  { title: 'One goal, one action', body: 'No navigation menu on the step, and every button on the page leads to the same form. The copy is short, plain and specific to the offer.' },
-  { title: 'A short, honest form', body: 'Single column, labels above the fields, six questions. The two SMS consent boxes are separate (inspection updates, and offers), unticked and optional, with the Privacy Policy and Terms linked, which is what A2P reviewers look for.' },
-  { title: 'Hidden UTM fields', body: 'Custom fields utm_source, utm_medium and utm_campaign with Hidden on and a Query Key that matches the URL parameter exactly. GHL already records First and Latest Attribution by itself; the fields are there so workflows, filters and merge fields can use the values.' },
-  { title: 'Thank-you step with the calendar', body: 'Step 2 embeds the Roof Inspection calendar. Sticky Contact prefills the booking form, so nobody types their details twice, and booking fires workflow 03.' },
-  { title: 'Tracking that survives edits', body: 'Meta Pixel and GA4 go in the funnel’s head tracking code. GHL does not copy tracking code when a step is cloned, so re-checking it is on the launch checklist.' },
-  { title: 'Fast on a phone', body: 'Optimize JavaScript and Image Optimization on, hero image under 200 KB. Any custom script listens for the hydrationDone event, so deferred loading does not break it.' },
-  { title: 'Test the headline, not the button color', body: 'A split-test variation on the step with a 50/50 slider. The Stats tab reports opt-in rate as opt-ins divided by unique page views, and one variation wins before the next test starts.' },
-];
 
 const compliance = [
   {
     title: 'A2P-ready opt-in',
-    body: 'Separate consent boxes for inspection updates and for offers, unticked and optional. The same wording goes into the A2P 10DLC campaign registration, and the first text names the business and says how to opt out.',
-    where: ['speed-to-lead'],
+    body: 'Every landing page has separate consent boxes for service texts and for offers, unticked and optional. The same wording goes into the A2P 10DLC campaign registration, and the first text names the business and says how to opt out.',
+    where: ['roofing/speed-to-lead', 'saas/demo-request', 'coaching/webinar'],
   },
   {
     title: 'Quiet hours in the contact’s time zone',
-    body: 'Federal rules stop solicitation texts at 9 PM, but Florida, Oklahoma and Maryland stop at 8. Marketing and follow-up texts wait for an 8 AM to 8 PM window in the contact’s time zone.',
-    where: ['speed-to-lead', 'estimate-follow-up', 'reactivation'],
+    body: 'Federal rules stop solicitation texts at 9 PM, but Florida, Oklahoma and Maryland stop at 8. Follow-up and marketing texts wait for an 8 AM to 8 PM window in the contact’s time zone.',
+    where: ['roofing/speed-to-lead', 'roofing/reactivation', 'coaching/cart-recovery'],
   },
   {
     title: 'Opt-outs by any reasonable means',
-    body: 'STOP and the other standard keywords switch on SMS DND automatically. “Please stop texting me” does not, and since April 11, 2025 the FCC requires honoring it too, within 10 business days. Workflow 07 catches it and switches DND on.',
-    where: ['reactivation'],
+    body: 'STOP and the other standard keywords switch on SMS DND automatically. “Please stop texting me” does not, and since April 11, 2025 the FCC requires honoring it too, within 10 business days. The reactivation workflow catches it and switches DND on.',
+    where: ['roofing/reactivation'],
   },
   {
     title: 'No review gating',
-    body: 'Every customer gets the same public review link, whatever they think of the job. Google prohibits selectively asking happy customers, and the FTC rule on reviews (16 CFR Part 465) bans review suppression and incentives tied to sentiment.',
-    where: ['reviews-referrals'],
+    body: 'Everyone gets the same public review link, whatever they think. Google prohibits selectively asking happy customers, and the FTC rule on reviews and testimonials (16 CFR Part 465) bans review suppression and incentives tied to sentiment.',
+    where: ['roofing/reviews-referrals', 'saas/nps-health', 'coaching/completion'],
+  },
+  {
+    title: 'Claims a coach can back up',
+    body: 'No income promises on the page or in the follow-ups, testimonials that are real and not presented as typical results, and any incentive disclosed. The FTC treats all three as advertising.',
+    where: ['coaching/webinar', 'coaching/completion'],
+  },
+  {
+    title: 'Secrets stay out of messages',
+    body: 'API keys live in webhook headers and stay out of custom values that templates can print. Payloads carry ids, not passwords, and every call back to the app is logged in Execution Logs.',
+    where: ['saas/trial-ending', 'saas/closed-won'],
   },
   {
     title: 'Email that lands',
     body: 'A dedicated sending subdomain with SPF, DKIM and DMARC, one-click unsubscribe on marketing email as Google and Yahoo require of bulk senders, and a postal address in the footer for CAN-SPAM.',
-    where: ['speed-to-lead', 'estimate-follow-up'],
+    where: [],
   },
   {
     title: 'Texts that stay cheap',
@@ -102,8 +99,8 @@ const audit = [
   { title: 'The wrong clock', body: 'Workflows set to the account time zone while contacts span several, and imported contacts with no time zone at all. Quiet hours only work in the recipient’s time.' },
   { title: 'Duplicate opportunities', body: 'Two cards per lead because duplicates are allowed. Fix the setting, then merge the pipeline so reporting can be trusted again.' },
   { title: 'Hard-coded links and numbers', body: 'A booking link typed into forty messages. Move it into a custom value so the next change is one edit.' },
-  { title: 'Silent trigger breaks', body: 'A Facebook lead form duplicated in Meta gets a new form ID and the trigger filter stops matching. So does a renamed form or calendar. Trigger Statistics shows it; I check it after any change.' },
-  { title: 'Premium steps doing standard work', body: 'Custom Code and Custom Webhook are billed per execution. Worth it where they earn it, not for a job a standard action does.' },
+  { title: 'Silent trigger breaks', body: 'A Facebook lead form duplicated in Meta gets a new form ID and the trigger filter stops matching. So does a renamed form, calendar or product. Trigger Statistics shows it; I check it after any change.' },
+  { title: 'Premium steps doing standard work', body: 'Custom Code, Custom Webhook and Inbound Webhook are billed per execution. Worth it where they earn it, not for a job a standard action does.' },
 ];
 
 const process = [
@@ -115,24 +112,21 @@ const process = [
   { title: 'Watch it', body: 'Trigger Statistics and Execution Logs checked in the first week, then monthly. Errors fixed before anyone notices them.' },
 ];
 
-const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
-const count = words[automations.length] ?? String(automations.length);
-const title = 'GoHighLevel automations';
-const description = `${automations.length} working GoHighLevel workflows and a landing page you can test: speed to lead, reminders, reviews, reactivation and the build notes behind each.`;
-const auto = (id: string) => automations.find((a) => a.id === id);
+const title = 'GoHighLevel case studies';
+const description = `Three GoHighLevel case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and live landing pages.`;
 ---
 
 <Base title={title} description={description}>
   <section class="gx-hero">
     <div class="container">
       <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-      <h1>{count} GoHighLevel workflows. Run every one of them.</h1>
+      <h1>Three businesses. {all.length} GoHighLevel workflows. Run every one.</h1>
       <p class="lede">
-        One sub-account for a fictional roofing company, built the way I build for clients: a landing page that captures the lead, {count.toLowerCase()} connected workflows that take it from first call to five-star review, and the notes behind every decision. Each workflow runs in a simulator on this page, on sample contacts or on you.
+        Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments. Each has a working landing page, a set of connected workflows and the notes behind every decision. Every workflow runs in a simulator on this page, on sample contacts or on you.
       </p>
       <div class="gx-cta">
-        <a class="btn btn-primary" href="#demo">Try the landing page</a>
-        <a class="btn btn-secondary" href="#workflows">Browse the workflows</a>
+        <a class="btn btn-primary" href="#cases">Pick a case study</a>
+        <a class="btn btn-secondary" href="#process">How I work</a>
         <a class="btn btn-secondary" href={url('/contact')}>Hire me</a>
       </div>
       <dl class="gx-stats">
@@ -140,79 +134,36 @@ const auto = (id: string) => automations.find((a) => a.id === id);
           <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
         ))}
       </dl>
-      <p class="gx-disclaimer">{business.disclaimer} The workflows use GHL’s real triggers, actions and settings, so each one can be rebuilt step for step in a sub-account. Nothing on this page sends a message.</p>
+      <p class="gx-disclaimer">The businesses and people are fictional. The workflows use GHL’s real triggers, actions and settings, checked against HighLevel’s help center, so each one can be rebuilt step for step in a sub-account. Nothing on this page sends a message.</p>
     </div>
   </section>
 
-  <section class="section gx-journey-section" id="journey" aria-labelledby="journey-title">
+  <nav class="gx-switch" id="cases" aria-label="Case studies">
     <div class="container">
-      <span class="eyebrow">The system</span>
-      <div class="section-head">
-        <h2 id="journey-title">One pipeline, one customer journey</h2>
-      </div>
-      <p class="lede">Each workflow does one job and hands the contact to the next. Pick one to open it below.</p>
-      <ol class="gx-journey">
-        {automations.map((a) => (
-          <li>
-            <a href={`#${a.id}`} data-open-auto={a.id} class="gx-j">
-              <span class="gx-j-num">{a.number}</span>
-              <span class="gx-j-name">{a.name}</span>
-              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{a.workflow.triggers[0].title}</span>
-              <span class="gx-j-out">{handoff[a.id] ?? a.kicker}</span>
-            </a>
-          </li>
-        ))}
-      </ol>
-      <div class="gx-team">
-        <p class="gx-team-title">The sample team</p>
-        <ul>
-          {team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="demo" aria-labelledby="demo-title">
-    <div class="container">
-      <span class="eyebrow">Live demo</span>
-      <div class="section-head">
-        <h2 id="demo-title">Fill in the form, then watch workflow 01 run on you</h2>
-      </div>
-      <p class="lede">The landing page that feeds the system, rebuilt so it works here. It runs at your local time, so if it is late where you are, you will see the text wait for morning.</p>
-      <LandingDemo />
-
-      <div class="gx-landing-notes" id="landing">
-        <h3>How the page is built in the funnel builder</h3>
-        <ul class="gx-note-grid">
-          {landingNotes.map((n) => (
-            <li><strong>{n.title}</strong><span>{n.body}</span></li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="section gx-workflows" id="workflows" aria-labelledby="workflows-title">
-    <div class="container">
-      <span class="eyebrow">The workflows</span>
-      <div class="section-head">
-        <h2 id="workflows-title">Pick a workflow, pick a test contact, press Run</h2>
-      </div>
-      <p class="lede">Each one is shown the way it reads in the GHL builder. The simulator follows the builder’s rules: branches never rejoin, a goal pulls the contact forward, Stop on Response ends the run, DND skips the message and time windows hold it.</p>
-
-      <div class="gx-tabs" role="tablist" aria-label="Workflows">
-        {automations.map((a, i) => (
-          <button class="gx-tab" role="tab" type="button" id={`tab-${a.id}`} aria-controls={a.id} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={a.id}>
-            <span class="gx-tab-num">{a.number}</span>
-            <span class="gx-tab-name">{a.name}</span>
-            <span class="gx-tab-kicker">{a.kicker}</span>
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.business.id}`}
+            aria-controls={c.business.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.business.id}
+            style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
+          >
+            <span class="gx-switch-kicker">Case study {i + 1} · {c.business.industry}</span>
+            <span class="gx-switch-name">{c.business.name}</span>
+            <span class="gx-switch-blurb">{c.business.blurb}</span>
+            <span class="gx-switch-meta">{c.automations.length} workflows · a working landing page</span>
           </button>
         ))}
       </div>
-
-      {automations.map((a, i) => <AutomationPanel automation={a} hidden={i !== 0} />)}
     </div>
-  </section>
+  </nav>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
 
   <section class="section" id="compliance" aria-labelledby="compliance-title">
     <div class="container">
@@ -220,22 +171,25 @@ const auto = (id: string) => automations.find((a) => a.id === id);
       <div class="section-head">
         <h2 id="compliance-title">Compliance is part of the build, not a checkbox</h2>
       </div>
-      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows above.</p>
+      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows in all three case studies.</p>
       <ul class="gx-cards">
-        {compliance.map((c) => (
-          <li class="card">
-            <h3>{c.title}</h3>
-            <p>{c.body}</p>
-            {c.where.filter(auto).length > 0 && (
-              <p class="gx-where">
-                In{' '}
-                {c.where.filter(auto).map((id, i, arr) => (
-                  <><a href={`#${id}`} data-open-auto={id}>{auto(id)!.number} · {auto(id)!.name}</a>{i < arr.length - 1 ? ', ' : ''}</>
-                ))}
-              </p>
-            )}
-          </li>
-        ))}
+        {compliance.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => (
+                    <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>
+                  ))}
+                </p>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   </section>
@@ -274,7 +228,7 @@ const auto = (id: string) => automations.find((a) => a.id === id);
         <h3>Naming, so the next person can find things</h3>
         <dl>
           <div><dt>Workflows</dt><dd><code>01 · Lead Intake · Speed to Lead</code> in a Lead Intake folder</dd></div>
-          <div><dt>Tags</dt><dd><code>stl-no-response</code>, <code>missed-call</code>: lowercase, prefixed by the workflow that sets them</dd></div>
+          <div><dt>Tags</dt><dd><code>stl-no-response</code>, <code>pql-alerted</code>: lowercase, prefixed by the workflow that sets them</dd></div>
           <div><dt>Custom fields</dt><dd><code>lead_score</code>, <code>utm_source</code>: snake_case keys, spelled exactly like the form</dd></div>
           <div><dt>Custom values</dt><dd><code>{'{{custom_values.booking_link}}'}</code>: every link and phone number lives in one place</dd></div>
         </dl>

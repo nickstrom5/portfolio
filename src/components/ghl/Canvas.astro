@@ -7,8 +7,9 @@ import Icon from './Icon.astro';
 
 interface Props {
   automation: Automation;
+  caseId: string;
 }
-const { automation: a } = Astro.props;
+const { automation: a, caseId } = Astro.props;
 const wf = a.workflow;
 const names: Record<string, string> = {};
 const collect = (list: Step[]) =>
@@ -38,7 +39,7 @@ const settings = [
 ].filter(Boolean) as { k: string; v: string }[];
 ---
 
-<figure class="g-canvas" data-canvas={a.id} aria-label={`Workflow: ${wf.name}, ${countSteps(wf.steps)} steps`}>
+<figure class="g-canvas" data-canvas={`${caseId}:${a.id}`} aria-label={`Workflow: ${wf.name}, ${countSteps(wf.steps)} steps`}>
   <div class="g-canvas-bar">
     <span class="g-folder">{wf.folder} /</span>
     <span class="g-wfname">{wf.name}</span>
