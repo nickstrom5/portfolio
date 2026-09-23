@@ -1,0 +1,45 @@
+---
+/** Controls and live output for one automation. Wired up by src/lib/ghl/ui.ts. */
+import type { Automation } from '@/lib/ghl/types';
+import { formatClock } from '@/lib/ghl/engine';
+import Icon from './Icon.astro';
+
+interface Props {
+  automation: Automation;
+}
+const { automation: a } = Astro.props;
+---
+
+<div class="g-sim" data-sim={a.id}>
+  <fieldset class="g-scen">
+    <legend>Pick a test contact</legend>
+    <div class="g-scen-list">
+      {a.scenarios.map((s, i) => (
+        <label class="g-scen-opt">
+          <input type="radio" name={`scenario-${a.id}`} value={s.id} checked={i === 0} />
+          <span><strong>{s.label}</strong><span>{s.summary}</span></span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+  <p class="g-override" data-override hidden>
+    Running with your form details: <strong data-override-name></strong>. Nothing is sent or stored.
+    <button type="button" class="g-link" data-clear-override>Use the sample contact</button>
+  </p>
+  <div class="g-controls">
+    <button type="button" class="btn btn-primary" data-run><Icon name="play" size={16} />Run workflow</button>
+    <button type="button" class="btn btn-secondary" data-instant><Icon name="skip" size={16} />Skip to result</button>
+    <button type="button" class="btn btn-secondary" data-reset><Icon name="reset" size={16} />Reset</button>
+  </div>
+  <div class="g-screen">
+    <div class="g-clock">
+      <span class="g-clock-now" data-clock>{formatClock(a.scenarios[0].start)}</span>
+      <span class="g-clock-elapsed" data-elapsed>Not started</span>
+    </div>
+    <ol class="g-log" data-log aria-label="Execution log">
+      <li class="g-log-empty">Run the workflow to see each step with its timestamp.</li>
+    </ol>
+    <p class="g-outcome" data-outcome role="status" hidden></p>
+  </div>
+  <div class="g-screen g-record" data-record aria-label="Contact record"></div>
+</div>

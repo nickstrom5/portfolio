@@ -1,0 +1,108 @@
+---
+/**
+ * The landing page that feeds workflow 01, rebuilt as a working demo. It
+ * mirrors how the page is built in the GHL funnel builder: one goal, a short
+ * single-column form, two optional SMS consent boxes and hidden UTM fields.
+ * Submitting turns the visitor into the test contact for workflow 01.
+ * Nothing is sent anywhere; see src/pages/ghl.astro for the wiring.
+ */
+import { business, env } from '@/data/ghl/business';
+import Icon from './Icon.astro';
+
+const services = ['Storm damage', 'Leak or repair', 'Full replacement', 'Not sure yet'];
+const ages = ['Under 10 years', '10-20 years', 'Over 20 years', 'Not sure'];
+---
+
+<div class="gx-demo" data-demo>
+  <div class="gx-browser">
+    <div class="gx-chrome" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <em>{env.location.website}/free-inspection</em>
+    </div>
+    <div class="lp" data-lp>
+      <div class="lp-top">
+        <span class="lp-logo">
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 12h3l-4 6h6v4h4v-4h6l-4-6h3z" fill="currentColor" /></svg>
+          {business.name}
+        </span>
+        <span class="lp-phone">{env.location.phone}</span>
+      </div>
+      <div class="lp-hero">
+        <div class="lp-copy">
+          <p class="lp-kicker">{business.area} · Free inspection</p>
+          <p class="lp-h">Storm damage? Get a free roof inspection this week.</p>
+          <p class="lp-sub">A local crew checks your roof, photographs anything that needs attention and leaves a written estimate. No pressure and no cost.</p>
+          <ul class="lp-points">
+            <li><Icon name="check" size={16} />Licensed and insured</li>
+            <li><Icon name="check" size={16} />Photos of every issue we find</li>
+            <li><Icon name="check" size={16} />Help with insurance claims</li>
+          </ul>
+        </div>
+
+        <div class="lp-card">
+          <form class="lp-form" data-lp-form novalidate>
+            <p class="lp-form-title">Book your free inspection</p>
+            <div class="lp-row">
+              <label>First name<input name="first" autocomplete="given-name" required /></label>
+              <label>Last name<input name="last" autocomplete="family-name" /></label>
+            </div>
+            <label>Mobile phone<input name="phone" type="tel" autocomplete="tel" required placeholder="(312) 555-0100" /></label>
+            <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+            <label>What do you need?
+              <select name="service" required>
+                <option value="">Choose one</option>
+                {services.map((s) => <option>{s}</option>)}
+              </select>
+            </label>
+            <label>How old is the roof?
+              <select name="age">
+                {ages.map((s, i) => <option selected={i === 3}>{s}</option>)}
+              </select>
+            </label>
+            <label class="lp-check"><input type="checkbox" name="sms" />
+              <span>Text me about my inspection request: scheduling, reminders and updates from {business.name}. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out.</span>
+            </label>
+            <label class="lp-check"><input type="checkbox" name="smsMarketing" />
+              <span>Also text me occasional offers and seasonal roof reminders. Reply STOP to opt out.</span>
+            </label>
+            <p class="lp-fine">Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service</p>
+            <p class="lp-error" data-lp-error role="alert" hidden></p>
+            <button class="lp-submit" type="submit">Get my free inspection</button>
+          </form>
+          <div class="lp-thanks" data-lp-thanks hidden tabindex="-1">
+            <p class="lp-form-title">Thanks, <span data-lp-name></span>. Your request is in.</p>
+            <p>Step 2 of 2: pick a time. In the live funnel, the Roof Inspection calendar sits here, already filled in with your details by Sticky Contact.</p>
+            <div class="lp-slots" aria-hidden="true">
+              <span>Thu 10:00 AM</span><span>Thu 2:30 PM</span><span>Fri 9:00 AM</span>
+            </div>
+            <button type="button" class="lp-again" data-lp-again>Start over</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="gx-demo-side" aria-labelledby="demo-side-title">
+    <h3 id="demo-side-title">What happens when you submit</h3>
+    <ol class="gx-demo-steps">
+      <li>The form creates the contact and saves each answer to a custom field, plus hidden UTM fields read from the page URL.</li>
+      <li><strong>Form Submitted</strong> fires <a href="#speed-to-lead" data-open-auto="speed-to-lead">workflow 01 · Speed to Lead</a>.</li>
+      <li>A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.</li>
+    </ol>
+
+    <fieldset class="gx-next">
+      <legend>After you submit, what do you do?</legend>
+      <label><input type="radio" name="demo-next" value="replies" checked /> Reply to the text</label>
+      <label><input type="radio" name="demo-next" value="books" /> Book from the link</label>
+      <label><input type="radio" name="demo-next" value="quiet" /> Ignore everything</label>
+    </fieldset>
+
+    <div class="gx-captured" data-captured hidden>
+      <p class="gx-captured-title">Your submission, as the contact record sees it</p>
+      <dl data-captured-list></dl>
+      <p class="gx-captured-note" data-captured-when></p>
+      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch workflow 01 run</button>
+    </div>
+    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={'?utm_source=google&utm_medium=cpc&utm_campaign=storm-season#demo'} data-utm-link>Reload with UTM tags</a> to see the hidden fields fill in.</p>
+  </aside>
+</div>

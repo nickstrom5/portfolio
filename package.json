@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "resume:pdf": "node scripts/make-resume-pdf.mjs",
     "qa": "node scripts/qa.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "ghl:check": "node scripts/ghl-check.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

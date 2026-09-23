@@ -1,0 +1,303 @@
+---
+/**
+ * /ghl/ — GoHighLevel automations and landing page, as working demos.
+ * Content lives in src/data/ghl; the simulator is src/lib/ghl. Run
+ * `npm run ghl:check` after editing an automation.
+ */
+import '@/styles/ghl.css';
+import Base from '@/layouts/Base.astro';
+import LandingDemo from '@/components/ghl/LandingDemo.astro';
+import AutomationPanel from '@/components/ghl/AutomationPanel.astro';
+import Icon from '@/components/ghl/Icon.astro';
+import { automations, business, env, sampleContact, team } from '@/data/ghl';
+import { countSteps, simulate } from '@/lib/ghl/engine';
+import type { Step } from '@/lib/ghl/types';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+// Every number in the hero is computed from the data by running the simulator at build time.
+let branches = 0;
+const walk = (list: Step[]) =>
+  list.forEach((s) => {
+    if (s.kind === 'ifelse') {
+      branches += s.branches.length + 1;
+      [...s.branches.map((b) => b.nodes), s.otherwise.nodes].forEach(walk);
+    }
+    if (s.kind === 'wait' && s.branches) {
+      branches += 2;
+      walk(s.branches.met.nodes);
+      walk(s.branches.timeout.nodes);
+    }
+  });
+automations.forEach((a) => walk(a.workflow.steps));
+const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
+const scenarios = automations.reduce((n, a) => n + a.scenarios.length, 0);
+const taken = new Set<string>();
+for (const a of automations) for (const s of a.scenarios) simulate(a, s, sampleContact, env).visited.forEach((v) => v.includes(':') && taken.add(`${a.id}/${v}`));
+const stats = [
+  { value: String(automations.length), label: 'Connected workflows' },
+  { value: String(steps), label: 'Workflow steps' },
+  { value: String(scenarios), label: 'Test contacts you can run' },
+  { value: `${taken.size}/${branches}`, label: 'Branches reached by a test' },
+];
+
+/** What each workflow hands to the next, for the journey map. */
+const handoff: Record<string, string> = {
+  'speed-to-lead': 'New Lead, then a person on reply',
+  'missed-call': 'New Lead from a missed call',
+  'inspection-booked': 'Inspection Booked → Inspected',
+  'estimate-follow-up': 'Estimate Sent → Won',
+  'job-handoff': 'Job Scheduled → Job Complete',
+  'reviews-referrals': 'Review and referral asks',
+  reactivation: 'Old leads back to New Lead',
+};
+
+const landingNotes = [
+  { title: 'One goal, one action', body: 'No navigation menu on the step, and every button on the page leads to the same form. The copy is short, plain and specific to the offer.' },
+  { title: 'A short, honest form', body: 'Single column, labels above the fields, six questions. The two SMS consent boxes are separate (inspection updates, and offers), unticked and optional, with the Privacy Policy and Terms linked, which is what A2P reviewers look for.' },
+  { title: 'Hidden UTM fields', body: 'Custom fields utm_source, utm_medium and utm_campaign with Hidden on and a Query Key that matches the URL parameter exactly. GHL already records First and Latest Attribution by itself; the fields are there so workflows, filters and merge fields can use the values.' },
+  { title: 'Thank-you step with the calendar', body: 'Step 2 embeds the Roof Inspection calendar. Sticky Contact prefills the booking form, so nobody types their details twice, and booking fires workflow 03.' },
+  { title: 'Tracking that survives edits', body: 'Meta Pixel and GA4 go in the funnel’s head tracking code. GHL does not copy tracking code when a step is cloned, so re-checking it is on the launch checklist.' },
+  { title: 'Fast on a phone', body: 'Optimise JavaScript and image optimisation on, hero image under 200 KB. Any custom script listens for the hydrationDone event, so deferred loading does not break it.' },
+  { title: 'Test the headline, not the button colour', body: 'A split-test variation on the step with a 50/50 slider. The Stats tab reports opt-in rate as opt-ins divided by unique page views, and one variation wins before the next test starts.' },
+];
+
+const compliance = [
+  {
+    title: 'A2P-ready opt-in',
+    body: 'Separate consent boxes for inspection updates and for offers, unticked and optional. The same wording goes into the A2P 10DLC campaign registration, and the first text names the business and says how to opt out.',
+    where: ['speed-to-lead'],
+  },
+  {
+    title: 'Quiet hours in the contact’s time zone',
+    body: 'Federal rules stop solicitation texts at 9 PM, but Florida, Oklahoma and Maryland stop at 8. Marketing and follow-up texts wait for an 8 AM to 8 PM window in the contact’s time zone.',
+    where: ['speed-to-lead', 'estimate-follow-up', 'reactivation'],
+  },
+  {
+    title: 'Opt-outs by any reasonable means',
+    body: 'STOP and the other standard keywords switch on SMS DND automatically. “Please stop texting me” does not, and since April 11, 2025 the FCC requires honouring it too, within 10 business days. Workflow 07 catches it and switches DND on.',
+    where: ['reactivation'],
+  },
+  {
+    title: 'No review gating',
+    body: 'Every customer gets the same public review link, whatever they think of the job. Google prohibits selectively asking happy customers, and the FTC rule on reviews (16 CFR Part 465) bans review suppression and incentives tied to sentiment.',
+    where: ['reviews-referrals'],
+  },
+  {
+    title: 'Email that lands',
+    body: 'A dedicated sending subdomain with SPF, DKIM and DMARC, one-click unsubscribe on marketing email as Google and Yahoo require of bulk senders, and a postal address in the footer for CAN-SPAM.',
+    where: ['speed-to-lead', 'estimate-follow-up'],
+  },
+  {
+    title: 'Texts that stay cheap',
+    body: 'One curly apostrophe or dash turns an SMS from GSM-7 into UCS-2 and cuts each segment from 160 characters to 70. Every text on this page is checked automatically for both.',
+    where: [],
+  },
+];
+
+const audit = [
+  { title: 'Loops', body: 'A workflow triggered by a tag that adds the same tag, or two workflows that trigger each other. Fix with trigger filters, re-entry off and an explicit Remove from Workflow.' },
+  { title: 'Double texts', body: 'Allow Re-entry on with no dedupe, so a double form submit sends everything twice. Fix with re-entry off, or a tag guard at the top.' },
+  { title: 'Stop on Response surprises', body: 'It ends the run on any response to the workflow’s messages, out-of-office auto-replies included. Keep it where any reply should reach a person; use a reply wait with timeout branches where the answer matters.' },
+  { title: 'The wrong clock', body: 'Workflows set to the account time zone while contacts span several, and imported contacts with no time zone at all. Quiet hours only work in the recipient’s time.' },
+  { title: 'Duplicate opportunities', body: 'Two cards per lead because duplicates are allowed. Fix the setting, then merge the pipeline so reporting can be trusted again.' },
+  { title: 'Hard-coded links and numbers', body: 'A booking link typed into forty messages. Move it into a custom value so the next change is one edit.' },
+  { title: 'Silent trigger breaks', body: 'A Facebook lead form duplicated in Meta gets a new form ID and the trigger filter stops matching. So does a renamed form or calendar. Trigger Statistics shows it; I check it after any change.' },
+  { title: 'Premium steps doing standard work', body: 'Custom Code and Custom Webhook are billed per execution. Worth it where they earn it, not for a job a standard action does.' },
+];
+
+const process = [
+  { title: 'Scope', body: 'Who the lead is, what counts as success, who acts on what, and what must never happen. Written down before anything is built.' },
+  { title: 'Data model', body: 'Custom fields, dropdown values, tags, pipeline stages and custom values first, named so the next person can guess them.' },
+  { title: 'Build in draft', body: 'One workflow per job, named NN · Folder · Name, with the settings chosen on purpose rather than left at the defaults.' },
+  { title: 'Test with test contacts', body: 'A test contact for every path, checked against Execution Logs and Enrollment History. Real phones and real inboxes for the copy.' },
+  { title: 'Publish and hand off', body: 'Published in a quiet hour, then a short Loom walkthrough and a one-page SOP: what it does, what to change, what never to touch.' },
+  { title: 'Watch it', body: 'Trigger Statistics and Execution Logs checked in the first week, then monthly. Errors fixed before anyone notices them.' },
+];
+
+const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+const count = words[automations.length] ?? String(automations.length);
+const title = 'GoHighLevel automations';
+const description = `${automations.length} working GoHighLevel workflows and a landing page you can test: speed to lead, reminders, reviews, reactivation and the build notes behind each.`;
+const auto = (id: string) => automations.find((a) => a.id === id);
+---
+
+<Base title={title} description={description}>
+  <section class="gx-hero">
+    <div class="container">
+      <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
+      <h1>{count} GoHighLevel workflows. Run every one of them.</h1>
+      <p class="lede">
+        One sub-account for a fictional roofing company, built the way I build for clients: a landing page that captures the lead, {count.toLowerCase()} connected workflows that take it from first call to five-star review, and the notes behind every decision. Each workflow runs in a simulator on this page, on sample contacts or on you.
+      </p>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href="#demo">Try the landing page</a>
+        <a class="btn btn-secondary" href="#workflows">Browse the workflows</a>
+        <a class="btn btn-secondary" href={url('/contact')}>Hire me</a>
+      </div>
+      <dl class="gx-stats">
+        {stats.map((s) => (
+          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+        ))}
+      </dl>
+      <p class="gx-disclaimer">{business.disclaimer} The workflows use GHL’s real triggers, actions and settings, so each one can be rebuilt step for step in a sub-account. Nothing on this page sends a message.</p>
+    </div>
+  </section>
+
+  <section class="section gx-journey-section" id="journey" aria-labelledby="journey-title">
+    <div class="container">
+      <span class="eyebrow">The system</span>
+      <div class="section-head">
+        <h2 id="journey-title">One pipeline, one customer journey</h2>
+      </div>
+      <p class="lede">Each workflow does one job and hands the contact to the next. Pick one to open it below.</p>
+      <ol class="gx-journey">
+        {automations.map((a) => (
+          <li>
+            <a href={`#${a.id}`} data-open-auto={a.id} class="gx-j">
+              <span class="gx-j-num">{a.number}</span>
+              <span class="gx-j-name">{a.name}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{a.workflow.triggers[0].title}</span>
+              <span class="gx-j-out">{handoff[a.id] ?? a.kicker}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-team">
+        <p class="gx-team-title">The sample team</p>
+        <ul>
+          {team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo" aria-labelledby="demo-title">
+    <div class="container">
+      <span class="eyebrow">Live demo</span>
+      <div class="section-head">
+        <h2 id="demo-title">Fill in the form, then watch workflow 01 run on you</h2>
+      </div>
+      <p class="lede">The landing page that feeds the system, rebuilt so it works here. It runs at your local time, so if it is late where you are, you will see the text wait for morning.</p>
+      <LandingDemo />
+
+      <div class="gx-landing-notes" id="landing">
+        <h3>How the page is built in the funnel builder</h3>
+        <ul class="gx-note-grid">
+          {landingNotes.map((n) => (
+            <li><strong>{n.title}</strong><span>{n.body}</span></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-workflows" id="workflows" aria-labelledby="workflows-title">
+    <div class="container">
+      <span class="eyebrow">The workflows</span>
+      <div class="section-head">
+        <h2 id="workflows-title">Pick a workflow, pick a test contact, press Run</h2>
+      </div>
+      <p class="lede">Each one is shown the way it reads in the GHL builder. The simulator follows the builder’s rules: branches never rejoin, a goal pulls the contact forward, Stop on Response ends the run, DND skips the message and time windows hold it.</p>
+
+      <div class="gx-tabs" role="tablist" aria-label="Workflows">
+        {automations.map((a, i) => (
+          <button class="gx-tab" role="tab" type="button" id={`tab-${a.id}`} aria-controls={a.id} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={a.id}>
+            <span class="gx-tab-num">{a.number}</span>
+            <span class="gx-tab-name">{a.name}</span>
+            <span class="gx-tab-kicker">{a.kicker}</span>
+          </button>
+        ))}
+      </div>
+
+      {automations.map((a, i) => <AutomationPanel automation={a} hidden={i !== 0} />)}
+    </div>
+  </section>
+
+  <section class="section" id="compliance" aria-labelledby="compliance-title">
+    <div class="container">
+      <span class="eyebrow">Compliance</span>
+      <div class="section-head">
+        <h2 id="compliance-title">Compliance is part of the build, not a checkbox</h2>
+      </div>
+      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows above.</p>
+      <ul class="gx-cards">
+        {compliance.map((c) => (
+          <li class="card">
+            <h3>{c.title}</h3>
+            <p>{c.body}</p>
+            {c.where.filter(auto).length > 0 && (
+              <p class="gx-where">
+                In{' '}
+                {c.where.filter(auto).map((id, i, arr) => (
+                  <><a href={`#${id}`} data-open-auto={id}>{auto(id)!.number} · {auto(id)!.name}</a>{i < arr.length - 1 ? ', ' : ''}</>
+                ))}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit an account</h2>
+        <p class="lede">Most broken GHL setups fail in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => (
+          <li><strong>{x.title}</strong><span>{x.body}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From a brief to a workflow the team trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Workflows</dt><dd><code>01 · Lead Intake · Speed to Lead</code> in a Lead Intake folder</dd></div>
+          <div><dt>Tags</dt><dd><code>stl-no-response</code>, <code>missed-call</code>: lowercase, prefixed by the workflow that sets them</dd></div>
+          <div><dt>Custom fields</dt><dd><code>lead_score</code>, <code>utm_source</code>: snake_case keys, spelled exactly like the form</dd></div>
+          <div><dt>Custom values</dt><dd><code>{'{{custom_values.booking_link}}'}</code>: every link and phone number lives in one place</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Need workflows like these in your account?</h2>
+        <p class="muted">I build, fix and document GoHighLevel sub-accounts: workflows, pipelines, funnels and the compliance around them.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initGhlPage } from '@/lib/ghl/page';
+  initGhlPage();
+</script>
