@@ -1,5 +1,5 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
-import { formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
+import { dateFieldValue, formatDay, nextWeekdayAt } from '@/lib/ghl/engine';
 
 const DAY = 1440;
 const MON_SAT = [0, 1, 2, 3, 4, 5];
@@ -8,10 +8,7 @@ const MON_SAT = [0, 1, 2, 3, 4, 5];
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
 /** The simulated date the way a GHL date field stores it: MM-DD-YYYY. */
-const dateField = (min: number) => {
-  const d = new Date(Date.UTC(2026, 2, 2) + Math.floor(min / DAY) * DAY * 60000);
-  return `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}-${d.getUTCFullYear()}`;
-};
+const dateField = dateFieldValue;
 
 /** A homeowner whose roof is finished: 05 has tagged the job, set Job Date and moved the card to Job Complete. */
 const finished = (start: number, assignedTo: string, amount: number, over: Partial<Contact> = {}): Partial<Contact> => ({
