@@ -44,6 +44,8 @@ export interface ScenarioEvent {
   appointmentAt?: number;
   /** Optional label shown in the log instead of the default. */
   label?: string;
+  /** For replies: the channel they came in on. Default sms. */
+  channel?: 'sms' | 'email';
 }
 
 export type DndChannel = 'sms' | 'email' | 'calls';
@@ -189,6 +191,8 @@ export interface WaitNode {
   mode: 'time' | 'event' | 'before_appointment' | 'after_appointment';
   minutes?: number;
   event?: EventType;
+  /** For event waits: only this link, tag or value counts (e.g. the 'replay' link). */
+  value?: string | number;
   /** Minutes before/after the appointment start for appointment-relative waits. */
   offset?: number;
   summary: string;
@@ -404,7 +408,7 @@ export interface LandingBehavior {
    * Events for the visitor's run. `start` is their submit time and
    * `firstText` the minutes until the first text can go out (quiet hours).
    */
-  events: (ctx: { start: number; firstText: number }) => ScenarioEvent[];
+  events: (ctx: { start: number; firstText: number; texts: boolean }) => ScenarioEvent[];
 }
 
 export interface LandingPage {

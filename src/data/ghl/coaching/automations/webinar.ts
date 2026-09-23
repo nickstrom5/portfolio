@@ -37,11 +37,11 @@ Saturday 8:15 PM      Email    Never opened the replay          Invitation to ne
 Texts carry reminders only. Nothing is sold by text: the offer goes by email.
 Latest text: 7:55 PM Eastern. Most texts in any 24 hours: three.`;
 
-const triggerLinks = `Trigger link       Points to                                  Used in
-Workshop Join      Workshop Room URL custom value (Zoom)      Confirmation, day-before email, both texts
-Workshop Replay    Replay page, live for 48 hours             Replay email, Friday text, offer P.S.
-Checkout           Two-Step Order form, Career Pivot Blueprint Offer email
-Apply              1:1 Pivot Coaching application             Offer email
+const triggerLinks = `Trigger link      Points to                                    Used in
+Workshop Join     Workshop Room URL custom value (Zoom)        Confirmation, day-before email, both texts
+Workshop Replay   Replay page, up for 48 hours                 Replay email, Friday text, offer P.S.
+Checkout          Two-Step Order form, Career Pivot Blueprint  Offer email
+Apply             1:1 Pivot Coaching application               Offer email
 
 Insert each one with the Trigger Links picker in the email or SMS editor.
 A raw URL, or the custom value on its own, sends people to the same page
@@ -54,7 +54,7 @@ export const webinar: Automation = {
   kicker: 'Workshop',
   tagline: 'Every registrant gets a confirmation and reminders pinned to Thursday at 7 PM, and after the session the workflow sends the offer to people who joined and the replay to people who did not.',
   problem:
-    'Morgan sent the workshop reminders by hand from her inbox, when she remembered. Show-up was thin, people who missed it heard nothing until next week’s promo, and people who had sat through the whole hour got the same "sorry we missed you" email as everyone else.',
+    'Workshop reminders went out by hand from Morgan’s inbox, when there was time. Show-up was thin, people who missed the session heard nothing until the next promo, and people who had sat through the whole hour got the same "sorry we missed you" email as everyone else.',
   solution:
     'One run per registration. Event Start Date pins every reminder to the Thursday session, texts go only to people who ticked the reminders box, and 75 minutes after the start one signal, a click on the Join trigger link, decides what comes next: the offer with the price and refund policy, or the replay for 48 hours with one text nudge. Replay viewers get the same offer, current students get their login instead, and anyone who never watches is invited to next week.',
   workflow: {
@@ -77,7 +77,7 @@ export const webinar: Automation = {
         'Stop on Response off: "see you Thursday" or a question about the replay must not cancel the reminders or the replay. Replies land in Conversations for a person, and STOP still turns on SMS DND by itself.',
         'Timezone: Contact. Event Start Date ignores this and always uses the account time zone, Central, which is what a live session needs. The contact zone only drives the Advance Window after a replay click.',
         'No workflow Time Window: it would also hold the 8:15 PM follow-up emails. The texts are pinned to the session instead, and the latest one lands at 7:55 PM Eastern.',
-        'Sender: From Name Morgan Hale, from morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not {{user.first_name}}, because the assigned user changes when Devon picks up an application.',
+        'Sender: From Name Morgan Hale, from morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not the name of the assigned user, because the assigned user changes when Devon picks up an application.',
       ],
     },
     steps: [
@@ -142,7 +142,7 @@ export const webinar: Automation = {
                         label: '1 day before',
                         mode: 'before_appointment',
                         offset: DAY,
-                        summary: 'Wait for Event/Appointment Time: 1 day before the event start date. If this date has already passed: Skip all outbound communication actions till next wait, so a same-day registrant does not get "tomorrow" by mistake.',
+                        summary: 'Wait for Event/Appointment Time: 1 day before the event start date. If this date has already passed: "Skip all outbound communication actions till next wait or event start date action", so a same-day registrant does not get "tomorrow" by mistake.',
                       },
                       {
                         id: 'email-1d',
@@ -175,7 +175,7 @@ export const webinar: Automation = {
                         summary: 'The first text they get from this account, so it names the sender and carries the opt-out line. Skipped for anyone on SMS DND.',
                         message: {
                           channel: 'sms',
-                          body: '{{location.name}}: Hi {{contact.first_name}}, {{custom_values.workshop_title}} starts in 1 hour, at 7 PM Central. Join here: {{trigger_link.join}} Reply STOP to opt out.',
+                          body: '{{location.name}}: Hi {{contact.first_name}}, the workshop starts in 1 hour (7 PM CT). Join: {{trigger_link.join}} Reply STOP to opt out.',
                         },
                       },
                       {
@@ -383,7 +383,7 @@ export const webinar: Automation = {
                                       summary: 'A reminder about the event they signed up for, not a pitch: no price, no checkout link. Skipped for anyone on SMS DND.',
                                       message: {
                                         channel: 'sms',
-                                        body: "{{location.name}}: Hi {{contact.first_name}}, the replay of Thursday's workshop is up until Saturday evening. Watch it here: {{trigger_link.replay}}",
+                                        body: "{{location.name}}: Hi {{contact.first_name}}, the replay of Thursday's workshop is up until Saturday evening: {{trigger_link.replay}}",
                                       },
                                     },
                                     {
@@ -456,7 +456,7 @@ export const webinar: Automation = {
                       action: 'create_opportunity',
                       title: 'Create Opportunity',
                       label: 'Registered',
-                      summary: 'Enrollment › Registered, named "{{contact.name}} · Workshop", source Workshop page. Only reached when the contact has no card at all, so Duplicate Opportunity stays off.',
+                      summary: 'Enrollment › Registered, named after the contact with " · Workshop", source Workshop page. Only reached when the contact has no card at all, so Duplicate Opportunity stays off.',
                       effect: { opportunity: { pipeline: 'Enrollment', stage: 'Registered', status: 'open' } },
                     },
                     {
@@ -565,7 +565,12 @@ export const webinar: Automation = {
       start: 7 * 60 + 50,
       contact: { fields: { sms_consent: 'Yes', sms_marketing_consent: 'No', current_role: 'Senior leader', goal: 'Freelancing' } },
       events: [
-        { at: fromWorkshop(7 * 60 + 50, -56), type: 'reply', value: 'Will there be a replay if I have to leave at 8?' },
+        {
+          at: fromWorkshop(7 * 60 + 50, -56),
+          type: 'reply',
+          value: 'Will there be a replay if I have to leave at 8?',
+          label: 'Stop on Response is off, so the reminders carry on. A person answers in Conversations.',
+        },
         { at: fromWorkshop(7 * 60 + 50, -3), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the doors-open text' },
         { at: fromWorkshop(7 * 60 + 50, 52), type: 'order_submitted', value: 497, label: 'Career Pivot Blueprint, paid in full' },
       ],
@@ -590,7 +595,9 @@ export const webinar: Automation = {
     customValues: [
       { name: 'Workshop Title', key: 'workshop_title', value: 'The Career Pivot Plan' },
       { name: 'Workshop Room URL', key: 'workshop_room_url', value: 'The Zoom link behind the Join trigger link' },
-      { name: 'Course Name / Price / Payment Plan', key: 'course_name', value: 'Career Pivot Blueprint · $497 · 3 payments of $179' },
+      { name: 'Course Name', key: 'course_name', value: 'Career Pivot Blueprint' },
+      { name: 'Course Price', key: 'course_price', value: '$497' },
+      { name: 'Payment Plan', key: 'payment_plan', value: '3 payments of $179' },
       { name: 'Refund Policy', key: 'refund_policy', value: '14-day money-back guarantee' },
       { name: 'Founder First Name', key: 'founder_first_name', value: 'Morgan' },
     ],
@@ -610,7 +617,7 @@ export const webinar: Automation = {
     },
     {
       title: 'Consent by DND, and what it costs',
-      body: 'Anyone whose SMS Consent is not Yes gets SMS DND switched on at the top, then a Go To puts them back on the main path. One step replaces an If/Else in front of every text, and a text added next month is covered without anyone remembering. The cost: DND is contact-wide and outlives the run. It blocks texts from every workflow and from the team, so a later opt-in, for example at checkout, has to switch it off on purpose. It is set Outbound only, so their own texts still reach us. The workflow never switches DND off, because it cannot tell its own DND from a STOP.',
+      body: 'Anyone whose SMS Consent is not Yes gets SMS DND switched on at the top, then a Go To puts them back on the main path. One step replaces an If/Else in front of every text, and a text added next month is covered without anyone remembering. The cost: DND is contact-wide and outlives the run. It blocks texts from every workflow and from the team, so a later opt-in, for example at checkout, has to switch it off on purpose. Someone who ticked only the marketing box also loses 02’s cart text; that is rare on this form and the safe direction to be wrong in. It is set Outbound only, so their own texts still reach us. The workflow never switches DND off, because it cannot tell its own DND from a STOP.',
     },
     {
       title: 'Find the card before moving it',
@@ -626,7 +633,7 @@ export const webinar: Automation = {
     },
     {
       title: 'Test against the calendar',
-      body: 'Five test contacts, one per scenario above, plus registrations on a Friday and on a Thursday afternoon to check the Event Start Date each one gets in Execution Logs. Then Morgan gets the schedule below, so she knows exactly who hears what, and when, without opening the builder.',
+      body: 'Five test contacts, one per scenario above, plus registrations on a Friday and on a Thursday afternoon to check the Event Start Date each one gets in Execution Logs. Then Morgan gets the schedule below: who hears what, and when, without opening the builder.',
     },
   ],
   edgeCases: [
@@ -663,10 +670,10 @@ export const webinar: Automation = {
     'Do not click anything: the replay email at 8:15 PM, one text on Friday at 2:15 PM, the invitation on Saturday at 8:15 PM and the workshop-no-show tag',
     'Open the replay on Friday: the offer arrives about two hours later, the card moves to Attended and Attended Live stays No',
     'Pay during the session: Enrollment History shows the contact removed by 03, and no offer email goes out',
-    'Every trigger link records a click on the activity timeline, every merge field renders in Gmail, Outlook and on a phone, and each text is one segment',
+    'Every trigger link records a click on the activity timeline, every merge field renders in Gmail, Outlook and on a phone, and each text stays one segment with an 11-letter first name and the real trigger-link URL',
   ],
   snippets: [
-    { title: 'Who hears what, and when', language: 'text', code: schedule, note: 'Goes to Morgan with the SOP, so she can answer "did they get a reminder?" without opening the builder.' },
+    { title: 'Who hears what, and when', language: 'text', code: schedule, note: 'Goes to Morgan and the team with the SOP, so anyone can answer "did they get a reminder?" without opening the builder.' },
     { title: 'Trigger links', language: 'text', code: triggerLinks, note: 'Created once in Marketing › Trigger Links. The Join link’s URL is a custom value, so a new Zoom room is a one-field change.' },
   ],
   features: [

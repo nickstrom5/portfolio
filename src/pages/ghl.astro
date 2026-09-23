@@ -129,7 +129,7 @@ const description =
   <section class="gx-hero">
     <div class="container">
       <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-      <h1>{caseWord} {cases.length === 1 ? 'business' : 'businesses'}. {plural(all.length, 'GoHighLevel workflow', 'GoHighLevel workflows')}. Run every one.</h1>
+      <h1>{all.length}&nbsp;GoHighLevel {all.length === 1 ? 'workflow' : 'workflows'} across {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one.</h1>
       <p class="lede">
         {cases.length === 3
           ? 'Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments.'
@@ -139,7 +139,7 @@ const description =
       <div class="gx-cta">
         <a class="btn btn-primary" href="#cases">Pick a case study</a>
         <a class="btn btn-secondary" href="#process">How I work</a>
-        <a class="btn btn-secondary" href={url('/contact')}>Hire me</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
       </div>
       <dl class="gx-stats">
         {stats.map((s) => (
@@ -150,7 +150,7 @@ const description =
     </div>
   </section>
 
-  <nav class="gx-switch" id="cases" aria-label="Case studies">
+  <div class="gx-switch" id="cases">
     <div class="container">
       <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
         {cases.map((c, i) => (
@@ -161,19 +161,22 @@ const description =
             id={`case-tab-${c.business.id}`}
             aria-controls={c.business.id}
             aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.business.id}`}
+            aria-describedby={`case-blurb-${c.business.id}`}
             tabindex={i === 0 ? 0 : -1}
             data-case-tab={c.business.id}
             style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
           >
-            <span class="gx-switch-kicker">Case study {i + 1} · {c.business.industry}</span>
-            <span class="gx-switch-name">{c.business.name}</span>
-            <span class="gx-switch-blurb">{c.business.blurb}</span>
-            <span class="gx-switch-meta">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}>{c.business.industry}. {c.business.blurb} {plural(c.automations.length, 'workflow', 'workflows')} and a working landing page.</span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
           </button>
         ))}
       </div>
     </div>
-  </nav>
+  </div>
 
   {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
 

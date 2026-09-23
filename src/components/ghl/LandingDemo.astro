@@ -64,30 +64,36 @@ const titleId = `${caseId}-demo-side-title`;
             {rows.map((row) => {
               const field = (f: LandingField) =>
                 f.type === 'select' ? (
-                  <label>{f.label}
-                    <select name={f.name} required={f.required}>
+                  <label><span>{f.label}{f.required && <span class="lp-req" aria-hidden="true"> *</span>}</span>
+                    <select name={f.name} required={f.required} aria-describedby={`${caseId}-lp-error`}>
                       {!f.initial && <option value="">Choose one</option>}
                       {f.options!.map((o) => <option selected={o === f.initial}>{o}</option>)}
                     </select>
                   </label>
                 ) : (
-                  <label>{f.label}<input name={f.name} type={f.type} autocomplete={f.autocomplete} required={f.required} placeholder={f.placeholder} /></label>
+                  <label><span>{f.label}{f.required && <span class="lp-req" aria-hidden="true"> *</span>}</span><input name={f.name} type={f.type} autocomplete={f.autocomplete} required={f.required} placeholder={f.placeholder} aria-describedby={`${caseId}-lp-error`} /></label>
                 );
               return row.length === 2 ? <div class="lp-row">{field(row[0])}{field(row[1])}</div> : field(row[0]);
             })}
             <label class="lp-check"><input type="checkbox" name="sms" /><span>{l.consent.transactional}</span></label>
             <label class="lp-check"><input type="checkbox" name="smsMarketing" /><span>{l.consent.marketing}</span></label>
-            <p class="lp-fine">{l.consent.fine}</p>
-            <p class="lp-error" data-lp-error role="alert" hidden></p>
+            <p class="lp-fine">
+              {l.consent.fine.replace(/\s*Privacy Policy · Terms of Service\s*$/, '')}{' '}
+              <a href={`#${caseId}-policies`}>Privacy Policy</a> · <a href={`#${caseId}-policies`}>Terms of Service</a> · <span aria-hidden="true">*</span> Required
+            </p>
+            <p class="lp-error" id={`${caseId}-lp-error`} data-lp-error role="alert" hidden></p>
             <button class="lp-submit" type="submit">{l.submitLabel}</button>
           </form>
           <div class="lp-thanks" data-lp-thanks hidden tabindex="-1">
             <p class="lp-form-title" data-lp-thanks-title></p>
             <p>{l.thanks.body}</p>
             {l.thanks.slots && (
-              <div class="lp-slots" aria-hidden="true">
-                {l.thanks.slots.map((s) => <span>{s}</span>)}
-              </div>
+              <>
+                <p class="lp-slots-caption">Calendar preview</p>
+                <div class="lp-slots" aria-hidden="true">
+                  {l.thanks.slots.map((s) => <span>{s}</span>)}
+                </div>
+              </>
             )}
             <button type="button" class="lp-again" data-lp-again>Start over</button>
           </div>
@@ -117,5 +123,6 @@ const titleId = `${caseId}-demo-side-title`;
       <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the workflow run</button>
     </div>
     <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={`?utm_source=google&utm_medium=cpc&utm_campaign=spring-launch#${caseId}-demo`}>Reload with UTM tags</a> to see the hidden fields fill in.</p>
+    <p class="gx-demo-note" id={`${caseId}-policies`}>In the live funnel, Privacy Policy and Terms of Service link to the business’s own pages, with an SMS section saying mobile numbers are never shared for marketing. A2P reviewers check both.</p>
   </aside>
 </div>

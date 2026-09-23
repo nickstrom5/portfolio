@@ -7,13 +7,33 @@
  * and one of its workflows; #roofing-demo scrolls to a case's landing page.
  */
 import { cases } from '@/data/ghl';
-import { formatDay, formatTime, nextWindowOpen } from './engine';
+import { formatDay, formatTime, nextWindowOpen, useWeekOf } from './engine';
 import type { CaseStudy, Contact } from './types';
 import { Simulator, envFor } from './ui';
 
 const DAY = 1440;
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scrollTo = (el: Element | null | undefined) => el?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+
+/** Moves keyboard focus to an element without scrolling it (the smooth scroll is already under way). */
+function focusQuietly(el: HTMLElement | null | undefined) {
+  if (!el) return;
+  if (!el.hasAttribute('tabindex') && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+  el.focus({ preventScroll: true });
+}
+
+/** One shared polite live region for small confirmations like "Copied". */
+function announcer() {
+  let el = document.getElementById('gx-announce');
+  if (!el) {
+    el = document.createElement('p');
+    el.id = 'gx-announce';
+    el.className = 'sr-only';
+    el.setAttribute('role', 'status');
+    document.body.append(el);
+  }
+  return el;
+}
 
 /** Roving-focus tablist: click, arrow keys, Home and End. */
 function tablist(tabs: HTMLButtonElement[], key: string, onSelect: (id: string, focus: boolean) => void) {
@@ -42,11 +62,16 @@ function mark(tabs: HTMLButtonElement[], key: string, id: string, focus: boolean
     if (on && focus) t.focus();
     // On phones the workflow tabs are a swipeable strip; keep the selected one visible.
     const strip = t.parentElement;
-    if (on && strip && strip.scrollWidth > strip.clientWidth) strip.scrollTo({ left: t.offsetLeft - strip.offsetLeft - 16 });
+    if (on && strip && strip.scrollWidth > strip.clientWidth) {
+      const pad = parseFloat(getComputedStyle(strip).scrollPaddingInlineStart) || 16;
+      strip.scrollTo({ left: Math.max(0, t.offsetLeft - strip.offsetLeft - pad) });
+    }
   });
 }
 
 export function initGhlPage() {
+  // Dates in the log and in messages follow the visitor's own week.
+  useWeekOf(new Date());
   const sims = new Map<string, Simulator>();
   document.querySelectorAll<HTMLElement>('[data-sim]').forEach((root) => {
     const study = cases.find((c) => c.business.id === root.dataset.case);
@@ -68,6 +93,16 @@ export function initGhlPage() {
     openAutomation.set(caseId, select);
   });
 
+  // Build-note tabs inside each workflow panel.
+  document.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((list) => {
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-note-tab]')];
+    const panels = [...(list.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])];
+    tablist(tabs, 'noteTab', (id, focus) => {
+      mark(tabs, 'noteTab', id, focus);
+      panels.forEach((p) => (p.hidden = p.dataset.notePanel !== id));
+    });
+  });
+
   // The case switcher.
   const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
   const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
@@ -78,27 +113,24 @@ export function initGhlPage() {
   };
   const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
 
-  /** Resolves "#case", "#case-automation" and "#case-section" to the right view. */
-  function go(target: string, scroll: boolean) {
+  /**
+   * Resolves "#case", "#case-automation" and "#case-section" to the right view.
+   * With `focus`, keyboard focus follows (the workflow's heading, or the section).
+   */
+  function go(target: string, scroll: boolean, focus = false) {
     const caseId = caseIds.find((c) => target === c || target.startsWith(`${c}-`));
     if (!caseId) return false;
     selectCase(caseId, false, false);
     const rest = target.slice(caseId.length + 1);
     const study = cases.find((c) => c.business.id === caseId);
-    if (rest && study?.automations.some((a) => a.id === rest)) openAutomation.get(caseId)?.(rest);
+    const isAutomation = !!rest && !!study?.automations.some((a) => a.id === rest);
+    if (isAutomation) openAutomation.get(caseId)?.(rest);
     else history.replaceState(null, '', `#${target}`);
-    if (scroll) scrollTo(document.getElementById(target));
+    const el = document.getElementById(target);
+    if (scroll) scrollTo(el);
+    if (focus) focusQuietly(isAutomation ? el?.querySelector<HTMLElement>('[data-panel-heading]') : el);
     return true;
   }
-
-  document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
-    a.addEventListener('click', (e) => {
-      if (go(a.dataset.openAuto!, true)) e.preventDefault();
-    }),
-  );
-  const fromHash = () => go(decodeURIComponent(location.hash.slice(1)), true);
-  window.addEventListener('hashchange', fromHash);
-  fromHash();
 
   // Copy buttons on snippets.
   document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
@@ -108,8 +140,10 @@ export function initGhlPage() {
       try {
         await navigator.clipboard.writeText(code);
         if (label) label.textContent = 'Copied';
+        announcer().textContent = 'Copied to the clipboard.';
       } catch {
         if (label) label.textContent = 'Select and copy';
+        announcer().textContent = 'Copying was blocked. Select the code and copy it.';
       }
       window.setTimeout(() => label && (label.textContent = 'Copy'), 1600);
     }),
@@ -119,6 +153,24 @@ export function initGhlPage() {
     const study = cases.find((c) => c.business.id === demo.dataset.demo);
     if (study) initLandingDemo(demo, study, sims, (id) => openAutomation.get(study.business.id)?.(id));
   });
+
+  // Links last, so a bad hash can never stop the rest of the page from working.
+  document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      if (go(a.dataset.openAuto!, true, true)) e.preventDefault();
+    }),
+  );
+  const fromHash = () => {
+    let target = location.hash.slice(1);
+    try {
+      target = decodeURIComponent(target);
+    } catch {
+      // Not a valid escape sequence; use it as written.
+    }
+    go(target, true);
+  };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
 }
 
 function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, Simulator>, openAutomation: (id: string) => void) {
@@ -142,15 +194,28 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     const get = (k: string) => String(data.get(k) ?? '').trim();
     const texts = !!data.get('sms');
     const missing: string[] = [];
+    const invalid: HTMLElement[] = [];
+    form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
     for (const f of l.fields) {
       const v = get(f.name);
+      const input = form.elements.namedItem(f.name) as HTMLElement | null;
       const needed = f.required || (f.maps === 'phone' && texts);
-      if (needed && !v) missing.push(f.maps === 'phone' && texts && !f.required ? 'a mobile number for the texts' : f.label.toLowerCase().replace(/\?$/, ''));
-      else if (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v)) missing.push('a valid email');
+      const name = f.label.replace(/ \(.*\)$/, '').replace(/\?$/, '');
+      let problem = '';
+      if (needed && !v) problem = f.maps === 'phone' && texts && !f.required ? 'Mobile phone (needed for the texts you asked for)' : name;
+      else if (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v)) problem = `${name} (check the address)`;
+      if (problem) {
+        missing.push(problem);
+        if (input) {
+          input.setAttribute('aria-invalid', 'true');
+          invalid.push(input);
+        }
+      }
     }
     if (missing.length) {
-      error.textContent = `Please add ${missing.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`;
+      error.textContent = `Please fill in: ${missing.join(', ')}.`;
       error.hidden = false;
+      invalid[0]?.focus();
       return;
     }
     error.hidden = true;
@@ -193,11 +258,13 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
 
   demo.querySelector('[data-lp-again]')?.addEventListener('click', () => {
     form.reset();
+    form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
     form.hidden = false;
     thanks.hidden = true;
     captured.hidden = true;
     identity = undefined;
     sim()?.useContact(undefined);
+    form.querySelector<HTMLElement>('input, select')?.focus();
   });
 
   demo.querySelector('[data-run-demo]')?.addEventListener('click', () => {
@@ -209,9 +276,11 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     // Replies and bookings land after the first text can actually go out.
     const firstText = texts && l.textWindow ? nextWindowOpen(start, l.textWindow) - start : 0;
     s.selectScenario(behavior.scenario);
-    s.useContact(identity, { start, events: behavior.events({ start, firstText }) });
+    s.useContact(identity, { start, events: behavior.events({ start, firstText, texts }) });
     openAutomation(l.feeds);
-    scrollTo(document.querySelector(`#${caseId}-${l.feeds} .gx-lab`));
-    window.setTimeout(() => s.run(false), reduceMotion() ? 0 : 500);
+    const target = document.querySelector<HTMLElement>(`#${caseId}-${l.feeds} .g-controls`);
+    scrollTo(target);
+    focusQuietly(s.logElement);
+    s.runLater(reduceMotion() ? 0 : 500);
   });
 }

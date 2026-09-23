@@ -13,12 +13,19 @@ interface Props {
 const { automation: a, caseId, hidden = false } = Astro.props;
 const dm = a.dataModel;
 const uid = `${caseId}-${a.id}`;
+const notes = [
+  { key: 'build', label: 'How I built it' },
+  { key: 'model', label: 'Data model' },
+  { key: 'edges', label: `Edge cases (${a.edgeCases.length})` },
+  { key: 'qa', label: `Test plan (${a.qa.length})` },
+  ...(a.snippets && a.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
+];
 ---
 
 <article class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
   <header class="gx-panel-head">
     <span class="eyebrow">{a.number} · {a.kicker}</span>
-    <h4>{a.name}</h4>
+    <h4 tabindex="-1" data-panel-heading>{a.name}</h4>
     <p class="gx-tagline">{a.tagline}</p>
   </header>
 
@@ -49,17 +56,22 @@ const uid = `${caseId}-${a.id}`;
   </div>
 
   <div class="gx-notes">
-    <section class="gx-build" aria-labelledby={`build-${uid}`}>
-      <h5 id={`build-${uid}`}>How I built it</h5>
+    <h5 class="gx-notes-title">Build notes</h5>
+    <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
+      {notes.map((n, i) => (
+        <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
+      ))}
+    </div>
+
+    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build">
       <ol class="gx-build-list">
         {a.build.map((b) => (
           <li><strong>{b.title}.</strong> {b.body}</li>
         ))}
       </ol>
-    </section>
+    </div>
 
-    <section class="gx-model" aria-labelledby={`model-${uid}`}>
-      <h5 id={`model-${uid}`}>Data model</h5>
+    <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
       {dm.customFields && dm.customFields.length > 0 && (
         <div class="gx-table-wrap">
           <table class="gx-table">
@@ -86,42 +98,39 @@ const uid = `${caseId}-${a.id}`;
       {dm.customValues && dm.customValues.length > 0 && (
         <p class="gx-values">Custom values: {dm.customValues.map((v, i) => <><code>{`{{custom_values.${v.key}}}`}</code>{i < dm.customValues!.length - 1 ? ' ' : ''}</>)}</p>
       )}
-    </section>
+    </div>
 
-    <section class="gx-edges" aria-labelledby={`edges-${uid}`}>
-      <h5 id={`edges-${uid}`}>Edge cases it handles</h5>
+    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges" hidden>
       <ul class="gx-edge-list">
         {a.edgeCases.map((e) => (
           <li><strong>{e.title}</strong><span>{e.body}</span></li>
         ))}
       </ul>
-    </section>
+    </div>
 
-    <section class="gx-qa" aria-labelledby={`qa-${uid}`}>
-      <h5 id={`qa-${uid}`}>Test plan before publishing</h5>
+    <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
       <ul class="gx-qa-list">
         {a.qa.map((q) => (
           <li><Icon name="check" size={16} /><span>{q}</span></li>
         ))}
       </ul>
-    </section>
+    </div>
 
     {a.snippets && a.snippets.length > 0 && (
-      <section class="gx-snips" aria-labelledby={`snips-${uid}`}>
-        <h5 id={`snips-${uid}`}>Copy-ready pieces</h5>
+      <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
         <div class="gx-snip-grid">
           {a.snippets.map((sn) => (
             <div class="g-snippet">
               <div class="g-snippet-head">
                 <h6>{sn.title}</h6>
-                <button type="button" class="g-copy" data-copy><Icon name="copy" size={15} /><span>Copy</span></button>
+                <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
               </div>
               <pre><code>{sn.code}</code></pre>
               {sn.note && <p>{sn.note}</p>}
             </div>
           ))}
         </div>
-      </section>
+      </div>
     )}
 
     <div class="gx-features">

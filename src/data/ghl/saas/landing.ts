@@ -53,7 +53,7 @@ export const landing: LandingPage = {
       value: 'replies',
       label: 'Reply to the email instead',
       scenario: 'replies',
-      events: () => [{ at: 35, type: 'reply', value: 'Thanks. Can we do Thursday afternoon? I would like our dispatcher on the call too.' }],
+      events: () => [{ at: 35, type: 'reply', channel: 'email', value: 'Thanks. Can we do Thursday afternoon? I would like our dispatcher on the call too.' }],
     },
     { value: 'quiet', label: 'Close the tab and forget', scenario: 'quiet', events: () => [] },
   ],
