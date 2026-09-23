@@ -482,7 +482,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
    * the time a watched event happened, if it did. Throws for goal jumps,
    * removals by another workflow and Stop on Response.
    */
-  function advanceTo(target: number, watch?: { event: EventType; value?: string | number }): number | undefined {
+  function advanceTo(target: number, watch?: { event: EventType; value?: GoalNode['value'] }): number | undefined {
     while (queue.length && queue[0].at <= target) {
       const ev = queue.shift()!;
       t = Math.max(t, ev.at);

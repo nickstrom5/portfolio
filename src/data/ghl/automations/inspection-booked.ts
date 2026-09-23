@@ -378,11 +378,13 @@ export const inspectionBooked: Automation = {
                           when: { type: 'appointment', status: 'showed' },
                           nodes: [
                             {
+                              // Latest, Roofing Sales, Status Open, right before the card moves. A card this run
+                              // created is not in context for Update Opportunity, and days have passed since the
+                              // first Find, so the workflow looks again instead of trusting it.
                               id: 'find-inspected',
                               kind: 'ifelse',
                               title: 'Find Opportunity',
                               label: 'Find the card again',
-                              summary: 'Latest, Roofing Sales, Status Open, right before the card moves. A card this run created is not in context for Update Opportunity, and days have passed since the first Find, so the workflow looks again instead of trusting it.',
                               branches: [
                                 {
                                   label: 'Opportunity Found',

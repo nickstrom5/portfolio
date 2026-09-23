@@ -181,14 +181,22 @@ export const onboarding: Automation = {
       stopOnResponse: false,
       timezone: 'contact',
       senderName: 'Morgan Hale',
+      exits: [
+        {
+          event: 'tag_added',
+          value: 'access-paused',
+          by: '04 · Billing · Failed Payment Recovery pauses course access on day 10 of an unpaid installment, tags access-paused and removes the contact from this workflow, so no "log in" nudge reaches someone who cannot. This run is over about two weeks after purchase and the second installment is due a month in, so it is a guard rather than a path anyone takes today.',
+        },
+      ],
       notes: [
         'Trigger: Order Submitted, Global Product is Career Pivot Blueprint, which covers both prices. It fires on a completed payment; Order Form Submission, which fires on step 1 whether or not they pay, belongs to 02. No Submission Type, funnel, page or source filter: Submission Type Primary describes order-form checkouts only, and this workflow is the one place access is granted, so a payment-link sale or a future bump must not slip past it.',
         'Allow Re-entry off: a second order of the same course is a mistake to refund, not a second onboarding. Other products fire Order Submitted too but never match the filter, and a contact held in a wait could not enter a second time anyway. The one cost: someone who refunded and buys again later gets no second run, so the refund SOP says Sasha grants their offer by hand.',
         'Stop on Response off: replies are questions for Jules, and they land in her Conversations inbox. Every later step is decided by the course itself, not by whether someone replied.',
         'No workflow Time Window: access, the welcome and the Slack post must go the minute they pay, even at 11 PM. The one text sits behind its own Advance Window, 10 AM to 7 PM in the contact’s time zone.',
         'Sender Details: From Name Morgan Hale, From Email morgan@trailheadcareers.example, for the welcome. The four emails from Jules override From Name and From Email at the step with hers, because this workflow makes her the owner and her name is in the signature.',
-        'Every email here delivers or supports a course the student paid for, which CAN-SPAM treats as transactional or relationship content. They still end with the postal address, and the account-wide unsubscribe link stays on. An unsubscribe switches on Email DND for every email, billing included, which is why 03 and 04 both check it.',
+        'Every email here delivers or supports a course the student paid for, which CAN-SPAM treats as transactional or relationship content. They still end with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on. An unsubscribe switches on Email DND for every email, billing included, which is why 03 and 04 both check it.',
         'Custom Webhook is a premium action, billed per execution: one per sale.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. Find Opportunity here skips the coaching stages, so an open coaching card is never closed as a course sale.',
       ],
     },
     steps: [
@@ -199,7 +207,16 @@ export const onboarding: Automation = {
         title: 'Remove from Workflow',
         label: 'Stop 01 and 02',
         summary:
-          'Another Workflow: 01 · Workshop · Registration and Reminders and 02 · Sales · Checkout Recovery. A buyer gets no offer, no replay and no cart nudge. Because this can pull them out of 02 before its goal runs, the tag cleanup and the card update also live here.',
+          'Another Workflow: 01 · Workshop · Registration and Reminders and 02 · Sales · Checkout Recovery. A buyer gets no offer, no replay and no cart nudge. Because this can pull them out of 02 before its goal runs, the tag cleanup comes next and the card update follows, writing what 02’s goal would have written.',
+      },
+      {
+        id: 'untag',
+        kind: 'action',
+        action: 'remove_tag',
+        title: 'Remove Contact Tag',
+        label: 'Cart tags',
+        summary: 'Removes checkout-started and cart-abandoned, the same two tags 02 removes after its goal. They describe someone who has not paid, and Smart Lists built on them must not include students.',
+        effect: { removeTags: ['checkout-started', 'cart-abandoned'] },
       },
       {
         id: 'grant',
@@ -209,15 +226,6 @@ export const onboarding: Automation = {
         label: 'Career Pivot Blueprint',
         summary:
           'Offer: Career Pivot Blueprint, published under Memberships › Offers. The product’s own Membership Offer toggle stays off, so this step is the one place access is granted (04 revokes and re-grants the same offer), and it runs before any email that says how to log in.',
-      },
-      {
-        id: 'untag',
-        kind: 'action',
-        action: 'remove_tag',
-        title: 'Remove Contact Tag',
-        label: 'Cart tags',
-        summary: 'Removes checkout-started and cart-abandoned. They describe someone who has not paid, and Smart Lists built on them must not include students.',
-        effect: { removeTags: ['checkout-started', 'cart-abandoned'] },
       },
       {
         id: 'assign',
@@ -248,7 +256,7 @@ export const onboarding: Automation = {
                 action: 'update_field',
                 title: 'Update Contact Field',
                 label: 'Purchase, on the plan',
-                summary: 'Purchase = Career Pivot Blueprint (01 and 05 read it to keep the course pitch away from students), Payment Plan = Yes (04 · Billing shows it to Sasha), Course Progress = Not started.',
+                summary: 'Purchase = Career Pivot Blueprint (01 and 05 read it to keep the course pitch away from students), Payment Plan = Yes (04 · Billing · Failed Payment Recovery shows it to Sasha), Course Progress = Not started.',
                 effect: recordPurchase('Yes'),
               },
               {
@@ -283,7 +291,7 @@ export const onboarding: Automation = {
                   label: 'Opportunity Found',
                   when: {
                     type: 'any',
-                    label: `Latest Opportunity where Pipeline is Enrollment and Stage is not ${COACHING_STAGES.join(', ').replace(/, ([^,]*)$/, ' or $1')}, any status`,
+                    label: `Latest opportunity where Pipeline is Enrollment and Stage is not ${COACHING_STAGES.join(', ').replace(/, ([^,]*)$/, ' or $1')}, any status`,
                     of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage })),
                   },
                   nodes: [
@@ -372,7 +380,7 @@ export const onboarding: Automation = {
                             value: COURSE,
                             minutes: 3 * DAY,
                             summary:
-                              'Specific conditions to be met: Contact Tag includes course-started, which 03a · Course Started adds on the Product Started trigger. Timeout 3 days.',
+                              'Specific conditions to be met: Contact Tag includes course-started, which 03a · Students · Course Started adds on the Product Started trigger. Timeout 3 days.',
                             branches: {
                               met: {
                                 label: 'Started',
@@ -494,7 +502,7 @@ export const onboarding: Automation = {
                                             title: 'Send SMS',
                                             label: 'Your login page',
                                             summary:
-                                              'A course notice, not an offer, so the service box is the gate: it reads "if I enroll, course and billing notices". Marketing consent is never read here. From Jules, one link, and the opt-out line.',
+                                              'A course notice, not an offer, so the service box is the gate: it reads "if I enroll, course and billing notices". SMS consent (offers) is never read here. From Jules, one link, and the opt-out line.',
                                             message: {
                                               channel: 'sms',
                                               body: "Hi {{contact.first_name}}, it's {{user.first_name}} from {{location.name}}. Your {{custom_values.course_name}} login page is {{custom_values.course_login}} (first time? use Forgot Password). Lesson 1 takes about 12 minutes. Stuck? Reply here. Reply STOP to opt out.",
@@ -607,7 +615,7 @@ export const onboarding: Automation = {
                     title: 'Create Opportunity',
                     label: 'Won course card',
                     summary:
-                      'Enrollment › Customer, status Won, Opportunity Value $497, named "{{contact.name}} · Career Pivot Blueprint". Duplicate Opportunity on, and Allow Multiple Opportunities per Contact is on for 02 and 05 already, so a contact whose only card is a coaching deal still gets a course card. It only runs when Find came back empty, so it never makes a second course card, and nothing later updates it, so there is no second Find.',
+                      'Enrollment › Customer, status Won, Opportunity Value $497, named "{{contact.name}} · Career Pivot Blueprint". Duplicate Opportunity on, with Allow Multiple Opportunities per Contact on in Sub-Account Settings › Objects › Opportunities, so a contact whose only card is a coaching deal still gets a course card. It only runs when Find came back empty, so it never makes a second course card, and nothing later updates it, so there is no second Find.',
                     run: ({ contact }) => {
                       const prev = contact.opportunity;
                       const name = `${contact.firstName} ${contact.lastName} · ${COURSE}`;
@@ -696,13 +704,14 @@ export const onboarding: Automation = {
       id: 'plan',
       label: 'Payment plan, after a strategy call',
       summary:
-        'Applied for 1:1 coaching and had a strategy call, where Devon suggested the course first and sent a payment link. Pays the first of three $179 payments on Wednesday afternoon. Their only card is the coaching deal at Call Booked, so it gets a course card of its own.',
+        'Heard Morgan on a podcast and applied for 1:1 coaching without going to a workshop, so their only card is the coaching deal at Call Booked. On the strategy call Devon suggested the course first and sent a payment link. Pays the first of three $179 payments on Wednesday afternoon and gets a course card of its own.',
       start: at(2, 13, 40),
       contact: {
         assignedTo: 'devon',
-        tags: ['workshop-attended', 'call-booked'],
+        source: 'Podcast',
+        tags: ['call-booked'],
         opportunity: { pipeline: 'Enrollment', stage: 'Call Booked', status: 'open', value: 0, name: 'Marcus Lee · 1:1 Pivot Coaching' },
-        fields: { current_role: 'Between roles', goal: 'A new industry', sms_consent: 'No', sms_marketing_consent: 'No', attended: 'Yes', application_score: 72, order_total: 179 },
+        fields: { current_role: 'Between roles', sms_consent: 'No', sms_marketing_consent: 'No', application_score: 72, order_total: 179 },
       },
       events: [
         { at: at(3, 12, 40) - at(2, 13, 40), type: 'product_started', value: COURSE, label: 'Opens lesson 1 at lunch the next day. 03a adds course-started' },
@@ -773,7 +782,7 @@ export const onboarding: Automation = {
     },
     {
       title: 'The first minute',
-      body: 'Course Grant Offer, then the cart tags come off and Jules becomes the owner, before anything invites replies. An If/Else on the trigger’s Order Total sets Payment Plan; there are no coupons on this product, so anything under $497 is the first installment. If Morgan ever adds one, that condition moves to the price. Update Opportunity needs a card in context, so Find Opportunity comes first, filtered to the course stages so a coaching deal at Applied, Call Booked or Coaching Client is never closed as a $497 sale. No course card means Create Opportunity, already Won, and a Go To back to the main path.',
+      body: 'Remove from Workflow (01 and 02) and the cart tags come off first, then Course Grant Offer, and Jules becomes the owner before anything invites replies. An If/Else on the trigger’s Order Total sets Payment Plan; there are no coupons on this product, so anything under $497 is the first installment. If Morgan ever adds one, that condition moves to the price. Update Opportunity needs a card in context, so Find Opportunity comes first, filtered to the course stages so a coaching deal at Applied, Call Booked or Coaching Client is never closed as a $497 sale. No course card means Create Opportunity, already Won, and a Go To back to the main path.',
     },
     {
       title: 'Tell the team, then check email',
@@ -785,7 +794,7 @@ export const onboarding: Automation = {
     },
     {
       title: 'Nudge with consent, then a person',
-      body: 'After three days without a start: an Advance Window of 10 AM to 7 PM, then an If/Else on SMS consent (service) and SMS DND. The reminders box on the workshop form covers "if I enroll, course and billing notices", so an access nudge fits it; marketing consent is not the gate. Then one email that asks for 12 minutes and a video task for Jules. A second wait catches late starters and sends them to the week-one path with Go To.',
+      body: 'After three days without a start: an Advance Window of 10 AM to 7 PM, then an If/Else on SMS consent (service) and SMS DND. The reminders box on the workshop form covers "if I enroll, course and billing notices", so an access nudge fits it; SMS consent (offers) is not the gate. Then one email that asks for 12 minutes and a video task for Jules. A second wait catches late starters and sends them to the week-one path with Go To.',
     },
     {
       title: 'Test with a real test student',
@@ -811,7 +820,7 @@ export const onboarding: Automation = {
     },
     {
       title: 'Payment plan buyers',
-      body: 'Full access on the first payment, with the plan explained in the welcome and the refund note saying the remaining payments are cancelled too. 04 · Billing finds installments by its own price filter, so a wrong Payment Plan value could never stop a billing notice. Whether a lapsed plan loses access is 04’s decision, not this workflow’s.',
+      body: 'Full access on the first payment, with the plan explained in the welcome and the refund note saying the remaining payments are canceled too. 04 · Billing · Failed Payment Recovery finds installments by its own price filter, so a wrong Payment Plan value could never stop a billing notice. Whether a lapsed plan loses access is 04’s decision, not this workflow’s; if 04 does pause access, it also removes the contact from this workflow, so no login nudge goes to someone who cannot log in.',
     },
     {
       title: 'No course card, or only a coaching card',

@@ -99,7 +99,6 @@ function score(p: Snapshot, seatsNow?: string | number | boolean) {
 const payload = `{
   "event": "usage.snapshot",
   "event_id": "evt_01JNXC2M8T4R6K9P3WQ5ZB7D1E",
-  "occurred_at": "2026-03-03T12:02:07Z",
   "email": "carlos@harlowmech.example",
   "workspace_id": "ws_4TN6RC",
   "plan": "trial",
@@ -197,7 +196,7 @@ export const pqlAlert: Automation = {
   problem:
     'Sales could not tell which trials were being used for real. A 40-person HVAC company running its whole schedule in Crewlo looked the same in the CRM as someone who signed up and never came back, so the AEs either called every trial or waited for trials to call them.',
   solution:
-    'The app posts one usage snapshot per trial workspace every morning. Custom Code turns people invited, jobs scheduled, integrations and active days into a product score from 0 to 100 and saves it on the contact. At 70 or more the trial goes to sales exactly once: the right AE by segment, a post in #pql with the numbers, and a deal on the New Business board. A trial that already has an open deal keeps that card, which moves to Trial Sales-Assist and to the AE along with the contact, and gets no automated email: someone in sales has already talked to them. A trial without one gets a new card in Trial Sales-Assist and a plain email from the AE. Between 40 and 69, Leo sends one tip aimed at the weakest signal. Below 40 nothing happens, and 02 · Trial Onboarding keeps doing its job.',
+    'The app posts one usage snapshot per trial workspace every morning. Custom Code turns people invited, jobs scheduled, integrations and active days into a product score from 0 to 100 and saves it on the contact. At 70 or more the trial goes to sales exactly once: the right AE by segment, a post in #pql with the numbers, and a deal on the New Business board. A trial that already has an open deal keeps that card, which moves to Trial Sales-Assist and to the AE along with the contact, and gets no automated email: someone in sales has already talked to them. A trial without one gets a new card in Trial Sales-Assist and a plain email from the AE. Between 40 and 69, Leo sends one tip aimed at the weakest signal. Below 40 nothing happens, and 02 · Product · Trial Onboarding keeps doing its job.',
   workflow: {
     name: '03 · Product · PQL Alert',
     folder: 'Product',
@@ -253,7 +252,7 @@ export const pqlAlert: Automation = {
           const { parts, out } = score(snapshotOf(contact, now), contact.fields.seats);
           return {
             vars: out,
-            log: `Returned pql_score ${out.pql_score} (team ${parts.team}, jobs ${parts.jobs}, integrations ${parts.integrations}, active days ${parts.habit}), seats ${out.seats}, annual_value ${out.annual_value} and weakest "${out.weakest}".`,
+            log: `Output pql_score ${out.pql_score} (team ${parts.team}, jobs ${parts.jobs}, integrations ${parts.integrations}, active days ${parts.habit}), seats ${out.seats}, annual_value ${out.annual_value} and weakest "${out.weakest}".`,
           };
         },
         code: { language: 'javascript', source: scoreCode },
@@ -477,7 +476,7 @@ export const pqlAlert: Automation = {
                                         summary:
                                           "New Business › Trial Sales-Assist, named after the company and seat count, source PQL, Opportunity Value from the code's annual_value (seats × $29 × 12). It runs after Assign To User, so the new card starts with the AE as its owner. Duplicate Opportunity is on here on purpose: this step only runs when there is no open card, and with it off an old Lost card would block the new one.",
                                         run: ({ contact, vars }) => {
-                                          const company = String(contact.fields.company_name ?? contact.fields.company ?? `${contact.firstName} ${contact.lastName}`);
+                                          const company = String(contact.fields.company ?? `${contact.firstName} ${contact.lastName}`);
                                           const value = Number(vars.annual_value);
                                           const name = `${company} · ${vars.seats} seats`;
                                           const old = contact.opportunity ? ` The ${contact.opportunity.status} card from before stays as it is.` : '';
@@ -586,7 +585,6 @@ export const pqlAlert: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', value: 0, name: 'Harlow Mechanical Group' },
         fields: {
           company: 'Harlow Mechanical Group',
-          company_name: 'Harlow Mechanical Group',
           company_size: '201-1,000',
           job_role: 'Operations or dispatch',
           segment: 'enterprise',
@@ -618,7 +616,7 @@ export const pqlAlert: Automation = {
         timezone: 'America/New_York',
         source: 'Crewlo app signup',
         tags: ['trial', 'activated'],
-        fields: { company: 'Doyle & Sons Plumbing', company_name: 'Doyle & Sons Plumbing', plan: 'trial', trial_end: '03-16-2026', workspace_id: 'ws_6PB3HX' },
+        fields: { company: 'Doyle & Sons Plumbing', plan: 'trial', trial_end: '03-16-2026', workspace_id: 'ws_6PB3HX' },
       },
       events: [],
       expect: {
@@ -642,7 +640,7 @@ export const pqlAlert: Automation = {
         timezone: 'America/Chicago',
         source: 'Crewlo app signup',
         tags: ['trial'],
-        fields: { company: 'Lawson Garage Door Co.', company_name: 'Lawson Garage Door Co.', plan: 'trial', trial_end: '03-10-2026', workspace_id: 'ws_2WQ9LM' },
+        fields: { company: 'Lawson Garage Door Co.', plan: 'trial', trial_end: '03-10-2026', workspace_id: 'ws_2WQ9LM' },
       },
       events: [],
       expect: { outcome: 'completed', visits: ['if-score:1', 'tag-tip', 'email-tip'], tags: ['pql-tip-sent'] },
@@ -660,7 +658,7 @@ export const pqlAlert: Automation = {
         timezone: 'America/Phoenix',
         source: 'Crewlo app signup',
         tags: ['trial'],
-        fields: { company: 'Marchetti Pool Service', company_name: 'Marchetti Pool Service', plan: 'trial', trial_end: '03-16-2026', workspace_id: 'ws_8KD5JT' },
+        fields: { company: 'Marchetti Pool Service', plan: 'trial', trial_end: '03-16-2026', workspace_id: 'ws_8KD5JT' },
       },
       events: [],
       expect: { outcome: 'ended', visits: ['save', 'if-score:else', 'end-cold'] },
@@ -683,7 +681,6 @@ export const pqlAlert: Automation = {
         opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', value: 0, name: 'Harlow Mechanical Group' },
         fields: {
           company: 'Harlow Mechanical Group',
-          company_name: 'Harlow Mechanical Group',
           company_size: '201-1,000',
           job_role: 'Operations or dispatch',
           segment: 'enterprise',
@@ -708,7 +705,7 @@ export const pqlAlert: Automation = {
         name: 'Seats',
         key: 'seats',
         type: 'Number',
-        note: 'People invited plus the owner, rewritten every morning while the plan is trial. Deal value is Seats × $29 × 12. The AE sets the number sold right before marking Won (05), since the next trial snapshot would overwrite an earlier edit. Once the plan is not trial, the code leaves it alone.',
+        note: 'Written here from usage.snapshot: people invited plus the owner, every morning while the plan is trial. Deal value is Seats × $29 × 12. Once paid, 04a writes the seats bought in the app, or the AE sets the number sold right before marking Won (05), since the next trial snapshot would overwrite an earlier edit. Once the plan is not trial, the code leaves it alone.',
       },
       { name: 'Trial Usage', key: 'trial_usage', type: 'Single line', note: 'One line for the AE: seats, jobs, integrations, active days' },
       { name: 'Next Step', key: 'next_step', type: 'Multi line', note: 'The tip for the weakest signal. The tip email merges it, and the AE can read it on the contact.' },
@@ -764,7 +761,7 @@ export const pqlAlert: Automation = {
     },
     {
       title: 'The trial already has a deal',
-      body: "A demo-led trial has a card from 01 · Demo Request. Find Opportunity picks it up, and Update Opportunity moves it to Trial Sales-Assist only from an earlier stage, so a card at Demo Held or Proposal stays put, value and all. Owners are decoupled in this sub-account, so after a small team moves from Priya to Ben, Assign To User alone would leave the card with Priya and her name on the win in 05. Add Owner to Opportunity moves it to Ben. No intro email goes out, because they have already talked to sales; the #pql post is the AE's cue to write in person.",
+      body: "A demo-led trial has a card from 01 · Inbound · Demo Request. Find Opportunity picks it up, and Update Opportunity moves it to Trial Sales-Assist only from an earlier stage, so a card at Demo Held or Proposal stays put, value and all. Owners are decoupled in this sub-account, so after a small team moves from Priya to Ben, Assign To User alone would leave the card with Priya and her name on the win in 05. Add Owner to Opportunity moves it to Ben. No intro email goes out, because they have already talked to sales; the #pql post is the AE's cue to write in person.",
     },
     {
       title: 'Email DND',
@@ -780,7 +777,7 @@ export const pqlAlert: Automation = {
     },
     {
       title: 'A paying or expired workspace sends a snapshot',
-      body: 'The app should stop sending snapshots once a workspace buys or its trial ends. If one slips through, plan is no longer trial: the code returns a score of 0 and keeps Seats as it was, so nothing reaches sales or the customer, and the number sold that 05 provisioned is not overwritten.',
+      body: 'The app should stop sending snapshots once a workspace buys or its trial ends. If one slips through, plan is no longer trial: the code outputs a score of 0 and keeps Seats as it was, so nothing reaches sales or the customer, and the seats 04a or 05 recorded are not overwritten.',
     },
   ],
   qa: [

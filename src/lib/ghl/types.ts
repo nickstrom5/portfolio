@@ -197,8 +197,8 @@ export interface WaitNode {
   mode: 'time' | 'event' | 'before_appointment' | 'after_appointment';
   minutes?: number;
   event?: EventType;
-  /** For event waits: only this link, tag or value counts (e.g. the 'replay' link). */
-  value?: string | number;
+  /** For event waits: only this link, tag or value counts (e.g. the 'replay' link), or any of several. */
+  value?: string | number | (string | number)[];
   /** Minutes before/after the appointment start for appointment-relative waits. */
   offset?: number;
   summary: string;

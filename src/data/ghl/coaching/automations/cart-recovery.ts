@@ -11,13 +11,19 @@ const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 const STAGES = business.pipeline.stages;
 const CHECKOUT = STAGES.indexOf('Checkout Started');
 const CUSTOMER = STAGES.indexOf('Customer');
+/** The course card's stages. Applied, Call Booked and Coaching Client belong to the separate coaching card 05 makes. */
+const COURSE_STAGES = STAGES.slice(0, CUSTOMER + 1);
+const COACHING_LIST = STAGES.slice(CUSTOMER + 1).join(', ').replace(/, ([^,]*)$/, ' or $1');
+/** Both Finds in this workflow use the same filters. */
+const FIND_LABEL = `Latest opportunity where Pipeline is Enrollment, Stage is not ${COACHING_LIST}, and Status is Open`;
+const COURSE = 'Career Pivot Blueprint';
 
 const userName = (key: string) => business.env.users[key]?.name ?? key;
 
 /**
- * A workshop registrant: 01 · Workshop gave them a card in Enrollment at
- * Registered, and moves it to Attended 75 minutes after the live start (or
- * two hours after a replay click).
+ * A workshop registrant: 01 · Workshop · Registration and Reminders gave
+ * them a course card in Enrollment at Registered, and moves it to Attended
+ * 75 minutes after the live start (or two hours after a replay click).
  */
 const registrant = (stage: 'Registered' | 'Attended', fields: Contact['fields']): Partial<Contact> => ({
   opportunity: { pipeline: 'Enrollment', stage, status: 'open', name: 'Marcus Lee · Workshop' },
@@ -25,7 +31,7 @@ const registrant = (stage: 'Registered' | 'Attended', fields: Contact['fields'])
 });
 
 /** Name and postal address under every email: these emails sell, so CAN-SPAM applies. */
-const signature = '{{user.name}}\n{{location.name}}, {{location.address}}';
+const signature = '{{user.name}}\n{{location.name}}, {{location.full_address}}';
 
 const faqSubject = 'Questions before you join, {{contact.first_name}}?';
 
@@ -70,7 +76,8 @@ const settingsSheet = `Trigger       Order Form Submission
   Submission Type     Opt-In      step 1 submitted, paid or not
 
 Not this one: Order Submitted fires only on a completed payment.
-It starts 03 · Course Onboarding, which removes the contact from 02.
+It starts 03 · Students · Course Onboarding, whose first step removes
+the contact from 02.
 
 Goal Event    Payment Received
   Product             Career Pivot Blueprint   one-time and plan price
@@ -78,9 +85,12 @@ Goal Event    Payment Received
   If Contact Reaches This Goal Without Meeting Conditions:
                       End this workflow
 
-Opportunities Find Opportunity    Latest, Pipeline is Enrollment, Status is Open
-              Create Opportunity  Duplicate Opportunity on
-              Settings › Objects › Opportunities:
+Opportunities Find Opportunity    Latest, Pipeline is Enrollment, Status is Open,
+                                  Stage is not Applied, Call Booked or Coaching Client
+                                  (the same filters at the top and after the goal)
+              Create Opportunity  Checkout Started, Duplicate Opportunity on,
+                                  then Go To the tag, never back to Find
+              Sub-Account Settings › Objects › Opportunities:
                                   Allow Multiple Opportunities per Contact on
 
 Settings      Allow Re-entry on · Stop on Response off
@@ -102,7 +112,7 @@ export const cartRecovery: Automation = {
     href: 'https://help.gohighlevel.com/support/solutions/articles/155000004303-workflow-trigger-order-submitted-vs-order-form-submission',
   },
   solution:
-    'Submitting step 1 of the two-step order form starts the workflow, whether or not payment follows. It moves their card to Checkout Started, then waits an hour, so someone who is just typing in their card number never gets a nudge. After that: an FAQ email with the refund policy and the payment plan, a text only for people who agreed to marketing texts, and a last email with no countdown. A Payment Received goal pulls a buyer out at any point and marks the card Customer, Won, the same change 03 · Course Onboarding makes on the purchase. Anyone who never pays ends tagged cart-abandoned.',
+    'Submitting step 1 of the two-step order form starts the workflow, whether or not payment follows. It moves their course card to Checkout Started, then waits an hour, so someone who is just typing in their card number never gets a nudge. After that: an FAQ email with the refund policy and the payment plan, a text only for people who ticked the offers box, and a last email with no countdown. A Payment Received goal pulls a buyer out at any point and marks the card Customer, Won, the same change 03 · Students · Course Onboarding makes on the purchase. Anyone who never pays ends tagged cart-abandoned.',
   workflow: {
     name: '02 · Sales · Checkout Recovery',
     folder: 'Sales',
@@ -118,13 +128,27 @@ export const cartRecovery: Automation = {
       stopOnResponse: false,
       timezone: 'contact',
       timeWindow: { start: '08:00', end: '20:00', days: ALL_WEEK },
+      exits: [
+        {
+          event: 'order_submitted',
+          by: 'Paying fires 03 · Students · Course Onboarding, whose first step is Remove from Workflow: 01 · Workshop · Registration and Reminders and 02 · Sales · Checkout Recovery, and whose next step removes checkout-started and cart-abandoned. Whichever of 02’s goal and 03 gets there first, the card ends at Customer, Won.',
+        },
+        {
+          event: 'survey_submitted',
+          value: 'Coaching Application',
+          by: 'A coaching application that scores 70 or more fires 05 · Sales · Coaching Application, which removes the contact from this workflow and takes off checkout-started. Devon talks to them about coaching; cart nudges for the course would talk over him.',
+        },
+      ],
       notes: [
         "Time Window (Specific Time) 8 AM to 8 PM in the contact's time zone, every day: it holds both emails and the text overnight, and GHL does not hold internal steps like the card update or the tag. The text's wait also has a 10 AM to 7 PM Advance Window, because 8 AM on a Saturday is legal but not kind.",
         'Stop on Response off: a reply is usually a question about refunds or the plan, and Devon answers it from Conversations. The run has to keep going so a non-buyer still ends tagged cart-abandoned, and the one email left after the text reads fine after a conversation. STOP still switches on SMS DND by itself.',
         'Allow Re-entry on: someone who abandons again after a later workshop gets the recovery again. GHL does not let a contact re-enter while still active, so a double submit of step 1 changes nothing.',
         'One Goal Event per workflow is a GHL limit. It sits near the end of the text path. GHL moves a buyer to it from wherever they are waiting, email-only path included, and a non-buyer on that path reaches it through the Go To.',
-        '03 · Course Onboarding runs on the same payment and its first step is Remove from Workflow: 02. The steps after this goal write exactly what 03 writes (card at Customer, Won, $497, both cart tags off), so whichever workflow gets there first, the contact ends up the same.',
-        'Sender Details left blank: GHL then sends automated email from the assigned user, and 02 assigns Devon before the first email, so the From line matches the {{user.name}} signature.',
+        '03 · Students · Course Onboarding runs on the same payment and removes the contact from 02 in its first step. The steps after this goal write exactly what 03 writes (both cart tags off; the course card at Customer, Won, $497, named "{{contact.name}} · Career Pivot Blueprint"), so the contact ends up the same whichever workflow gets there first.',
+        'A coaching applicant who scores under 70 stays in 02: 05’s "not yet" email recommends the same course, so the two do not disagree. At 70 or more, 05 takes them out of 02 (see the exits).',
+        'Texts need SMS consent (offers). Someone who ticked only the offers box on the workshop form has SMS DND from 01 (tag sms-off-no-consent), and 02 does not switch it off: that would also let 01’s reminder texts through, which they left unticked. They get the emails and no text. If they tick the texts box on the coaching application, 05 lifts the DND.',
+        'Sender Details left blank: GHL then sends automated email from the assigned user, and 02 assigns Devon before the first email, so the From line matches the {{user.name}} signature. Every email ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. This workflow moves the course card to Checkout Started, or creates it there, and on payment writes what 03 writes. Allow Multiple Opportunities per Contact is on in Sub-Account Settings › Objects › Opportunities, so a contact whose only card is closed or a coaching deal still gets a course card here.',
       ],
     },
     steps: [
@@ -132,11 +156,11 @@ export const cartRecovery: Automation = {
         id: 'find-opp',
         kind: 'ifelse',
         title: 'Find Opportunity',
-        label: 'Find the enrollment card',
+        label: 'Open course card?',
         branches: [
           {
             label: 'Opportunity Found',
-            when: { type: 'all', label: 'Latest Opportunity, Pipeline is Enrollment and Status is Open', of: [{ type: 'opportunity', status: 'open' }] },
+            when: { type: 'any', label: FIND_LABEL, of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })) },
             nodes: [
               {
                 id: 'opp-checkout',
@@ -145,7 +169,7 @@ export const cartRecovery: Automation = {
                 title: 'Update Opportunity',
                 label: 'Checkout Started',
                 summary:
-                  'Enrollment › Checkout Started, Opportunity Value $497. Status is not in the step, so this can never reopen a card. Allow Opportunity to Move to Any Previous Stage stays off, so a card that is further along never goes backwards.',
+                  'Enrollment › Checkout Started, Opportunity Value $497, on the card Find just picked. Status is not in the step, so this can never reopen a card. Allow Opportunity to Move to Any Previous Stage stays off, so a card that is further along never goes backward.',
                 run: ({ contact }) => {
                   const stage = contact.opportunity?.stage ?? '';
                   if (STAGES.indexOf(stage) > CHECKOUT) return { log: `The card is already at ${stage}. This step only moves cards forward, so it stays there.` };
@@ -159,7 +183,7 @@ export const cartRecovery: Automation = {
                 action: 'add_tag',
                 title: 'Add Contact Tag',
                 label: 'checkout-started',
-                summary: 'Marks everyone who is in checkout recovery right now. Removed the moment they pay, here or in 03.',
+                summary: 'Marks everyone who is in checkout recovery right now. Removed the moment they pay, here or in 03, or when 05 takes a qualified applicant out.',
                 effect: { addTags: ['checkout-started'] },
               },
               {
@@ -208,10 +232,10 @@ export const cartRecovery: Automation = {
                 label: 'Can we text?',
                 branches: [
                   {
-                    label: 'Marketing consent',
+                    label: 'Offers consent',
                     when: {
                       type: 'all',
-                      label: 'Marketing Texts is Yes, and the contact is not DND for SMS',
+                      label: 'SMS consent (offers) is Yes, and the contact is not DND for SMS',
                       of: [
                         { type: 'field', key: 'sms_marketing_consent', op: 'eq', value: 'Yes' },
                         { type: 'not', of: { type: 'dnd', channel: 'sms' } },
@@ -255,7 +279,7 @@ export const cartRecovery: Automation = {
                         title: 'Add Contact Tag',
                         label: 'cart-abandoned',
                         summary:
-                          'Only someone who never paid reaches this step: a payment skips past it straight to the goal. For a Smart List and the recovery report, never for more cart messages. The card stays Open at Checkout Started, so a later checkout or application finds it instead of making a second one.',
+                          'Only someone who never paid reaches this step: a payment skips past it straight to the goal. For a Smart List and the recovery report, never for more cart messages. The course card stays Open at Checkout Started, so a later checkout moves the same card instead of making a second one.',
                         effect: { addTags: ['cart-abandoned'] },
                       },
                       {
@@ -264,24 +288,9 @@ export const cartRecovery: Automation = {
                         title: 'Goal Event',
                         label: 'Payment Received',
                         event: 'payment',
+                        value: [497, 179],
                         ifNotMet: 'end',
                         summary: 'Payment Received, product Career Pivot Blueprint (either price), Payment Status Success. Reached without paying: End this workflow.',
-                      },
-                      {
-                        id: 'opp-customer',
-                        kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Customer, Won',
-                        summary:
-                          'Enrollment › Customer, status Won, Opportunity Value $497: the same values 03 writes, so the result does not depend on which workflow runs first. A later coaching application gets its own card in 05, because this one is closed.',
-                        run: ({ contact }) => {
-                          const stage = contact.opportunity?.stage ?? '';
-                          if (STAGES.indexOf(stage) > CUSTOMER) {
-                            return { effect: { opportunity: { status: 'won', value: 497 } }, log: `The card is already at ${stage}. Backward moves are off, so it stays there; status Won, $497, as in 03.` };
-                          }
-                          return { effect: { opportunity: { stage: 'Customer', status: 'won', value: 497 } }, log: `Enrollment › Customer, moved from ${stage || 'no stage'}. Status Won, $497.` };
-                        },
                       },
                       {
                         id: 'untag',
@@ -289,8 +298,59 @@ export const cartRecovery: Automation = {
                         action: 'remove_tag',
                         title: 'Remove Contact Tag',
                         label: 'Cart tags',
-                        summary: 'Removes checkout-started, and cart-abandoned in case an earlier checkout left it. No receipt or welcome here: 03 starts on the purchase itself.',
+                        summary: 'Removes checkout-started, and cart-abandoned in case an earlier checkout left it, as 03 does. No receipt or welcome here: 03 starts on the purchase itself.',
                         effect: { removeTags: ['checkout-started', 'cart-abandoned'] },
+                      },
+                      {
+                        id: 'find-paid',
+                        kind: 'ifelse',
+                        title: 'Find Opportunity',
+                        label: 'Card to close as Won',
+                        branches: [
+                          {
+                            label: 'Opportunity Found',
+                            when: { type: 'any', label: FIND_LABEL, of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })) },
+                            nodes: [
+                              {
+                                id: 'opp-customer',
+                                kind: 'action',
+                                action: 'update_opportunity',
+                                title: 'Update Opportunity',
+                                label: 'Customer, Won',
+                                summary:
+                                  'Enrollment › Customer, status Won, Opportunity Value $497, Opportunity Name "{{contact.name}} · Career Pivot Blueprint": the values 03 writes, so the card ends the same whichever workflow runs first. The Find right before it is what puts the card in context; a card Create Opportunity made at the top is not.',
+                                run: ({ contact }) => {
+                                  const stage = contact.opportunity?.stage ?? '';
+                                  const name = `${contact.firstName} ${contact.lastName} · ${COURSE}`;
+                                  return {
+                                    effect: { opportunity: { stage: 'Customer', status: 'won', value: 497, name } },
+                                    log: `Enrollment › Customer, moved from ${stage || 'no stage'}. Status Won, $497, named "${name}", as in 03.`,
+                                  };
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                        otherwise: {
+                          label: 'Opportunity Not Found',
+                          nodes: [
+                            {
+                              id: 'notify-lost',
+                              kind: 'action',
+                              action: 'internal_notification',
+                              title: 'Internal Notification',
+                              label: 'Paid after a Lost card',
+                              summary:
+                                'Type Notification (in-app), To User Type Particular Users: Devon Brooks, Redirect Page: the contact. Only reached when someone closed the course card during recovery. 02 does not reopen it; 03, on the same payment, finds it by stage and marks it Customer, Won.',
+                              message: {
+                                channel: 'internal',
+                                to: 'Devon Brooks (Notification, Particular Users)',
+                                subject: 'Paid after all: {{contact.name}}',
+                                body: '{{contact.name}} bought {{custom_values.course_name}} after their course card was closed as Lost. 03 marks that card Customer, Won on this payment and Jules takes over onboarding. Nothing to do, unless the card was closed for another reason.',
+                              },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },
@@ -327,20 +387,23 @@ export const cartRecovery: Automation = {
               kind: 'action',
               action: 'create_opportunity',
               title: 'Create Opportunity',
-              label: 'New card',
+              label: 'New course card',
               summary:
-                'Enrollment › Checkout Started, named after the contact and the course, Opportunity Source Checkout, Opportunity Value $497. Duplicate Opportunity on: a contact whose only card is closed would otherwise get no new card, and the Go To below would send them round forever.',
-              run: ({ contact }) => ({
-                effect: { opportunity: { pipeline: 'Enrollment', stage: 'Checkout Started', status: 'open', value: 497, name: `${contact.firstName} ${contact.lastName} · Career Pivot Blueprint`.trim() } },
-                log: 'New card in Enrollment at Checkout Started, $497, status Open.',
-              }),
+                'Enrollment › Checkout Started, status Open, Opportunity Value $497, named "{{contact.name}} · Career Pivot Blueprint", Opportunity Source Checkout. Duplicate Opportunity on: a contact whose only cards are closed or a coaching deal still gets one, and the old cards stay as history.',
+              run: ({ contact }) => {
+                const prev = contact.opportunity;
+                return {
+                  effect: { opportunity: { pipeline: 'Enrollment', stage: 'Checkout Started', status: 'open', value: 497, name: `${contact.firstName} ${contact.lastName} · ${COURSE}`.trim() } },
+                  log: `New course card in Enrollment at Checkout Started, $497, status Open.${prev ? ` The ${prev.stage} card (${prev.status}) stays as it is.` : ''}`,
+                };
+              },
             },
             {
-              id: 'goto-find',
+              id: 'goto-tag',
               kind: 'goto',
               title: 'Go To',
-              target: 'find-opp',
-              summary: 'A created opportunity is not in context for later updates, so the contact goes back through Find Opportunity, which now finds it.',
+              target: 'tag-started',
+              summary: 'On to the tag, past the stage update the new card does not need. Nothing leads back to Find Opportunity, so this cannot loop; the goal runs its own Find before it closes the card.',
             },
           ],
         },
@@ -355,7 +418,7 @@ export const cartRecovery: Automation = {
       start: at(3, 19, 52),
       contact: registrant('Registered', { current_role: 'Manager', goal: 'A new industry', sms_consent: 'Yes', sms_marketing_consent: 'Yes' }),
       events: [{ at: 20, type: 'payment', value: 497, label: '$497 in full, Career Pivot Blueprint' }],
-      expect: { outcome: 'goal', visits: ['find-opp:0', 'opp-checkout', 'assign', 'wait-1h', 'goal-paid', 'opp-customer', 'untag'], stage: 'Customer' },
+      expect: { outcome: 'goal', visits: ['find-opp:0', 'opp-checkout', 'assign', 'wait-1h', 'goal-paid', 'untag', 'find-paid:0', 'opp-customer'], stage: 'Customer' },
     },
     {
       id: 'pays-day-2',
@@ -372,7 +435,7 @@ export const cartRecovery: Automation = {
         },
         { at: at(6, 11, 2) - at(4, 18, 45), type: 'payment', value: 179, label: '$179, first of 3 plan payments' },
       ],
-      expect: { outcome: 'goal', visits: ['email-faq', 'wait-text', 'can-text:0', 'sms-nudge', 'goal-paid', 'opp-customer', 'untag'], stage: 'Customer' },
+      expect: { outcome: 'goal', visits: ['email-faq', 'wait-text', 'can-text:0', 'sms-nudge', 'goal-paid', 'untag', 'find-paid:0', 'opp-customer'], stage: 'Customer' },
     },
     {
       id: 'never-pays-texts',
@@ -391,7 +454,7 @@ export const cartRecovery: Automation = {
     {
       id: 'reminders-only',
       label: 'Never pays, reminder consent only',
-      summary: 'Ticked the workshop-reminder box but not marketing texts. The same two emails, no text, then tagged cart-abandoned.',
+      summary: 'Ticked the workshop-reminder box but not the offers box. The same two emails, no text, then tagged cart-abandoned.',
       start: at(1, 12, 35),
       contact: registrant('Attended', { current_role: 'Manager', goal: 'Not sure yet', sms_consent: 'Yes', sms_marketing_consent: 'No' }),
       events: [],
@@ -406,18 +469,41 @@ export const cartRecovery: Automation = {
       events: [{ at: at(3, 7, 50) - at(0, 9, 10), type: 'payment', value: 497, label: '$497 in full, Career Pivot Blueprint' }],
       expect: {
         outcome: 'goal',
-        visits: ['find-opp:else', 'create-opp', 'goto-find', 'find-opp:0', 'can-text:else', 'goto-last', 'email-last', 'goal-paid', 'opp-customer'],
+        visits: ['find-opp:else', 'create-opp', 'goto-tag', 'tag-started', 'assign', 'can-text:else', 'goto-last', 'email-last', 'goal-paid', 'untag', 'find-paid:0', 'opp-customer'],
         stage: 'Customer',
+      },
+    },
+    {
+      id: 'closed-then-pays',
+      label: 'Says no, then pays anyway',
+      summary: 'Starts checkout on a Wednesday morning after the replay. Answers the FAQ email with "not for me right now", so Devon closes the card as Lost. Buys on Saturday morning after the last email.',
+      start: at(2, 9, 20),
+      contact: registrant('Attended', { current_role: 'Manager', goal: 'A new role', sms_consent: 'Yes', sms_marketing_consent: 'No' }),
+      events: [
+        {
+          at: at(2, 18, 5) - at(2, 9, 20),
+          type: 'reply',
+          channel: 'email',
+          value: 'Thanks for the honest answers. It is not for me right now.',
+          label: 'Reply by email. Stop on Response is off, so the run carries on',
+        },
+        { at: at(3, 9, 5) - at(2, 9, 20), type: 'opportunity_lost', label: 'Devon closes the course card as Lost after the clear no' },
+        { at: at(5, 8, 40) - at(2, 9, 20), type: 'payment', value: 497, label: '$497 in full, Career Pivot Blueprint, after the last email' },
+      ],
+      expect: {
+        outcome: 'goal',
+        visits: ['email-faq', 'can-text:else', 'email-last', 'goal-paid', 'untag', 'find-paid:else', 'notify-lost'],
+        stage: 'Checkout Started',
       },
     },
   ],
   dataModel: {
     customFields: [
-      { name: 'Marketing Texts', key: 'sms_marketing_consent', type: 'Checkbox', note: 'From the workshop form: "Also text me about future workshops and offers." Unticked and optional. The only thing that allows the cart text.' },
-      { name: 'SMS Consent', key: 'sms_consent', type: 'Checkbox', note: 'Workshop reminders only. Not consent to a sales text, so this workflow never reads it.' },
+      { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'From the workshop form: "Also text me about future workshops and offers." Unticked and optional. The only consent that allows the cart text, and only without SMS DND.' },
+      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: 'Workshop reminders and course and billing notices. Not consent to a sales text, so this workflow never reads it.' },
     ],
     tags: [
-      { name: 'checkout-started', note: 'Added on entry, removed on payment by 02 or 03. Whoever has it is in recovery right now.' },
+      { name: 'checkout-started', note: 'Added on entry, removed on payment by 02 or 03, or by 05 when a qualified applicant leaves 02. Whoever has it is in recovery right now.' },
       { name: 'cart-abandoned', note: 'Finished recovery without paying. For reporting and Smart Lists, not for more cart messages.' },
     ],
     pipeline: { name: 'Enrollment', stages: [...STAGES] },
@@ -432,7 +518,7 @@ export const cartRecovery: Automation = {
   build: [
     {
       title: 'Agree what abandoned means',
-      body: 'With Morgan: someone who submits step 1 and does not pay, including a declined card. Three touches over two days, no discount, no countdown, no income claims. Someone who buys hears nothing from this workflow; their welcome belongs to 03 · Course Onboarding.',
+      body: 'With Morgan: someone who submits step 1 and does not pay, including a declined card. Three touches over two days, no discount, no countdown, no income claims. Someone who buys hears nothing from this workflow; their welcome belongs to 03 · Students · Course Onboarding.',
     },
     {
       title: 'Product and order form first',
@@ -443,20 +529,20 @@ export const cartRecovery: Automation = {
       body: 'Order Form Submission with Submission Type Opt-In fires when step 1 is submitted, paid or not. Order Submitted fires only on a completed payment, which is why it starts 03 and could never start this one. I filtered on the funnel, the checkout page and the product, so a future offer gets its own recovery.',
     },
     {
-      title: 'Find the card before moving it',
-      body: 'Update Opportunity only works on an opportunity in context, and this trigger brings none. Find Opportunity picks the latest open card in Enrollment; with no open card, Create Opportunity makes one and Go To runs Find again. Duplicate Opportunity is on in that step and Allow Multiple Opportunities per Contact is on in Settings › Objects › Opportunities, as 05 needs too. With either off, a contact whose only card is Won or Lost gets no new card, Find fails again and the Go To loops.',
+      title: 'The course card: find, or create and move on',
+      body: 'Update Opportunity only works on an opportunity in context, and this trigger brings none. Find Opportunity picks the latest open course card in Enrollment, skipping the coaching stages (Applied, Call Booked, Coaching Client) exactly as 03 does, so a coaching deal from 05 is never moved to Checkout Started. With no open course card, Create Opportunity makes one at Checkout Started, with Duplicate Opportunity on and Allow Multiple Opportunities per Contact on in Sub-Account Settings › Objects › Opportunities, and Go To carries on to the tag, never back to Find. A card made by Create Opportunity is not in context for a later Update Opportunity, so the goal runs the same Find again before it closes the card.',
     },
     {
       title: 'Consent picks the path',
-      body: 'Cart texts are marketing, so only Marketing Texts = Yes gets one; the workshop-reminder box is not enough. The If/Else sits right before the text, not at the top, so it reads consent and SMS DND when the text would go out, a day after checkout. The order form’s Terms & Conditions checkbox is part of buying, so text consent cannot ride on it: consent to marketing texts can never be a condition of purchase. The emails are commercial too, so each one ends with the business address, and GHL’s default unsubscribe link stays on (Business Profile › General › Include Unsubscribe Link).',
+      body: 'Cart texts are marketing, so only SMS consent (offers) = Yes gets one; the workshop-reminder box is not enough. The If/Else sits right before the text, not at the top, so it reads consent and SMS DND when the text would go out, a day after checkout. The order form’s Terms & Conditions checkbox is part of buying, so text consent cannot ride on it: consent to marketing texts can never be a condition of purchase. The emails are commercial too, so each one ends with the business address, and GHL’s default unsubscribe link stays on (Business Profile › General › Include Unsubscribe Link).',
     },
     {
       title: 'One goal, one exit',
-      body: 'GHL allows one Goal Event per workflow and moves the contact to it from wherever they are waiting. Payment Received filtered by product and Payment Status Success, so both prices count and a declined card does not. Anyone who arrives without paying ends there, and cart-abandoned is the step right before it. There is no If/Else after the goal: payment conditions only exist in a workflow triggered by Payment Received, and the goal already separates buyers from everyone else.',
+      body: 'GHL allows one Goal Event per workflow and moves the contact to it from wherever they are waiting. Payment Received filtered by product and Payment Status Success, so both prices count and a declined card does not. Anyone who arrives without paying ends there, and cart-abandoned is the step right before it. After the goal there is no payment If/Else, because payment conditions only exist in a workflow triggered by Payment Received and the goal already separates buyers from everyone else; there is only the tag cleanup and a Find before the card update.',
     },
     {
       title: 'Share the purchase with 03',
-      body: 'The same payment fires Order Submitted, and 03 removes the contact from 02 in its first step. I cannot choose which runs first, so the steps after 02’s goal write exactly what 03 writes: Customer, Won, $497, both cart tags off. The Checkout Started update leaves Status out, so even a late run can never reopen a Won card.',
+      body: 'The same payment fires Order Submitted, and 03 removes the contact from 02 in its first step. I cannot choose which runs first, so the steps after 02’s goal write exactly what 03 writes: both cart tags off, and the course card at Customer, Won, $497, named "{{contact.name}} · Career Pivot Blueprint". Both workflows find that card with the same stage filter. The Checkout Started update leaves Status out, so even a late run can never reopen a Won card.',
     },
     {
       title: 'Settings, then test with test cards',
@@ -470,33 +556,38 @@ export const cartRecovery: Automation = {
     },
     {
       title: 'The card is declined',
-      body: 'A decline records a failed payment, not a successful one, so the goal ignores it and they stay in recovery. The first email says the order did not go through rather than assuming they changed their mind. 04 · Billing leaves first-payment declines to this workflow.',
+      body: 'A decline records a failed payment, not a successful one, so the goal ignores it and they stay in recovery. The first email says the order did not go through rather than assuming they changed their mind. 04 · Billing · Failed Payment Recovery leaves first-payment declines to this workflow.',
     },
     {
-      title: 'Reminder consent only, or STOP',
-      body: 'The workshop-reminder box covers reminders, not offers, so they take the email-only path. Someone with marketing consent who texts STOP to a workshop reminder before the cart text is due has SMS DND on by then, so the If/Else, which runs right before the text, sends them down the email-only path too.',
+      title: 'Reminder consent only, offers only, or STOP',
+      body: 'The workshop-reminder box covers reminders, not offers, so they take the email-only path. Someone who ticked only the offers box has SMS DND from 01, and 02 leaves it on: lifting it would also release 01’s reminder texts, which they did not ask for, so they get email only. Someone with offers consent who texts STOP to a workshop reminder before the cart text is due has SMS DND on by then, and the If/Else, which runs right before the text, sends them down the email-only path too.',
     },
     {
       title: 'Checkout right after the live workshop',
       body: 'The pitch ends around 8 PM Central, so a checkout from the live session runs into quiet hours. The first email waits for the Time Window and goes out at 8 AM Friday, and the text follows on Saturday, after 10 AM.',
     },
     {
+      title: 'Devon closed the card, then they paid',
+      body: 'A clear "not for me" gets the card closed as Lost. If they buy anyway, the Find after the goal looks for an open card, finds none and tells Devon in-app instead of reopening it. 03 runs on the same payment, finds the card by stage and marks it Customer, Won, so the end result is the same.',
+    },
+    {
       title: 'They reply with a question',
       body: 'Stop on Response is off on purpose: the run still has to tag a non-buyer at the end. The reply goes to Devon’s Conversations inbox, and the one remaining email still reads fine after a conversation. If they buy while talking to him, the goal and 03 take it from there.',
     },
     {
-      title: 'No open card',
-      body: 'A newsletter reader who never registered has no card, so Find Opportunity comes back empty; Create Opportunity adds one at Checkout Started and Go To sends them back through Find. The same happens for a current student, whose card is Won. That is rare, because 01 and 05 keep the checkout link away from students, so I did not add a separate check.',
+      title: 'No open course card',
+      body: 'A newsletter reader who never registered has no card, so Find Opportunity comes back empty and Create Opportunity adds one at Checkout Started. The same happens for someone whose only course card was closed, or whose only card is a coaching deal, which stays as it is. A current student would get a second course card this way; that is rare, because 01 and 05 keep the checkout link away from students, so I did not add a separate check.',
     },
   ],
   qa: [
-    'Test mode, step 1 only: the contact enters, the card moves to Checkout Started with a $497 value and keeps its status, Devon is the owner, and the log shows the 1-hour wait',
-    'Pay with a test card inside the hour: the logs show 02’s goal or 03’s Remove from Workflow, and either way the card is at Customer, Won, both cart tags are gone and no cart email was sent',
+    'Test mode, step 1 only: the contact enters, the course card moves to Checkout Started with a $497 value and keeps its status, Devon is the owner, and the log shows the 1-hour wait. A test contact with an open coaching card at Call Booked: that card does not move, and a new course card appears',
+    'Pay with a test card inside the hour: the logs show 02’s goal or 03’s Remove from Workflow, and either way the card is at Customer, Won, $497, renamed for the course, both cart tags are gone and no cart email was sent',
     'Pay on the 3 x $179 price: the goal is still met, because it filters on the product, not the price',
     'Use a declined test card on step 2: the contact stays in 02 and gets the FAQ email an hour later',
     'Reminder consent only: the Send SMS step never runs and the email path does. Submit step 1 at 7:30 PM: the first email shows as waiting until 8 AM',
     'Never pay: cart-abandoned is added, then the run ends at the goal with nothing after it, and the card stays Open at Checkout Started',
-    'No card, and a contact whose only card is Won: exactly one new opportunity each, the later updates land on it, and no Go To loop',
+    'No card, and a contact whose only card is Lost: exactly one new course card each, the goal’s Update Opportunity lands on it, and Execution Logs show no step running twice. Close a test card as Lost, then pay: Devon gets the in-app notification and 03 marks the card Won',
+    'Ticked only the offers box on the workshop form: SMS DND stays on and the text path is never taken. Submit a qualifying coaching application mid-checkout: 05 removes the contact from 02 and checkout-started is gone',
     'Emails in Gmail, Outlook and on a phone: the checkout trigger link, custom values, signature, postal address and unsubscribe link all render; the text is GSM-7 and at most two segments',
   ],
   snippets: [
@@ -528,6 +619,7 @@ export const cartRecovery: Automation = {
     'Trigger Links',
     'Goal Event',
     'Remove Contact Tag',
+    'Internal Notification',
     'Time Window',
     'Allow Re-entry',
   ],

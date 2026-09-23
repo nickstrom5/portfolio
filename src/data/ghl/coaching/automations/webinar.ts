@@ -13,6 +13,17 @@ const fromWorkshop = (start: number, minutes: number) => nextWorkshop(start) - s
  * off: a card already past the target stage stays where it is.
  */
 const STAGES = business.pipeline.stages;
+const CUSTOMER = STAGES.indexOf('Customer');
+/** The course card's stages. Applied, Call Booked and Coaching Client belong to the separate coaching card that 05 makes. */
+const COURSE_STAGES = STAGES.slice(0, CUSTOMER + 1);
+const COACHING_LIST = STAGES.slice(CUSTOMER + 1).join(', ').replace(/, ([^,]*)$/, ' or $1');
+
+/** Business name and postal address under every email (CAN-SPAM); the unsubscribe link comes from the sub-account setting. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
+/** A session five weeks before the sample Thursday, for a contact who registered before. */
+const EARLIER_SESSION = formatDay(3 * DAY - 5 * 7 * DAY);
+
 function moveCard(stage: string) {
   return ({ contact }: RunContext) => {
     const current = contact.opportunity?.stage;
@@ -34,7 +45,8 @@ Friday 2:15 PM        SMS      Box ticked, replay not opened    Replay nudge
 Replay click + 2 hr   Email    Opened the replay                Same offer email
 Saturday 8:15 PM      Email    Never opened the replay          Invitation to next Thursday
 
-Current students get their course login instead of the offer.
+Current students get their course login instead of the offer, or
+nothing while their course access is paused.
 Texts carry reminders only. Nothing is sold by text: the offer goes by email.
 Latest text: 7:55 PM Eastern. Most texts in any 24 hours: three.`;
 
@@ -78,7 +90,9 @@ export const webinar: Automation = {
         'Stop on Response off: "see you Thursday" or a question about the replay must not cancel the reminders or the replay. Replies land in Conversations for a person, and STOP still turns on SMS DND by itself.',
         'Timezone: Contact. Event Start Date ignores this and always uses the account time zone, Central, which is what a live session needs. The contact zone only drives the Advance Window after a replay click.',
         'No workflow Time Window: it would also hold the 8:15 PM follow-up emails. The texts are pinned to the session instead, and the latest one lands at 7:55 PM Eastern. In Atlantic Canada that is 8:55 PM, five minutes before a session that starts at 9 PM there, and a reminder they asked for.',
-        'Sender: From Name Morgan Hale, from morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not the name of the assigned user, because the assigned user changes when Devon picks up an application.',
+        'Sender Details: From Name Morgan Hale, From Email morgan@trailheadcareers.example. Emails are signed with the Founder First Name custom value, not the name of the assigned user, because the assigned user changes when Devon picks up an application.',
+        'Every email ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on. The offer, replay and invitation emails are commercial under CAN-SPAM; the confirmation and reminder carry the same footer so nothing depends on classifying them.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. This workflow creates the course card at Registered and moves it to Attended. Allow Multiple Opportunities per Contact is on in Sub-Account Settings › Objects › Opportunities, so a contact whose only card is a coaching deal can still get a course card here.',
       ],
     },
     steps: [
@@ -113,7 +127,7 @@ export const webinar: Automation = {
             label: 'Ticked it this time',
             when: {
               type: 'all',
-              label: 'SMS Consent is Yes, and Contact Tag includes sms-off-no-consent',
+              label: 'SMS consent (service) is Yes, and Contact Tag includes sms-off-no-consent',
               of: [
                 { type: 'field', key: 'sms_consent', op: 'eq', value: 'Yes' },
                 { type: 'tag', has: 'sms-off-no-consent' },
@@ -151,7 +165,7 @@ export const webinar: Automation = {
             label: 'SMS consent',
             when: {
               type: 'all',
-              label: 'SMS Consent is Yes, and Contact Tag does not include sms-off-no-consent',
+              label: 'SMS consent (service) is Yes, and Contact Tag does not include sms-off-no-consent',
               of: [
                 { type: 'field', key: 'sms_consent', op: 'eq', value: 'Yes' },
                 { type: 'no_tag', has: 'sms-off-no-consent' },
@@ -162,11 +176,15 @@ export const webinar: Automation = {
                 id: 'find-opp',
                 kind: 'ifelse',
                 title: 'Find Opportunity',
-                label: 'Find the Enrollment card',
+                label: 'Has a course card?',
                 branches: [
                   {
                     label: 'Opportunity Found',
-                    when: { type: 'all', label: 'Latest opportunity in the Enrollment pipeline, any status', of: [{ type: 'opportunity' }] },
+                    when: {
+                      type: 'any',
+                      label: `Latest opportunity where Pipeline is Enrollment and Stage is not ${COACHING_LIST}, any status`,
+                      of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage })),
+                    },
                     nodes: [
                       {
                         id: 'email-confirm',
@@ -178,7 +196,7 @@ export const webinar: Automation = {
                         message: {
                           channel: 'email',
                           subject: 'You are in: {{custom_values.workshop_title}}, Thursday at 7 PM Central',
-                          body: 'Hi {{contact.first_name}},\n\nYou are registered for {{custom_values.workshop_title}}, a free 60-minute live workshop.\n\nWhen: Thursday at 7 PM Central (8 PM Eastern, 5 PM Pacific)\nJoin: {{trigger_link.join}}\nThe room opens 10 minutes early, and this same link works on the day.\n\nWhat we will cover:\n- How to describe the skills you already have in the words a new field uses\n- How to test a new field before you quit anything\n- A 90-day plan you can start the next morning\n\nCannot make it live? Everyone who registers gets the replay for 48 hours.\n\nOne favor: reply to this email with the one question you most want answered. I will take as many as I can in the live Q&A.\n\n{{custom_values.founder_first_name}}',
+                          body: `Hi {{contact.first_name}},\n\nYou are registered for {{custom_values.workshop_title}}, a free 60-minute live workshop.\n\nWhen: Thursday at 7 PM Central (8 PM Eastern, 5 PM Pacific)\nJoin: {{trigger_link.join}}\nThe room opens 10 minutes early, and this same link works on the day.\n\nWhat we will cover:\n- How to describe the skills you already have in the words a new field uses\n- How to test a new field before you quit anything\n- A 90-day plan you can start the next morning\n\nCannot make it live? Everyone who registers gets the replay for 48 hours.\n\nOne favor: reply to this email with the one question you most want answered. I will take as many as I can in the live Q&A.\n\n{{custom_values.founder_first_name}}${footer}`,
                         },
                       },
                       {
@@ -188,7 +206,8 @@ export const webinar: Automation = {
                         label: '1 day before',
                         mode: 'before_appointment',
                         offset: DAY,
-                        summary: 'An upcoming appointment or booking: 1 day before the Event Start Date above (the Event Start Date article calls this wait Wait for Event/Appointment Time). If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so a Thursday registrant gets no day-before email.',
+                        ifPassed: 'skip_outbound',
+                        summary: 'An upcoming appointment or booking: 1 day before the Event Start Date above (the Event Start Date article calls this wait Wait for Event/Appointment Time). If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so someone who registers after 7 PM Wednesday gets no day-before email.',
                       },
                       {
                         id: 'email-1d',
@@ -200,7 +219,7 @@ export const webinar: Automation = {
                         message: {
                           channel: 'email',
                           subject: 'Thursday at 7 PM Central: two things to have ready',
-                          body: 'Hi {{contact.first_name}},\n\nA reminder that {{custom_values.workshop_title}} is live on Thursday at 7 PM Central.\n\nJoin here: {{trigger_link.join}}\n\nTwo things make the hour more useful. Write down your current job title and one role you are curious about, and have something to write on. We use both in the first 20 minutes.\n\nIf something comes up, the replay goes to everyone who registered.\n\nSee you Thursday,\n{{custom_values.founder_first_name}}',
+                          body: `Hi {{contact.first_name}},\n\nA reminder that {{custom_values.workshop_title}} is live on Thursday at 7 PM Central.\n\nJoin here: {{trigger_link.join}}\n\nTwo things make the hour more useful. Write down your current job title and one role you are curious about, and have something to write on. We use both in the first 20 minutes.\n\nIf something comes up, the replay goes to everyone who registered.\n\nSee you Thursday,\n{{custom_values.founder_first_name}}${footer}`,
                         },
                       },
                       {
@@ -210,7 +229,8 @@ export const webinar: Automation = {
                         label: '1 hour before',
                         mode: 'before_appointment',
                         offset: 60,
-                        summary: 'An upcoming appointment or booking: 1 hour before, with the same past-date setting. 6 PM Central is 7 PM Eastern and 4 PM Pacific.',
+                        ifPassed: 'skip_outbound',
+                        summary: 'An upcoming appointment or booking: 1 hour before. 6 PM Central is 7 PM Eastern and 4 PM Pacific. It is also the next wait, so it ends the skip for a Thursday registrant. If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so "starts in 1 hour" can never go out after 6 PM.',
                       },
                       {
                         id: 'sms-1h',
@@ -268,10 +288,10 @@ export const webinar: Automation = {
                                 action: 'send_sms',
                                 title: 'Send SMS',
                                 label: 'Room is open',
-                                summary: 'Only for people who have not clicked Join yet. Not at 7:00, because 7 PM Central is 8 PM Eastern, the edge of the strictest state quiet-hours window: this lands at 7:55 PM on the East Coast. Skipped for anyone on SMS DND.',
+                                summary: 'Only for people who have not clicked Join yet. Not at 7:00, because 7 PM Central is 8 PM Eastern, the edge of the strictest state quiet-hours window: this lands at 7:55 PM on the East Coast. It carries the opt-out line because, for someone who registers in the last hour, the 1-hour text was skipped and this is their first text. Skipped for anyone on SMS DND.',
                                 message: {
                                   channel: 'sms',
-                                  body: '{{location.name}}: the room is open, {{contact.first_name}}. We start in 5 minutes: {{trigger_link.join}} See you inside, {{custom_values.founder_first_name}}',
+                                  body: '{{location.name}}: the room is open, {{contact.first_name}}. We start in 5 minutes: {{trigger_link.join}} Reply STOP to opt out.',
                                 },
                               },
                               {
@@ -295,16 +315,8 @@ export const webinar: Automation = {
                                         label: 'Until 8:15 PM',
                                         mode: 'after_appointment',
                                         offset: 75,
-                                        summary: 'An upcoming appointment or booking: 1 hour 15 minutes after the Event Start Date. The hour plus Q&A, so nobody gets the offer while Morgan is still answering questions.',
-                                      },
-                                      {
-                                        id: 'opp-attended',
-                                        kind: 'action',
-                                        action: 'update_opportunity',
-                                        title: 'Update Opportunity',
-                                        label: 'Attended',
-                                        summary: 'Enrollment › Attended, the card Find Opportunity picked. Allow Opportunity to Move to Any Previous Stage stays off, and Status is not touched, so a won card is never reopened or moved back.',
-                                        run: moveCard('Attended'),
+                                        ifPassed: 'continue',
+                                        summary: 'An upcoming appointment or booking: 1 hour 15 minutes after the Event Start Date. The hour plus Q&A, so nobody gets the offer while Morgan is still answering questions. If this date has already passed: Continue to next action, so a Join click at 8:15 on the dot still gets the offer straight away.',
                                       },
                                       {
                                         id: 'field-attended',
@@ -325,46 +337,98 @@ export const webinar: Automation = {
                                         effect: { addTags: ['workshop-attended'] },
                                       },
                                       {
-                                        id: 'offer-check',
+                                        id: 'find-seen',
                                         kind: 'ifelse',
-                                        title: 'If/Else',
-                                        label: 'Already a student?',
+                                        title: 'Find Opportunity',
+                                        label: 'Open course card?',
                                         branches: [
                                           {
-                                            label: 'Already a student',
-                                            when: { type: 'field', key: 'purchase', op: 'not_empty', label: 'Purchase is not empty' },
+                                            label: 'Opportunity Found',
+                                            when: {
+                                              type: 'any',
+                                              label: `Latest opportunity where Pipeline is Enrollment, Stage is not ${COACHING_LIST}, and Status is Open`,
+                                              of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })),
+                                            },
                                             nodes: [
                                               {
-                                                id: 'email-student',
+                                                id: 'opp-attended',
                                                 kind: 'action',
-                                                action: 'send_email',
-                                                title: 'Send Email',
-                                                label: 'Your course login',
-                                                summary: 'A current student came back for the live Q&A. No pitch for a course they own: the login and a line to student success.',
-                                                message: {
-                                                  channel: 'email',
-                                                  subject: 'Good to see you again, {{contact.first_name}}',
-                                                  body: 'Hi {{contact.first_name}},\n\nThanks for coming back to the workshop. You already have {{custom_values.course_name}}, so there is nothing to buy here. Pick up where you left off: {{custom_values.course_login}}\n\nStuck on a module? Reply to this email and our student success team will help.\n\n{{custom_values.founder_first_name}}',
+                                                action: 'update_opportunity',
+                                                title: 'Update Opportunity',
+                                                label: 'Attended',
+                                                summary: 'Enrollment › Attended, live or replay, on the card this Find just picked. Allow Opportunity to Move to Any Previous Stage stays off and Status is not in the step, so a card already at Checkout Started stays there.',
+                                                run: moveCard('Attended'),
+                                              },
+                                              {
+                                                id: 'offer-check',
+                                                kind: 'ifelse',
+                                                title: 'If/Else',
+                                                label: 'Already a student?',
+                                                branches: [
+                                                  {
+                                                    label: 'Access paused',
+                                                    when: { type: 'tag', has: 'access-paused' },
+                                                    nodes: [
+                                                      {
+                                                        id: 'end-paused',
+                                                        kind: 'end',
+                                                        title: 'End',
+                                                        summary:
+                                                          'The branch ends here, with a Sticky Note saying why: this student’s course access is paused while 04 · Billing · Failed Payment Recovery waits for an installment, so a "pick up where you left off" link would open nothing, and an offer for a course they own would be worse. 04’s emails already say how to restore access.',
+                                                      },
+                                                    ],
+                                                  },
+                                                  {
+                                                    label: 'Already a student',
+                                                    when: { type: 'field', key: 'purchase', op: 'not_empty', label: 'Purchase is not empty' },
+                                                    nodes: [
+                                                      {
+                                                        id: 'email-student',
+                                                        kind: 'action',
+                                                        action: 'send_email',
+                                                        title: 'Send Email',
+                                                        label: 'Your course login',
+                                                        summary: 'A current student came back for the live Q&A. No pitch for a course they own: the login and a line to student success.',
+                                                        message: {
+                                                          channel: 'email',
+                                                          subject: 'Good to see you again, {{contact.first_name}}',
+                                                          body: `Hi {{contact.first_name}},\n\nThanks for coming back to the workshop. You already have {{custom_values.course_name}}, so there is nothing to buy here. Pick up where you left off: {{custom_values.course_login}}\n\nStuck on a module? Reply to this email and our student success team will help.\n\n{{custom_values.founder_first_name}}${footer}`,
+                                                        },
+                                                      },
+                                                    ],
+                                                  },
+                                                ],
+                                                otherwise: {
+                                                  label: 'Not a student',
+                                                  nodes: [
+                                                    {
+                                                      id: 'email-offer',
+                                                      kind: 'action',
+                                                      action: 'send_email',
+                                                      title: 'Send Email',
+                                                      label: 'The offer',
+                                                      summary: 'Price, payment plan and refund policy in plain words, one checkout link, no countdown and no claims about jobs or pay. The P.S. links the replay, for anyone who clicked Join but left early.',
+                                                      message: {
+                                                        channel: 'email',
+                                                        subject: 'If you want the full plan: {{custom_values.course_name}}',
+                                                        body: `Hi {{contact.first_name}},\n\nThanks for spending the hour on {{custom_values.workshop_title}}. The workshop gives you the map. {{custom_values.course_name}} is the full, self-paced version: the skills inventory, the 90-day plan and the templates from the workshop, to work through on your own schedule.\n\nIt is {{custom_values.course_price}} paid once, or {{custom_values.payment_plan}}, which comes to a little more in total. It comes with a {{custom_values.refund_policy}}: email {{custom_values.support_email}} within the guarantee period for a full refund.\n\nEnroll here: {{trigger_link.checkout}}\n\nThe price is the same next week. There is no countdown, so take the time you need.\n\nWant one-to-one help instead? {{custom_values.coaching_name}} is by application: {{trigger_link.apply}}\n\n{{custom_values.founder_first_name}}\n\nP.S. Missed part of it? The replay is here until Saturday evening: {{trigger_link.replay}}${footer}`,
+                                                      },
+                                                    },
+                                                  ],
                                                 },
                                               },
                                             ],
                                           },
                                         ],
                                         otherwise: {
-                                          label: 'Not a student',
+                                          label: 'Opportunity Not Found',
                                           nodes: [
                                             {
-                                              id: 'email-offer',
-                                              kind: 'action',
-                                              action: 'send_email',
-                                              title: 'Send Email',
-                                              label: 'The offer',
-                                              summary: 'Price, payment plan and refund policy in plain words, one checkout link, no countdown and no claims about jobs or pay. The P.S. links the replay, for anyone who clicked Join but left early.',
-                                              message: {
-                                                channel: 'email',
-                                                subject: 'If you want the full plan: {{custom_values.course_name}}',
-                                                body: 'Hi {{contact.first_name}},\n\nThanks for spending the hour on {{custom_values.workshop_title}}. The workshop gives you the map. {{custom_values.course_name}} is the full, self-paced version: the skills inventory, the 90-day plan and the templates from the workshop, to work through on your own schedule.\n\nIt is {{custom_values.course_price}} paid once, or {{custom_values.payment_plan}}, which comes to a little more in total. It comes with a {{custom_values.refund_policy}}: email {{custom_values.support_email}} within the guarantee period for a full refund.\n\nEnroll here: {{trigger_link.checkout}}\n\nThe price is the same next week. There is no countdown, so take the time you need.\n\nWant one-to-one help instead? {{custom_values.coaching_name}} is by application: {{trigger_link.apply}}\n\n{{custom_values.founder_first_name}}\n\nP.S. Missed part of it? The replay is here until Saturday evening: {{trigger_link.replay}}',
-                                              },
+                                              id: 'goto-offer',
+                                              kind: 'goto',
+                                              title: 'Go To',
+                                              target: 'offer-check',
+                                              summary: 'No open course card: a student’s card is Won, and a closed card is never reopened here. Nothing moves; on to the student check.',
                                             },
                                           ],
                                         },
@@ -384,7 +448,7 @@ export const webinar: Automation = {
                                         message: {
                                           channel: 'email',
                                           subject: 'Sorry we missed you: the replay is up until Saturday',
-                                          body: 'Hi {{contact.first_name}},\n\nWe missed you tonight, and that is fine. The full recording of {{custom_values.workshop_title}} is here until Saturday evening:\n\n{{trigger_link.replay}}\n\nIf you only have 20 minutes, watch the first 20. That is the skills map, and you can do it on paper while you watch.\n\n{{custom_values.founder_first_name}}',
+                                          body: `Hi {{contact.first_name}},\n\nWe missed you tonight, and that is fine. The full recording of {{custom_values.workshop_title}} is here until Saturday evening:\n\n{{trigger_link.replay}}\n\nIf you only have 20 minutes, watch the first 20. That is the skills map, and you can do it on paper while you watch.\n\n{{custom_values.founder_first_name}}${footer}`,
                                         },
                                       },
                                       {
@@ -412,29 +476,20 @@ export const webinar: Automation = {
                                                 summary: 'Two hours, long enough to finish the recording before the offer arrives. Advance Window 8 AM to 9 PM, so a midnight viewer gets it over breakfast.',
                                               },
                                               {
-                                                id: 'opp-replay',
-                                                kind: 'action',
-                                                action: 'update_opportunity',
-                                                title: 'Update Opportunity',
-                                                label: 'Attended',
-                                                summary: 'Enrollment › Attended: they have seen the workshop. The Attended Live field stays No, so live and replay are still counted apart.',
-                                                run: moveCard('Attended'),
-                                              },
-                                              {
                                                 id: 'tag-replay',
                                                 kind: 'action',
                                                 action: 'add_tag',
                                                 title: 'Add Contact Tag',
                                                 label: 'workshop-replay',
-                                                summary: 'Watched the replay, not live.',
+                                                summary: 'Watched the replay, not live. Attended Live stays No, so live and replay are counted apart.',
                                                 effect: { addTags: ['workshop-replay'] },
                                               },
                                               {
-                                                id: 'goto-offer',
+                                                id: 'goto-seen',
                                                 kind: 'goto',
                                                 title: 'Go To',
-                                                target: 'offer-check',
-                                                summary: 'Same student check and the same offer email as the live path, so there is one offer to keep up to date.',
+                                                target: 'find-seen',
+                                                summary: 'Joins the live path at the card update: the same Find, the card to Attended, the same student check and the same offer email, so there is one offer to keep up to date.',
                                               },
                                             ],
                                           },
@@ -472,7 +527,7 @@ export const webinar: Automation = {
                                                         kind: 'goto',
                                                         title: 'Go To',
                                                         target: 'wait-watch',
-                                                        summary: 'Joins the replay path above: time to watch, card to Attended, tag, then the offer.',
+                                                        summary: 'Joins the replay path above: time to watch, the tag, the card to Attended, then the offer.',
                                                       },
                                                     ],
                                                   },
@@ -498,7 +553,7 @@ export const webinar: Automation = {
                                                         message: {
                                                           channel: 'email',
                                                           subject: 'Next Thursday, 7 PM Central?',
-                                                          body: 'Hi {{contact.first_name}},\n\nThe replay of {{custom_values.workshop_title}} is down now. The workshop runs live every Thursday at 7 PM Central, and you are welcome at the next one: {{location.website}}/pivot-plan\n\nIf Thursday evenings do not work for you, reply and tell me what would. I read the replies.\n\n{{custom_values.founder_first_name}}',
+                                                          body: `Hi {{contact.first_name}},\n\nThe replay of {{custom_values.workshop_title}} is down now. The workshop runs live every Thursday at 7 PM Central, and you are welcome at the next one: {{location.website}}/pivot-plan\n\nIf Thursday evenings do not work for you, reply and tell me what would. I read the replies.\n\n{{custom_values.founder_first_name}}${footer}`,
                                                         },
                                                       },
                                                     ],
@@ -529,15 +584,21 @@ export const webinar: Automation = {
                       action: 'create_opportunity',
                       title: 'Create Opportunity',
                       label: 'Registered',
-                      summary: 'Enrollment › Registered, named after the contact with " · Workshop", source Workshop page. Duplicate Opportunity off, so if Find ever misses a card that exists, this makes nothing rather than a second card. Enrollment is the only pipeline in this sub-account; a card in another pipeline would block this step and loop the Go To, so a new pipeline means revisiting it.',
-                      effect: { opportunity: { pipeline: 'Enrollment', stage: 'Registered', status: 'open' } },
+                      summary: 'Enrollment › Registered, status Open, named "{{contact.name}} · Workshop", source Workshop page. Duplicate Opportunity on, because a contact whose only card is a coaching deal from 05 still needs a course card. It only runs when Find came back empty, so nobody gets two course cards.',
+                      run: ({ contact }) => {
+                        const prev = contact.opportunity;
+                        return {
+                          effect: { opportunity: { pipeline: 'Enrollment', stage: 'Registered', status: 'open', name: `${contact.firstName} ${contact.lastName} · Workshop` } },
+                          log: `New course card in Enrollment › Registered, status Open.${prev ? ` The ${prev.stage} card (${prev.status}) stays as it is.` : ''}`,
+                        };
+                      },
                     },
                     {
-                      id: 'goto-refind',
+                      id: 'goto-confirm',
                       kind: 'goto',
                       title: 'Go To',
-                      target: 'find-opp',
-                      summary: 'A card made by Create Opportunity is not in context for Update Opportunity later in the run, so the contact goes back through Find, which now finds it.',
+                      target: 'email-confirm',
+                      summary: 'On to the confirmation. Nothing leads back to Find Opportunity, so this cannot loop; the Attended update runs its own Find, because a card made by Create Opportunity is not in context for a later Update Opportunity.',
                     },
                   ],
                 },
@@ -588,7 +649,7 @@ export const webinar: Automation = {
       events: [{ at: fromWorkshop(DAY + 12 * 60 + 40, 3), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the doors-open text' }],
       expect: {
         outcome: 'completed',
-        visits: ['can-text:1', 'find-opp:else', 'create-opp', 'goto-refind', 'find-opp:0', 'email-confirm', 'email-1d', 'sms-1h', 'save-date', 'wait-early:timeout', 'sms-doors', 'wait-join:met', 'wait-end', 'opp-attended', 'field-attended', 'tag-attended', 'offer-check:else', 'email-offer'],
+        visits: ['can-text:1', 'find-opp:else', 'create-opp', 'goto-confirm', 'email-confirm', 'email-1d', 'sms-1h', 'save-date', 'wait-early:timeout', 'sms-doors', 'wait-join:met', 'wait-end', 'field-attended', 'tag-attended', 'find-seen:0', 'opp-attended', 'offer-check:else', 'email-offer'],
         tags: ['workshop-attended'],
         stage: 'Attended',
       },
@@ -602,7 +663,7 @@ export const webinar: Automation = {
       events: [{ at: fromWorkshop(20 * 60 + 25, 20 * 60), type: 'link_clicked', value: 'replay', label: 'Workshop Replay, from the Friday text' }],
       expect: {
         outcome: 'completed',
-        visits: ['sms-doors', 'wait-join:timeout', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:met', 'goto-watched', 'wait-watch', 'opp-replay', 'tag-replay', 'goto-offer', 'offer-check:else', 'email-offer'],
+        visits: ['sms-doors', 'wait-join:timeout', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:met', 'goto-watched', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:0', 'opp-attended', 'offer-check:else', 'email-offer'],
         tags: ['workshop-replay'],
         stage: 'Attended',
       },
@@ -624,7 +685,7 @@ export const webinar: Automation = {
     {
       id: 'student-no-texts',
       label: 'Current student, no texts',
-      summary: 'Bought the course in February through a payment link and never ticked a texts box. Registers on Saturday for the live Q&A, misses it, tries the Join link at 8:25 PM after it has ended and opens the replay at 9:40 PM.',
+      summary: 'Bought the course last month through a payment link and never ticked a texts box. Registers on Saturday for the live Q&A, misses it, tries the Join link at 8:25 PM after it has ended and opens the replay at 9:40 PM.',
       start: 5 * DAY + 10 * 60 + 15,
       contact: {
         opportunity: { pipeline: 'Enrollment', stage: 'Customer', status: 'won', value: 497, name: 'Marcus Lee · Career Pivot Blueprint' },
@@ -636,40 +697,64 @@ export const webinar: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['untag', 'can-text:else', 'dnd-on', 'tag-dnd', 'goto-find', 'find-opp:0', 'wait-early:timeout', 'wait-join:timeout', 'email-replay', 'wait-replay-1:met', 'wait-watch', 'opp-replay', 'tag-replay', 'goto-offer', 'offer-check:0', 'email-student'],
+        visits: ['untag', 'can-text:else', 'dnd-on', 'tag-dnd', 'goto-find', 'find-opp:0', 'wait-early:timeout', 'wait-join:timeout', 'email-replay', 'wait-replay-1:met', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:else', 'goto-offer', 'offer-check:1', 'email-student'],
         skips: ['sms-1h', 'sms-doors'],
         tags: ['workshop-replay', 'sms-off-no-consent'],
         stage: 'Customer',
       },
     },
     {
+      id: 'student-paused',
+      label: 'Student with access paused',
+      summary: 'On the payment plan; an installment failed and 04 paused course access last week. Registers on Monday morning for the live Q&A and joins from the doors-open text. No offer and no login email afterward: the course is paused for them.',
+      start: 9 * 60 + 5,
+      contact: {
+        tags: ['payment-failed', 'access-paused'],
+        assignedTo: 'jules',
+        opportunity: { pipeline: 'Enrollment', stage: 'Customer', status: 'won', value: 497, name: 'Marcus Lee · Career Pivot Blueprint' },
+        fields: { sms_consent: 'Yes', sms_marketing_consent: 'No', current_role: 'Individual contributor', goal: 'A new role', purchase: 'Career Pivot Blueprint', payment_plan: 'Yes', course_progress: 'Started' },
+      },
+      events: [{ at: fromWorkshop(9 * 60 + 5, 2), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the doors-open text' }],
+      expect: {
+        outcome: 'ended',
+        visits: ['can-text:1', 'find-opp:0', 'sms-doors', 'wait-join:met', 'field-attended', 'tag-attended', 'find-seen:else', 'goto-offer', 'offer-check:0', 'end-paused'],
+        tags: ['workshop-attended', 'access-paused'],
+        stage: 'Customer',
+      },
+    },
+    {
       id: 'returns-buys',
-      label: 'Comes back with texts on, buys live',
-      summary: 'Registered for a January session without the texts box and never watched, so 01 left SMS DND on. Ticks the box this time, replies to the 1-hour text with a question, joins from it at 6:06 PM and pays near the end. 03 takes over.',
-      start: 7 * 60 + 50,
+      label: 'Registers Thursday afternoon, buys live',
+      summary: 'Registered for an earlier session without the texts box and never watched, so 01 left SMS DND on. Registers again at 1:50 PM on the day with the box ticked, too late for the day-before email. Replies to the 1-hour text with a question, joins from it at 6:06 PM and pays near the end. 03 takes over.',
+      start: 3 * DAY + 13 * 60 + 50,
       contact: {
         tags: ['workshop-no-show', 'sms-off-no-consent'],
         dnd: { sms: true },
         opportunity: { pipeline: 'Enrollment', stage: 'Registered', status: 'open', name: 'Marcus Lee · Workshop' },
-        fields: { sms_consent: 'Yes', sms_marketing_consent: 'No', current_role: 'Senior leader', goal: 'Freelancing', workshop_date: 'Thu, Jan 22', attended: 'No' },
+        fields: { sms_consent: 'Yes', sms_marketing_consent: 'No', current_role: 'Senior leader', goal: 'Freelancing', workshop_date: EARLIER_SESSION, attended: 'No' },
       },
       events: [
         {
-          at: fromWorkshop(7 * 60 + 50, -56),
+          at: fromWorkshop(3 * DAY + 13 * 60 + 50, -56),
           type: 'reply',
           value: 'Will there be a replay if I have to leave at 8?',
           label: 'Stop on Response is off, so the run carries on. A person answers in Conversations.',
         },
-        { at: fromWorkshop(7 * 60 + 50, -54), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the 1-hour text' },
-        { at: fromWorkshop(7 * 60 + 50, 52), type: 'order_submitted', value: 497, label: 'Career Pivot Blueprint, paid in full' },
+        { at: fromWorkshop(3 * DAY + 13 * 60 + 50, -54), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the 1-hour text' },
+        { at: fromWorkshop(3 * DAY + 13 * 60 + 50, 52), type: 'order_submitted', value: 497, label: 'Career Pivot Blueprint, paid in full' },
       ],
-      expect: { outcome: 'ended', visits: ['untag', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-find-on', 'find-opp:0', 'sms-1h', 'wait-early:met', 'goto-live', 'wait-end'], stage: 'Registered' },
+      expect: {
+        outcome: 'ended',
+        visits: ['untag', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-find-on', 'find-opp:0', 'email-confirm', 'wait-1d', 'wait-1h', 'sms-1h', 'wait-early:met', 'goto-live', 'wait-end'],
+        skips: ['email-1d'],
+        stage: 'Registered',
+      },
     },
   ],
   dataModel: {
     customFields: [
-      { name: 'SMS Consent', key: 'sms_consent', type: 'Checkbox', note: 'The reminders box on the form. Unticked by default, not required' },
-      { name: 'Marketing Texts', key: 'sms_marketing_consent', type: 'Checkbox', note: 'A separate box. Not read here: this workflow sends no marketing texts' },
+      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: 'The service box on the form: "workshop reminders and, if I enroll, course and billing notices". Unticked by default, not required. Not Yes means SMS DND on here' },
+      { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'A separate box. Not read here: this workflow sends no marketing texts' },
       { name: 'Workshop Date', key: 'workshop_date', type: 'Date', note: 'Current Date, written at 6 PM on the session day' },
       { name: 'Attended Live', key: 'attended', type: 'Dropdown (single)', note: 'Yes · No. Reset to No on the session day, Yes on a Join click' },
       { name: 'Current Role / Goal', key: 'current_role', type: 'Dropdown (single) ×2', note: 'From the form, used by 05 to pre-fill the application' },
@@ -679,7 +764,7 @@ export const webinar: Automation = {
       { name: 'workshop-attended', note: 'Clicked Join at the latest session' },
       { name: 'workshop-replay', note: 'Opened the replay of the latest session' },
       { name: 'workshop-no-show', note: 'Neither. All three are cleared when they register again' },
-      { name: 'sms-off-no-consent', note: 'This workflow turned SMS DND on for lack of consent. Removed when they tick the box on a later registration' },
+      { name: 'sms-off-no-consent', note: 'This workflow turned SMS DND on for lack of consent. Removed, with the DND, when they tick the service box on a later registration or the texts box on the coaching application (05)' },
     ],
     pipeline: business.pipeline,
     customValues: [
@@ -703,7 +788,7 @@ export const webinar: Automation = {
     },
     {
       title: 'One clock: Event Start Date',
-      body: 'Event Start Date sets Thursday at 7 PM as the reference, and three waits of the type An upcoming appointment or booking count from it: a day before, an hour before and 75 minutes after. GHL documents that this action uses the account time zone even when the workflow runs on contact time, which suits a live session. The two before-waits have "If this date has already passed" set to skip outbound messages until the next wait, so a Thursday-afternoon registrant does not get the day-before email.',
+      body: 'Event Start Date sets Thursday at 7 PM as the reference, and three waits of the type An upcoming appointment or booking count from it: a day before, an hour before and 75 minutes after. GHL documents that this action uses the account time zone even when the workflow runs on contact time, which suits a live session. Each wait sets "If this date has already passed" on purpose: both before-waits use Skip all outbound communication actions till next wait or event start date action, so a Thursday-afternoon registrant gets no day-before email and no "starts in 1 hour" text can go out late, and the 8:15 PM wait uses Continue to next action, so a late joiner still gets the offer.',
     },
     {
       title: 'Reading the Join click',
@@ -711,25 +796,25 @@ export const webinar: Automation = {
     },
     {
       title: 'Consent by DND, and what it costs',
-      body: 'Anyone whose SMS Consent is not Yes gets SMS DND switched on at the top, plus a tag, sms-off-no-consent, as the receipt. A Go To then puts them back on the main path. One step replaces an If/Else in front of every text, and a text added next month is covered without anyone remembering. The cost: DND is contact-wide and outlives the run. It blocks texts from every workflow and from the team, including 02’s cart text for someone who ticked only the marketing box and 05’s texts if they tick the application’s own box later. It is Outbound only, so their own texts still reach us. The tag is what makes it reversible: when a tagged contact registers again with the box ticked, the workflow switches SMS DND off and removes the tag. A STOP never carries the tag, so a STOP is never undone.',
+      body: 'Anyone whose SMS consent (service) is not Yes gets SMS DND switched on at the top, plus a tag, sms-off-no-consent, as the receipt. A Go To then puts them back on the main path. One step replaces an If/Else in front of every text, and a text added next month is covered without anyone remembering. The cost: DND is contact-wide and outlives the run, so it blocks texts from every workflow and from the team. 02 does not lift it, so someone who ticked only the offers box gets no cart text. 05 does lift it when they tick the application’s texts box, the same way this workflow does. It is Outbound only, so their own texts still reach us. The tag is what makes it reversible: when a tagged contact registers again with the box ticked, the workflow switches SMS DND off and removes the tag. A STOP never carries the tag, so a STOP is never undone.',
     },
     {
-      title: 'Find the card before moving it',
-      body: 'GHL does not carry a card made by Create Opportunity into later Update Opportunity steps. So Find Opportunity runs first (latest card in Enrollment, any status); if there is none, Create Opportunity makes one in Registered and a Go To runs Find again. A returning contact keeps their card, and a student’s won card is found and never dragged back, because backward moves are off. The Go To loop is safe only while Enrollment is the sub-account’s one pipeline, and the step summary says so.',
+      title: 'One course card, found twice, never looped',
+      body: 'Enrollment holds two kinds of card: the course card (Registered, Attended, Checkout Started, Customer), which 01 to 03 move, and a separate coaching card (Applied, Call Booked, Coaching Client) that 05 creates. At the top, Find Opportunity looks for a course card of any status (Stage is not Applied, Call Booked or Coaching Client). If there is none, Create Opportunity makes one at Registered with Duplicate Opportunity on and Go To carries on to the confirmation, never back to Find. A card made by Create Opportunity is not in context for a later Update Opportunity, so a second Find, open course cards only, runs right before the move to Attended. A student’s Won card fails that filter and is never touched.',
     },
     {
       title: 'The replay path, and one offer',
-      body: 'The replay wait is split in two, 18 and 30 hours, so the one nudge text lands on Friday afternoon instead of Thursday night, and the second timeout matches the moment the replay page comes down. Replay viewers get two hours to watch, then Go To the same student check and offer email as live attendees, so there is one offer to keep up to date.',
+      body: 'The replay wait is split in two, 18 and 30 hours, so the one nudge text lands on Friday afternoon instead of Thursday night, and the second timeout matches the moment the replay page comes down. Replay viewers get two hours to watch, then Go To the same Find, card update, student check and offer email as live attendees, so there is one offer to keep up to date.',
     },
     {
       title: 'Settings on purpose, then test against the calendar',
-      body: 'Allow Re-entry on, because the workshop is weekly. Stop on Response off, because a reply like "see you Thursday" must not cancel the replay. No Time Window, because it would hold the 8:15 PM emails. Paying fires 03, whose first step removes the contact from this workflow. Then five test contacts, one per scenario above, plus registrations on a Friday and on a Thursday afternoon to check the Event Start Date each one gets in Execution Logs. Morgan gets the schedule below: who hears what, and when, without opening the builder.',
+      body: 'Allow Re-entry on, because the workshop is weekly. Stop on Response off, because a reply like "see you Thursday" must not cancel the replay. No Time Window, because it would hold the 8:15 PM emails. Paying fires 03, whose first step removes the contact from this workflow. Then one test contact per scenario above (the Thursday-afternoon one included), plus a Friday registration to check that Event Start Date moves to the following Thursday in Execution Logs. Morgan gets the schedule below: who hears what, and when, without opening the builder.',
     },
   ],
   edgeCases: [
     {
       title: 'Registers on Thursday afternoon',
-      body: 'The day-before wait has already passed, and its past-date setting skips outbound messages until the next wait. They get the confirmation, the 1-hour text and the doors-open text, and no day-before email on the day itself.',
+      body: 'The day-before time has already passed, and that wait is set to Skip all outbound communication actions till next wait or event start date action. The day-before email is skipped, the 1-hour wait ends the skip, and they get the confirmation, the 1-hour text and the doors-open text. The last test contact above runs exactly this.',
     },
     {
       title: 'Clicks Join early, or leaves after five minutes',
@@ -749,7 +834,7 @@ export const webinar: Automation = {
     },
     {
       title: 'Buys during the session, or already a student',
-      body: 'Paying fires 03, which removes the contact from this workflow before 8:15 PM, so a new student gets onboarding instead of an offer for what they just bought. A student who registers later is found by Find Opportunity, their won card stays in Customer because backward moves are off, and after the session they get their course login instead of the offer.',
+      body: 'Paying fires 03, which removes the contact from this workflow before 8:15 PM, so a new student gets onboarding instead of an offer for what they just bought. A student who registers later already has a course card, so the first Find stops a second one; the Attended Find looks only at open cards, so their Won card stays in Customer, and after the session they get their course login instead of the offer. A student whose access 04 has paused gets neither: the run ends quietly, because a login link would open nothing.',
     },
   ],
   qa: [
@@ -760,7 +845,9 @@ export const webinar: Automation = {
     'Click Join from the 1-hour text at 6:05 PM: no doors-open text, and at 8:15 PM the card is in Attended, Attended Live is Yes, the tag is there and the offer’s checkout link opens the order form',
     'Click nothing: the replay email at 8:15 PM, one text on Friday at 2:15 PM, the invitation on Saturday at 8:15 PM and the workshop-no-show tag. Click Join at 8:30 PM on a second test contact: nothing changes, because the replay waits count only the Replay link',
     'Open the replay on Friday: the offer arrives about two hours later, the card moves to Attended and Attended Live stays No. Pay during the session on a third: Enrollment History shows the contact removed by 03 and no offer email',
-    'Every trigger link records a click on the activity timeline, every merge field renders in Gmail, Outlook and on a phone, each text stays within two segments with an 11-letter first name and the real trigger-link URL, and the offer, replay and invitation emails carry the unsubscribe link and the Chicago mailing address',
+    'A student tagged access-paused who joins live: no offer and no login email, and the run ends at the student check',
+    'Register a contact with no card, a student with a Won course card and a contact whose only card is a coaching card: afterward each has exactly one course card, the new ones at Registered, and the Won card has not moved',
+    'Every trigger link records a click on the activity timeline, every merge field renders in Gmail, Outlook and on a phone, each text stays within two segments with an 11-letter first name and the real trigger-link URL, and every email carries the unsubscribe link and the Chicago mailing address',
   ],
   snippets: [
     { title: 'Who hears what, and when', language: 'text', code: schedule, note: 'Goes to Morgan and the team with the SOP, so anyone can answer "did they get a reminder?" without opening the builder.' },

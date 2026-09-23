@@ -10,7 +10,7 @@ const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 /** Last quarter's answer. The first step clears all three, so the tag is always the latest answer. */
 const NPS_TAGS = ['nps-detractor', 'nps-passive', 'nps-promoter'];
 
-const company = (c: Contact) => String(c.fields.company_name ?? c.fields.company ?? `${c.firstName} ${c.lastName}`);
+const company = (c: Contact) => String(c.fields.company ?? `${c.firstName} ${c.lastName}`);
 const comment = (c: Contact) => String(c.fields.nps_comment ?? '').trim();
 
 /** Update Contact Field on Account Health, logged as a change. */
@@ -598,7 +598,7 @@ export const npsHealth: Automation = {
         assignedTo: 'leo',
         fields: {
           company: 'Chen Mechanical',
-          plan: 'annual',
+          plan: 'standard-annual',
           seats: 23,
           workspace_id: 'ws_2VN6TE',
           account_health: 'Healthy',

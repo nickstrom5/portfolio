@@ -69,14 +69,16 @@ output = { application_score: score, capped: capped };`;
 
 /* ---------- Card moves ---------- */
 
-/** Update Opportunity: stage Applied, renamed for the coaching deal, value 0. Backward moves are off. */
-function toApplied({ contact }: RunContext) {
-  const current = contact.opportunity?.stage ?? '';
-  const name = `${contact.firstName} ${contact.lastName} · ${COACHING}`;
-  if (current === 'Applied') return { log: 'The card is already in Applied, so nothing changes.' };
-  if (STAGES.indexOf(current) > STAGES.indexOf('Applied')) return { log: `The card is already in ${current}. Backward moves are off, so it stays there.` };
-  return { effect: { opportunity: { stage: 'Applied', name, value: 0 } }, log: `Enrollment › Applied, moved from ${current}. Renamed "${name}", value 0 until a package is agreed.` };
-}
+/**
+ * The coaching card's stages. Registered to Customer belong to the separate
+ * course card that 01 to 03 move; this workflow never touches that card.
+ */
+const CUSTOMER = STAGES.indexOf('Customer');
+const COURSE_LIST = STAGES.slice(0, CUSTOMER + 1).join(', ').replace(/, ([^,]*)$/, ' or $1');
+const COACHING_STAGES = STAGES.slice(CUSTOMER + 1);
+/** Both Finds in this workflow use the same filters: an open coaching card. */
+const FIND_LABEL = `Latest opportunity where Pipeline is Enrollment, Stage is not ${COURSE_LIST}, and Status is Open`;
+const openCoachingCard = { type: 'any' as const, label: FIND_LABEL, of: COACHING_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })) };
 
 function toCallBooked({ contact }: RunContext) {
   const current = contact.opportunity?.stage ?? '';
@@ -118,11 +120,23 @@ const answers = (a: Answers): Contact['fields'] => ({
   sms_marketing_consent: a.texts,
 });
 
-/** A workshop registrant as 01 left them: an open Enrollment card, no owner. */
-const registrant = (stage: string, tags: string[], a: Answers, extra: Contact['fields'] = {}, dnd: Contact['dnd'] = {}): Partial<Contact> => ({
+/**
+ * A workshop registrant as 01 left them: an open course card, no owner. The
+ * simulator keeps one card per contact, the latest; `card` overrides it, e.g.
+ * with an open coaching card from an earlier application.
+ */
+const registrant = (
+  stage: string,
+  tags: string[],
+  a: Answers,
+  extra: Contact['fields'] = {},
+  dnd: Contact['dnd'] = {},
+  card: { name?: string; value?: number; owner?: string } = {},
+): Partial<Contact> => ({
   tags,
   dnd,
-  opportunity: { pipeline: 'Enrollment', stage, status: 'open', name: 'Marcus Lee · Workshop' },
+  ...(card.owner ? { assignedTo: card.owner } : {}),
+  opportunity: { pipeline: 'Enrollment', stage, status: 'open', name: card.name ?? 'Marcus Lee · Workshop', ...(card.value === undefined ? {} : { value: card.value }) },
   fields: { sms_consent: 'Yes', ...extra, ...answers(a) },
 });
 
@@ -256,7 +270,7 @@ export const application: Automation = {
     href: 'https://help.gohighlevel.com/support/solutions/articles/155000003259-workflow-trigger-survey-submitted',
   },
   solution:
-    'The survey handles the one hard no itself, with a Disqualify Lead rule, and the trigger’s Disqualified filter keeps those submissions out. Everything else is scored 0 to 100 by a Custom Code step from four answers. At 70 or more the card moves to Applied, Devon becomes the owner and gets the answers by email, and the applicant gets the booking link by email, and by text if they agreed to texts about offers. A booked Strategy Call moves the card to Call Booked. No booking in two days gives Devon a task and sends a personal follow-up. Under 70, the applicant gets a kind email that recommends the course first, or tells a current student to keep going, and says how to apply again.',
+    'The survey handles the one hard no itself, with a Disqualify Lead rule, and the trigger’s Disqualified filter keeps those submissions out. Everything else is scored 0 to 100 by a Custom Code step from four answers. At 70 or more a coaching card opens at Applied (the course card is left alone), the contact leaves checkout recovery if they were in it, Devon becomes the owner and gets the answers by email, and the applicant gets the booking link by email, and by text if they agreed to texts about offers. A booked Strategy Call moves the coaching card to Call Booked. No booking in two days gives Devon a task and sends a personal follow-up. Under 70, the applicant gets a kind email that recommends the course first, or tells a current student to keep going, and says how to apply again.',
   workflow: {
     name: '05 · Sales · Coaching Application',
     folder: 'Sales',
@@ -268,11 +282,12 @@ export const application: Automation = {
       senderName: 'Devon Brooks',
       notes: [
         'Allow Re-entry on: someone who is "not a fit yet" can apply again after the course, and the new answers are scored fresh. GHL does not let a contact re-enter while still active, so a second submit during the follow-up starts nothing; the new answers still land on the record for Devon.',
-        'Stop on Response off: a reply is usually a question about the call ("is this a sales pitch?"), and the booking still has to be tracked afterwards. Replies land in Devon’s Conversations inbox because he owns the contact, and the follow-up email still reads fine after a conversation. STOP still switches on SMS DND by itself.',
+        'Stop on Response off: a reply is usually a question about the call ("is this a sales pitch?"), and the booking still has to be tracked afterward. Replies land in Devon’s Conversations inbox because he owns the contact, and the follow-up email still reads fine after a conversation. STOP still switches on SMS DND by itself.',
         'Timezone: Contact Timezone. The texting-hours and weekday-hours windows use the applicant’s time zone. A contact with no time zone falls back to the account’s, Central.',
         'No workflow Time Window: the invitation email should reach the applicant while they are still on the thank-you page, day or night. Only the text waits, behind its own Advance Window.',
-        'Sender Details: From Name Devon Brooks, From Email devon@trailheadcareers.example. The two "not yet" emails set From Name Morgan Hale and From Email morgan@trailheadcareers.example on the step, because they are not a sales conversation. Every email to the applicant ends with the postal address, and the sub-account’s unsubscribe link (on by default in Business Profile › General) stays on.',
-        'Allow Multiple Opportunities per Contact is on in Sub-Account Settings › Objects › Opportunities, so a student’s Won course card and a coaching card can sit in Enrollment together. The workflow’s own Allow multiple Opportunities toggle is left alone: it only matters for opportunity triggers.',
+        'Sender Details: From Name Devon Brooks, From Email devon@trailheadcareers.example. The two "not yet" emails set From Name Morgan Hale and From Email morgan@trailheadcareers.example on the step, because they are not a sales conversation. Every email to the applicant ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on.',
+        'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. Both Finds here look only at open coaching cards, so a registrant’s course card is never turned into a coaching deal and a student’s Won sale is never touched.',
+        'Allow Multiple Opportunities per Contact is on in Sub-Account Settings › Objects › Opportunities, and Create Opportunity has Duplicate Opportunity on, so the coaching card can sit in Enrollment next to the course card. The workflow’s own Allow multiple Opportunities toggle is left alone: it only matters for opportunity triggers.',
         'Custom Code is a premium action, so every application adds one billed execution.',
       ],
     },
@@ -299,8 +314,8 @@ export const application: Automation = {
           return {
             vars: { application_score: r.score, capped: !!r.reason },
             log: r.reason
-              ? `Returned application_score ${r.score}: the answers add up to ${r.sum} (${parts}), capped at ${CAP} because ${r.reason}.`
-              : `Returned application_score ${r.score} (${parts}).`,
+              ? `Output application_score ${r.score}: the answers add up to ${r.sum} (${parts}), capped at ${CAP} because ${r.reason}.`
+              : `Output application_score ${r.score} (${parts}).`,
           };
         },
         code: { language: 'javascript', source: scoreCode },
@@ -325,6 +340,29 @@ export const application: Automation = {
             when: { type: 'field', key: 'application_score', op: 'gte', value: 70, label: 'Application Score is greater than or equal to 70' },
             nodes: [
               {
+                id: 'stop-02',
+                kind: 'action',
+                action: 'remove_from_workflow',
+                title: 'Remove from Workflow',
+                label: 'Stop 02',
+                summary:
+                  'Another Workflow: 02 · Sales · Checkout Recovery. Someone mid-checkout who qualifies for coaching is now in a conversation with Devon about coaching; cart nudges for the course would talk over it. For anyone not in 02, it does nothing.',
+                run: ({ contact }) => ({
+                  log: contact.tags.includes('checkout-started')
+                    ? 'Removed from 02, so the cart emails and text stop while Devon talks to them about coaching.'
+                    : 'Not in 02 (no checkout-started tag), so there is nothing to stop.',
+                }),
+              },
+              {
+                id: 'untag-cart',
+                kind: 'action',
+                action: 'remove_tag',
+                title: 'Remove Contact Tag',
+                label: 'checkout-started',
+                summary: 'Takes off checkout-started with the removal above, so the tag still means "in checkout recovery right now". The course card keeps its stage, so Devon can see the unfinished checkout.',
+                effect: { removeTags: ['checkout-started'] },
+              },
+              {
                 id: 'assign',
                 kind: 'action',
                 action: 'assign_user',
@@ -341,32 +379,22 @@ export const application: Automation = {
                 id: 'find-opp',
                 kind: 'ifelse',
                 title: 'Find Opportunity',
-                label: 'Find the open card',
+                label: 'Open coaching card?',
                 branches: [
                   {
                     label: 'Opportunity Found',
-                    when: { type: 'all', label: 'Latest opportunity with Pipeline is Enrollment and Status is Open', of: [{ type: 'opportunity', status: 'open' }] },
+                    when: openCoachingCard,
                     nodes: [
-                      {
-                        id: 'opp-applied',
-                        kind: 'action',
-                        action: 'update_opportunity',
-                        title: 'Update Opportunity',
-                        label: 'Applied',
-                        summary:
-                          'Enrollment › Applied on the card Find Opportunity picked, renamed "{contact name} · 1:1 Pivot Coaching", Opportunity Value 0 until Devon agrees a package on the call. Allow Opportunity to Move to Any Previous Stage stays off, and Status is not touched.',
-                        run: toApplied,
-                      },
                       {
                         id: 'notify',
                         kind: 'action',
                         action: 'internal_notification',
                         title: 'Internal Notification',
                         label: 'Tell Devon',
-                        summary: 'Type Email, To User Type Assigned User. The score, every answer and the applicant’s own words, so Devon can prepare before a time is even picked.',
+                        summary: 'Type Email, To User Type Assigned User. The score, every answer and the applicant’s own words, so Devon can prepare before a time is even picked. An open coaching card from an earlier application is used as it is: it is already at Applied or further, so there is nothing to update.',
                         message: {
                           channel: 'internal',
-                          to: '{{user.name}} (assigned user)',
+                          to: '{{user.name}} (Email, assigned user)',
                           subject: 'New application: {{contact.name}}, score {{contact.application_score}}',
                           body: '{{contact.first_name}} applied for {{custom_values.coaching_name}} and is getting the booking link by email now.\n\nRole: {{contact.current_role}}\nWants to move: {{contact.pivot_timeline}}\nHours a week: {{contact.weekly_hours}}\nBudget: {{contact.coaching_budget}}\nOK to text about offers: {{contact.sms_marketing_consent}}\n\nIn their words: "{{contact.pivot_story}}"\n\n{{contact.phone}} · {{contact.email}}\nNo call booked in 2 days means a task for you.',
                         },
@@ -485,11 +513,11 @@ export const application: Automation = {
                                         id: 'find-booked',
                                         kind: 'ifelse',
                                         title: 'Find Opportunity',
-                                        label: 'Find the card to move',
+                                        label: 'Find the coaching card',
                                         branches: [
                                           {
                                             label: 'Opportunity Found',
-                                            when: { type: 'all', label: 'Latest opportunity with Pipeline is Enrollment and Status is Open', of: [{ type: 'opportunity', status: 'open' }] },
+                                            when: openCoachingCard,
                                             nodes: [
                                               {
                                                 id: 'opp-booked',
@@ -497,7 +525,7 @@ export const application: Automation = {
                                                 action: 'update_opportunity',
                                                 title: 'Update Opportunity',
                                                 label: 'Call Booked',
-                                                summary: 'Enrollment › Call Booked on the card this Find picked, which is also a card Create Opportunity made earlier in the run. Confirmation and reminders come from the Strategy Call calendar’s own notifications, so this workflow sends nothing more.',
+                                                summary: 'Enrollment › Call Booked on the coaching card this Find picked, including one Create Opportunity made earlier in the run, which is not in context without this Find. Backward moves stay off. Confirmation and reminders come from the Strategy Call calendar’s own notifications, so this workflow sends nothing more.',
                                                 run: toCallBooked,
                                               },
                                             ],
@@ -512,10 +540,10 @@ export const application: Automation = {
                                               action: 'internal_notification',
                                               title: 'Internal Notification',
                                               label: 'Card is closed',
-                                              summary: 'Type Email, To User Type Assigned User. Only reached when Devon has closed the card since the application, usually after a "not now". Nothing is created or reopened automatically: Devon decides whether the call is on.',
+                                              summary: 'Type Email, To User Type Assigned User. Only reached when Devon has closed the coaching card since the application, usually after a "not now". Nothing is created or reopened automatically: Devon decides whether the call is on.',
                                               message: {
                                                 channel: 'internal',
-                                                to: '{{user.name}} (assigned user)',
+                                                to: '{{user.name}} (Email, assigned user)',
                                                 subject: '{{contact.name}} booked a strategy call, but their card is closed',
                                                 body: '{{contact.name}} just booked a Strategy Call. Their coaching card in Enrollment is closed, so nothing moved.\n\nThe call is on your calendar. If it goes ahead, reopen the card and move it to Call Booked. If they booked by mistake, cancel it from the calendar.',
                                               },
@@ -633,13 +661,13 @@ export const application: Automation = {
                       title: 'Create Opportunity',
                       label: 'Applied',
                       summary:
-                        'Enrollment › Applied, named "{contact name} · 1:1 Pivot Coaching", value 0, status Open, Duplicate Opportunity on. Only reached when there is no open card: no card at all, or a closed one such as a student’s Won course sale, which stays as it is.',
+                        'Enrollment › Applied, named "{{contact.name}} · 1:1 Pivot Coaching", Opportunity Value 0 until Devon agrees a package, status Open, Duplicate Opportunity on. Reached whenever there is no open coaching card, which is almost everyone: the course card (a registrant’s at Attended, a student’s Won at Customer) stays exactly as it is.',
                       run: ({ contact }) => {
                         const prev = contact.opportunity;
                         const name = `${contact.firstName} ${contact.lastName} · ${COACHING}`;
                         return {
                           effect: { opportunity: { pipeline: 'Enrollment', stage: 'Applied', status: 'open', value: 0, name } },
-                          log: `New card "${name}" in Enrollment › Applied.${prev ? ` The ${prev.stage} card (${prev.status}) stays as it is, so the course sale still counts as ${prev.status}.` : ''}`,
+                          log: `New coaching card "${name}" in Enrollment › Applied.${prev ? ` The ${prev.stage} card (${prev.status}) stays as it is.` : ''}`,
                         };
                       },
                     },
@@ -649,7 +677,7 @@ export const application: Automation = {
                       title: 'Go To',
                       target: 'notify',
                       summary:
-                        'Joins the main path at Tell Devon, past the Applied update. Not back through Find: a created card is not in context for later updates, so the booking branch runs its own Find, and this path can never loop.',
+                        'Joins the main path at Tell Devon. Not back through Find: a created card is not in context for later updates, so the booking branch runs its own Find, and this path can never loop.',
                     },
                   ],
                 },
@@ -738,9 +766,9 @@ export const application: Automation = {
     {
       id: 'books',
       label: 'Strong applicant books',
-      summary: 'Went to last Thursday’s workshop, applies on a Tuesday lunch break with texts ticked, and books a Thursday call from the link 25 minutes later.',
+      summary: 'Went to last Thursday’s workshop and started checkout for the course, but stopped at the card step. Applies on a Tuesday lunch break with texts ticked, leaves checkout recovery, and books a Thursday call from the link 25 minutes later.',
       start: at(1, 12, 35),
-      contact: registrant('Attended', ['workshop-attended'], {
+      contact: registrant('Checkout Started', ['workshop-attended', 'checkout-started'], {
         role: 'Manager',
         timeline: 'In the next 3 months',
         hours: '5-8 hours',
@@ -751,19 +779,19 @@ export const application: Automation = {
       events: [{ at: 25, type: 'appointment_booked', value: 'Strategy Call', appointmentAt: at(3, 10) - at(1, 12, 35), label: 'Strategy Call, Thursday 10:00 AM, from the link in the text' }],
       expect: {
         outcome: 'completed',
-        visits: ['clear-tags', 'if-score:0', 'assign', 'find-opp:0', 'opp-applied', 'notify', 'email-invite', 'quiet', 'can-text:1', 'sms-invite', 'wait-book:met', 'find-booked:0', 'opp-booked'],
+        visits: ['clear-tags', 'if-score:0', 'stop-02', 'untag-cart', 'assign', 'find-opp:else', 'create-opp', 'goto-notify', 'notify', 'email-invite', 'quiet', 'can-text:1', 'sms-invite', 'wait-book:met', 'find-booked:0', 'opp-booked'],
         stage: 'Call Booked',
       },
     },
     {
       id: 'no-booking',
-      label: 'Strong applicant never books',
+      label: 'Applies again, never books',
       summary:
-        'Registered without ticking reminder texts, so 01 switched texts off. Ticks the texts box on the application at 10:10 PM on a Friday: texts come back on at 8 AM with the first one. Asks about the call on Saturday, never books, and gets Devon’s follow-up on Monday.',
+        'Applied three weeks ago and never booked, so their coaching card is still open in Applied; 01 had switched texts off because they skipped the reminders box. Applies again at 10:10 PM on a Friday, this time with the texts box ticked: texts come back on at 8 AM with the first one. Asks about the call on Saturday, never books, and gets Devon’s follow-up on Monday.',
       start: at(4, 22, 10),
       contact: registrant(
-        'Attended',
-        ['workshop-replay', 'sms-off-no-consent'],
+        'Applied',
+        ['workshop-replay', 'sms-off-no-consent', 'applied-no-call'],
         {
           role: 'Individual contributor',
           timeline: '3-6 months',
@@ -774,6 +802,7 @@ export const application: Automation = {
         },
         { goal: 'A new role', attended: 'No', sms_consent: 'No' },
         { sms: true },
+        { name: 'Marcus Lee · 1:1 Pivot Coaching', value: 0, owner: 'devon' },
       ),
       events: [
         {
@@ -785,7 +814,7 @@ export const application: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['quiet', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-sms', 'sms-invite', 'wait-book:timeout', 'office-hours', 'task-devon', 'email-followup', 'wait-late:timeout', 'tag-no-call'],
+        visits: ['clear-tags', 'stop-02', 'find-opp:0', 'notify', 'quiet', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-sms', 'sms-invite', 'wait-book:timeout', 'office-hours', 'task-devon', 'email-followup', 'wait-late:timeout', 'tag-no-call'],
         tags: ['applied-no-call'],
         stage: 'Applied',
       },
@@ -815,7 +844,7 @@ export const application: Automation = {
       id: 'student-reapplies',
       label: 'Student says not now, then books',
       summary:
-        'Got "not yet" in January, bought the course and applies again on a Sunday afternoon without ticking texts. Answers Tuesday’s follow-up with "not this month", so Devon closes the card, then books a call on Thursday night after all.',
+        'Got "not yet" two months ago, bought the course and applies again on a Sunday afternoon without ticking texts. Answers Tuesday’s follow-up with "not this month", so Devon closes the coaching card, then books a call on Thursday night after all.',
       start: at(6, 15, 20),
       contact: student(['not-a-fit-yet'], {
         role: 'Senior leader',
@@ -886,6 +915,7 @@ export const application: Automation = {
       { name: 'call-booked', note: 'Added by 05a when a Strategy Call is created. The If/Else and the waits read it, and each new application clears it' },
       { name: 'applied-no-call', note: 'Qualified, followed up, still no call after 9 days' },
       { name: 'sms-off-no-consent', note: 'From 01: it switched texts off for lack of consent. 05 removes it, and turns texts back on, only when the applicant ticks the texts box' },
+      { name: 'checkout-started', note: 'From 02. Removed here, with Remove from Workflow: 02, when an applicant scores 70 or more' },
     ],
     pipeline: business.pipeline,
     customValues: [
@@ -915,8 +945,8 @@ export const application: Automation = {
       body: 'Four properties go in through inputData and the score comes out through output. GHL only makes a Custom Code output available to later steps after a successful test, so I tested it in Test Setup with answer sets that should land at 65, 70 and 75, and with a capped set. Update Contact Field writes the score to Application Score, and the If/Else reads that field, so the number Devon sees and the number that routed the applicant are the same number.',
     },
     {
-      title: 'Find the card, and never loop back to Find',
-      body: 'Assign To User runs first, so a new card gets Devon as owner. Find Opportunity (Latest, Pipeline is Enrollment, Status is Open) picks up a registrant’s workshop card and Update Opportunity moves it to Applied. A student’s course card is Won, so Find comes back empty and Create Opportunity adds a coaching card at Applied, with Duplicate Opportunity on. A created card is not in context for later updates, but I do not send the contact back through the same Find: if Create ever failed, that Go To would loop. The booking branch runs its own Find instead, which also notices a card Devon has closed in the meantime.',
+      title: 'A coaching card of its own, and never loop back to Find',
+      body: 'The course card belongs to 01 to 03, so the coaching deal gets its own card. Assign To User runs first, so a new card gets Devon as owner. Find Opportunity (Latest, Pipeline is Enrollment, Stage is not Registered, Attended, Checkout Started or Customer, Status is Open) only finds an open coaching card from an earlier application, which is used as it is. Everyone else gets Create Opportunity at Applied, with Duplicate Opportunity on and Allow Multiple Opportunities per Contact on, and Go To carries on to Devon’s notification. A created card is not in context for a later Update Opportunity, and a Go To back into the same Find would loop if Create ever failed, so the booking branch runs its own Find with the same filters, which also notices a card Devon has closed in the meantime.',
     },
     {
       title: 'Invite by email, text only with the right consent',
@@ -945,26 +975,31 @@ export const application: Automation = {
       body: 'The invitation email and Devon’s notification go out straight away. The text waits for 8 AM in their time zone, and if they booked from the email overnight, the call-booked tag is already there, so no "book your call" text goes out and the condition wait releases at once. The two-day follow-up only lands between 9 AM and 5 PM on a weekday.',
     },
     {
+      title: 'Mid-checkout when they apply',
+      body: 'Someone who started the course checkout and then applies is in 02 · Sales · Checkout Recovery. At 70 or more, 05 removes them from 02 and takes off checkout-started before Devon’s emails go out, so they do not get cart nudges and a call invitation in the same week. Their course card stays at Checkout Started and the coaching card is new. Under 70 they stay in 02, because the "not yet" email recommends the same course.',
+    },
+    {
       title: 'Books by message, not by the link',
       body: 'They reply "can we do Tuesday at 4?" and Devon books it from the calendar. Customer Booked Appointment would miss that, because it only fires when the contact books. Appointment Status fires for any booking, and 05a listens for both New and Confirmed, so the tag lands whether or not the calendar confirms bookings on its own.',
     },
     {
       title: 'No reminder texts, yes to application texts',
-      body: '01 switched SMS DND on when they registered without ticking the reminders box, and tagged sms-off-no-consent as the receipt. Ticking the texts box on the application is a new opt-in, so 05 turns DND off and removes the tag right before the first text. Someone who replied STOP has DND without that tag, so their opt-out stands and they get email only.',
+      body: '01 switched SMS DND on when they registered without ticking the reminders box, and tagged sms-off-no-consent as the receipt. Ticking the texts box on the application is a new opt-in, so 05 turns DND off and removes the tag right before the first text. Lifting it also lets 01’s reminder texts through if they are registered for a session; the box covers "future workshops and offers", so those are consented to as well. Someone who replied STOP has DND without that tag, so their opt-out stands and they get email only.',
     },
     {
       title: 'A current student or a graduate applies',
-      body: 'Their course card is Won, so Find Opportunity finds no open card and Create Opportunity adds a second card for the coaching deal; the course sale stays Won in revenue reports. Ownership moves from Jules to Devon for the sales conversation. Under 70 they get "put the plan to work", not an offer for a course they own, and Remove from Workflow takes a graduate out of 06, so no coaching invitation lands days after the "not yet".',
+      body: 'Find Opportunity only looks at coaching cards, so their Won course card is never picked, and Create Opportunity adds a coaching card next to it; the course sale stays Won in revenue reports. Ownership moves from Jules to Devon for the sales conversation. Under 70 they get "put the plan to work", not an offer for a course they own, and Remove from Workflow takes a graduate out of 06, so no coaching invitation lands days after the "not yet".',
     },
   ],
   qa: [
     'Score check: test answer sets that should land at 65, 70 and 75 give exactly those numbers in Execution Logs and route to not yet, call and call. A capped set shows 60',
     'Pick the recruiter answer: the explanation appears on the slide, the submission is marked disqualified, and Enrollment History for 05 has no entry',
-    'Qualified with SMS consent (offers) at 2 PM: card in Applied named "... · 1:1 Pivot Coaching" with Devon as owner, notification email with every answer, invitation email, and a text with the opt-out line that stays within two segments with an 11-letter first name and the real booking URL',
+    'Qualified with SMS consent (offers) at 2 PM: a new coaching card in Applied named "... · 1:1 Pivot Coaching" with Devon as owner, the course card untouched, notification email with every answer, invitation email, and a text with the opt-out line that stays within two segments with an 11-letter first name and the real booking URL',
     'A registrant 01 switched texts off, who ticks the texts box at 10 PM: the text waits in Execution Logs until 8 AM, then the log shows DND Disabled by Workflows and sms-off-no-consent removed before it sends. A contact who texted STOP gets email only',
     'Book through the link, have Devon book another test contact by hand, and book a third on a copy of the calendar that confirms bookings: all three get call-booked from 05a and all three cards move to Call Booked',
     'Do not book: two days later, inside weekday hours, Devon has a task due the next weekday at 11 AM and the follow-up email is in Conversations. After 9 days, applied-no-call is on the contact. Close a test card as Lost, then book: Devon gets the "card is closed" email and nothing moves',
-    'Student test contact: two cards in Enrollment, the course card still Won in Customer and the new one in Applied, and Execution Logs show Find Opportunity once before the booking. A graduate under 70 shows Remove from Workflow in 06’s Enrollment History',
+    'Student test contact: two cards in Enrollment, the course card still Won in Customer and the new one in Applied, and Execution Logs show Find Opportunity once before the booking. A graduate under 70 shows Remove from Workflow in 06’s Enrollment History. A qualified applicant mid-checkout shows it in 02’s, without checkout-started',
+    'Apply twice, the second time three weeks later without booking in between: one coaching card, still in Applied, and no second one',
     'Every merge field renders in Gmail, Outlook and on a phone, each email ends with the postal address and the unsubscribe link, and Morgan signs off all four emails for tone and for no outcome or income claims',
   ],
   snippets: [
