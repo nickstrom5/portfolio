@@ -85,6 +85,13 @@ export const business: Business = {
     seats: 'Seats',
     nps: 'NPS',
     workspace_id: 'Workspace ID',
+    trial_usage: 'Trial usage',
+    next_step: 'Next step',
+    kickoff_date: 'Kickoff date',
+    account_health: 'Account health',
+    nps_comment: 'NPS comment',
+    utm_source: 'UTM source',
+    utm_campaign: 'UTM campaign',
   },
   handoff: {
     'demo-request': 'Demo Requested → right rep, booked',

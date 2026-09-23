@@ -50,9 +50,10 @@ const settings = [
       <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
     ))}
   </dl>
-  {s.notes && s.notes.length > 0 && (
+  {((s.notes && s.notes.length > 0) || (s.exits && s.exits.length > 0)) && (
     <ul class="g-settings-notes">
-      {s.notes.map((n) => <li>{n}</li>)}
+      {s.notes?.map((n) => <li>{n}</li>)}
+      {s.exits?.map((x) => <li><strong>Leaves early:</strong> {x.by}</li>)}
     </ul>
   )}
   <div class="g-canvas-body">
