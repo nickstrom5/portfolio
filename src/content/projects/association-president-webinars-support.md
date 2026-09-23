@@ -1,6 +1,6 @@
 ---
 title: 'Webinar production and executive support for an association president'
-shortTitle: 'Webinars and support for a president'
+shortTitle: 'Webinar production & executive support'
 client: 'Professional association (president)'
 summary: 'Zoom webinar coordination for a professional association in spring 2026 that grew into an ongoing assistant-to-the-president role covering scheduling and events.'
 category: 'video'
@@ -11,6 +11,7 @@ featured: false
 source: 'upwork'
 links: {}
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

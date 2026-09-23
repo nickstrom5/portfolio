@@ -15,7 +15,7 @@ export const site = {
   /** Replace with your real profile URLs. */
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
-    linkedin: 'http://linkedin.com/in/nick-soderstrom',
+    linkedin: 'https://www.linkedin.com/in/nick-soderstrom/',
     github: 'https://github.com/nickstrom5',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
@@ -30,7 +30,7 @@ export const site = {
   badges: ['Top Rated Plus', '100% Job Success', 'Freelance since 2015'],
   availability: 'Open for work',
   /** Path under /public. */
-  photo: '/nick.jpg',
+  photo: '/nick-soderstrom.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
   resumePdf: '/Nick-Soderstrom-Resume.pdf',
   /**
@@ -44,7 +44,7 @@ export const footerNav = [
   { href: '/work', label: 'Work' },
   { href: '/clients', label: 'Clients' },
   { href: '/apps', label: 'AI/Projects' },
-  { href: '/ghl', label: 'GHL automations' },
+  { href: '/ghl', label: 'GoHighLevel automations' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;

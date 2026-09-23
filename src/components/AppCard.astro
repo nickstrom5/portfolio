@@ -43,7 +43,7 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
     {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
     {app.website && <a class="store" href={app.website} target="_blank" rel="noopener">{siteLabel}</a>}
-    {app.projectSlug && <a href={url(`/work/${app.projectSlug}`)}>Case study →</a>}
+    {app.projectSlug && <a href={url(`/work/${app.projectSlug}`)}>{app.name} case study →</a>}
     {!hasStore && app.status && <span class="muted small status">{app.status}</span>}
     {!hasStore && !app.status && !app.projectSlug && <span class="muted small">Private / enterprise distribution</span>}
   </div>

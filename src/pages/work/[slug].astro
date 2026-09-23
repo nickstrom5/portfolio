@@ -3,6 +3,8 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
+import Testimonial from '@/components/Testimonial.astro';
+import testimonials from '@/data/testimonials.json';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
@@ -17,10 +19,19 @@ interface Props {
 const { project } = Astro.props;
 const { Content } = await render(project);
 const d = project.data;
+const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
+const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
 
-const related = (await getCollection('projects'))
-  .filter((p) => p.id !== project.id && p.data.category === d.category)
-  .slice(0, 2);
+// Rotate through the category so every case study gets related links, not just the first two alphabetically.
+const peers = (await getCollection('projects'))
+  .filter((p) => p.data.category === d.category)
+  .sort((a, b) => a.id.localeCompare(b.id));
+const i = peers.findIndex((p) => p.id === project.id);
+const related = [...peers.slice(i + 1), ...peers.slice(0, i)].slice(0, 2);
+
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+const shortDate = (dt: Date) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
 const links = [
@@ -35,18 +46,26 @@ const links = [
   title={d.shortTitle ?? d.title}
   description={d.summary}
   ogType="article"
+  image={d.cover}
+  imageAlt={d.cover ? coverAlt : undefined}
+  breadcrumbs={[{ name: 'Work', path: '/work/' }, { name: d.shortTitle ?? d.title, path: Astro.url.pathname }]}
   jsonLd={[
     {
       '@type': 'Article',
-      '@id': `${new URL(Astro.url.pathname, Astro.site).href}#article`,
+      '@id': `${pageUrl}#article`,
       headline: d.title,
       description: d.summary,
-      about: d.client,
+      url: pageUrl,
+      image: [new URL(d.cover ?? '/og.png', Astro.site).href],
+      inLanguage: 'en-US',
+      isPartOf: { '@id': `${site.url}/#website` },
       keywords: d.stack.join(', '),
-      datePublished: `${d.year}-01-01`,
-      author: { '@id': `${site.url}/#person` },
+      ...(d.published ? { datePublished: iso(d.published), dateModified: iso(d.updated ?? d.published) } : {}),
+      author: { '@type': 'Person', '@id': `${site.url}/#person`, name: site.name, url: `${site.url}/about/` },
       publisher: { '@id': `${site.url}/#person` },
-      mainEntityOfPage: { '@id': `${new URL(Astro.url.pathname, Astro.site).href}#webpage` },
+      mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
+      // Only clients already named and linked on the page; anonymized clients have no live link.
+      ...(d.source !== 'personal' && d.links.live ? { about: { '@type': 'Organization', name: d.client, url: d.links.live } } : {}),
     },
   ]}
 >
@@ -73,6 +92,12 @@ const links = [
             </dd>
             <dt>Engagement</dt>
             <dd>{sourceLabel}</dd>
+            {d.published && (
+              <>
+                <dt>Published</dt>
+                <dd><time datetime={iso(d.published)}>{shortDate(d.published)}</time></dd>
+              </>
+            )}
             {d.platforms.length > 0 && (
               <>
                 <dt>Platforms</dt>
@@ -99,6 +124,17 @@ const links = [
       </div>
     </div>
   </article>
+
+  {quotes.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Client feedback</h2>
+        </div>
+        {quotes.map((t) => <Testimonial {...t} />)}
+      </div>
+    </section>
+  )}
 
   {related.length > 0 && (
     <section class="section">
