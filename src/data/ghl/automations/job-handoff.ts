@@ -28,6 +28,9 @@ const estimator = (c: Contact) => (c.assignedTo && env.users[c.assignedTo]?.name
 
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/** Every email ends with the business name and postal address. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
+
 const slackPayload = `{
   "text": "New job: {{contact.name}}, {{contact.service_needed}}, \${{contact.estimate_amount}}",
   "blocks": [
@@ -75,7 +78,7 @@ and this workflow keeps waiting for a tag that never comes.
 Homeowner texts back?        You follow every sold contact, so it shows
                              in your notifications. Answer in Conversations.
 Job slipping past 45 days?   Add a note on the contact saying why.
-Signed job cancelled?        Mark the opportunity Lost and post in #production.`;
+Signed job canceled?         Mark the opportunity Lost and post in #production.`;
 
 export const jobHandoff: Automation = {
   id: 'job-handoff',
@@ -99,6 +102,7 @@ export const jobHandoff: Automation = {
     settings: {
       allowReEntry: true,
       stopOnResponse: false,
+      allowMultipleOpportunities: true,
       timeWindow: { start: '08:00', end: '20:00', days: MON_SAT },
       timezone: 'contact',
       senderName: 'Sam Rivera, Harbor & Pine Roofing',
@@ -106,6 +110,7 @@ export const jobHandoff: Automation = {
         "Stop on Response off: a reply to Sam must not end the run before the card reaches Job Complete, or 06 never starts. Nothing after Sam's text goes to the homeowner, so no automated message ever follows a reply.",
         'Time Window Monday to Saturday, 8 AM to 8 PM, contact time zone. It holds the email and the text only; Slack, the sheet row and the task run the moment the deal is won.',
         "Allow Re-entry on, so a repeat customer's next job gets its own hand-off. GHL never re-enters a contact who is still in the workflow, and the If/Else at the top stops a card that was already handed off from running it twice.",
+        'Allow multiple Opportunities on (the default for new workflows): each won card gets its own run, and Update Opportunity changes the card that triggered it.',
         'Sender Details: From Name Sam Rivera, From Email sam@harborpine.example, From Number the main line the homeowner already has saved.',
       ],
     },
@@ -161,7 +166,7 @@ export const jobHandoff: Automation = {
                   channel: 'slack',
                   to: '#production',
                   subject: 'New job: {{contact.name}}',
-                  body: 'Scope: {{contact.service_needed}}, roof age {{contact.roof_age}}\nContract: ${{contact.estimate_amount}}\nSold by: {{user.name}}\nHomeowner: {{contact.phone}}\nNext: {{custom_values.production_manager}} orders materials',
+                  body: 'Address: {{contact.full_address}}\nScope: {{contact.service_needed}}, roof age {{contact.roof_age}}\nContract: ${{contact.estimate_amount}}\nSold by: {{user.name}}\nHomeowner: {{contact.phone}}\nNext: {{custom_values.production_manager}} orders materials',
                 },
                 code: { language: 'json', source: slackPayload },
               },
@@ -173,7 +178,7 @@ export const jobHandoff: Automation = {
                 label: 'Add to Jobs 2026',
                 summary: 'Premium. Create Spreadsheet Row in Jobs 2026 › Sold, columns A to I. Install date and crew stay blank for Sam.',
                 run: ({ contact, now }) => ({
-                  log: `New row in Jobs 2026 › Sold: ${sheetDate(now)} | ${contact.firstName} ${contact.lastName} | ${contact.phone} | ${contact.fields.service_needed} | ${contact.fields.estimate_amount} | ${estimator(contact)}. The address comes from the contact record; install date and crew are left blank for Sam.`,
+                  log: `New row in Jobs 2026 › Sold: ${sheetDate(now)} | ${contact.firstName} ${contact.lastName} | ${contact.phone} | ${contact.address ?? ''} | ${contact.fields.service_needed} | ${contact.fields.estimate_amount} | ${estimator(contact)}. Install date and crew are left blank for Sam.`,
                 }),
               },
               {
@@ -190,7 +195,7 @@ export const jobHandoff: Automation = {
               {
                 id: 'follow-sam',
                 kind: 'action',
-                action: 'assign_user',
+                action: 'follower',
                 title: 'Add Contact Follower',
                 label: 'Sam follows the job',
                 summary: "Sam Rivera becomes a follower; the estimator stays the assigned user. GHL's in-app alert for new messages on followed conversations is on by default, so a reply to Sam reaches Sam.",
@@ -206,7 +211,7 @@ export const jobHandoff: Automation = {
                 message: {
                   channel: 'email',
                   subject: 'Your new roof: what happens next',
-                  body: "Hi {{contact.first_name}},\n\nThank you for choosing Harbor & Pine Roofing. I'm {{custom_values.production_manager}}, the production manager, and I look after your job from here until the crew packs up. {{user.first_name}} is still your contact for anything about the contract.\n\nWhat happens next\n1. I order your materials and call you within two business days to set an install date.\n2. Most roofs take one or two days. If the forecast turns, I call you before the crew is due, not after.\n3. When the crew finishes, we walk the property with you before we call it done.\n\nGetting ready\n- Move cars out of the driveway and the garage the night before.\n- Take down pictures and shelves on top-floor walls. Hammering shakes them.\n- Move patio furniture, grills and planters away from the house.\n- Keep pets inside while the crew works, and let your neighbors know it will be noisy.\n\nYour warranty and what it covers: {{custom_values.warranty_link}}\n\nQuestions? Reply to this email or call {{custom_values.office_phone}}.\n\n{{custom_values.production_manager}}\nHarbor & Pine Roofing",
+                  body: "Hi {{contact.first_name}},\n\nThank you for choosing Harbor & Pine Roofing. I'm {{custom_values.production_manager}}, the production manager, and I look after your job from here until the crew packs up. {{user.first_name}} is still your contact for anything about the contract.\n\nWhat happens next\n1. I order your materials and call you within two business days to set an install date.\n2. Most roofs take one or two days. If the forecast turns, I call you before the crew is due, not after.\n3. When the crew finishes, we walk the property with you before we call it done.\n\nGetting ready\n- Move cars out of the driveway and the garage the night before.\n- Take down pictures and shelves on top-floor walls. Hammering shakes them.\n- Move patio furniture, grills and planters away from the house.\n- Keep pets inside while the crew works, and let your neighbors know it will be noisy.\n\nYour warranty and what it covers: {{custom_values.warranty_link}}\n\nQuestions? Reply to this email or call {{custom_values.office_phone}}.\n\n{{custom_values.production_manager}}\nProduction Manager" + footer,
                 },
               },
               {
@@ -228,8 +233,9 @@ export const jobHandoff: Automation = {
                 label: 'Until the crew signs off',
                 mode: 'event',
                 event: 'tag_added',
+                value: 'job-complete',
                 minutes: 45 * DAY,
-                summary: 'Specific conditions to be met: Contact Tag includes job-complete, which Sam adds after the final walkthrough. Timeout: 45 days.',
+                summary: 'Specific conditions to be met: Contact Tag includes job-complete, which Sam adds after the final walkthrough. No other tag ends it. Timeout: 45 days.',
                 branches: {
                   met: {
                     label: 'Job complete',
@@ -280,12 +286,12 @@ export const jobHandoff: Automation = {
                                 action: 'internal_notification',
                                 title: 'Internal Notification',
                                 label: 'Stale job card',
-                                summary: 'In-app and email to Jordan (Particular Users), with the Redirect Page set to the opportunity. Says what to do in each case.',
+                                summary: 'Type Notification (the bell), To User Type Particular Users: Jordan Blake, Redirect Page the opportunity. Says what to do in each case.',
                                 message: {
                                   channel: 'internal',
                                   to: 'Jordan Blake (particular user)',
                                   subject: 'Stale job: {{contact.name}}, no sign-off yet',
-                                  body: 'Sold by {{user.name}}, in Job Scheduled for 45 days or more with no job-complete tag. Roof done? Ask {{custom_values.production_manager}} to add the tag: this workflow is still watching, and the tag moves the card and starts the review request. Delayed? Add a note saying why. Cancelled? Mark the deal Lost.',
+                                  body: 'Sold by {{user.name}}, in Job Scheduled for 45 days or more with no job-complete tag. Roof done? Ask {{custom_values.production_manager}} to add the tag: this workflow is still watching, and the tag moves the card and starts the review request. Delayed? Add a note saying why. Canceled? Mark the deal Lost.',
                                 },
                               },
                               {
@@ -307,7 +313,7 @@ export const jobHandoff: Automation = {
                               action: 'add_note',
                               title: 'Add Note',
                               label: 'Closed without sign-off',
-                              summary: 'The deal is no longer Won in Job Scheduled: cancelled, lost or moved by hand. It says so on the contact and ends without an alert.',
+                              summary: 'The deal is no longer Won in Job Scheduled: canceled, lost or moved by hand. It says so on the contact and ends without an alert.',
                               run: ({ contact }) => {
                                 const o = contact.opportunity;
                                 return { log: `Note on the contact: "Hand-off closed after 45 days. The deal is ${capital(o?.status ?? 'unknown')} in ${o?.stage ?? 'no stage'} and was never tagged job-complete, so no stale-job alert went out."` };
@@ -350,6 +356,7 @@ export const jobHandoff: Automation = {
       start: at(1, 14, 25),
       contact: {
         assignedTo: 'maya',
+        address: '418 Maple Ave, Oak Park, IL 60302',
         tags: ['estimate-signed'],
         opportunity: { pipeline: 'Roofing Sales', stage: 'Estimate Sent', status: 'won', value: 14800 },
         fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', sms_consent: 'Yes', estimate_amount: 14800 },
@@ -372,6 +379,7 @@ export const jobHandoff: Automation = {
       start: at(3, 21, 10),
       contact: {
         assignedTo: 'luis',
+        address: '2215 Elm St, Berwyn, IL 60402',
         dnd: { sms: true },
         opportunity: { pipeline: 'Roofing Sales', stage: 'Estimate Sent', status: 'won', value: 11200 },
         fields: { service_needed: 'Storm damage', roof_age: '10-20 years', sms_consent: 'Yes', estimate_amount: 11200 },
@@ -386,6 +394,7 @@ export const jobHandoff: Automation = {
       start: at(0, 11, 30),
       contact: {
         assignedTo: 'luis',
+        address: '731 Linden Ave, Forest Park, IL 60130',
         opportunity: { pipeline: 'Roofing Sales', stage: 'Estimate Sent', status: 'won', value: 16400 },
         fields: { service_needed: 'Storm damage', roof_age: 'Over 20 years', sms_consent: 'Yes', estimate_amount: 16400 },
       },
@@ -403,10 +412,11 @@ export const jobHandoff: Automation = {
       start: at(5, 11, 20),
       contact: {
         assignedTo: 'luis',
+        address: '52 Cedar Ct, River Forest, IL 60305',
         opportunity: { pipeline: 'Roofing Sales', stage: 'Estimate Sent', status: 'won', value: 9800 },
         fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', sms_consent: 'Yes', estimate_amount: 9800 },
       },
-      events: [{ at: at(7, 9, 5) - at(5, 11, 20), type: 'opportunity_lost', label: 'Luis marked it Lost, reason Cancelled by customer, and told Sam' }],
+      events: [{ at: at(7, 9, 5) - at(5, 11, 20), type: 'opportunity_lost', label: 'Luis marked it Lost, reason Canceled by customer, and told Sam' }],
       expect: { outcome: 'completed', visits: ['sms-sam', 'wait-job:timeout', 'check-card:else', 'note-closed'], stage: 'Job Scheduled' },
     },
     {
@@ -416,6 +426,7 @@ export const jobHandoff: Automation = {
       start: at(2, 16, 5),
       contact: {
         assignedTo: 'maya',
+        address: '418 Maple Ave, Oak Park, IL 60302',
         tags: ['estimate-signed', 'job-complete'],
         opportunity: { pipeline: 'Roofing Sales', stage: 'Job Complete', status: 'won', value: 13400 },
         fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', sms_consent: 'Yes', estimate_amount: 13400, job_date: '02-10-2026' },
@@ -426,7 +437,7 @@ export const jobHandoff: Automation = {
   ],
   dataModel: {
     customFields: [
-      { name: 'Estimate Amount', key: 'estimate_amount', type: 'Monetary', note: 'Filled in by the estimator when the estimate goes out (04). Feeds the Slack post and the sheet, never a customer message' },
+      { name: 'Estimate Amount', key: 'estimate_amount', type: 'Number', note: 'Filled in by the estimator when the estimate goes out (04). A plain number, so the Slack post adds its own dollar sign. Feeds the Slack post and the sheet, never a customer message' },
       { name: 'Job Date', key: 'job_date', type: 'Date', note: 'Set to Current Date when the crew signs off. Warranty and review timing count from it' },
     ],
     tags: [{ name: 'job-complete', note: 'Added by Sam after the final walkthrough. Ends the wait; cleared at the start of every new hand-off' }],
@@ -468,7 +479,7 @@ export const jobHandoff: Automation = {
     },
     {
       title: 'Test, publish, hand off',
-      body: "On a test contact I mark a deal Won at night, reply to Sam's text, add the tag, then set the finished card to Open and back to Won. A draft copy with a 5-minute timeout covers the stale and cancelled paths. Execution Logs must show a 200 from Slack and exactly one sheet row per sale. Sam and the crew get the one-page sign-off card below.",
+      body: "On a test contact I mark a deal Won at night, reply to Sam's text, add the tag, then set the finished card to Open and back to Won. A draft copy with a 5-minute timeout covers the stale and canceled paths. Execution Logs must show a 200 from Slack and exactly one sheet row per sale. Sam and the crew get the one-page sign-off card below.",
     },
   ],
   edgeCases: [
@@ -505,7 +516,7 @@ export const jobHandoff: Automation = {
     'Add job-complete: Job Date is today, the card moves to Job Complete, and the contact appears in 06',
     'Draft copy with a 5-minute timeout: Jordan gets an alert that opens the opportunity and the contact goes back into the wait; with the deal marked Lost first, a note and no alert',
     'Set the finished test card to Open and back to Won: one note on the contact, nothing in Slack, the sheet, the task list or the homeowner\'s inbox, and job-complete still on the contact',
-    "A name with an apostrophe, an address with an ampersand and a $14,800 estimate: the Slack post shows one dollar sign, and the sheet row lands in the right columns with the amount totalling",
+    "A name with an apostrophe, an address with an ampersand and a $14,800 estimate: the Slack post shows one dollar sign, and the sheet row lands in the right columns with the amount totaling",
   ],
   snippets: [
     { title: 'Slack post (Custom Webhook raw body)', language: 'json', code: slackPayload, note: 'Posted to a Slack incoming webhook for #production. "text" is what shows in the phone notification; the blocks lay the job out as fields.' },

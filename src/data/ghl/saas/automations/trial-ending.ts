@@ -1,24 +1,23 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
+import { formatClock, formatDay } from '@/lib/ghl/engine';
 import { business } from '../business';
 
 const DAY = 1440;
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
-/** Monday 2 March 2026, 00:00: the sample week the simulator runs in. */
+/** Monday 2 March 2026, 00:00: the sample week the scenarios are written in. */
 const BASE = Date.UTC(2026, 2, 2);
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const WEEKDAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /** Minutes after Monday 00:00 of the sample week. */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
 const api = business.env.customValues.api_base;
-const company = (c: Contact) => String(c.fields.company ?? 'their company');
+const company = (c: Contact) => String(c.fields.company_name ?? c.fields.company ?? 'their company');
+const name = (c: Contact) => `${c.firstName} ${c.lastName}`;
 
-/** "Thu, Mar 19" for a simulated minute. */
-function dayOf(min: number): string {
-  const day = Math.floor(min / DAY);
-  const d = new Date(BASE + day * DAY * 60000);
-  return `${WEEKDAY[day % 7]}, ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+/** Trial Ends (MM-DD-YYYY) as minutes after the start of the sample week: the start of that day. */
+function trialEndsAt(c: Contact): number | undefined {
+  const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(c.fields.trial_end ?? ''));
+  return m ? (Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2])) - BASE) / 60000 : undefined;
 }
 
 /** Math Operation on a Date field: MM-DD-YYYY plus n days, written back as MM-DD-YYYY. */
@@ -29,8 +28,8 @@ function addDays(mdy: string, n: number): string {
   return `${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}-${dt.getUTCFullYear()}`;
 }
 
-/** Commercial emails carry the postal address; the unsubscribe link sits in the template footer. */
-const footer = '\n\n{{location.name}}, {{location.address}}';
+/** Commercial emails carry the full postal address; the unsubscribe link sits in the template footer. */
+const footer = '\n\n{{location.name}}, {{location.full_address}}';
 
 const extensionBody = `{
   "days": 7,
@@ -66,7 +65,7 @@ const subscriptionPayload = `{
 const extendOffer = {
   subject: 'Want 7 more days with Crewlo?',
   body:
-    "Hi {{contact.first_name}},\n\nYour Crewlo trial ends in 3 days, and it looks like no jobs have gone out to a tech's phone yet. That is the point where Crewlo starts saving your office time, and 3 days may not be enough to get there.\n\nIf you want more time, this link adds 7 days to your trial straight away. Nothing to fill in: {{trigger_link.extend_trial}}\n\nIf it would help, I will also set it up with you on a 20-minute screen share: we load this week's jobs, invite one tech and send them their first job. Reply with two times that suit you.\n\nLeo Park\nCustomer Success, Crewlo" +
+    "Hi {{contact.first_name}},\n\nYour Crewlo trial ends in 3 days, and it looks like no jobs have gone out to a tech's phone yet. That is the point where Crewlo starts saving your office time, and 3 days may not be enough to get there.\n\nIf you want more time, click this link in the next 3 days and your trial gets 7 more days. Nothing to fill in: {{trigger_link.extend_trial}}\n\nIf it would help, I will also set it up with you on a 20-minute screen share: we load this week's jobs, invite one tech and send them their first job. Reply with two times that suit you.\n\nLeo Park\nCustomer Success, Crewlo" +
     footer,
 };
 
@@ -80,7 +79,7 @@ export const trialEnding: Automation = {
   problem:
     'Trials ended on day 14 whether anyone was ready or not. Teams dispatching from Crewlo every day hit the end of the trial before anyone had talked price with them, and owners who wanted more time emailed support and waited a day or two for someone to extend it by hand.',
   solution:
-    'Three days before Trial Ends, the workflow looks at one tag. Activated teams get the price for the users they have, a reminder the day before, and a call from Leo on the last day, and paying at any point pulls them out through the Goal Event. Teams that have not activated get an offer of 7 more days: one click on the trigger link and GHL calls Crewlo\'s API to extend the workspace, moves Trial Ends and confirms by email. No click means a last-chance call from Leo and a trial-expired tag. Each trial can be extended once, and the workflow knows when it already has been.',
+    "Three days before Trial Ends, the workflow looks at one tag. Activated teams get the price for the users they have, a reminder the day before, and a call from Leo on the last day, and paying at any point pulls them out through the Goal Event. Teams that have not activated get an offer of 7 more days: one click on the trigger link and GHL calls Crewlo's API to extend the workspace, moves Trial Ends and confirms by email. No click means a last-chance call from Leo and a trial-expired tag. Every later step counts from Trial Ends itself, not from the hour the trigger happened to fire, and each trial can be extended once.",
   workflow: {
     name: '04 · Product · Trial Ending',
     folder: 'Product',
@@ -96,16 +95,37 @@ export const trialEnding: Automation = {
       stopOnResponse: false,
       timezone: 'contact',
       senderName: 'Leo Park, Crewlo',
+      exits: [
+        {
+          event: 'opportunity_won',
+          by: "05 · Sales · Closed-Won to Onboarding: when a New Business deal is marked Won, its Remove from Workflow step takes the contact out of 02 and 04, then removes the trial tag. It runs before 05 adds customer, so a sales win leaves quietly instead of reaching this workflow's goal, and Leo hears about it from 05.",
+        },
+      ],
       notes: [
-        'Allow Re-entry on: an extension moves Trial Ends 7 days, and the reminder should fire again for the new date. GHL does not let a contact re-enter while still active, and the first run has finished days before the second reminder.',
-        'Stop on Response off: the deadline stays true whatever the reply says, and an out-of-office reply must not cancel the last-day call. Replies go to Leo, and his tasks tell him to read Conversations first.',
-        'No workflow Time Window: the extension confirmation answers a click and goes at any hour. The trial emails wait inside Advance Windows instead.',
+        'Allow Re-entry on: an extension moves Trial Ends 7 days, and the reminder has to fire again for the new date. GHL does not let a contact re-enter while still active, and the first run has finished days before the second reminder.',
+        "Stop on Response off: the deadline stays true whatever the reply says, and an out-of-office reply must not cancel the last-day call. Replies go to Leo, and both of his tasks tell him to read Conversations first.",
+        "Timezone: Contact, for the first email's Advance Window. Event Start Date always runs on the account time zone, Pacific, so the waits that count from Trial Ends release at 8 AM in San Francisco, 11 AM in New York: a fine hour for an email and for a call task.",
+        'No workflow Time Window: the extension confirmation answers a click and goes at any hour. The first email waits inside an Advance Window, and the rest are pinned to Trial Ends.',
         'Sender Details: From Name Leo Park, From Email leo@crewlo.example, the same sender as onboarding.',
         'Custom Webhook is a premium action, billed per execution. It runs only when someone clicks the extension link.',
-        'Error notifications are on in the global Workflow Settings, sent to Hana: a failed extension call puts this workflow in the Needs Review tab.',
+        'Error notifications are on in the global Workflow Settings and go to Hana. GHL sends at most one error email every 24 hours, so her runbook checks the Needs Review tab each morning instead of waiting for the email.',
       ],
     },
     steps: [
+      {
+        id: 'event-date',
+        kind: 'action',
+        action: 'event_date',
+        title: 'Event Start Date',
+        label: 'Trial Ends',
+        summary:
+          'Type Custom Field, Trial Ends. The waits below count from this date, not from whenever the trigger fired, which is the product-trial use the Set Event Start Date article describes. GHL runs this action on the account time zone, Pacific, even with the workflow on contact time.',
+        run: ({ contact }) => {
+          const start = trialEndsAt(contact);
+          if (start === undefined) return { log: 'Trial Ends is empty, so there is no date to count from. The Custom Date Reminder does not fire without one.' };
+          return { eventStart: start, log: `Event start set to ${formatClock(start)}, the start of the day Trial Ends names (${contact.fields.trial_end}). The waits below count from it.` };
+        },
+      },
       {
         id: 'send-hours',
         kind: 'wait',
@@ -115,7 +135,7 @@ export const trialEnding: Automation = {
         minutes: 0,
         window: { start: '08:00', end: '18:00', days: ALL_WEEK },
         summary:
-          "No delay, but its Advance Window only resumes between 8 AM and 6 PM in the contact's time zone, any day. The Custom Date Reminder article does not say at what hour the trigger fires, so this step decides when the first email goes.",
+          "No delay, but its Advance Window only resumes between 8 AM and 6 PM in the contact's time zone, any day. The Birthday Reminder article says that trigger runs at 8 AM account time; the Custom Date Reminder article gives no hour, so this step decides when the first email goes.",
       },
       {
         id: 'if-activated',
@@ -138,7 +158,7 @@ export const trialEnding: Automation = {
                   channel: 'email',
                   subject: 'Your Crewlo trial ends in 3 days',
                   body:
-                    "Hi {{contact.first_name}},\n\nYour team is running jobs through Crewlo, and your trial ends in 3 days. To keep the board, the jobs and your techs' logins as they are, pick a plan before then.\n\nCrewlo is {{custom_values.price_per_seat}}. Your workspace has {{contact.seats}} users today, and you only pay for the users you keep. Choose a plan under Settings > Billing in {{custom_values.app_url}}. What each plan includes: {{custom_values.pricing_link}}\n\nIf you need annual billing, a quote or a purchase order, reply to this email and I will set it up with our sales team.\n\nLeo Park\nCustomer Success, Crewlo" +
+                    "Hi {{contact.first_name}},\n\nYour team is running jobs through Crewlo, and your trial ends in 3 days. To keep dispatching without a break, pick a plan before then.\n\nCrewlo is {{custom_values.price_per_seat}}, and you only pay for the users you keep. Users in your workspace today: {{contact.seats}}. Choose a plan under Settings > Billing in {{custom_values.app_url}}. What each plan includes: {{custom_values.pricing_link}}\n\nIf you need annual billing, a quote or a purchase order, reply to this email and I will set it up with our sales team.\n\nLeo Park\nCustomer Success, Crewlo" +
                     footer,
                 },
               },
@@ -146,11 +166,12 @@ export const trialEnding: Automation = {
                 id: 'wait-eve',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Day before it ends',
-                mode: 'time',
-                minutes: 2 * DAY,
-                window: { start: '08:00', end: '18:00', days: ALL_WEEK },
-                summary: 'Two days, which lands on the day before Trial Ends because the trigger fired exactly 3 days out. Same 8 AM to 6 PM Advance Window.',
+                label: 'Day before, 8 AM',
+                mode: 'before_appointment',
+                offset: 16 * 60,
+                ifPassed: 'skip_outbound',
+                summary:
+                  "An upcoming appointment or booking, Type Appointment / Calendar Event (the Event Start Date article's Wait for Event/Appointment Time): Before, 16 hours, which is 8 AM the day before Trial Ends. If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so an \"ends tomorrow\" email can never go out on the last day.",
               },
               {
                 id: 'email-tomorrow',
@@ -171,10 +192,11 @@ export const trialEnding: Automation = {
                 id: 'wait-last',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Last day',
-                mode: 'time',
-                minutes: DAY,
-                summary: 'One day, to the morning of the last day of the trial.',
+                label: 'Last day, 8 AM',
+                mode: 'after_appointment',
+                offset: 8 * 60,
+                ifPassed: 'continue',
+                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM on the last day of the trial. If this date has already passed: Continue to next action, because the call matters most on the last day.',
               },
               {
                 id: 'task-owner',
@@ -183,9 +205,9 @@ export const trialEnding: Automation = {
                 title: 'Add Task',
                 label: 'Leo: activated, not paid',
                 summary:
-                  'Assigned to Leo Park, Due In Now: the trial ends tonight, so this cannot wait for a weekday. The description gives the user count and says to check the opportunity first. If an account executive is working it in Trial Sales-Assist, the call is theirs.',
+                  'Assign To Leo Park, Due In Now: the trial ends today, so this cannot wait for a weekday. The description has the seat count and phone, and says to check Conversations, Email DND (then they never saw the pricing) and the opportunity first. If an account executive is working it in Trial Sales-Assist, the call is theirs.',
                 run: ({ contact, now }) => ({
-                  log: `Task for Leo Park, due now (${dayOf(now)}): "Activated, not paid: ${contact.firstName} ${contact.lastName}, ${company(contact)}". ${contact.fields.seats} users on the board and the trial ends tonight. Check Conversations and the opportunity, then call ${contact.phone}.`,
+                  log: `Task for Leo Park, due now (${formatDay(now)}): "Activated, not paid: ${name(contact)}, ${company(contact)}". Seats: ${contact.fields.seats}. Trial Ends is today. Check Conversations, Email DND and the opportunity, then call ${contact.phone}.`,
                 }),
               },
               {
@@ -193,9 +215,10 @@ export const trialEnding: Automation = {
                 kind: 'wait',
                 title: 'Wait',
                 label: 'Trial over',
-                mode: 'time',
-                minutes: DAY,
-                summary: 'One more day, so the next step runs the morning after the last day, once the trial has really ended.',
+                mode: 'after_appointment',
+                offset: DAY + 8 * 60,
+                ifPassed: 'continue',
+                summary: 'After, 1 day 8 hours: 8 AM the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
               },
               {
                 id: 'tag-expired-a',
@@ -215,7 +238,7 @@ export const trialEnding: Automation = {
                 value: 'customer',
                 ifNotMet: 'end',
                 summary:
-                  'Contact Tag Added: customer. 04a · Subscription Created adds the tag when the app posts subscription.created. Paying at any point pulls the contact here, and the nudges, the call task and the expiry tag never happen. Reached without it: End this workflow.',
+                  'Contact Tag Added or Removed, watching for customer to be added. 04a · Subscription Created adds it when the app posts subscription.created, a self-serve upgrade. The contact moves here from wherever they are, any branch included, so paying skips every email, task and tag still ahead. Reached without it: End this workflow.',
               },
               {
                 id: 'notify-paid',
@@ -223,12 +246,12 @@ export const trialEnding: Automation = {
                 action: 'internal_notification',
                 title: 'Internal Notification',
                 label: 'Tell Leo',
-                summary: 'Type of Notification: In-App Notification to Leo Park, with the contact record as the Redirect Page, so he stops chasing a trial that has already paid.',
+                summary: 'Type of Notification: In-App Notification. To User Type: Particular Users, Leo Park. Redirect Page: the contact. One type per action, and the bell is enough: this tells him to stop, not to act.',
                 message: {
                   channel: 'internal',
                   to: 'Leo Park',
-                  subject: 'Upgraded: {{contact.company}}',
-                  body: '{{contact.name}} picked a plan for {{contact.seats}} users before the trial ended. The remaining trial emails will not send, and no last-day call task will be created.',
+                  subject: 'Now a customer: {{contact.company_name}}',
+                  body: '{{contact.name}} is a paying customer now (seats on record: {{contact.seats}}), so no more trial emails go out from 04 · Trial Ending. If a last-day call task is open for them, close it.',
                 },
               },
             ],
@@ -243,7 +266,7 @@ export const trialEnding: Automation = {
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'Extra week ends',
-                summary: 'This is the second reminder, fired by the new Trial Ends. No extension link: each trial is extended once. It offers help and the price instead.',
+                summary: 'The second reminder, fired by the new Trial Ends. No extension link: each trial is extended once. It offers help and the price instead.',
                 message: {
                   channel: 'email',
                   subject: 'Your extra week with Crewlo ends in 3 days',
@@ -256,10 +279,11 @@ export const trialEnding: Automation = {
                 id: 'wait-final',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Last day',
-                mode: 'time',
-                minutes: 3 * DAY,
-                summary: 'Three days, the same length as the click timeout below, so both paths reach the last day at the same hour.',
+                label: 'Last day, 8 AM',
+                mode: 'after_appointment',
+                offset: 8 * 60,
+                ifPassed: 'continue',
+                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM on the new last day. If this date has already passed: Continue to next action.',
               },
               {
                 id: 'goto-last',
@@ -290,8 +314,10 @@ export const trialEnding: Automation = {
               label: 'Clicked Extend?',
               mode: 'event',
               event: 'link_clicked',
+              value: 'extend_trial',
               minutes: 3 * DAY,
-              summary: 'The contact to take an action: Clicks a trigger link, Extend my trial. Timeout 3 days, which is the morning of the last day, so no click gets its own branch.',
+              summary:
+                'The contact to take an action: Clicks a trigger link, Extend my trial, so no other click releases it. Timeout 3 days, which is the morning of the last day, and no click gets its own branch.',
               branches: {
                 met: {
                   label: 'Clicked',
@@ -303,7 +329,7 @@ export const trialEnding: Automation = {
                       title: 'Custom Webhook',
                       label: 'Extend the workspace',
                       summary:
-                        'Event CUSTOM, POST to the app\'s trial-extension endpoint for this workspace. Authorization is a Bearer token saved as a masked key in the action, so the API key lives in the webhook\'s headers and never in a message, a field or a custom value.',
+                        "Premium. Event CUSTOM, Method POST to the app's trial-extension endpoint for this workspace. Authorization is a Bearer Token saved as a masked key in the action, so the API key lives in the webhook's headers and never in the body, a message, a field or a custom value. An Idempotency-Key header makes a retry harmless.",
                       run: ({ contact }) => ({
                         log: `POST ${api}/workspaces/${contact.fields.workspace_id}/trial-extension with "days": 7 and an Idempotency-Key header. Crewlo answers 200 and the workspace gets 7 more days.`,
                       }),
@@ -316,7 +342,7 @@ export const trialEnding: Automation = {
                       title: 'Math Operation',
                       label: 'Trial Ends + 7 days',
                       summary:
-                        'Select Field Trial Ends, Add 7 Days, Update Field Trial Ends. GHL\'s date now matches the app\'s, and moving it is what fires this reminder again for the new end date.',
+                        "Select Field Trial Ends, add 7 days, Update Field Trial Ends. Update Contact Field cannot add days to a date; Math Operation can. GHL's date now matches the app's, and moving it is what fires the reminder again for the new end date.",
                       run: ({ contact }) => {
                         const before = String(contact.fields.trial_end ?? '');
                         if (!before) return { log: 'Trial Ends is empty, so there is nothing to add to.' };
@@ -344,7 +370,7 @@ export const trialEnding: Automation = {
                         channel: 'email',
                         subject: 'Your Crewlo trial has 7 more days',
                         body:
-                          "Hi {{contact.first_name}},\n\nDone: your Crewlo trial now runs 7 days longer. Your jobs, settings and team logins stay as they are.\n\nTo make the week count, put one real job on the board and send it to a tech's phone: {{custom_values.app_url}}. Short guides for each step: {{custom_values.help_center}}\n\nMy offer stands: reply with two times and I will set it up with you on a 20-minute screen share.\n\nLeo",
+                          "Hi {{contact.first_name}},\n\nDone: your Crewlo trial now runs 7 days longer, and the new end date shows under Settings > Billing. Your jobs, settings and team logins stay as they are.\n\nTo make the week count, put one real job on the board and send it to a tech's phone: {{custom_values.app_url}}. Short guides for each step: {{custom_values.help_center}}\n\nMy offer stands: reply with two times and I will set it up with you on a 20-minute screen share.\n\nLeo",
                       },
                     },
                   ],
@@ -359,11 +385,11 @@ export const trialEnding: Automation = {
                       title: 'Add Task',
                       label: 'Last-chance call',
                       summary:
-                        'Assigned to Leo Park, Due In Now. The description has the workspace ID and phone, and says to read Conversations and check the activity timeline for a late click before calling.',
+                        'Assign To Leo Park, Due In Now: the trial ends today. The description has the workspace ID and phone, and three checks before calling: a reply in Conversations, the activated tag (the team may have started since the offer went out) and the activity timeline for a late click on Extend my trial.',
                       run: ({ contact, now }) => {
                         const again = contact.tags.includes('trial-extended');
                         return {
-                          log: `Task for Leo Park, due now (${dayOf(now)}): "Last-chance call: ${contact.firstName} ${contact.lastName}, ${company(contact)}". The trial ends tonight${again ? ' after its one extension' : ''}, and workspace ${contact.fields.workspace_id} has not sent a job to a tech yet. Call ${contact.phone}.`,
+                          log: `Task for Leo Park, due now (${formatDay(now)}): "Last-chance call: ${name(contact)}, ${company(contact)}". Trial Ends is today${again ? ', after its one extension' : ''}. Workspace ${contact.fields.workspace_id} had not sent a job to a tech when the reminder fired 3 days ago. Check Conversations, the activated tag and the activity timeline, then call ${contact.phone}.`,
                         };
                       },
                     },
@@ -372,9 +398,10 @@ export const trialEnding: Automation = {
                       kind: 'wait',
                       title: 'Wait',
                       label: 'Trial over',
-                      mode: 'time',
-                      minutes: DAY,
-                      summary: 'One day, so the tag goes on the morning after the last day, once the trial has really ended.',
+                      mode: 'after_appointment',
+                      offset: DAY + 8 * 60,
+                      ifPassed: 'continue',
+                      summary: 'An upcoming appointment or booking: After, 1 day 8 hours, so the tag goes on at 8 AM the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
                     },
                     {
                       id: 'tag-expired',
@@ -409,13 +436,17 @@ export const trialEnding: Automation = {
         { at: at(12, 8, 14) - at(12, 6), type: 'email_opened' },
         { at: at(14, 14, 25) - at(12, 6), type: 'tag_added', value: 'customer', label: 'Added by 04a: the app posted subscription.created for 9 seats' },
       ],
-      expect: { outcome: 'goal', visits: ['send-hours', 'if-activated:0', 'email-upgrade', 'email-tomorrow', 'goal-customer', 'notify-paid'], tags: ['activated', 'customer'] },
+      expect: {
+        outcome: 'goal',
+        visits: ['event-date', 'send-hours', 'if-activated:0', 'email-upgrade', 'wait-eve', 'email-tomorrow', 'goal-customer', 'notify-paid'],
+        tags: ['activated', 'customer'],
+      },
     },
     {
       id: 'never-pays',
-      label: 'Activated, never pays',
+      label: 'Activated, unsubscribed, never pays',
       summary:
-        'Dana\'s team uses the board every day. She opens both emails but never picks a plan, so Leo gets a call task on the last morning and the trial ends tagged trial-expired.',
+        "Dana's team uses the board every day, but she unsubscribed from the onboarding tips in week one, so Email DND is on. GHL skips both emails. Leo's call task on the last morning is the only touch, and the trial ends tagged trial-expired.",
       start: at(14, 6),
       contact: {
         firstName: 'Dana',
@@ -425,13 +456,16 @@ export const trialEnding: Automation = {
         timezone: 'America/New_York',
         source: 'Crewlo app signup',
         tags: ['trial', 'activated'],
+        dnd: { email: true },
         fields: { company: 'Whitfield Home Cleaning', workspace_id: 'ws_9FC2VB', plan: 'trial', trial_end: '03-19-2026', seats: 4 },
       },
-      events: [
-        { at: at(14, 12, 40) - at(14, 6), type: 'email_opened' },
-        { at: at(16, 19, 55) - at(14, 6), type: 'email_opened' },
-      ],
-      expect: { outcome: 'ended', visits: ['if-activated:0', 'email-tomorrow', 'wait-last', 'task-owner', 'wait-over-a', 'tag-expired-a', 'goal-customer'], tags: ['activated', 'trial-expired'] },
+      events: [],
+      expect: {
+        outcome: 'ended',
+        visits: ['if-activated:0', 'wait-eve', 'wait-last', 'task-owner', 'wait-over-a', 'tag-expired-a', 'goal-customer'],
+        skips: ['email-upgrade', 'email-tomorrow'],
+        tags: ['activated', 'trial-expired'],
+      },
     },
     {
       id: 'extends',
@@ -453,7 +487,11 @@ export const trialEnding: Automation = {
         { at: at(13, 21, 10) - at(13, 5), type: 'email_opened' },
         { at: at(13, 21, 12) - at(13, 5), type: 'link_clicked', value: 'extend_trial', label: 'Extend my trial' },
       ],
-      expect: { outcome: 'completed', visits: ['if-activated:else', 'email-extend', 'wait-click:met', 'webhook-extend', 'math-trial-end', 'tag-extended', 'email-extended'], tags: ['trial-extended'] },
+      expect: {
+        outcome: 'completed',
+        visits: ['event-date', 'if-activated:else', 'email-extend', 'wait-click:met', 'webhook-extend', 'math-trial-end', 'tag-extended', 'email-extended'],
+        tags: ['trial-extended'],
+      },
     },
     {
       id: 'ignores',
@@ -478,7 +516,7 @@ export const trialEnding: Automation = {
       id: 'second-reminder',
       label: 'Already extended once',
       summary:
-        'Sam took the extra week. Moving Trial Ends fired the reminder again and re-entry let him back in, but a trial is only extended once: no link this time, and Leo calls on the new last day.',
+        "Sam took the extra week. Moving Trial Ends fired the reminder again and re-entry let him back in, but a trial is only extended once: no link this time. He answers by email asking for the screen share. Stop on Response is off, so Leo still gets the last-day task and the expiry tag still follows.",
       start: at(11, 4),
       contact: {
         firstName: 'Sam',
@@ -490,27 +528,33 @@ export const trialEnding: Automation = {
         tags: ['trial', 'trial-extended'],
         fields: { company: 'Ortega Garage Doors', workspace_id: 'ws_6MW3RC', plan: 'trial', trial_end: '03-16-2026', seats: 1 },
       },
-      events: [],
-      expect: { outcome: 'completed', visits: ['if-activated:1', 'email-final', 'wait-final', 'goto-last', 'task-leo', 'tag-expired'], tags: ['trial-extended', 'trial-expired'] },
+      events: [{ at: at(11, 12, 40) - at(11, 4), type: 'reply', channel: 'email', value: 'Thanks Leo. Could we do the screen share Monday at 10 my time?' }],
+      expect: { outcome: 'completed', visits: ['if-activated:1', 'email-final', 'wait-final', 'goto-last', 'task-leo', 'wait-over', 'tag-expired'], tags: ['trial-extended', 'trial-expired'] },
     },
   ],
   dataModel: {
     customFields: [
-      { name: 'Trial Ends', key: 'trial_end', type: 'Date', note: 'Written by 02 from trial.started as MM-DD-YYYY. The trigger counts back from it, and the Math Operation here moves it on an extension. Empty means no reminder.' },
-      { name: 'Seats', key: 'seats', type: 'Number', note: 'Users in the workspace, kept current by the app\'s events. At least 1, since the owner counts.' },
-      { name: 'Workspace ID', key: 'workspace_id', type: 'Single line', note: 'Goes into the path of the extension call.' },
+      {
+        name: 'Trial Ends',
+        key: 'trial_end',
+        type: 'Date',
+        note: 'Written by 02 from trial.started as MM-DD-YYYY. The trigger counts back from it, Event Start Date anchors the waits to it, and the Math Operation here moves it on an extension. Empty means no reminder.',
+      },
+      { name: 'Seats', key: 'seats', type: 'Number', note: 'Written by 03 from each daily usage snapshot: people invited plus the owner. 04a updates it to the seats paid for.' },
+      { name: 'Workspace ID', key: 'workspace_id', type: 'Single line', note: "The app's ID for the workspace. Goes into the path of the extension call." },
     ],
     tags: [
-      { name: 'trial', note: 'Trigger filter. Added by 02; 04a removes it when the contact pays, so customers never get a trial reminder' },
+      { name: 'trial', note: 'Trigger filter: the trigger can require a tag but not exclude one, so this is the gate. Added by 02; 04a removes it on subscription.created and 05 when a deal is won, so customers never get a trial reminder' },
       { name: 'activated', note: 'Picks the branch. Added by 02a when the first job reaches a tech' },
-      { name: 'customer', note: 'The goal. Added by 04a from subscription.created' },
-      { name: 'trial-extended', note: 'This trial has had its one extension. Added here after the API call' },
-      { name: 'trial-expired', note: 'The trial ran out without a plan' },
+      { name: 'customer', note: 'The goal. Added by 04a from subscription.created. 05 adds it too, after it has taken the contact out of this workflow' },
+      { name: 'trial-extended', note: 'This trial has had its one extension. Added here after the API call; 02 clears it when a new trial starts' },
+      { name: 'trial-expired', note: 'The trial ran out without a plan. 02 clears it when a new trial starts' },
     ],
     customValues: [
       { name: 'Price Per Seat', key: 'price_per_seat', value: '$29 per user per month' },
       { name: 'Pricing Link', key: 'pricing_link', value: 'crewlo.example/pricing' },
       { name: 'App URL', key: 'app_url', value: 'app.crewlo.example' },
+      { name: 'Help Center', key: 'help_center', value: 'help.crewlo.example' },
       { name: 'API Base', key: 'api_base', value: 'https://api.crewlo.example/v1' },
     ],
   },
@@ -521,68 +565,68 @@ export const trialEnding: Automation = {
     },
     {
       title: 'Trigger on the date the app already sends',
-      body: 'Custom Date Reminder on Trial Ends, Before Number of Days 3, Has Tag trial. Match on Year Along with Day and Month is on, or a trial that ended last April would get "3 days left" every April. The article\'s FAQ describes that toggle the other way round, so the test plan checks it. The article does not say at what hour the trigger fires, so the first step is a zero-length Wait whose Advance Window decides when emails go.',
+      body: "Custom Date Reminder on Trial Ends, Before Number of Days 3, Has Tag trial. The trigger can require a tag but not exclude one, so both ways of paying remove trial: 04a on subscription.created and 05 when a deal is won. Match on Year Along with Day and Month is on, or a trial that ended last April would get \"3 days left\" every April; the article's FAQ describes that toggle the other way round, so the test plan checks it. The article gives no hour for the trigger, so a zero-length Wait with an Advance Window decides when the first email goes.",
+    },
+    {
+      title: 'Count from Trial Ends, not from the trigger',
+      body: 'Event Start Date reads Trial Ends, and every later timed wait is An upcoming appointment or booking counted from it: 16 hours before for the day-before email, 8 hours after for the last-day call, a day and 8 hours after for the expiry tag. If the trigger fires late, or someone adds a contact by hand, the emails still land on the right day, and the day-before wait skips its email rather than send it on the last day. A chain of 2-day and 1-day waits would drift with the trigger hour.',
     },
     {
       title: 'One tag decides the path',
       body: 'The If/Else reads activated first, so a team that activated during its extra week still gets pricing. Then trial-extended, for the second reminder. Everyone else gets the extension offer. The emails come from Leo, like onboarding, so replies reach someone who knows the account.',
     },
     {
-      title: 'The extension: link, wait, API call',
-      body: 'A trigger link named Extend my trial, pointing at a confirmation page in the app, inserted with the trigger link picker. A Wait for the click with a 3-day timeout. The Custom Webhook posts to the app with a Bearer token that Hana saved as a masked key, plus an Idempotency-Key header, because GHL can retry a failed call with exponential backoff and a retry must not add a second week. I tested it against the staging API with a test workspace and read the status codes in Execution Logs.',
-    },
-    {
-      title: 'Keep GHL\'s date in step',
-      body: 'Math Operation adds 7 days to Trial Ends, the same field it reads. That keeps smart lists and reports right, and it makes the reminder fire again 3 days before the new date. Re-entry is on for that second run, and the trial-extended tag sends it down the path without a link.',
+      title: 'The extension: link, wait, API call, date',
+      body: "A trigger link named Extend my trial, inserted with the picker, whose URL is Settings > Billing in the app: that page shows the trial's real end date from Crewlo's own records, so a failed or late click never shows an extension that did not happen. The Wait listens for that one link, with a 3-day timeout. The Custom Webhook posts to the app with a Bearer token Hana saved as a masked key, plus an Idempotency-Key header, because GHL can retry a failed call with exponential backoff and a retry must not add a second week. Then Math Operation adds 7 days to Trial Ends, which keeps reports right and makes the reminder fire again for the new date. I tested it against the staging API with a test workspace and read the status codes in Execution Logs.",
     },
     {
       title: 'One goal: paid',
-      body: 'GHL allows one Goal Event per workflow, so it is the one that matters: Contact Tag Added: customer. The app posts subscription.created to 04a · Subscription Created, which finds the contact, adds customer and removes trial. The goal sits after the last-day steps with End this workflow, so paying at any point skips everything that is left.',
+      body: 'GHL allows one Goal Event per workflow, so it is the one that matters: Contact Tag Added or Removed, watching for customer to be added. The app posts subscription.created to 04a · Subscription Created, which finds the contact, adds customer and removes trial. A deal won in sales takes the contact out through 05 before 05 adds customer, so Leo hears about that one from 05. The goal sits after the last-day steps with End this workflow, and a contact who pays in any branch moves to it, so paying skips everything that is left.',
     },
     {
       title: 'Email only, on purpose',
-      body: 'No texts here. The demo form\'s text consent covers booking reminders and product news, not billing nudges. The pricing, reminder and offer emails are commercial, so they carry the postal address and the unsubscribe link in the footer. The extension confirmation is transactional and goes at any hour.',
+      body: "No texts here. SMS consent (service) on the demo form covers booking reminders, and SMS consent (offers) covers product news and event invites; a nudge to pay is neither, and trials that start in the app give no text consent at all. The pricing, reminder and offer emails are commercial, so they carry the full postal address and the unsubscribe link in the footer. The extension confirmation is transactional and goes at any hour.",
     },
     {
       title: 'Test, then hand over',
-      body: 'Test contacts with Trial Ends set 3 days out, one per scenario, entered by the real trigger, and a test copy with the waits cut to minutes for the rest. Then I walked Leo through his two tasks and wrote down what to do when the extension call fails.',
+      body: 'Test contacts with Trial Ends set 3 days out, one per scenario, entered by the real trigger, so Enrollment History showed the hour it fires and Execution Logs the hour GHL gives a date with no time. Then a contact added by hand the day before its Trial Ends, to watch the day-before wait skip its email. I walked Leo through his two tasks and wrote down what to do when the extension call fails.',
     },
   ],
   edgeCases: [
     {
-      title: 'Pays before the reminder, or during it',
-      body: '04a removes the trial tag on payment, so Has Tag: trial keeps paying customers out of this workflow. If they pay while in it, the Goal Event article says the contact moves to the goal from wherever they are, so even a team in the extension path lands on it and Leo hears they paid.',
+      title: 'Pays, signs or is already with sales',
+      body: "04a and 05 remove the trial tag, so Has Tag: trial keeps paying customers out. If they pay in the app while in the workflow, the Goal Event moves them to the goal from wherever they are, extension path included, and Leo hears about it. A deal won in sales takes them out through 05 instead. A trial that 03 sent to an account executive still gets the pricing email, which quotes the public price and routes quotes to a reply; Leo's last-day task says the call belongs to the AE if the deal is open.",
     },
     {
-      title: 'Clicks after the timeout, or twice',
-      body: 'A late click is recorded in the activity timeline, but the wait has closed, so nothing calls the app. Leo\'s task says to check the timeline first; he extends in the app admin and updates Trial Ends by hand. A second click during the same run does nothing either: the contact is already past the wait.',
+      title: 'Clicks late, twice, or from a forwarded email',
+      body: "The link opens Billing, which shows the real end date, so nobody is told they got a week they did not get. A click after the wait closes is only recorded in the activity timeline; Leo's task says to check it, and if they want the week he extends it in the app admin, adds 7 days to Trial Ends, adds trial-extended and removes them from 04 so trial-expired does not follow. A second click in the same run does nothing, and a forwarded click counts for the contact it was sent to, which is the same workspace.",
     },
     {
       title: 'The extension call fails',
-      body: 'Depending on the error, GHL retries with exponential backoff or marks the step failed and skips it. This build does not branch on the response, so the confirmation still goes. Error notifications email Hana, the workflow shows in Needs Review, and her runbook says to extend that workspace in the app admin the same day, which makes the email true.',
+      body: "Depending on the error, GHL retries with exponential backoff or marks the step failed and skips it. The docs offer Save response from this Webhook for GET only, so this build does not branch on the response: the date, the tag and the confirmation still follow. The workflow lands in Needs Review, and Hana's morning check extends that workspace in the app admin the same day, which makes the email true. A 409 means support had already extended that workspace by hand; she sets Trial Ends back to the app's date.",
     },
     {
-      title: 'Email DND',
-      body: 'GHL skips the emails, so there is nothing to click and the wait times out. Leo still gets the last-day call task, and so does an activated team that never saw the pricing.',
+      title: 'Unsubscribed (Email DND)',
+      body: 'GHL skips every email step, so there is nothing to click and the wait times out. Leo still gets the last-day call task, and so does an activated team that never saw the pricing. A phone call from Leo is not an email, so the unsubscribe does not block it.',
     },
     {
-      title: 'A colleague clicks a forwarded email',
-      body: 'The click counts for the contact the email was sent to. It is the same workspace, so the extension goes to the right trial either way.',
+      title: 'Last day on a weekend',
+      body: "Leo's task is due Now on a Saturday or Sunday and may sit until Monday, when the trial has ended. That call becomes a win-back call, and it still works: the app keeps the workspace, and picking a plan brings it back. The emails do not wait for weekdays, because the trial clock does not.",
     },
     {
       title: 'The same company starts a new trial next year',
-      body: 'trial-extended and trial-expired describe one trial, so they have to come off when a new trial starts. The right place is the Remove Contact Tag step at the top of 02 · Trial Onboarding, which clears activated for the same reason. Otherwise the new trial would be treated as already extended.',
+      body: 'trial-extended and trial-expired describe one trial, so they have to come off when a new trial starts. The Remove Contact Tag step at the top of 02 · Trial Onboarding clears them along with activated. Otherwise the new trial would be treated as already extended.',
     },
   ],
   qa: [
-    'Activated test contact with Trial Ends 3 days out: enters on the day, and the pricing email shows the price and the right user count',
-    'Contact whose Trial Ends was 3 days from today last year: does not enter',
-    'Contact tagged customer without trial: does not enter',
+    'Activated test contact with Trial Ends 3 days out: enters that day, Enrollment History shows the hour, and the pricing email shows the price and the right user count',
+    'Trial Ends 3 days from today but last year: does not enter. Trial Ends of January 2: enters on December 30 with year matching on',
+    'Contact tagged customer without trial: does not enter. Win a test deal for a contact waiting here: Enrollment History shows 05 removed it, no goal note fires, trial comes off and no reminder follows',
     'Click Extend in the test email: the staging API logs the POST with the Bearer header, Execution Logs show 200, Trial Ends moves 7 days, trial-extended is added and the confirmation arrives',
-    'Add the customer tag to a waiting test contact: it jumps to the goal, Leo is notified, and nothing else sends',
-    'Test copy with minute-long waits and no click: Leo gets the last-chance task, and trial-expired is added a step later',
+    'Add the customer tag to test contacts waiting in each branch: each jumps to the goal, Leo gets the in-app note, and nothing else sends',
+    'Add a contact by hand the day before its Trial Ends: the day-before email is skipped, and the last-day task and expiry tag still come at 8 AM Pacific',
     'Extended test contact, Trial Ends 3 days out again: it re-enters, takes Extended already, and the email has no extension link',
-    'Trial Ends of January 2: the reminder still fires on December 30 with year matching on',
+    'Contact with Email DND: no emails, Leo still gets the task. The other emails show the full postal address and unsubscribe link in Gmail and Outlook',
   ],
   snippets: [
     {
@@ -595,19 +639,21 @@ export const trialEnding: Automation = {
       title: 'Extension offer email',
       language: 'text',
       code: `Subject: ${extendOffer.subject}\n\n${extendOffer.body}`,
-      note: '{{trigger_link.extend_trial}} stands for the trigger link inserted with the picker. The link\'s target is the app\'s "your trial has 7 more days" page, so the person sees the result at once.',
+      note: "{{trigger_link.extend_trial}} stands for the trigger link inserted with the picker. Its URL is Settings > Billing in the app, which shows the trial's end date from Crewlo's own records: the new date a few seconds after the call lands, or the old one if the click came too late.",
     },
     {
       title: 'subscription.created payload (feeds 04a)',
       language: 'json',
       code: subscriptionPayload,
-      note: '04a · Product · Subscription Created has its own Inbound Webhook URL. It runs Create/Update Contact on the email, updates Plan and Seats, adds customer and removes trial. The customer tag is what this workflow\'s goal listens for.',
+      note: "04a · Product · Subscription Created has its own Inbound Webhook URL. It runs Create/Update Contact on the email, updates Plan and Seats, adds customer and removes trial. The customer tag is what this workflow's goal listens for.",
     },
   ],
   features: [
     'Custom Date Reminder',
-    'If/Else',
+    'Event Start Date',
     'Wait · Advance Window',
+    'Wait · An upcoming appointment or booking',
+    'If/Else',
     'Send Email',
     'Trigger Links',
     'Wait · The contact to take an action',

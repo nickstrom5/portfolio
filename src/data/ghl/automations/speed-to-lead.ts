@@ -462,7 +462,7 @@ export const speedToLead: Automation = {
     customFields: [
       { name: 'Service Needed', key: 'service_needed', type: 'Dropdown (single)', note: 'Leak or repair · Storm damage · Full replacement · Not sure yet' },
       { name: 'Roof Age', key: 'roof_age', type: 'Dropdown (single)', note: 'Under 10 years · 10-20 years · Over 20 years · Not sure' },
-      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: 'The first box: inspection texts. Unticked by default, not required to submit. The If/Else reads it' },
+      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: 'The first box: texts about the inspection, estimate and job. Unticked by default, not required to submit. The If/Else reads it' },
       { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'The second box: offers and seasonal reminders. Only 07 reads it' },
       { name: 'Lead Score', key: 'lead_score', type: 'Number', note: 'Written by the Custom Code step' },
       { name: 'Call Priority', key: 'call_priority', type: 'Single line', note: '"15 minutes" or "1 hour"' },
@@ -512,7 +512,7 @@ export const speedToLead: Automation = {
     {
       title: 'SMS consent checkboxes on the form',
       language: 'text',
-      code: 'Box 1 (SMS consent, service):\nText me about my inspection request: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.\n\nBox 2 (SMS consent, offers):\nAlso text me occasional offers and seasonal roof reminders. Reply STOP to opt out.\n\nUnder both: Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service',
+      code: 'Box 1 (SMS consent, service):\nText me about my inspection, estimate and job: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.\n\nBox 2 (SMS consent, offers):\nAlso text me occasional offers and seasonal roof reminders. Reply STOP to opt out.\n\nUnder both: Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service',
       note: 'Both boxes are unticked by default and neither is required to submit. The same wording goes in the A2P campaign registration.',
     },
   ],
