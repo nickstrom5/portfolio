@@ -120,6 +120,42 @@ form). It exits non-zero with a findings list. Needs Playwright with
 Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
 A weekly routine runs this and reports.
 
+## GoHighLevel showcase (`/ghl/`)
+
+A page of working GoHighLevel demos for a fictional roofing company: a
+landing page whose form feeds workflow 01, and seven connected workflows
+(speed to lead, missed-call text-back, inspection reminders, estimate
+follow-up, job hand-off, reviews and referrals, database reactivation).
+Each workflow renders as a GHL-builder-style canvas and runs in an
+in-browser simulator on sample test contacts, or on whoever fills in the
+landing-page form. Nothing is sent anywhere.
+
+| What | Where |
+| --- | --- |
+| The sample sub-account (team, custom values, field labels) | `src/data/ghl/business.ts` |
+| One file per workflow, in page order | `src/data/ghl/automations/*.ts`, listed in `src/data/ghl/index.ts` |
+| Data model (triggers, steps, settings, scenarios) | `src/lib/ghl/types.ts` |
+| The simulator (waits, branches, goals, DND, time windows) | `src/lib/ghl/engine.ts` |
+| Canvas, simulator panel, landing demo | `src/components/ghl/` |
+| Page, compliance and audit copy | `src/pages/ghl.astro` |
+| Styles | `src/styles/ghl.css` |
+
+After editing a workflow, run:
+
+```bash
+npm run ghl:check
+```
+
+It runs every test scenario through the simulator and fails if a run ends
+differently than its `expect` block says, a step or branch is never reached,
+a message has an unresolved `{{merge_field}}`, or an SMS is longer than two
+segments or contains characters that force UCS-2 encoding.
+
+To attach proof of a live build (a Loom or screenshots of the real
+sub-account), add a `proof` array to that workflow's file; the links show
+under its build notes. The page is linked from the footer only; to put it in
+the top nav, remove the `/ghl` filter in `src/data/site.ts`.
+
 ## SignalRig (GTM engineering showcase)
 
 `signalrig/` is a separate Next.js app: a client-facing showcase with

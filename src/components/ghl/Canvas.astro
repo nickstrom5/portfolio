@@ -1,0 +1,65 @@
+---
+/** The workflow as it reads in the GHL builder: name, settings, triggers, steps. */
+import type { Automation, Step } from '@/lib/ghl/types';
+import { countSteps } from '@/lib/ghl/engine';
+import Steps from './Steps.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  automation: Automation;
+}
+const { automation: a } = Astro.props;
+const wf = a.workflow;
+const names: Record<string, string> = {};
+const collect = (list: Step[]) =>
+  list.forEach((st) => {
+    names[st.id] = ('label' in st && st.label) || st.title;
+    if (st.kind === 'ifelse') [...st.branches.map((b) => b.nodes), st.otherwise.nodes].forEach(collect);
+    if (st.kind === 'wait' && st.branches) [st.branches.met.nodes, st.branches.timeout.nodes].forEach(collect);
+  });
+collect(wf.steps);
+const s = wf.settings;
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const to12 = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h < 12 ? 'AM' : 'PM'}`;
+};
+const days = (d: number[]) => {
+  const sorted = [...d].sort();
+  const contiguous = sorted.every((v, i) => i === 0 || v === sorted[i - 1] + 1);
+  return contiguous && sorted.length > 2 ? `${DAYS[sorted[0]]}–${DAYS[sorted[sorted.length - 1]]}` : sorted.map((i) => DAYS[i]).join(', ');
+};
+const settings = [
+  { k: 'Re-entry', v: s.allowReEntry ? 'Allowed' : 'Off' },
+  { k: 'Stop on response', v: s.stopOnResponse ? 'On' : 'Off' },
+  s.timeWindow && { k: 'Time window', v: `${days(s.timeWindow.days)}, ${to12(s.timeWindow.start)}–${to12(s.timeWindow.end)}` },
+  { k: 'Timezone', v: s.timezone === 'contact' ? 'Contact' : 'Account' },
+  s.allowMultipleOpportunities !== undefined && { k: 'Multiple opportunities', v: s.allowMultipleOpportunities ? 'Allowed' : 'Off' },
+].filter(Boolean) as { k: string; v: string }[];
+---
+
+<figure class="g-canvas" data-canvas={a.id} aria-label={`Workflow: ${wf.name}, ${countSteps(wf.steps)} steps`}>
+  <div class="g-canvas-bar">
+    <span class="g-folder">{wf.folder} /</span>
+    <span class="g-wfname">{wf.name}</span>
+    <span class="g-pub">Published</span>
+  </div>
+  <dl class="g-settings" aria-label="Workflow settings">
+    {settings.map((x) => (
+      <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
+    ))}
+  </dl>
+  <div class="g-canvas-body">
+    <div class="g-triggers">
+      <span class="g-kind">{wf.triggers.length > 1 ? 'Workflow triggers' : 'Workflow trigger'}</span>
+      <ul>
+        {wf.triggers.map((t) => (
+          <li><Icon name="bolt" size={16} /><strong>{t.title}</strong>{t.filters.length > 0 && <span>{t.filters.join(' · ')}</span>}</li>
+        ))}
+      </ul>
+    </div>
+    <ol class="g-steps g-root">
+      <Steps steps={wf.steps} names={names} />
+    </ol>
+  </div>
+</figure>
