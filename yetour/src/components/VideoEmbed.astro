@@ -1,0 +1,175 @@
+---
+/**
+ * A click-to-load YouTube facade with the real broadcast frame as its poster.
+ *
+ * Nothing from youtube.com is requested until the visitor asks for it, which
+ * keeps the page fast and keeps third-party cookies off it. The poster is
+ * YouTube's own thumbnail for the video, which is what thumbnails are for.
+ */
+interface Props {
+  videoId: string;
+  title: string;
+  where: string;
+  note: string;
+  accent?: string;
+}
+
+const { videoId, title, where, note, accent = '#ff3b2a' } = Astro.props;
+const src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+const watch = `https://www.youtube.com/watch?v=${videoId}`;
+const poster = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+---
+
+<figure class="vid" style={`--ye-accent:${accent}`}>
+  <button class="vid-btn" type="button" data-video={src} data-label={title}>
+    <img
+      class="vid-art"
+      src={poster}
+      alt={`The globe stage during ${title}`}
+      width="1280"
+      height="720"
+      loading="lazy"
+      decoding="async"
+      data-yt={videoId}
+    />
+    <span class="vid-play">
+      <span class="vid-cue">Play</span>
+      <span class="vid-title">{title}</span>
+      <span class="vid-where">{where}</span>
+    </span>
+  </button>
+  <figcaption>
+    {note} <a href={watch} rel="noopener nofollow">Watch on YouTube</a>
+  </figcaption>
+</figure>
+
+<style>
+  .vid {
+    margin: 0;
+    border: 1px solid var(--ye-line);
+    background: var(--ye-pit);
+  }
+
+  .vid-btn {
+    display: block;
+    position: relative;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: #0a0c0e;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .vid-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.4s;
+  }
+
+  .vid-btn:hover .vid-art,
+  .vid-btn:focus-visible .vid-art {
+    transform: scale(1.04);
+    opacity: 0.82;
+  }
+
+  .vid-play {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: block;
+    padding: 30px 16px 15px;
+    background: linear-gradient(to top, rgb(5 6 7 / 0.96), rgb(5 6 7 / 0.7) 55%, transparent);
+  }
+
+  .vid-cue {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-bottom: 9px;
+    background: var(--ye-accent);
+    color: #08090a;
+    font-family: var(--ye-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .vid-title {
+    display: block;
+    font-family: var(--ye-display);
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 1.25;
+    color: var(--ye-bone);
+  }
+
+  .vid-where {
+    display: block;
+    margin-top: 5px;
+    font-family: var(--ye-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    color: var(--ye-dust);
+  }
+
+  [data-broken] .vid-art {
+    visibility: hidden;
+  }
+
+  .vid-btn[data-broken] {
+    background: repeating-linear-gradient(135deg, #0f1114 0 10px, #0b0d0f 10px 20px);
+  }
+
+  .vid :global(iframe) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border: 0;
+  }
+
+  figcaption {
+    padding: 14px 16px;
+    border-top: 1px solid var(--ye-line);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ye-ash);
+  }
+
+  figcaption a {
+    display: inline-block;
+    padding-block: 6px;
+    color: var(--ye-bone);
+  }
+</style>
+
+<script>
+  // maxresdefault only exists for uploads encoded at 1080p or better. If the
+  // smaller frame fails too, mark the container rather than leaving a broken icon.
+  for (const img of document.querySelectorAll<HTMLImageElement>('img[data-yt]')) {
+    img.addEventListener('error', () => {
+      if (!img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = `https://img.youtube.com/vi/${img.dataset.yt}/hqdefault.jpg`;
+        return;
+      }
+      img.closest('.vid-btn, .plate')?.setAttribute('data-broken', '');
+    });
+  }
+
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-video]')) {
+    btn.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.setAttribute('src', btn.dataset.video!);
+      frame.setAttribute('title', btn.dataset.label!);
+      frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      frame.setAttribute('allowfullscreen', '');
+      btn.replaceWith(frame);
+    });
+  }
+</script>

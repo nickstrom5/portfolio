@@ -1,0 +1,39 @@
+---
+import { url } from '@/lib/url';
+import { tour } from '@/data/tour';
+
+const links = [
+  { href: '/', label: 'Dates' },
+  { href: '/globe/', label: 'Globe' },
+  { href: '/discography/', label: 'Discography' },
+  { href: '/andre/', label: 'André' },
+];
+
+const here = Astro.url.pathname.replace(/\/$/, '');
+const isCurrent = (href: string) => here === url(href).replace(/\/$/, '');
+---
+
+<header class="tnav">
+  <div class="wrap tnav-in">
+    <a class="tnav-brand" href={url('/')}>
+      <b>YE</b>
+      <span>TOUR</span>
+    </a>
+
+    <nav class="tnav-links" aria-label="Tour">
+      {
+        links.map((l) => (
+          <a href={url(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <a class="tnav-cta" href={tour.officialSite} rel="noopener nofollow">
+      Tour
+      <span aria-hidden="true">{'↗'}</span>
+      <span class="sr-only-ye">Opens the official tour site at tour.yeezy.com</span>
+    </a>
+  </div>
+</header>
