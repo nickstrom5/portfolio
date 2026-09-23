@@ -8,11 +8,16 @@
 import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
 import CaseStudyView from '@/components/ghl/CaseStudy.astro';
-import { cases } from '@/data/ghl';
+import { cases as allCases } from '@/data/ghl';
 import { countSteps, simulate } from '@/lib/ghl/engine';
 import type { Step } from '@/lib/ghl/types';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+
+// A case appears once it has workflows, so a half-finished case never ships as an empty tab.
+const cases = allCases.filter((c) => c.automations.length > 0);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 // Every number in the hero is computed from the data, by running the simulator at build time.
 let branches = 0;
@@ -112,17 +117,24 @@ const process = [
   { title: 'Watch it', body: 'Trigger Statistics and Execution Logs checked in the first week, then monthly. Errors fixed before anyone notices them.' },
 ];
 
+const caseWord = words[cases.length] ?? String(cases.length);
 const title = 'GoHighLevel case studies';
-const description = `Three GoHighLevel case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and live landing pages.`;
+const description =
+  cases.length === 3
+    ? `Three GoHighLevel case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and live landing pages.`
+    : `GoHighLevel case studies you can test: ${plural(all.length, 'working workflow', 'working workflows')}, live landing pages and the build notes behind each.`;
 ---
 
 <Base title={title} description={description}>
   <section class="gx-hero">
     <div class="container">
       <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-      <h1>Three businesses. {all.length} GoHighLevel workflows. Run every one.</h1>
+      <h1>{caseWord} {cases.length === 1 ? 'business' : 'businesses'}. {plural(all.length, 'GoHighLevel workflow', 'GoHighLevel workflows')}. Run every one.</h1>
       <p class="lede">
-        Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments. Each has a working landing page, a set of connected workflows and the notes behind every decision. Every workflow runs in a simulator on this page, on sample contacts or on you.
+        {cases.length === 3
+          ? 'Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments.'
+          : `${caseWord} ${cases.length === 1 ? 'case study' : 'case studies'}, each built as its own sub-account.`}{' '}
+        Each has a working landing page, a set of connected workflows and the notes behind every decision. Every workflow runs in a simulator on this page, on sample contacts or on you.
       </p>
       <div class="gx-cta">
         <a class="btn btn-primary" href="#cases">Pick a case study</a>
@@ -156,7 +168,7 @@ const description = `Three GoHighLevel case studies you can test: a local roofer
             <span class="gx-switch-kicker">Case study {i + 1} · {c.business.industry}</span>
             <span class="gx-switch-name">{c.business.name}</span>
             <span class="gx-switch-blurb">{c.business.blurb}</span>
-            <span class="gx-switch-meta">{c.automations.length} workflows · a working landing page</span>
+            <span class="gx-switch-meta">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
           </button>
         ))}
       </div>
@@ -171,7 +183,7 @@ const description = `Three GoHighLevel case studies you can test: a local roofer
       <div class="section-head">
         <h2 id="compliance-title">Compliance is part of the build, not a checkbox</h2>
       </div>
-      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows in all three case studies.</p>
+      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows in every case study.</p>
       <ul class="gx-cards">
         {compliance.map((x) => {
           const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
