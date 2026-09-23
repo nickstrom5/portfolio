@@ -36,7 +36,7 @@ export const landing: LandingPage = {
   },
   thanks: {
     title: 'Thanks, {first}. Pick a time that suits you.',
-    body: 'Step 2 of 2: in the live funnel, the Demo calendar sits here. It is a round-robin calendar, so you see every rep’s open times and the booking goes to whoever the routing chose.',
+    body: 'Step 2 of 2: in the live funnel, the Product Demo calendar sits here. It is round robin with Always Book with Assigned User on, so once the workflow has picked your rep, you see their times and book with them.',
     slots: ['Tue 11:00 AM', 'Wed 2:30 PM', 'Thu 10:00 AM'],
   },
   feeds: 'demo-request',
@@ -65,7 +65,7 @@ export const landing: LandingPage = {
   notes: [
     { title: 'Qualify with the form, not a call', body: 'Team size and role are the two questions routing needs, so the form asks exactly those. Company size ranges match the Custom Code thresholds, word for word.' },
     { title: 'Work email, optional phone', body: 'B2B buyers expect email. The phone is optional and texting is opt-in with its own consent box, so nobody gets a text they did not ask for.' },
-    { title: 'Round-robin calendar on the thank-you step', body: 'The Demo calendar is round robin across the reps, with buffer time and a minimum notice. Booking straight after the form catches people while they still care.' },
+    { title: 'Round-robin calendar on the thank-you step', body: 'The Product Demo calendar is round robin across the reps, with Always Book with Assigned User on, the form first in the widget and Allow Staff Selection off, so the booking lands with the rep the routing chose. Booking straight after the form catches people while they still care.' },
     { title: 'Fast, even on a site full of scripts', body: 'Optimize JavaScript defers the chat widget and analytics until the page is interactive, and the hero is a compressed screenshot, not a video.' },
     { title: 'Source you can trust', body: 'UTM hidden fields plus GHL’s own First and Latest Attribution. The Custom Webhook to Slack includes the source, so reps know whether they are talking to a Google ad click or a referral.' },
     { title: 'One page per audience', body: 'Paid campaigns for HVAC, plumbing and cleaning companies each get a split-test variation of the headline and screenshot, measured by opt-in rate in the Stats tab.' },

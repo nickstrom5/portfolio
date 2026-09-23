@@ -1,4 +1,5 @@
 import type { Automation, Contact } from '@/lib/ghl/types';
+import { business } from '../business';
 
 const DAY = 1440;
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
@@ -6,7 +7,9 @@ const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
 /** Minutes after Monday 00:00 of the sample week (Mon Mar 2, 2026). */
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
 
-const USERS: Record<string, string> = { hana: 'Hana Ito', priya: 'Priya Shah', ben: 'Ben Carter', aisha: 'Aisha Rahman', leo: 'Leo Park' };
+const users = business.env.users;
+const stages = business.pipeline.stages;
+const ownerOf = (c: Contact) => (c.assignedTo && users[c.assignedTo]?.name) || 'the owner';
 const money = (v: number) => `$${v.toLocaleString('en-US')}`;
 
 /** What the app sends in usage.snapshot, beyond the owner's email. */
@@ -101,7 +104,8 @@ const integrations = num(inputData.integrations_connected);
 const days = num(inputData.days_active);
 
 // Weights agreed with sales. Team size counts most: a sales call
-// only pays for itself on a team big enough to need one.
+// only pays for itself on a team big enough to need one. With nobody
+// invited the most a trial can score is 65, so a solo trial never pages sales.
 const parts = {
   team: Math.min(invited * 5, 35),               // 7+ people invited
   jobs: Math.min(Math.floor(jobs / 2), 30),      // 60+ jobs scheduled
@@ -109,7 +113,7 @@ const parts = {
 };
 const habit = Math.min(days * 3, 15);            // active on 5+ days
 
-// Only trials score. A workspace that has already bought never pages sales.
+// Only trials score. A workspace that has bought or expired never pages sales.
 const isTrial = String(inputData.plan || '').toLowerCase() === 'trial';
 const score = isTrial ? parts.team + parts.jobs + parts.integrations + habit : 0;
 
@@ -149,7 +153,7 @@ const slackPayload = `{
     {
       "type": "section",
       "fields": [
-        { "type": "mrkdwn", "text": "*Contact*\\n{{contact.name}}\\n{{contact.email}}\\n{{contact.phone}}" },
+        { "type": "mrkdwn", "text": "*Contact*\\n{{contact.name}}" },
         { "type": "mrkdwn", "text": "*Owner*\\n{{user.name}}" },
         { "type": "mrkdwn", "text": "*Usage*\\n{{contact.trial_usage}}" },
         { "type": "mrkdwn", "text": "*At list price*\\n{{contact.seats}} seats at {{custom_values.price_per_seat}}" },
@@ -166,11 +170,11 @@ export const pqlAlert: Automation = {
   name: 'PQL alert',
   kicker: 'Product-qualified leads',
   tagline:
-    'Once a day the app reports how each trial is being used. When a trial starts to look like a buyer, the right AE hears about it once, with the numbers, and sends one plain email. Trials that are close get one useful tip instead.',
+    'Once a day the app reports how each trial is being used. When a trial starts to look like a buyer, the right AE hears about it once, with the numbers, and a trial nobody at Crewlo is talking to yet gets one plain email from them. Trials that are close get one useful tip instead.',
   problem:
     'Sales could not tell which trials were being used for real. A 40-person HVAC company running its whole schedule in Crewlo looked the same in the CRM as someone who signed up and never came back, so the AEs either called every trial or waited for trials to call them.',
   solution:
-    'The app posts one usage snapshot per trial workspace every morning. Custom Code turns people invited, jobs scheduled, integrations and active days into a product score from 0 to 100 and saves it on the contact. At 70 or more the trial goes to sales exactly once: the right AE by segment, a deal on the New Business board, a post in #pql with the numbers and a plain email from that AE. Between 40 and 69, Leo sends one tip aimed at the weakest signal. Below 40 nothing happens, and 02 · Trial Onboarding keeps doing its job.',
+    'The app posts one usage snapshot per trial workspace every morning. Custom Code turns people invited, jobs scheduled, integrations and active days into a product score from 0 to 100 and saves it on the contact. At 70 or more the trial goes to sales exactly once: the right AE by segment, a post in #pql with the numbers, and a deal on the New Business board. A trial that already has an open deal keeps it, and gets no automated email because its AE has already met them. A trial without one gets a new card in Trial Sales-Assist and a plain email from the AE. Between 40 and 69, Leo sends one tip aimed at the weakest signal. Below 40 nothing happens, and 02 · Trial Onboarding keeps doing its job.',
   workflow: {
     name: '03 · Product · PQL Alert',
     folder: 'Product',
@@ -190,9 +194,10 @@ export const pqlAlert: Automation = {
       notes: [
         'Allow Re-entry on: every trial sends a snapshot every day, and each one has to be scored. The pql-alerted tag, not this setting, is what stops a second alert.',
         'Stop on Response off: the only message to the contact is the last step of its branch, so there is nothing left for a reply to stop.',
-        "Time Window 9 AM to 5 PM in the contact's time zone, every day. It holds the two emails only; the tag, the deal and the Slack post run at about 7 AM when the snapshot lands, so the AE has read the numbers before the prospect sees the email.",
-        'Every day, not weekdays only: a contact held over a weekend would still be active in the workflow when the next snapshots arrive, and GHL does not let an active contact re-enter, so a Sunday PQL would wait until Tuesday.',
+        "Time Window 9 AM to 5 PM in the contact's time zone. GHL documents that it holds communication actions and not tags, field updates or opportunities, so the tag, the deal and the Slack post run at about 7 AM when the snapshot lands and the AE has read the numbers before the prospect sees the email.",
+        'Include Days is every day, not weekdays only. Field-service owners run crews and do their admin on Saturdays, and the trial clock runs through the weekend. It also keeps holds short: GHL does not let a contact re-enter while still active, so a warm trial held from Saturday to Monday could miss the snapshot that makes it a PQL. The test plan checks how a second snapshot behaves during a hold.',
         "Sender Details: From Name Leo Park, From Email leo@crewlo.example, for the tip email. The AE email overrides both with the assigned user's name and email.",
+        'Inbound Webhook, Custom Code and Custom Webhook are premium, billed per execution: two per trial per day, plus one Slack post per alert.',
       ],
     },
     steps: [
@@ -203,7 +208,7 @@ export const pqlAlert: Automation = {
         title: 'Create/Update Contact',
         label: 'Map the snapshot',
         summary:
-          'GHL adds this step after an Inbound Webhook trigger. It finds the workspace owner by email (02 created them at trial.started) and refreshes Plan and Workspace ID from the payload. The counts go to the next step, not onto the contact.',
+          'GHL opens this step when the Inbound Webhook trigger is saved. It finds the workspace owner by email (02 created them at trial.started) and refreshes Plan and Workspace ID. It is also what gives the run a contact: without it the tag, the owner and the deal would have nothing to attach to. The counts go to the next step, not onto the contact.',
         run: ({ contact, now }) => {
           const p = snapshotOf(contact, now);
           return {
@@ -262,7 +267,7 @@ export const pqlAlert: Automation = {
                 kind: 'end',
                 title: 'End',
                 summary:
-                  "Sales already has this trial. Today's numbers are on the contact, so the AE's view stays current, and nothing else runs: no second Slack post, no second deal, no tip email.",
+                  "The branch ends here, with a Sticky Note saying why: sales already has this trial. Today's numbers are on the contact, so the AE's view stays current, and nothing else runs: no second Slack post, no second deal, no email.",
               },
             ],
           },
@@ -297,7 +302,7 @@ export const pqlAlert: Automation = {
                       branches: [
                         {
                           label: 'Enterprise',
-                          when: { type: 'field', key: 'segment', op: 'eq', value: 'Enterprise', label: 'Segment is Enterprise' },
+                          when: { type: 'field', key: 'segment', op: 'eq', value: 'enterprise', label: 'Segment is enterprise' },
                           nodes: [
                             {
                               id: 'assign-aisha',
@@ -308,16 +313,16 @@ export const pqlAlert: Automation = {
                               summary: 'Enterprise AE. Only Apply to Unassigned Contacts is off, so an account sitting with the SDR moves to the AE.',
                               run: ({ contact }) => {
                                 if (contact.assignedTo === 'aisha') return { log: "Already Aisha Rahman's from the demo, so the owner stays the same." };
-                                const prev = contact.assignedTo && USERS[contact.assignedTo];
+                                const prev = contact.assignedTo && users[contact.assignedTo]?.name;
                                 return { effect: { assignTo: 'aisha' }, log: `Assigned to Aisha Rahman${prev ? `, taking over from ${prev}` : ''}.` };
                               },
                             },
                             {
-                              id: 'goto-deal',
+                              id: 'goto-slack',
                               kind: 'goto',
                               title: 'Go To',
-                              target: 'opp',
-                              summary: "Joins Ben's path at the deal step, so the deal, the Slack post and the email are built once and stay the same for both AEs.",
+                              target: 'slack',
+                              summary: "Joins Ben's path at the #pql post, so the post, the deal lookup and the email are built once and read the same for both AEs.",
                             },
                           ],
                         },
@@ -331,35 +336,12 @@ export const pqlAlert: Automation = {
                             action: 'assign_user',
                             title: 'Assign To User',
                             label: 'Ben Carter',
-                            summary: 'Mid-market AE, and the owner for self-serve trials that never filled in the demo form. Only Apply to Unassigned Contacts is off here too.',
+                            summary:
+                              'Mid-market AE, and the owner for self-serve trials that never filled in the demo form. Only Apply to Unassigned Contacts is off here too, so a small team that Priya sent to the live demo moves to Ben once it grows.',
                             run: ({ contact }) => {
                               if (contact.assignedTo === 'ben') return { log: "Already Ben Carter's, so the owner stays the same." };
-                              const prev = contact.assignedTo && USERS[contact.assignedTo];
+                              const prev = contact.assignedTo && users[contact.assignedTo]?.name;
                               return { effect: { assignTo: 'ben' }, log: `Assigned to Ben Carter${prev ? `, taking over from ${prev}` : ''}.` };
-                            },
-                          },
-                          {
-                            id: 'opp',
-                            kind: 'action',
-                            action: 'create_opportunity',
-                            title: 'Create Opportunity',
-                            label: 'Trial Sales-Assist deal',
-                            summary:
-                              "New Business › Trial Sales-Assist, named after the company and seat count, Opportunity Value from the code's annual_value (seats × $29 × 12). Duplicate Opportunity off, so a demo-led trial keeps the deal it already has.",
-                            run: ({ contact, vars }) => {
-                              const owner = USERS[contact.assignedTo ?? ''] ?? 'the owner';
-                              const company = String(contact.fields.company ?? `${contact.firstName} ${contact.lastName}`);
-                              if (contact.opportunity) {
-                                return {
-                                  log: `Duplicate Opportunity is off and ${company} already has a deal in ${contact.opportunity.pipeline} › ${contact.opportunity.stage}, so no second one is created. ${owner} works the existing deal.`,
-                                };
-                              }
-                              const value = Number(vars.annual_value);
-                              const name = `${company} · ${vars.seats} seats`;
-                              return {
-                                effect: { opportunity: { pipeline: 'New Business', stage: 'Trial Sales-Assist', status: 'open', value, name } },
-                                log: `New deal "${name}" in New Business › Trial Sales-Assist, value ${money(value)} (${vars.seats} seats × $29 × 12), owned by ${owner}.`,
-                              };
                             },
                           },
                           {
@@ -369,28 +351,84 @@ export const pqlAlert: Automation = {
                             title: 'Custom Webhook',
                             label: 'Post to #pql',
                             summary:
-                              'Premium. Event CUSTOM, Method POST, Content-Type application/json, to a Slack incoming webhook for #pql. Block Kit fields with the score, the usage line, the owner and the phone number.',
+                              'Premium. Event CUSTOM, Method POST, Content-Type application/json, Block Kit in the Raw Body, to a Slack incoming webhook for #pql. Score, usage, seats at list price, trial end and the owner. No email or phone: more people read the channel than work the deal.',
                             message: {
                               channel: 'slack',
                               to: '#pql',
                               subject: 'PQL: {{contact.company_name}}, score {{contact.pql_score}}',
-                              body: '{{contact.name}}, {{contact.email}}, {{contact.phone}}\nOwner: {{user.name}}\nUsage: {{contact.trial_usage}}\nAt list price: {{contact.seats}} seats at {{custom_values.price_per_seat}}\nTrial ends: {{contact.trial_end}}\nWorkspace: {{contact.workspace_id}}',
+                              body: '{{contact.name}}, {{contact.company_name}}\nOwner: {{user.name}}\nUsage: {{contact.trial_usage}}\nAt list price: {{contact.seats}} seats at {{custom_values.price_per_seat}}\nTrial ends: {{contact.trial_end}}\nWorkspace: {{contact.workspace_id}}',
                             },
                             code: { language: 'json', source: slackPayload },
                           },
                           {
-                            id: 'email-ae',
-                            kind: 'action',
-                            action: 'send_email',
-                            title: 'Send Email',
-                            label: 'Hello from the AE',
-                            summary:
-                              "From Name and From Email set to the assigned user, so it comes from Aisha or Ben and the reply reaches them. Plain text, one link, no ask beyond 'reply if it helps'. The Time Window holds it until 9 AM, contact time.",
-                            message: {
-                              channel: 'email',
-                              subject: 'Your Crewlo trial, and a quick hello',
-                              body:
-                                "Hi {{contact.first_name}},\n\nI'm {{user.first_name}}, and I work with field-service teams on Crewlo. With {{contact.seats}} people on your board already, your team is clearly putting Crewlo to real use, so I wanted to say hello in case I can save you some time.\n\nTeams at this point usually ask about three things: getting the rest of the crew set up, how billing works ({{custom_values.price_per_seat}}), and what help looks like after the trial. If any of that is on your mind, reply here, or pick a time that suits you: {{trigger_link.book_demo}}\n\nIf you would rather keep going on your own, that is completely fine. Your trial runs until {{contact.trial_end}}.\n\n{{user.name}}\nCrewlo",
+                            id: 'find-opp',
+                            kind: 'ifelse',
+                            title: 'Find Opportunity',
+                            label: 'Open deal already?',
+                            branches: [
+                              {
+                                label: 'Opportunity Found',
+                                when: { type: 'all', label: 'Latest opportunity in New Business with Status Open', of: [{ type: 'opportunity', status: 'open' }] },
+                                nodes: [
+                                  {
+                                    id: 'update-opp',
+                                    kind: 'action',
+                                    action: 'update_opportunity',
+                                    title: 'Update Opportunity',
+                                    label: 'Trial Sales-Assist, never back',
+                                    summary:
+                                      'The card Find Opportunity picked moves to Trial Sales-Assist. Allow Opportunity to Move to Any Previous Stage is off, so a card at Demo Held or later stays where the AE put it. Value is left alone. No email follows: this contact asked for a demo, so the AE has already been in touch.',
+                                    run: ({ contact }) => {
+                                      const now = contact.opportunity?.stage ?? '';
+                                      if (stages.indexOf(now) > stages.indexOf('Trial Sales-Assist')) {
+                                        return { log: `The card is already at ${now}, and moving back is off, so it stays there. ${ownerOf(contact)} is already working this deal, so no intro email goes out.` };
+                                      }
+                                      return {
+                                        effect: { opportunity: { pipeline: 'New Business', stage: 'Trial Sales-Assist' } },
+                                        log: `Moved the card from ${now} to Trial Sales-Assist. ${ownerOf(contact)} already has the conversation, so no intro email goes out.`,
+                                      };
+                                    },
+                                  },
+                                ],
+                              },
+                            ],
+                            otherwise: {
+                              label: 'Opportunity Not Found',
+                              nodes: [
+                                {
+                                  id: 'create-opp',
+                                  kind: 'action',
+                                  action: 'create_opportunity',
+                                  title: 'Create Opportunity',
+                                  label: 'Trial Sales-Assist deal',
+                                  summary:
+                                    "New Business › Trial Sales-Assist, named after the company and seat count, source PQL, Opportunity Value from the code's annual_value (seats × $29 × 12). Duplicate Opportunity is on here on purpose: this step only runs when there is no open card, and with it off an old Lost card would block the new one.",
+                                  run: ({ contact, vars }) => {
+                                    const company = String(contact.fields.company_name ?? contact.fields.company ?? `${contact.firstName} ${contact.lastName}`);
+                                    const value = Number(vars.annual_value);
+                                    const name = `${company} · ${vars.seats} seats`;
+                                    const old = contact.opportunity ? ` The ${contact.opportunity.status} card from before stays as it is.` : '';
+                                    return {
+                                      effect: { opportunity: { pipeline: 'New Business', stage: 'Trial Sales-Assist', status: 'open', value, name } },
+                                      log: `New deal "${name}" in New Business › Trial Sales-Assist, value ${money(value)} (${vars.seats} seats × $29 × 12), owner ${ownerOf(contact)}.${old}`,
+                                    };
+                                  },
+                                },
+                                {
+                                  id: 'email-ae',
+                                  kind: 'action',
+                                  action: 'send_email',
+                                  title: 'Send Email',
+                                  label: 'Hello from the AE',
+                                  summary:
+                                    "From Name and From Email set to the assigned user, so it comes from Aisha or Ben and the reply reaches them. Plain text, one link, no ask beyond 'reply if it helps'. The Time Window holds it until 9 AM, contact time.",
+                                  message: {
+                                    channel: 'email',
+                                    subject: 'Your Crewlo trial, and a quick hello',
+                                    body: "Hi {{contact.first_name}},\n\nI'm {{user.first_name}}, and I help field-service teams get set up on Crewlo. Your team has {{contact.seats}} people on the Crewlo board already, so I wanted to say hello in case I can save you some time.\n\nAt this point teams usually ask about three things: getting the rest of the crew set up, how billing works ({{custom_values.price_per_seat}}), and what help looks like after the trial. If any of that is on your mind, reply here, or pick a time that suits you: {{trigger_link.book_demo}}\n\nIf you would rather keep going on your own, that is completely fine.\n\n{{user.name}}\n{{location.name}} | {{location.phone}}\n{{location.address}}",
+                                  },
+                                },
+                              ],
                             },
                           },
                         ],
@@ -416,7 +454,7 @@ export const pqlAlert: Automation = {
                       action: 'add_tag',
                       title: 'Add Contact Tag',
                       label: 'pql-tip-sent',
-                      summary: 'One tip per trial. Tomorrow\'s snapshot for a trial still in the 40s or 50s falls through to the None branch instead of getting another email.',
+                      summary: "One tip per trial. Tomorrow's snapshot for a trial still in the 40s or 50s falls through to the None branch instead of getting another email.",
                       effect: { addTags: ['pql-tip-sent'] },
                     },
                     {
@@ -429,8 +467,7 @@ export const pqlAlert: Automation = {
                       message: {
                         channel: 'email',
                         subject: 'One thing to try next in Crewlo',
-                        body:
-                          'Hi {{contact.first_name}},\n\nThanks for giving Crewlo a real try. From what you have set up so far, one change would make the biggest difference this week:\n\n{{contact.next_step}}\n\nThere is a short guide for it at {{custom_values.help_center}}. And if something is in the way, reply and tell me what it is. I read every reply.\n\nLeo Park\nCustomer Success, Crewlo',
+                        body: 'Hi {{contact.first_name}},\n\nThanks for giving Crewlo a real try. From what you have set up so far, one change would make the biggest difference this week:\n\n{{contact.next_step}}\n\nThere is a short guide for it at {{custom_values.help_center}}. And if something is in the way, reply and tell me what it is. I read every reply.\n\nLeo Park\nCustomer Success, Crewlo\n\n{{location.name}}, {{location.address}}',
                       },
                     },
                   ],
@@ -444,7 +481,7 @@ export const pqlAlert: Automation = {
                     kind: 'end',
                     title: 'End',
                     summary:
-                      'Below 40, or 40 to 69 with the tip already sent. No alert and no email today: the onboarding emails in 02 cover this stage, and tomorrow\'s snapshot scores the trial again.',
+                      "The branch ends here, with a Sticky Note saying why: below 40, or 40 to 69 with the tip already sent. No alert and no email today. The onboarding emails in 02 cover this stage, and tomorrow's snapshot scores the trial again.",
                   },
                 ],
               },
@@ -459,7 +496,7 @@ export const pqlAlert: Automation = {
       id: 'enterprise',
       label: 'Demo-led trial crosses 70',
       summary:
-        "Carlos had his demo with Aisha last week and started a trial the next day. Tuesday's snapshot scores 90: Aisha keeps the deal she already has, #pql hears at 7:02 AM, and her email goes at 9.",
+        "Carlos had his demo with Aisha last week and started a trial the next day. Tuesday's snapshot scores 90, and #pql hears at 7:02 AM. Find Opportunity finds her deal at Demo Held, which stays there, and no intro email goes out: she has already met him.",
       start: at(1, 7, 2),
       contact: {
         firstName: 'Carlos',
@@ -470,13 +507,14 @@ export const pqlAlert: Automation = {
         source: 'Website demo form',
         tags: ['trial', 'activated'],
         assignedTo: 'aisha',
-        opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', name: 'Harlow Mechanical Group' },
+        opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', value: 0, name: 'Harlow Mechanical Group' },
         fields: {
           company: 'Harlow Mechanical Group',
           company_name: 'Harlow Mechanical Group',
           company_size: '201-1,000',
           job_role: 'Operations or dispatch',
-          segment: 'Enterprise',
+          segment: 'enterprise',
+          fit_score: 90,
           plan: 'trial',
           trial_end: '03-11-2026',
           workspace_id: 'ws_4TN6RC',
@@ -485,16 +523,16 @@ export const pqlAlert: Automation = {
       events: [],
       expect: {
         outcome: 'completed',
-        visits: ['if-alerted:else', 'if-score:0', 'tag-pql', 'if-segment:0', 'assign-aisha', 'goto-deal', 'opp', 'slack', 'email-ae'],
+        visits: ['if-alerted:else', 'if-score:0', 'tag-pql', 'if-segment:0', 'assign-aisha', 'goto-slack', 'slack', 'find-opp:0', 'update-opp'],
         tags: ['pql-alerted'],
         stage: 'Demo Held',
       },
     },
     {
       id: 'self-serve',
-      label: 'Self-serve trial, email off',
+      label: 'Self-serve trial on a Saturday',
       summary:
-        "Megan signed up on her own on Monday and had 11 people on the board by Friday. Saturday's snapshot scores 80, so Ben gets a new deal and the Slack post. She asked Leo to stop the onboarding emails, so Email DND is on and the AE email is skipped; Ben calls instead.",
+        "Megan signed up on her own on Monday and had 11 people on the board by Friday. Saturday's snapshot scores 80. She has no deal, so Ben gets a new one in Trial Sales-Assist and the #pql post at 7:04 AM, and his email waits for the 9 AM window.",
       start: at(5, 7, 4),
       contact: {
         firstName: 'Megan',
@@ -504,14 +542,12 @@ export const pqlAlert: Automation = {
         timezone: 'America/New_York',
         source: 'Crewlo app signup',
         tags: ['trial', 'activated'],
-        dnd: { email: true },
         fields: { company: 'Doyle & Sons Plumbing', company_name: 'Doyle & Sons Plumbing', plan: 'trial', trial_end: '03-16-2026', workspace_id: 'ws_6PB3HX' },
       },
       events: [],
       expect: {
         outcome: 'completed',
-        visits: ['if-score:0', 'if-segment:else', 'assign-ben', 'opp', 'slack'],
-        skips: ['email-ae'],
+        visits: ['if-score:0', 'if-segment:else', 'assign-ben', 'slack', 'find-opp:else', 'create-opp', 'email-ae'],
         tags: ['pql-alerted'],
         stage: 'Trial Sales-Assist',
       },
@@ -568,13 +604,14 @@ export const pqlAlert: Automation = {
         source: 'Website demo form',
         tags: ['trial', 'activated', 'pql-alerted'],
         assignedTo: 'aisha',
-        opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', name: 'Harlow Mechanical Group' },
+        opportunity: { pipeline: 'New Business', stage: 'Demo Held', status: 'open', value: 0, name: 'Harlow Mechanical Group' },
         fields: {
           company: 'Harlow Mechanical Group',
           company_name: 'Harlow Mechanical Group',
           company_size: '201-1,000',
           job_role: 'Operations or dispatch',
-          segment: 'Enterprise',
+          segment: 'enterprise',
+          fit_score: 90,
           plan: 'trial',
           trial_end: '03-11-2026',
           workspace_id: 'ws_4TN6RC',
@@ -591,15 +628,20 @@ export const pqlAlert: Automation = {
   dataModel: {
     customFields: [
       { name: 'Product Score', key: 'pql_score', type: 'Number', note: '0 to 100, rewritten by every snapshot. The If/Else reads this field, not the raw code output.' },
-      { name: 'Seats', key: 'seats', type: 'Number', note: 'People invited plus the owner. Deal value is Seats × $29 × 12.' },
+      {
+        name: 'Seats',
+        key: 'seats',
+        type: 'Number',
+        note: 'People invited plus the owner, rewritten every morning while the trial runs. Deal value is Seats × $29 × 12. The AE sets the number sold right before marking Won (05), since the next snapshot would overwrite an earlier edit.',
+      },
       { name: 'Trial Usage', key: 'trial_usage', type: 'Single line', note: 'One line for the AE: seats, jobs, integrations, active days' },
       { name: 'Next Step', key: 'next_step', type: 'Multi line', note: 'The tip for the weakest signal. The tip email merges it, and the AE can read it on the contact.' },
     ],
     tags: [
-      { name: 'pql-alerted', note: 'Sales has been alerted about this trial. Added first on the PQL path; the guard reads it' },
-      { name: 'pql-tip-sent', note: 'Has had the one tip email this trial' },
+      { name: 'pql-alerted', note: 'Sales has been alerted about this trial. Added first on the PQL path; the guard reads it. 02 clears it when a new trial starts' },
+      { name: 'pql-tip-sent', note: 'Has had the one tip email this trial. 02 clears it when a new trial starts' },
     ],
-    pipeline: { name: 'New Business', stages: ['Demo Requested', 'Demo Booked', 'Trial Sales-Assist', 'Demo Held', 'Proposal', 'Closed Won', 'Onboarding'] },
+    pipeline: { name: 'New Business', stages },
     customValues: [
       { name: 'Price Per Seat', key: 'price_per_seat', value: '$29 per user per month' },
       { name: 'Help Center', key: 'help_center', value: 'help.crewlo.example' },
@@ -608,15 +650,15 @@ export const pqlAlert: Automation = {
   build: [
     {
       title: 'Define a PQL with sales and product',
-      body: "Hana, both AEs and Crewlo's product team agreed on four signals the app already counts: people invited, jobs scheduled, integrations connected and days active. Team size carries the most weight, because a sales call only pays for itself on a team big enough to need one, and the bar is 70 out of 100. The weights live in one Custom Code step, so changing them is an edit in GHL, not a release of the app.",
+      body: "Hana, both AEs and Crewlo's product team agreed on four signals the app already counts: people invited, jobs scheduled, integrations connected and days active. Team size carries the most weight, because a sales call only pays for itself on a team big enough to need one, and the bar is 70 out of 100. With nobody invited the most a trial can score is 65, so solo operators never page sales. The weights live in one Custom Code step, so changing them is an edit in GHL, not a release of the app.",
     },
     {
       title: 'One snapshot a day, totals to date',
-      body: 'The app posts usage.snapshot for every trial workspace at about 7 AM, workspace time. It sends totals for the trial so far rather than the day\'s change, so a failed snapshot loses nothing: the next one catches up. Once a day is enough for a sales alert, and each run of the premium trigger and Custom Code is billed as an execution, so the app does not send one per click.',
+      body: "The app posts usage.snapshot for every trial workspace at about 7 AM, workspace time. It sends totals for the trial so far rather than the day's change, so a failed snapshot loses nothing: the next one catches up. Once a day is enough for a sales alert, and the premium trigger and Custom Code are billed per execution, so the app does not send one per click.",
     },
     {
       title: 'Trigger, Mapping Reference, contact',
-      body: "Inbound Webhook, one staging event, Test Trigger, then that request saved as the Mapping Reference. GHL adds Create/Update Contact after the trigger; it finds the owner by email and refreshes Plan and Workspace ID. The four counts and the plan go into Custom Code as properties, picked from the Inbound Webhook trigger's Body values.",
+      body: "Inbound Webhook, one staging event, Test Trigger, then that request saved as the Mapping Reference. GHL then opens Create/Update Contact, which finds the owner by email and refreshes Plan and Workspace ID. That step matters more than it looks: an Inbound Webhook run starts without a contact, and Create Opportunity cannot make a deal without one. The four counts and the plan go into Custom Code as properties, picked from the Inbound Webhook trigger's Body values.",
     },
     {
       title: 'Score, then save before deciding',
@@ -624,15 +666,15 @@ export const pqlAlert: Automation = {
     },
     {
       title: 'Guards before anything talks',
-      body: 'The numbers save on every run, alerted or not, so the AE always sees current usage. Only then does the If/Else check for pql-alerted, and the PQL path adds that tag as its very first step. Warm trials get one tip per trial, guarded the same way by pql-tip-sent.',
+      body: 'The numbers save on every run, alerted or not, so the AE always sees current usage. Only then does the If/Else check for pql-alerted, and the PQL path adds that tag as its very first step. Warm trials get one tip per trial, guarded the same way by pql-tip-sent. 02 clears both tags when a new trial starts, so a returning company can be alerted again.',
     },
     {
-      title: 'Route, record, tell sales',
-      body: "An If/Else on Segment sends enterprise accounts to Aisha and everyone else to Ben, with Only Apply to Unassigned Contacts off so an account moves from the SDR to an AE. Aisha's branch ends in a Go To that joins Ben's path, so the deal, the post and the email exist once. Create Opportunity has Duplicate Opportunity off and takes its value from annual_value. The post is a Custom Webhook to a Slack incoming webhook for #pql, because I wanted Block Kit fields that read well on a phone.",
+      title: 'Route, tell sales, then the deal',
+      body: "An If/Else on Segment sends enterprise accounts to Aisha and everyone else to Ben, with Only Apply to Unassigned Contacts off so an account moves from the SDR to an AE. Aisha's branch ends in a Go To that joins Ben's path. The #pql post is a Custom Webhook to a Slack incoming webhook, because I wanted Block Kit fields that read well on a phone, and like #demo-requests it carries no email or phone. Then Find Opportunity (Latest, Pipeline is New Business, Status is Open), the same pattern as 01. Found: Update Opportunity moves an early card to Trial Sales-Assist and never backwards. Not Found: Create Opportunity, value from annual_value, Duplicate Opportunity on because GHL checks duplicates by contact, so an old Lost card would otherwise block the new one.",
     },
     {
       title: 'Emails a person would send',
-      body: "The AE email sets From Name and From Email to the assigned user, so it comes from Aisha or Ben and the reply reaches them. It is plain text with one link and no pressure. The tip email comes from Leo, like the onboarding emails in 02, with the tip merged from Next Step. The workflow Time Window holds both to 9 AM to 5 PM in the contact's time zone, and both carry Crewlo's postal address and an unsubscribe link in the footer.",
+      body: "Only a trial without an open deal gets the AE email: anyone with a card has asked for a demo, and a 'nice to meet you' from the rep who ran it would give the automation away. The email sets From Name and From Email to the assigned user, is plain text with one link, and asks for nothing. The tip email comes from Leo, like the onboarding emails in 02, with the tip merged from Next Step. The workflow Time Window holds both to 9 AM to 5 PM in the contact's time zone. Both carry Crewlo's postal address, and the template footer has the unsubscribe link.",
     },
     {
       title: 'Test with staging payloads',
@@ -641,16 +683,16 @@ export const pqlAlert: Automation = {
   ],
   edgeCases: [
     {
-      title: 'Tomorrow\'s snapshot, same trial',
+      title: "Tomorrow's snapshot, same trial",
       body: 'Re-entry is on, so it runs and the numbers update. The pql-alerted guard then ends the run before anything reaches sales or the contact. The tag goes on first, so even a failed Slack post cannot lead to a second alert.',
     },
     {
       title: 'The trial already has a deal',
-      body: 'A demo-led trial has a deal from 01 · Demo Request. Duplicate Opportunity is off and GHL checks it by contact, so no second deal appears and the AE works the one they have. The catch: an old lost deal blocks a new one too, so the SOP says to reopen it and move it to Trial Sales-Assist.',
+      body: 'A demo-led trial has a card from 01 · Demo Request. Find Opportunity picks it up, and Update Opportunity moves it to Trial Sales-Assist only from an earlier stage, so a card at Demo Held or Proposal stays put, value and all. No intro email goes out, because the AE has already met them; the #pql post tells them their deal is being used for real. Contact and opportunity owners are not decoupled in this sub-account, so a card that sat with Priya should follow the contact to the AE. The test plan checks that before launch.',
     },
     {
       title: 'Email DND',
-      body: 'GHL skips the AE email, and the tag, the deal and the Slack post still happen. The post carries the phone number, and the contact the AE opens from it shows Email DND, so they call instead. On the tip path the email is skipped the same way. The tag still goes on, so lifting DND later does not send a stale tip.',
+      body: 'GHL skips the AE email, and the tag, the deal and the Slack post still happen. The AE sees Email DND on the contact and calls instead. On the tip path the email is skipped the same way. The tag still goes on, so lifting DND later does not send a stale tip.',
     },
     {
       title: 'A big team that skipped the demo form',
@@ -658,22 +700,22 @@ export const pqlAlert: Automation = {
     },
     {
       title: 'Slack is down, or the webhook URL is revoked',
-      body: 'The Custom Webhook fails, and GHL retries or marks the step failed and moves on. The deal and the email do not depend on Slack, and Execution Logs show the failure. The incoming webhook URL is a secret in itself, so it lives only in this step.',
+      body: 'Depending on the error, GHL marks the Custom Webhook failed and skips it, or retries it with exponential backoff, and the deal lookup waits behind the retries. Either way the deal and the email still happen, and Execution Logs show the failure. The incoming webhook URL is a secret in itself, so it lives only in this step.',
     },
     {
-      title: 'A paying workspace sends a snapshot',
-      body: 'The app should stop sending snapshots once a workspace buys. If one slips through, plan is no longer trial, the code returns a score of 0, and nothing reaches sales about a paying customer.',
+      title: 'A paying or expired workspace sends a snapshot',
+      body: 'The app should stop sending snapshots once a workspace buys or its trial ends. If one slips through, plan is no longer trial, the code returns a score of 0, and nothing reaches sales about a paying customer or a lapsed trial.',
     },
   ],
   qa: [
     'Staging snapshot with known numbers: Product Score, Seats, Trial Usage and Next Step match a hand calculation',
-    'Score 70+ with no segment: owner Ben, deal at Trial Sales-Assist with value Seats × $348, one #pql post, one email from Ben inside the 9 to 5 window',
-    'Segment Enterprise with an existing Demo Held deal: owner Aisha, no second deal, post and email from Aisha',
-    'Same payload twice, then a higher one the next morning: one alert, one deal, one email, and the fields still update',
-    'Score 40 to 69: one tip about the weakest signal; a second warm snapshot sends nothing',
-    'Email DND at 70+: the email shows as skipped in Execution Logs; the deal and the post still happen',
-    'plan set to anything but trial: score 0 and no alert',
-    'Replies to both emails land in Conversations; the footer shows the address and the unsubscribe link in Gmail and Outlook',
+    "Score 70+, no segment, no deal: owner Ben, a card in Trial Sales-Assist valued at Seats × $348, one #pql post at once, and Ben's email held until 9 AM",
+    'Segment enterprise with an open Demo Held card: owner Aisha, the card stays in Demo Held with its value, no second card, a #pql post and no email',
+    'Segment small with an open Demo Booked card owned by Priya: contact and card move to Ben, and the card moves to Trial Sales-Assist',
+    'Only a Lost card on the record: a new open card appears in Trial Sales-Assist next to it',
+    'Same payload twice, then a higher one the next morning: one alert, one deal, one email, and the fields still update. A second snapshot while an email is held: Enrollment History shows what GHL did with it',
+    'Score 40 to 69: one tip about the weakest signal, and a second warm snapshot sends nothing. Email DND: the email shows as skipped. Plan other than trial: score 0 and no alert',
+    'The #pql post shows no email or phone. Both emails show the postal address and unsubscribe link in Gmail and Outlook, and replies land in Conversations for the sender',
   ],
   snippets: [
     {
@@ -692,7 +734,7 @@ export const pqlAlert: Automation = {
       title: '#pql Slack post (Custom Webhook body)',
       language: 'json',
       code: slackPayload,
-      note: 'Event CUSTOM, Method POST, Content-Type application/json, sent to a Slack incoming webhook for #pql. The text line is the fallback for notifications; the blocks are what people see in the channel.',
+      note: 'Event CUSTOM, Method POST, Content-Type application/json, sent to a Slack incoming webhook for #pql. The text line is the fallback for notifications; the blocks are what people see in the channel. No email or phone in a channel.',
     },
   ],
   features: [
@@ -706,10 +748,13 @@ export const pqlAlert: Automation = {
     'Add Contact Tag',
     'Assign To User',
     'Go To',
-    'Create Opportunity',
     'Custom Webhook',
+    'Find Opportunity',
+    'Update Opportunity',
+    'Create Opportunity',
     'Send Email',
     'Allow Re-entry',
     'Time Window',
+    'Sticky Notes',
   ],
 };
