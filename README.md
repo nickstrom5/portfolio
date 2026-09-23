@@ -120,6 +120,58 @@ form). It exits non-zero with a findings list. Needs Playwright with
 Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
 A weekly routine runs this and reports.
 
+## GoHighLevel case studies (`/ghl/`)
+
+Three switchable case studies of GoHighLevel builds, each a fictional
+business with its own sample sub-account, a working landing page and a set
+of connected workflows:
+
+- **Harbor & Pine Roofing** (small local business): speed to lead,
+  missed-call text-back, inspection reminders, estimate follow-up, job
+  hand-off, reviews and referrals, database reactivation.
+- **Crewlo** (B2B SaaS): demo routing, trial onboarding from product events
+  over Inbound Webhooks, product-qualified lead alerts, trial ending,
+  closed-won hand-off, NPS routing.
+- **Trailhead Career Coaching** (online coach): workshop registration and
+  reminders, checkout recovery, course onboarding, failed payments,
+  coaching applications, completion and testimonials.
+
+Each workflow renders as a GHL-builder-style canvas and runs in an
+in-browser simulator on sample test contacts, or on whoever fills in that
+case's landing-page form. Nothing is sent anywhere.
+
+| What | Where |
+| --- | --- |
+| The three cases, in page order | `src/data/ghl/index.ts` |
+| A case's sub-account (team, pipeline, custom values, field labels) | `src/data/ghl/<case>/business.ts` (roofing: `src/data/ghl/business.ts`) |
+| A case's landing page (copy, fields, consent, post-submit choices) | `src/data/ghl/<case>/landing.ts` (roofing: `src/data/ghl/landing.ts`) |
+| One file per workflow | `src/data/ghl/<case>/automations/*.ts` (roofing: `src/data/ghl/automations/`) |
+| Data model (triggers, steps, settings, scenarios) | `src/lib/ghl/types.ts` |
+| The simulator (waits, branches, goals, DND, time windows) | `src/lib/ghl/engine.ts` |
+| Case view, canvas, simulator panel, landing demo | `src/components/ghl/` |
+| Page, compliance and troubleshooting copy | `src/pages/ghl.astro` |
+| Styles | `src/styles/ghl.css` |
+
+After editing a workflow, run:
+
+```bash
+npm run ghl:check                                          # every case
+npm run ghl:check -- src/data/ghl/saas/automations/pql-alert.ts   # one file
+```
+
+It runs every test scenario through the simulator and fails if a run ends
+differently than its `expect` block says, a step or branch is never reached,
+a message has an unresolved `{{merge_field}}`, an SMS is longer than two
+segments or contains characters that force UCS-2 encoding, or a landing
+page points at a workflow or scenario that does not exist.
+
+Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
+of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To
+attach proof of a live build (a Loom or screenshots of a real sub-account),
+add a `proof` array to that workflow's file. The page is linked from the
+footer only; to put it in the top nav, remove the `/ghl` filter in
+`src/data/site.ts`.
+
 ## SignalRig (GTM engineering showcase)
 
 `signalrig/` is a separate Next.js app: a client-facing showcase with

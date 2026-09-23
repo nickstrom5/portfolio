@@ -1,0 +1,86 @@
+---
+/** Small stroke icons for workflow steps. 24px grid, currentColor. */
+export type IconName =
+  | 'bolt'
+  | 'sms'
+  | 'mail'
+  | 'bell'
+  | 'tag'
+  | 'pipeline'
+  | 'user'
+  | 'field'
+  | 'note'
+  | 'task'
+  | 'webhook'
+  | 'code'
+  | 'flow'
+  | 'star'
+  | 'slack'
+  | 'sheet'
+  | 'dnd'
+  | 'voicemail'
+  | 'math'
+  | 'ai'
+  | 'clock'
+  | 'split'
+  | 'flag'
+  | 'stop'
+  | 'phone'
+  | 'check'
+  | 'play'
+  | 'skip'
+  | 'reset'
+  | 'copy'
+  | 'invoice'
+  | 'card'
+  | 'book'
+  | 'calendar';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+}
+const { name, size = 18, class: cls } = Astro.props;
+
+const paths: Record<IconName, string> = {
+  bolt: 'M13 2 4 14h7l-1 8 9-12h-7l1-8z',
+  sms: 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12zM8.5 12h.01M12 12h.01M15.5 12h.01',
+  mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  bell: 'M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10.3 20a2 2 0 0 0 3.4 0',
+  tag: 'M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9zM7.5 7.5h.01',
+  pipeline: 'M3 5h18M6 12h12M9 19h6',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  field: 'M4 6h16M4 12h10M4 18h7M17 15l3 3-3 3',
+  note: 'M5 3h10l4 4v14H5zM14 3v5h5M8 13h8M8 17h5',
+  task: 'M4 12l4 4 8-9M4 4h16v16H4z',
+  webhook: 'M8.5 15.5a4 4 0 1 1 1.4-6.9M12 7l3.8 6.6M9 18h7a4 4 0 1 0-1.2-7.8',
+  code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16',
+  flow: 'M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3v6M6 21V15M3 18l3 3 3-3',
+  star: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z',
+  slack: 'M9 3a2 2 0 0 0 0 4h2V5a2 2 0 0 0-2-2zM3 15a2 2 0 0 0 4 0v-2H5a2 2 0 0 0-2 2zM15 21a2 2 0 0 0 0-4h-2v2a2 2 0 0 0 2 2zM21 9a2 2 0 0 0-4 0v2h2a2 2 0 0 0 2-2zM9 9h6v6H9z',
+  sheet: 'M4 3h16v18H4zM4 9h16M4 15h16M10 3v18',
+  dnd: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM5.6 5.6l12.8 12.8',
+  voicemail: 'M6.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM17.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM6.5 16h11',
+  math: 'M5 7h6M8 4v6M14 7h5M5 17l4-4M9 17l-4-4M14 15h5M14 19h5',
+  ai: 'M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+  split: 'M12 3v6M12 9l-6 6v6M12 9l6 6v6',
+  flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
+  stop: 'M8 3h8l5 5v8l-5 5H8l-5-5V8zM9 9h6v6H9z',
+  phone: 'M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2',
+  check: 'M4 12l5 5L20 6',
+  play: 'M7 4l13 8-13 8z',
+  skip: 'M5 4l10 8-10 8zM19 5v14',
+  reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  invoice: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3',
+  card: 'M3 6h18v12H3zM3 10h18M7 15h3',
+  book: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 5v16M8 7h7',
+  calendar: 'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4',
+};
+---
+
+<svg class={cls} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <path d={paths[name]} />
+</svg>

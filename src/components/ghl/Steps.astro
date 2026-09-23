@@ -1,0 +1,187 @@
+---
+/**
+ * Renders a list of workflow steps the way the GHL builder lays them out:
+ * one card per step, If/Else splits into branches that each run to their own
+ * END. Recursive through Astro.self. Styles live in src/styles/ghl.css
+ * because the simulator adds state classes at run time.
+ */
+import type { Step, ActionKind } from '@/lib/ghl/types';
+import { describeCondition, formatDuration } from '@/lib/ghl/engine';
+import Icon, { type IconName } from './Icon.astro';
+
+interface Props {
+  steps: Step[];
+  depth?: number;
+  /** Names of every step in the workflow, for Go To labels. */
+  names?: Record<string, string>;
+}
+const { steps, depth = 0, names = {} } = Astro.props;
+const targetName = (id: string) => names[id] ?? id;
+
+const actionIcon: Record<ActionKind, IconName> = {
+  send_sms: 'sms',
+  send_email: 'mail',
+  internal_notification: 'bell',
+  add_tag: 'tag',
+  remove_tag: 'tag',
+  create_opportunity: 'pipeline',
+  update_opportunity: 'pipeline',
+  assign_user: 'user',
+  update_field: 'field',
+  add_note: 'note',
+  add_task: 'task',
+  webhook: 'webhook',
+  custom_code: 'code',
+  add_to_workflow: 'flow',
+  remove_from_workflow: 'flow',
+  review_request: 'star',
+  slack: 'slack',
+  google_sheets: 'sheet',
+  dnd: 'dnd',
+  voicemail: 'voicemail',
+  math: 'math',
+  drip: 'clock',
+  appointment_status: 'task',
+  invoice: 'invoice',
+  charge: 'card',
+  course_access: 'book',
+  event_date: 'calendar',
+  ai: 'ai',
+};
+
+const tone = (a: ActionKind) => {
+  if (['send_sms', 'send_email', 'voicemail', 'review_request', 'invoice'].includes(a)) return 'comms';
+  if (['internal_notification', 'slack', 'add_task', 'add_note'].includes(a)) return 'team';
+  if (['webhook', 'custom_code', 'google_sheets', 'math', 'ai', 'drip'].includes(a)) return 'dev';
+  return 'crm';
+};
+
+/** Splits a message into text and {{merge}} tokens so the tokens can be highlighted. */
+const segments = (body: string) => body.split(/(\{\{\s*[\w.]+\s*\}\})/g).filter(Boolean);
+
+const last = steps[steps.length - 1];
+const needsEnd = !last || !(last.kind === 'ifelse' || last.kind === 'end' || last.kind === 'goto' || (last.kind === 'wait' && last.branches));
+---
+
+{steps.map((s) => (
+  s.kind === 'action' ? (
+    <li class={`g-step g-tone-${tone(s.action)}`} data-node={s.id}>
+      <div class="g-card">
+        <span class="g-ico"><Icon name={actionIcon[s.action]} /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          {s.label && <span class="g-name">{s.label}</span>}
+          <p class="g-sum">{s.summary}</p>
+          {s.message && (
+            <p class="g-msg">
+              {s.message.subject && <span class="g-subj">{segments(s.message.subject).map((seg) => (/^\{\{/.test(seg) ? <code class="g-merge">{seg}</code> : seg))}</span>}
+              {segments(s.message.body).map((seg) => (/^\{\{/.test(seg) ? <code class="g-merge">{seg}</code> : seg))}
+            </p>
+          )}
+          {s.code && (
+            <details class="g-code">
+              <summary>{s.code.language === 'javascript' ? 'View the code' : 'View the payload'}</summary>
+              <pre><code>{s.code.source}</code></pre>
+            </details>
+          )}
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+    </li>
+  ) : s.kind === 'wait' ? (
+    <li class:list={['g-step', 'g-tone-wait', { 'g-has-branches': !!s.branches }]} data-node={s.id}>
+      <div class="g-card g-card-wait">
+        <span class="g-ico"><Icon name="clock" /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          <span class="g-name">{s.label ?? (s.minutes ? formatDuration(s.minutes) : s.title)}</span>
+          <p class="g-sum">{s.summary}</p>
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+      {s.branches && (
+        <div class="g-branches" style="--n: 2" data-n="2">
+          {[{ key: 'met', b: s.branches.met }, { key: 'timeout', b: s.branches.timeout }].map(({ key, b }) => (
+            <div class="g-branch" data-branch={`${s.id}:${key}`}>
+              <div class="g-branch-head">
+                <span class="g-b-label">{b.label}</span>
+              </div>
+              <ol class="g-steps">
+                <Astro.self steps={b.nodes} depth={depth + 1} names={names} />
+              </ol>
+            </div>
+          ))}
+        </div>
+      )}
+    </li>
+  ) : s.kind === 'ifelse' ? (
+    <li class="g-step g-tone-logic g-has-branches" data-node={s.id}>
+      <div class="g-card g-card-logic">
+        <span class="g-ico"><Icon name="split" /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          {s.label && <span class="g-name">{s.label}</span>}
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+      <div class="g-branches" style={`--n: ${s.branches.length + 1}`} data-n={s.branches.length + 1}>
+        {s.branches.map((b, i) => (
+          <div class="g-branch" data-branch={`${s.id}:${i}`}>
+            <div class="g-branch-head">
+              <span class="g-b-label">{b.label}</span>
+              <span class="g-b-cond">{describeCondition(b.when)}</span>
+            </div>
+            <ol class="g-steps">
+              <Astro.self steps={b.nodes} depth={depth + 1} names={names} />
+            </ol>
+          </div>
+        ))}
+        <div class="g-branch" data-branch={`${s.id}:else`}>
+          <div class="g-branch-head">
+            <span class="g-b-label">{s.otherwise.label}</span>
+            <span class="g-b-cond">None of the above</span>
+          </div>
+          <ol class="g-steps">
+            <Astro.self steps={s.otherwise.nodes} depth={depth + 1} names={names} />
+          </ol>
+        </div>
+      </div>
+    </li>
+  ) : s.kind === 'goto' ? (
+    <li class="g-step g-tone-logic" data-node={s.id}>
+      <div class="g-card">
+        <span class="g-ico"><Icon name="flow" /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          <span class="g-name">→ {targetName(s.target)}</span>
+          <p class="g-sum">{s.summary}</p>
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+    </li>
+  ) : s.kind === 'goal' ? (
+    <li class="g-step g-tone-goal" data-node={s.id}>
+      <div class="g-card">
+        <span class="g-ico"><Icon name="flag" /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          {s.label && <span class="g-name">{s.label}</span>}
+          <p class="g-sum">{s.summary}</p>
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+    </li>
+  ) : (
+    <li class="g-step g-tone-end" data-node={s.id}>
+      <div class="g-card g-card-end">
+        <span class="g-ico"><Icon name="stop" /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.title}</span>
+          {s.summary && <p class="g-sum">{s.summary}</p>}
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+    </li>
+  )
+))}
+{needsEnd && <li class="g-endcap" aria-label="End of branch"><span>End</span></li>}
