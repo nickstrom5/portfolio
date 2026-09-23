@@ -1,80 +1,94 @@
 ---
 /**
- * The landing page that feeds workflow 01, rebuilt as a working demo. It
- * mirrors how the page is built in the GHL funnel builder: one goal, a short
- * single-column form, two optional SMS consent boxes and hidden UTM fields.
- * Submitting turns the visitor into the test contact for workflow 01.
- * Nothing is sent anywhere; see src/pages/ghl.astro for the wiring.
+ * A case study's landing page, rebuilt as a working demo. It mirrors how the
+ * page is built in the GHL funnel builder: one goal, a short single-column
+ * form, two optional SMS consent boxes and hidden UTM fields. Submitting
+ * turns the visitor into the test contact for the workflow the form feeds.
+ * Nothing is sent anywhere; src/lib/ghl/page.ts does the wiring.
  */
-import { business, env } from '@/data/ghl/business';
+import type { LandingField, LandingPage } from '@/lib/ghl/types';
 import Icon from './Icon.astro';
 
-const services = ['Storm damage', 'Leak or repair', 'Full replacement', 'Not sure yet'];
-const ages = ['Under 10 years', '10-20 years', 'Over 20 years', 'Not sure'];
+interface Props {
+  caseId: string;
+  landing: LandingPage;
+  /** "01 · Speed to Lead" style name of the workflow the form feeds. */
+  feedsName: string;
+}
+const { caseId, landing: l, feedsName } = Astro.props;
+const c = l.brand.colors;
+const style = `--lp-primary:${c.primary};--lp-primary-dark:${c.primaryDark};--lp-bg:${c.bg};--lp-accent:${c.accent};--lp-accent-ink:${c.accentInk};--lp-ink:${c.ink};--lp-muted:${c.muted};--lp-logo:${c.logo}`;
+const logos = {
+  pine: 'M12 2 5 12h3l-4 6h6v4h4v-4h6l-4-6h3z',
+  leaf: 'M4 20C4 10 10 4 20 4c0 10-6 16-16 16z',
+  peak: 'M2 20 9 7l4 6 3-4 6 11z',
+};
+
+// Pair "half" fields with the field after them.
+const rows: LandingField[][] = [];
+for (let i = 0; i < l.fields.length; i++) {
+  const f = l.fields[i];
+  if (f.half && l.fields[i + 1]) rows.push([f, l.fields[++i]]);
+  else rows.push([f]);
+}
+const titleId = `${caseId}-demo-side-title`;
 ---
 
-<div class="gx-demo" data-demo>
+<div class="gx-demo" data-demo={caseId}>
   <div class="gx-browser">
     <div class="gx-chrome" aria-hidden="true">
       <span></span><span></span><span></span>
-      <em>{env.location.website}/free-inspection</em>
+      <em>{l.url}</em>
     </div>
-    <div class="lp" data-lp>
+    <div class="lp" style={style}>
       <div class="lp-top">
         <span class="lp-logo">
-          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 5 12h3l-4 6h6v4h4v-4h6l-4-6h3z" fill="currentColor" /></svg>
-          {business.name}
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d={logos[l.brand.logo]} fill="currentColor" /></svg>
+          {l.brand.name}
         </span>
-        <span class="lp-phone">{env.location.phone}</span>
+        {l.brand.phone && <span class="lp-phone">{l.brand.phone}</span>}
       </div>
       <div class="lp-hero">
         <div class="lp-copy">
-          <p class="lp-kicker">{business.area} · Free inspection</p>
-          <p class="lp-h">Storm damage? Get a free roof inspection this week.</p>
-          <p class="lp-sub">A local crew checks your roof, photographs anything that needs attention and leaves a written estimate. No pressure and no cost.</p>
+          <p class="lp-kicker">{l.kicker}</p>
+          <p class="lp-h">{l.headline}</p>
+          <p class="lp-sub">{l.sub}</p>
           <ul class="lp-points">
-            <li><Icon name="check" size={16} />Licensed and insured</li>
-            <li><Icon name="check" size={16} />Photos of every issue we find</li>
-            <li><Icon name="check" size={16} />Help with insurance claims</li>
+            {l.points.map((p) => <li><Icon name="check" size={16} />{p}</li>)}
           </ul>
         </div>
 
         <div class="lp-card">
           <form class="lp-form" data-lp-form novalidate>
-            <p class="lp-form-title">Book your free inspection</p>
-            <div class="lp-row">
-              <label>First name<input name="first" autocomplete="given-name" required /></label>
-              <label>Last name<input name="last" autocomplete="family-name" /></label>
-            </div>
-            <label>Mobile phone<input name="phone" type="tel" autocomplete="tel" required placeholder="(312) 555-0100" /></label>
-            <label>Email<input name="email" type="email" autocomplete="email" required /></label>
-            <label>What do you need?
-              <select name="service" required>
-                <option value="">Choose one</option>
-                {services.map((s) => <option>{s}</option>)}
-              </select>
-            </label>
-            <label>How old is the roof?
-              <select name="age">
-                {ages.map((s, i) => <option selected={i === 3}>{s}</option>)}
-              </select>
-            </label>
-            <label class="lp-check"><input type="checkbox" name="sms" />
-              <span>Text me about my inspection request: scheduling, reminders and updates from {business.name}. Message frequency varies. Msg &amp; data rates may apply. Reply HELP for help, STOP to opt out.</span>
-            </label>
-            <label class="lp-check"><input type="checkbox" name="smsMarketing" />
-              <span>Also text me occasional offers and seasonal roof reminders. Reply STOP to opt out.</span>
-            </label>
-            <p class="lp-fine">Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service</p>
+            <p class="lp-form-title">{l.formTitle}</p>
+            {rows.map((row) => {
+              const field = (f: LandingField) =>
+                f.type === 'select' ? (
+                  <label>{f.label}
+                    <select name={f.name} required={f.required}>
+                      {!f.initial && <option value="">Choose one</option>}
+                      {f.options!.map((o) => <option selected={o === f.initial}>{o}</option>)}
+                    </select>
+                  </label>
+                ) : (
+                  <label>{f.label}<input name={f.name} type={f.type} autocomplete={f.autocomplete} required={f.required} placeholder={f.placeholder} /></label>
+                );
+              return row.length === 2 ? <div class="lp-row">{field(row[0])}{field(row[1])}</div> : field(row[0]);
+            })}
+            <label class="lp-check"><input type="checkbox" name="sms" /><span>{l.consent.transactional}</span></label>
+            <label class="lp-check"><input type="checkbox" name="smsMarketing" /><span>{l.consent.marketing}</span></label>
+            <p class="lp-fine">{l.consent.fine}</p>
             <p class="lp-error" data-lp-error role="alert" hidden></p>
-            <button class="lp-submit" type="submit">Get my free inspection</button>
+            <button class="lp-submit" type="submit">{l.submitLabel}</button>
           </form>
           <div class="lp-thanks" data-lp-thanks hidden tabindex="-1">
-            <p class="lp-form-title">Thanks, <span data-lp-name></span>. Your request is in.</p>
-            <p>Step 2 of 2: pick a time. In the live funnel, the Roof Inspection calendar sits here, already filled in with your details by Sticky Contact.</p>
-            <div class="lp-slots" aria-hidden="true">
-              <span>Thu 10:00 AM</span><span>Thu 2:30 PM</span><span>Fri 9:00 AM</span>
-            </div>
+            <p class="lp-form-title" data-lp-thanks-title></p>
+            <p>{l.thanks.body}</p>
+            {l.thanks.slots && (
+              <div class="lp-slots" aria-hidden="true">
+                {l.thanks.slots.map((s) => <span>{s}</span>)}
+              </div>
+            )}
             <button type="button" class="lp-again" data-lp-again>Start over</button>
           </div>
         </div>
@@ -82,27 +96,26 @@ const ages = ['Under 10 years', '10-20 years', 'Over 20 years', 'Not sure'];
     </div>
   </div>
 
-  <aside class="gx-demo-side" aria-labelledby="demo-side-title">
-    <h3 id="demo-side-title">What happens when you submit</h3>
+  <aside class="gx-demo-side" aria-labelledby={titleId}>
+    <h4 id={titleId}>What happens when you submit</h4>
     <ol class="gx-demo-steps">
-      <li>The form creates the contact and saves each answer to a custom field, plus hidden UTM fields read from the page URL.</li>
-      <li><strong>Form Submitted</strong> fires <a href="#speed-to-lead" data-open-auto="speed-to-lead">workflow 01 · Speed to Lead</a>.</li>
-      <li>A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.</li>
+      {l.steps.map((s) => <li>{s}</li>)}
     </ol>
+    <p class="gx-demo-feeds">The form feeds <a href={`#${caseId}-${l.feeds}`} data-open-auto={`${caseId}-${l.feeds}`}>{feedsName}</a>.</p>
 
     <fieldset class="gx-next">
       <legend>After you submit, what do you do?</legend>
-      <label><input type="radio" name="demo-next" value="replies" checked /> Reply to the text</label>
-      <label><input type="radio" name="demo-next" value="books" /> Book from the link</label>
-      <label><input type="radio" name="demo-next" value="quiet" /> Ignore everything</label>
+      {l.behaviors.map((b, i) => (
+        <label><input type="radio" name={`${caseId}-next`} value={b.value} checked={i === 0} /> {b.label}</label>
+      ))}
     </fieldset>
 
     <div class="gx-captured" data-captured hidden>
       <p class="gx-captured-title">Your submission, as the contact record sees it</p>
       <dl data-captured-list></dl>
       <p class="gx-captured-note" data-captured-when></p>
-      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch workflow 01 run</button>
+      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the workflow run</button>
     </div>
-    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={'?utm_source=google&utm_medium=cpc&utm_campaign=storm-season#demo'} data-utm-link>Reload with UTM tags</a> to see the hidden fields fill in.</p>
+    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={`?utm_source=google&utm_medium=cpc&utm_campaign=spring-launch#${caseId}-demo`}>Reload with UTM tags</a> to see the hidden fields fill in.</p>
   </aside>
 </div>

@@ -24,7 +24,15 @@ export type EventType =
   | 'opportunity_lost'
   | 'tag_added'
   | 'review_left'
-  | 'survey_submitted';
+  | 'survey_submitted'
+  | 'form_submitted'
+  | 'invoice_paid'
+  | 'payment_failed'
+  | 'order_submitted'
+  | 'document_signed'
+  | 'product_started'
+  | 'lesson_completed'
+  | 'product_completed';
 
 export interface ScenarioEvent {
   /** Minutes after the scenario starts. */
@@ -32,7 +40,7 @@ export interface ScenarioEvent {
   type: EventType;
   /** Reply text, link name, tag name, review rating, survey score… */
   value?: string | number;
-  /** For appointment_booked: minutes after scenario start the appointment begins. */
+  /** For appointment_booked: minutes after scenario start the appointment begins. Its calendar goes in `value`. */
   appointmentAt?: number;
   /** Optional label shown in the log instead of the default. */
   label?: string;
@@ -73,7 +81,7 @@ export type Condition =
   | { type: 'reply_matches'; words: string[]; label?: string }
   | { type: 'dnd'; channel: DndChannel }
   | { type: 'opportunity'; stage?: string; status?: Opportunity['status'] }
-  | { type: 'appointment'; status: 'booked' | 'confirmed' | 'showed' | 'noshow' | 'cancelled' }
+  | { type: 'appointment'; status?: 'booked' | 'confirmed' | 'showed' | 'noshow' | 'cancelled'; calendar?: string }
   | { type: 'var'; key: string; op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'; value: string | number | boolean; label?: string }
   | { type: 'all'; of: Condition[]; label?: string }
   | { type: 'any'; of: Condition[]; label?: string }
@@ -107,6 +115,8 @@ export interface RunContext {
   vars: Record<string, string | number | boolean>;
   /** Text of the most recent inbound reply, if any. */
   lastReply?: string;
+  /** Simulated time, minutes after Monday 00:00 of the sample week. */
+  now: number;
 }
 
 export type ActionKind =
@@ -133,6 +143,10 @@ export type ActionKind =
   | 'math'
   | 'drip'
   | 'appointment_status'
+  | 'invoice'
+  | 'charge'
+  | 'course_access'
+  | 'event_date'
   | 'ai';
 
 export interface ActionNode {
@@ -151,7 +165,13 @@ export interface ActionNode {
    * For custom code and AI steps: computes outputs at run time. Returned
    * `vars` are stored for later conditions; `effect` is applied to the contact.
    */
-  run?: (ctx: RunContext) => { vars?: Record<string, string | number | boolean>; effect?: Effect; log?: string };
+  run?: (ctx: RunContext) => {
+    vars?: Record<string, string | number | boolean>;
+    effect?: Effect;
+    log?: string;
+    /** Sets the date later appointment-relative waits count from (Event Start Date), absolute minutes. */
+    eventStart?: number;
+  };
   /** Source shown under the step: custom code, webhook payload… */
   code?: { language: 'javascript' | 'json'; source: string };
 }
@@ -277,7 +297,7 @@ export interface Scenario {
    * An appointment that already exists when the workflow starts (for
    * appointment triggers). `at` is minutes after the scenario starts.
    */
-  appointment?: { at: number };
+  appointment?: { at: number; calendar?: string };
   /** What a correct run ends with; checked by scripts/ghl-check.mjs. */
   expect: { outcome: 'completed' | 'stopped' | 'goal' | 'ended'; visits?: string[]; skips?: string[]; tags?: string[]; stage?: string };
 }
@@ -324,4 +344,104 @@ export interface Automation {
   features: string[];
   /** Optional proof you can attach later: a Loom or screenshot of the real build. */
   proof?: { label: string; href: string }[];
+}
+
+/* ---------- Case studies: one sample sub-account per business ---------- */
+
+/** Merge-field environment for a sub-account (location, users, custom values, trigger links). */
+export interface SubAccountEnv {
+  location: Record<string, string>;
+  users: Record<string, { name: string; first_name: string; phone: string; email: string }>;
+  customValues: Record<string, string>;
+  triggerLinks?: Record<string, string>;
+}
+
+export interface Business {
+  /** Used in URLs and ids, e.g. "roofing". */
+  id: string;
+  name: string;
+  industry: string;
+  area: string;
+  /** One line for the case-study switcher. */
+  blurb: string;
+  /** A short paragraph introducing the client and what they needed. */
+  intro: string;
+  disclaimer: string;
+  pipeline: { name: string; stages: string[] };
+  team: { key: string; name: string; role: string }[];
+  env: SubAccountEnv;
+  sampleContact: Contact;
+  /** Custom fields shown on the simulator's contact record, in order. */
+  fieldLabels: Record<string, string>;
+  /** Journey map: what each workflow hands to the next, by automation id. */
+  handoff: Record<string, string>;
+  /** Accent colours for the switcher card (light and dark theme). */
+  tint: { light: string; dark: string };
+}
+
+export interface LandingField {
+  name: string;
+  label: string;
+  type: 'text' | 'tel' | 'email' | 'select';
+  required?: boolean;
+  options?: string[];
+  /** Pre-selected option for selects. */
+  initial?: string;
+  placeholder?: string;
+  autocomplete?: string;
+  /** Sit next to the following field on wide screens. */
+  half?: boolean;
+  /** Where the answer lands on the contact. */
+  maps: 'firstName' | 'lastName' | 'phone' | 'email' | { field: string };
+}
+
+export interface LandingBehavior {
+  value: string;
+  label: string;
+  /** Scenario of the fed automation whose label and settings to use. */
+  scenario: string;
+  /**
+   * Events for the visitor's run. `start` is their submit time and
+   * `firstText` the minutes until the first text can go out (quiet hours).
+   */
+  events: (ctx: { start: number; firstText: number }) => ScenarioEvent[];
+}
+
+export interface LandingPage {
+  /** Shown in the fake browser bar. */
+  url: string;
+  brand: {
+    name: string;
+    logo: 'pine' | 'leaf' | 'peak';
+    phone?: string;
+    /** The page's own palette; it stays the same in dark mode, like a screenshot. */
+    colors: { primary: string; primaryDark: string; bg: string; accent: string; accentInk: string; ink: string; muted: string; logo: string };
+  };
+  kicker: string;
+  headline: string;
+  sub: string;
+  points: string[];
+  formTitle: string;
+  submitLabel: string;
+  fields: LandingField[];
+  consent: { transactional: string; marketing: string; fine: string };
+  /** `{first}` is replaced with the visitor's first name. */
+  thanks: { title: string; body: string; slots?: string[] };
+  /** Automation id the form triggers. */
+  feeds: string;
+  /** Trigger index of that automation for this form. */
+  trigger?: number;
+  /** Sending window for the first text, so demo replies land after it. */
+  textWindow?: { start: string; end: string; days: number[] };
+  behaviors: LandingBehavior[];
+  /** "What happens when you submit", in order. */
+  steps: string[];
+  /** How the page is built in the GHL funnel builder. */
+  notes: { title: string; body: string }[];
+}
+
+export interface CaseStudy {
+  business: Business;
+  landing: LandingPage;
+  automations: Automation[];
 }

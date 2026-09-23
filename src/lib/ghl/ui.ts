@@ -3,14 +3,19 @@
  * on the canvas, keeps the contact record in sync and writes the log.
  */
 import { simulate, startContact, formatClock, formatDay, formatTime, formatDuration, type Trace, type TraceStep } from './engine';
-import type { Automation, Contact, Scenario, ScenarioEvent } from './types';
+import type { Automation, CaseStudy, Contact, Scenario, ScenarioEvent } from './types';
 
+/** What a simulator needs from its case study: the sample contact, merge env and field labels. */
 export interface SimEnv {
   automations: Automation[];
   contact: Contact;
   env: Parameters<typeof simulate>[3];
   /** Custom-field keys to show on the record, with display names. */
   fieldLabels: Record<string, string>;
+}
+
+export function envFor(study: CaseStudy): SimEnv {
+  return { automations: study.automations, contact: study.business.sampleContact, env: study.business.env, fieldLabels: study.business.fieldLabels };
 }
 
 const STEP_MS = 520;
@@ -49,7 +54,7 @@ export class Simulator {
     this.env = env;
     const id = root.dataset.sim!;
     this.auto = env.automations.find((a) => a.id === id)!;
-    this.canvas = document.querySelector<HTMLElement>(`[data-canvas="${id}"]`);
+    this.canvas = document.querySelector<HTMLElement>(`[data-canvas="${root.dataset.case}:${id}"]`);
     this.log = root.querySelector('[data-log]')!;
     this.clock = root.querySelector('[data-clock]')!;
     this.elapsed = root.querySelector('[data-elapsed]')!;

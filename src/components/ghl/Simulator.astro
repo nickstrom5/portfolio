@@ -6,17 +6,18 @@ import Icon from './Icon.astro';
 
 interface Props {
   automation: Automation;
+  caseId: string;
 }
-const { automation: a } = Astro.props;
+const { automation: a, caseId } = Astro.props;
 ---
 
-<div class="g-sim" data-sim={a.id}>
+<div class="g-sim" data-sim={a.id} data-case={caseId}>
   <fieldset class="g-scen">
     <legend>Pick a test contact</legend>
     <div class="g-scen-list">
       {a.scenarios.map((s, i) => (
         <label class="g-scen-opt">
-          <input type="radio" name={`scenario-${a.id}`} value={s.id} checked={i === 0} />
+          <input type="radio" name={`scenario-${caseId}-${a.id}`} value={s.id} checked={i === 0} />
           <span><strong>{s.label}</strong><span>{s.summary}</span></span>
         </label>
       ))}
@@ -41,5 +42,5 @@ const { automation: a } = Astro.props;
     </ol>
     <p class="g-outcome" data-outcome role="status" hidden></p>
   </div>
-  <div class="g-screen g-record" data-record aria-label="Contact record"></div>
+  <div class="g-screen g-record" data-record></div>
 </div>

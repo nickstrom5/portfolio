@@ -18,6 +18,7 @@ import type {
   Scenario,
   ScenarioEvent,
   Step,
+  SubAccountEnv,
   WaitNode,
   WorkflowSettings,
 } from './types';
@@ -72,6 +73,14 @@ const EVENT_LABEL: Record<EventType, string> = {
   tag_added: 'Tag added',
   review_left: 'Review left',
   survey_submitted: 'Survey submitted',
+  form_submitted: 'Form submitted',
+  invoice_paid: 'Invoice paid',
+  payment_failed: 'Payment failed',
+  order_submitted: 'Order submitted',
+  document_signed: 'Document signed',
+  product_started: 'Course started',
+  lesson_completed: 'Lesson completed',
+  product_completed: 'Course completed',
 };
 
 /** GHL's appointment statuses: New, Confirmed, Cancelled, Showed, No-show, Invalid. */
@@ -102,7 +111,7 @@ export function describeCondition(c: Condition): string {
     case 'opportunity':
       return `Opportunity ${c.stage ? `stage is ${c.stage}` : ''}${c.stage && c.status ? ' and ' : ''}${c.status ? `status is ${c.status}` : ''}`;
     case 'appointment':
-      return `Appointment status is ${APPT_LABEL[c.status]}`;
+      return [c.calendar && `Appointment calendar is ${c.calendar}`, c.status && `Appointment status is ${APPT_LABEL[c.status]}`].filter(Boolean).join(' and ');
     case 'var': {
       if (c.label) return c.label;
       const ops = { eq: 'is', neq: 'is not', gt: '>', gte: '≥', lt: '<', lte: '≤' };
@@ -117,17 +126,13 @@ export function describeCondition(c: Condition): string {
   }
 }
 
-export interface MergeEnv {
-  location: Record<string, string>;
-  users: Record<string, { name: string; first_name: string; phone: string; email: string }>;
-  customValues: Record<string, string>;
-  /** Trigger links by id, rendered for {{trigger_link.<id>}}. */
-  triggerLinks?: Record<string, string>;
-}
+/** Merge-field environment for one sub-account. Trigger links render for {{trigger_link.<id>}}. */
+export type MergeEnv = SubAccountEnv;
 
 export interface Appointment {
   start: number;
   status: 'booked' | 'confirmed' | 'showed' | 'noshow' | 'cancelled';
+  calendar?: string;
 }
 
 /** Builds the object merge fields resolve against, e.g. contact.first_name. */
@@ -160,6 +165,7 @@ function mergeContext(contact: Contact, env: MergeEnv, appt: Appointment | undef
           cancellation_link: `${env.location.website}/cancel`,
           meeting_location: 'At your property',
           add_to_google_calendar: `${env.location.website}/calendar`,
+          title: appt.calendar ?? 'Appointment',
         }
       : {},
     custom_code: vars,
@@ -290,7 +296,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   const path: { list: Step[]; index: number }[] = [];
   const goalsMet = new Set<string>();
   let lastReply: string | undefined;
-  let appt: Appointment | undefined = scenario.appointment ? { start: start + scenario.appointment.at, status: 'booked' } : undefined;
+  let appt: Appointment | undefined = scenario.appointment ? { start: start + scenario.appointment.at, status: 'booked', calendar: scenario.appointment.calendar } : undefined;
   let t = start;
   let budget = 400;
   /** Stop on Response only reacts to replies once this workflow has messaged the contact. */
@@ -330,8 +336,8 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         }
         break;
       case 'appointment_booked':
-        appt = { start: ev.appointmentAt !== undefined ? start + ev.appointmentAt : ev.at + DAY, status: 'booked' };
-        detail = detail ?? `For ${formatClock(appt.start)}`;
+        appt = { start: ev.appointmentAt !== undefined ? start + ev.appointmentAt : ev.at + DAY, status: 'booked', calendar: ev.value === undefined ? undefined : String(ev.value) };
+        detail = detail ?? `${appt.calendar ? `${appt.calendar}, ` : ''}${formatClock(appt.start)}`;
         break;
       case 'appointment_confirmed':
         if (appt) appt.status = 'confirmed';
@@ -376,6 +382,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       case 'survey_submitted':
         vars.survey_score = Number(ev.value ?? 0);
         detail = detail ?? `Score ${ev.value}`;
+        break;
+      default:
+        // Payments, documents, courses and forms: remember that it happened, and the value if any.
+        vars[ev.type] = ev.value ?? true;
+        if (ev.value !== undefined && detail === undefined) detail = typeof ev.value === 'number' ? `$${ev.value.toLocaleString('en-US')}` : String(ev.value);
         break;
     }
     log({ t: ev.at, kind: 'event', title: EVENT_LABEL[ev.type], detail, message });
@@ -427,7 +438,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       case 'var':
         return compare(vars[c.key], c.op, c.value);
       case 'appointment':
-        return !!appt && appt.status === c.status;
+        return !!appt && (!c.status || appt.status === c.status) && (!c.calendar || appt.calendar === c.calendar);
       case 'all':
         return c.of.every(evaluate);
       case 'any':
@@ -467,10 +478,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
     }
     let detail = node.summary;
     if (node.run) {
-      const out = node.run({ contact, vars, lastReply });
+      const out = node.run({ contact, vars, lastReply, now: t });
       if (out.vars) Object.assign(vars, out.vars);
       if (out.effect) applyEffect(out.effect);
       if (out.log) detail = out.log;
+      if (out.eventStart !== undefined) appt = { start: out.eventStart, status: 'booked' };
     }
     if (node.effect) applyEffect(node.effect);
     let message: TraceMessage | undefined;
@@ -696,4 +708,21 @@ export function countSteps(list: Step[]): number {
     if (s.kind === 'wait' && s.branches) n += countSteps(s.branches.met.nodes) + countSteps(s.branches.timeout.nodes);
   }
   return n;
+}
+
+/** Minutes of the next `dow` (0 = Monday) at `minuteOfDay`, strictly after `from` plus `leadMinutes`. */
+export function nextDayAt(from: number, dow: number, minuteOfDay: number, leadMinutes = 0): number {
+  let day = Math.floor(from / DAY);
+  for (let i = 0; i < 15; i++, day++) {
+    const at = day * DAY + minuteOfDay;
+    if (day % 7 === dow && at > from + leadMinutes) return at;
+  }
+  return from + 7 * DAY;
+}
+
+/** Minutes of the next weekday (Mon-Fri) at `minuteOfDay`, at least one calendar day after `from`. */
+export function nextWeekdayAt(from: number, minuteOfDay: number): number {
+  let day = Math.floor(from / DAY) + 1;
+  while (day % 7 >= 5) day++;
+  return day * DAY + minuteOfDay;
 }

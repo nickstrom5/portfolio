@@ -1,10 +1,15 @@
 /**
- * Everything /ghl/ shows: the sample sub-account and its automations, in
- * the order they appear. Checked by `npm run ghl:check`.
+ * Everything /ghl/ shows: three case studies, each a sample sub-account with
+ * a landing page and its workflows. Checked by `npm run ghl:check`.
  */
-import type { Automation } from '@/lib/ghl/types';
+import type { CaseStudy } from '@/lib/ghl/types';
+import { roofingBusiness } from './business';
+import { roofingLanding } from './landing';
 import { speedToLead } from './automations/speed-to-lead';
+import { saasCase } from './saas';
+import { coachingCase } from './coaching';
 
-export { business, pipeline, env, sampleContact, fieldLabels, team } from './business';
+const roofingCase: CaseStudy = { business: roofingBusiness, landing: roofingLanding, automations: [speedToLead] };
 
-export const automations: Automation[] = [speedToLead];
+/** Small local business, tech company, then online coaching. */
+export const cases: CaseStudy[] = [roofingCase, saasCase, coachingCase];

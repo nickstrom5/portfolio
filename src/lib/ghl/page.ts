@@ -1,70 +1,102 @@
 /**
- * Wires up /ghl/: workflow tabs (with deep links), the simulators, copy
- * buttons and the landing-page demo that turns the visitor into the test
- * contact for workflow 01.
+ * Wires up /ghl/: the case-study switcher, each case's workflow tabs, the
+ * simulators, copy buttons and the landing-page demos that turn the visitor
+ * into the test contact for a case's first workflow.
+ *
+ * Deep links: #roofing opens a case; #roofing-speed-to-lead opens a case
+ * and one of its workflows; #roofing-demo scrolls to a case's landing page.
  */
-import { automations, env, fieldLabels, sampleContact } from '@/data/ghl';
+import { cases } from '@/data/ghl';
 import { formatDay, formatTime, nextWindowOpen } from './engine';
-import type { Contact, ScenarioEvent } from './types';
-import { Simulator } from './ui';
+import type { CaseStudy, Contact } from './types';
+import { Simulator, envFor } from './ui';
 
 const DAY = 1440;
-const QUIET = { start: '08:00', end: '20:00', days: [0, 1, 2, 3, 4, 5, 6] };
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scrollTo = (el: Element | null | undefined) => el?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
 
-export function initGhlPage() {
-  const sims = new Map<string, Simulator>();
-  document.querySelectorAll<HTMLElement>('[data-sim]').forEach((root) => {
-    sims.set(root.dataset.sim!, new Simulator(root, { automations, contact: sampleContact, env, fieldLabels }));
-  });
-
-  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
-  const ids = tabs.map((t) => t.dataset.tab!);
-
-  function select(id: string, opts: { focus?: boolean; scroll?: boolean; hash?: boolean } = {}) {
-    if (!ids.includes(id)) return;
-    tabs.forEach((t) => {
-      const on = t.dataset.tab === id;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-      if (on && opts.focus) t.focus();
-      // On phones the tabs are a swipeable strip; keep the selected one visible.
-      const strip = t.parentElement;
-      if (on && strip && strip.scrollWidth > strip.clientWidth) strip.scrollTo({ left: t.offsetLeft - strip.offsetLeft - 16 });
-    });
-    panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
-    if (opts.hash) history.replaceState(null, '', `#${id}`);
-    if (opts.scroll) {
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    }
-  }
-
+/** Roving-focus tablist: click, arrow keys, Home and End. */
+function tablist(tabs: HTMLButtonElement[], key: string, onSelect: (id: string, focus: boolean) => void) {
+  const ids = tabs.map((t) => t.dataset[key]!);
   tabs.forEach((t, i) => {
-    t.addEventListener('click', () => select(t.dataset.tab!, { hash: true }));
+    t.addEventListener('click', () => onSelect(ids[i], false));
     t.addEventListener('keydown', (e) => {
       const move = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
       if (move) {
         e.preventDefault();
-        select(ids[(i + move + ids.length) % ids.length], { focus: true, hash: true });
+        onSelect(ids[(i + move + ids.length) % ids.length], true);
       } else if (e.key === 'Home' || e.key === 'End') {
         e.preventDefault();
-        select(ids[e.key === 'Home' ? 0 : ids.length - 1], { focus: true, hash: true });
+        onSelect(ids[e.key === 'Home' ? 0 : ids.length - 1], true);
       }
     });
   });
+  return ids;
+}
+
+function mark(tabs: HTMLButtonElement[], key: string, id: string, focus: boolean) {
+  tabs.forEach((t) => {
+    const on = t.dataset[key] === id;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+    if (on && focus) t.focus();
+    // On phones the workflow tabs are a swipeable strip; keep the selected one visible.
+    const strip = t.parentElement;
+    if (on && strip && strip.scrollWidth > strip.clientWidth) strip.scrollTo({ left: t.offsetLeft - strip.offsetLeft - 16 });
+  });
+}
+
+export function initGhlPage() {
+  const sims = new Map<string, Simulator>();
+  document.querySelectorAll<HTMLElement>('[data-sim]').forEach((root) => {
+    const study = cases.find((c) => c.business.id === root.dataset.case);
+    if (study) sims.set(`${root.dataset.case}-${root.dataset.sim}`, new Simulator(root, envFor(study)));
+  });
+
+  // Workflow tabs inside each case.
+  const openAutomation = new Map<string, (id: string, focus?: boolean) => void>();
+  document.querySelectorAll<HTMLElement>('[data-case-tabs]').forEach((list) => {
+    const caseId = list.dataset.caseTabs!;
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...document.querySelectorAll<HTMLElement>(`[data-case-panel="${caseId}"] [data-panel]`)];
+    const select = (id: string, focus = false) => {
+      mark(tabs, 'tab', id, focus);
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+      history.replaceState(null, '', `#${caseId}-${id}`);
+    };
+    tablist(tabs, 'tab', (id, focus) => select(id, focus));
+    openAutomation.set(caseId, select);
+  });
+
+  // The case switcher.
+  const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
+  const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
+  const selectCase = (id: string, focus = false, hash = true) => {
+    mark(caseTabs, 'caseTab', id, focus);
+    casePanels.forEach((p) => (p.hidden = p.dataset.casePanel !== id));
+    if (hash) history.replaceState(null, '', `#${id}`);
+  };
+  const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
+
+  /** Resolves "#case", "#case-automation" and "#case-section" to the right view. */
+  function go(target: string, scroll: boolean) {
+    const caseId = caseIds.find((c) => target === c || target.startsWith(`${c}-`));
+    if (!caseId) return false;
+    selectCase(caseId, false, false);
+    const rest = target.slice(caseId.length + 1);
+    const study = cases.find((c) => c.business.id === caseId);
+    if (rest && study?.automations.some((a) => a.id === rest)) openAutomation.get(caseId)?.(rest);
+    else history.replaceState(null, '', `#${target}`);
+    if (scroll) scrollTo(document.getElementById(target));
+    return true;
+  }
 
   document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
     a.addEventListener('click', (e) => {
-      e.preventDefault();
-      select(a.dataset.openAuto!, { scroll: true, hash: true });
+      if (go(a.dataset.openAuto!, true)) e.preventDefault();
     }),
   );
-
-  const fromHash = () => {
-    const id = decodeURIComponent(location.hash.slice(1));
-    if (ids.includes(id)) select(id, { scroll: true });
-  };
+  const fromHash = () => go(decodeURIComponent(location.hash.slice(1)), true);
   window.addEventListener('hashchange', fromHash);
   fromHash();
 
@@ -83,13 +115,16 @@ export function initGhlPage() {
     }),
   );
 
-  initLandingDemo(sims, select);
+  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((demo) => {
+    const study = cases.find((c) => c.business.id === demo.dataset.demo);
+    if (study) initLandingDemo(demo, study, sims, (id) => openAutomation.get(study.business.id)?.(id));
+  });
 }
 
-function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: { scroll?: boolean; hash?: boolean }) => void) {
-  const demo = document.querySelector<HTMLElement>('[data-demo]');
-  const form = demo?.querySelector<HTMLFormElement>('[data-lp-form]');
-  if (!demo || !form) return;
+function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, Simulator>, openAutomation: (id: string) => void) {
+  const l = study.landing;
+  const caseId = study.business.id;
+  const form = demo.querySelector<HTMLFormElement>('[data-lp-form]')!;
   const thanks = demo.querySelector<HTMLElement>('[data-lp-thanks]')!;
   const error = demo.querySelector<HTMLElement>('[data-lp-error]')!;
   const captured = demo.querySelector<HTMLElement>('[data-captured]')!;
@@ -97,6 +132,7 @@ function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: 
   const when = demo.querySelector<HTMLElement>('[data-captured-when]')!;
   const params = new URLSearchParams(location.search);
   const utm = { utm_source: params.get('utm_source') ?? '', utm_medium: params.get('utm_medium') ?? '', utm_campaign: params.get('utm_campaign') ?? '' };
+  const sim = () => sims.get(`${caseId}-${l.feeds}`);
   let identity: Partial<Contact> | undefined;
   let start = 0;
 
@@ -104,12 +140,14 @@ function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: 
     e.preventDefault();
     const data = new FormData(form);
     const get = (k: string) => String(data.get(k) ?? '').trim();
-    const missing = [
-      !get('first') && 'your first name',
-      !get('phone') && 'a mobile number',
-      !/^\S+@\S+\.\S+$/.test(get('email')) && 'a valid email',
-      !get('service') && 'what you need',
-    ].filter(Boolean) as string[];
+    const texts = !!data.get('sms');
+    const missing: string[] = [];
+    for (const f of l.fields) {
+      const v = get(f.name);
+      const needed = f.required || (f.maps === 'phone' && texts);
+      if (needed && !v) missing.push(f.maps === 'phone' && texts && !f.required ? 'a mobile number for the texts' : f.label.toLowerCase().replace(/\?$/, ''));
+      else if (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v)) missing.push('a valid email');
+    }
     if (missing.length) {
       error.textContent = `Please add ${missing.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`;
       error.hidden = false;
@@ -117,35 +155,18 @@ function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: 
     }
     error.hidden = true;
 
-    identity = {
-      firstName: get('first'),
-      lastName: get('last'),
-      phone: get('phone'),
-      email: get('email'),
-      source: 'Website form',
-      fields: {
-        service_needed: get('service'),
-        roof_age: get('age'),
-        sms_consent: data.get('sms') ? 'Yes' : 'No',
-        sms_marketing_consent: data.get('smsMarketing') ? 'Yes' : 'No',
-        ...utm,
-      },
-    };
-    const now = new Date();
-    start = ((now.getDay() + 6) % 7) * DAY + now.getHours() * 60 + now.getMinutes();
-
-    const rows: [string, string][] = [
-      ['Name', `${identity.firstName} ${identity.lastName}`.trim()],
-      ['Phone', identity.phone!],
-      ['Email', identity.email!],
-      ['Service needed', get('service')],
-      ['Roof age', get('age')],
-      ['SMS consent (updates)', identity.fields!.sms_consent as string],
-      ['SMS consent (offers)', identity.fields!.sms_marketing_consent as string],
-      ['utm_source', utm.utm_source || '(not in the URL)'],
-      ['utm_medium', utm.utm_medium || '(not in the URL)'],
-      ['utm_campaign', utm.utm_campaign || '(not in the URL)'],
-    ];
+    const fields: Record<string, string> = { sms_consent: texts ? 'Yes' : 'No', sms_marketing_consent: data.get('smsMarketing') ? 'Yes' : 'No', ...utm };
+    const who: Partial<Contact> = { source: 'Website form', firstName: '', lastName: '', phone: '', email: '' };
+    const rows: [string, string][] = [];
+    for (const f of l.fields) {
+      const v = get(f.name);
+      if (typeof f.maps === 'object') fields[f.maps.field] = v;
+      else who[f.maps] = v;
+      rows.push([f.label.replace(/ \(.*\)$/, '').replace(/\?$/, ''), v || '(left blank)']);
+    }
+    identity = { ...who, fields };
+    rows.push(['SMS consent (service)', fields.sms_consent], ['SMS consent (offers)', fields.sms_marketing_consent]);
+    for (const k of ['utm_source', 'utm_medium', 'utm_campaign'] as const) rows.push([k, utm[k] || '(not in the URL)']);
     list.replaceChildren(
       ...rows.map(([k, v]) => {
         const d = document.createElement('div');
@@ -157,18 +178,17 @@ function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: 
         return d;
       }),
     );
-    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${identity.fields!.sms_consent === 'Yes' ? 'You ticked the SMS box, so you get texts.' : 'You left the SMS box unticked, so it is email and phone only.'}`;
+    const now = new Date();
+    start = ((now.getDay() + 6) % 7) * DAY + now.getHours() * 60 + now.getMinutes();
+    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${texts ? 'You ticked the SMS box, so you get texts.' : 'You left the SMS box unticked, so it is email only.'}`;
     captured.hidden = false;
 
-    demo.querySelector('[data-lp-name]')!.textContent = identity.firstName!;
+    demo.querySelector('[data-lp-thanks-title]')!.textContent = l.thanks.title.replace('{first}', who.firstName || 'there');
     form.hidden = true;
     thanks.hidden = false;
     thanks.focus({ preventScroll: true });
     // On one-column layouts the next step sits below the form; bring it into view.
-    if (window.matchMedia('(max-width: 900px)').matches) {
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      captured.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
-    }
+    if (window.matchMedia('(max-width: 900px)').matches) captured.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
   });
 
   demo.querySelector('[data-lp-again]')?.addEventListener('click', () => {
@@ -177,29 +197,21 @@ function initLandingDemo(sims: Map<string, Simulator>, select: (id: string, o?: 
     thanks.hidden = true;
     captured.hidden = true;
     identity = undefined;
-    sims.get('speed-to-lead')?.useContact(undefined);
+    sim()?.useContact(undefined);
   });
 
   demo.querySelector('[data-run-demo]')?.addEventListener('click', () => {
-    const sim = sims.get('speed-to-lead');
-    if (!sim || !identity) return;
-    const next = demo.querySelector<HTMLInputElement>('input[name="demo-next"]:checked')?.value ?? 'replies';
+    const s = sim();
+    if (!s || !identity) return;
+    const value = demo.querySelector<HTMLInputElement>(`input[name="${caseId}-next"]:checked`)?.value;
+    const behavior = l.behaviors.find((b) => b.value === value) ?? l.behaviors[0];
     const texts = identity.fields?.sms_consent === 'Yes';
-    // Reply a couple of minutes after the first message actually reaches them.
-    const firstMessage = texts ? nextWindowOpen(start, QUIET) - start : 0;
-    let events: ScenarioEvent[] = [];
-    if (next === 'replies') events = [{ at: firstMessage + 3, type: 'reply', value: 'Yes please. Tomorrow after 3 works for me.' }];
-    if (next === 'books') {
-      // Books for 10 AM on the next weekday.
-      let day = Math.floor(start / DAY) + 1;
-      while (day % 7 >= 5) day++;
-      events = [{ at: firstMessage + 25, type: 'appointment_booked', appointmentAt: day * DAY + 600 - start }];
-    }
-    sim.selectScenario(next);
-    sim.useContact(identity, { start, events });
-    select('speed-to-lead', { hash: true });
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.querySelector('#speed-to-lead .gx-lab')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    window.setTimeout(() => sim.run(false), reduce ? 0 : 500);
+    // Replies and bookings land after the first text can actually go out.
+    const firstText = texts && l.textWindow ? nextWindowOpen(start, l.textWindow) - start : 0;
+    s.selectScenario(behavior.scenario);
+    s.useContact(identity, { start, events: behavior.events({ start, firstText }) });
+    openAutomation(l.feeds);
+    scrollTo(document.querySelector(`#${caseId}-${l.feeds} .gx-lab`));
+    window.setTimeout(() => s.run(false), reduceMotion() ? 0 : 500);
   });
 }

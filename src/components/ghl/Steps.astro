@@ -42,11 +42,15 @@ const actionIcon: Record<ActionKind, IconName> = {
   math: 'math',
   drip: 'clock',
   appointment_status: 'task',
+  invoice: 'invoice',
+  charge: 'card',
+  course_access: 'book',
+  event_date: 'calendar',
   ai: 'ai',
 };
 
 const tone = (a: ActionKind) => {
-  if (['send_sms', 'send_email', 'voicemail', 'review_request'].includes(a)) return 'comms';
+  if (['send_sms', 'send_email', 'voicemail', 'review_request', 'invoice'].includes(a)) return 'comms';
   if (['internal_notification', 'slack', 'add_task', 'add_note'].includes(a)) return 'team';
   if (['webhook', 'custom_code', 'google_sheets', 'math', 'ai', 'drip'].includes(a)) return 'dev';
   return 'crm';
