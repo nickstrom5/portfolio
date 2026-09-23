@@ -1,0 +1,117 @@
+---
+/**
+ * One case study: the client, their journey map, the working landing page
+ * and every workflow with its simulator and build notes. Ids are prefixed
+ * with the case id so three of these can live on one page.
+ */
+import type { CaseStudy } from '@/lib/ghl/types';
+import { countSteps } from '@/lib/ghl/engine';
+import LandingDemo from './LandingDemo.astro';
+import AutomationPanel from './AutomationPanel.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+  index: number;
+  hidden?: boolean;
+}
+const { study, index, hidden = false } = Astro.props;
+const { business: b, landing, automations } = study;
+const fed = automations.find((a) => a.id === landing.feeds);
+const feedsName = fed ? `workflow ${fed.number} · ${fed.name}` : 'the first workflow';
+const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
+---
+
+<section
+  class="gx-case"
+  id={b.id}
+  role="tabpanel"
+  aria-labelledby={`case-tab-${b.id}`}
+  hidden={hidden}
+  data-case-panel={b.id}
+  style={`--case: ${b.tint.light}; --case-dark: ${b.tint.dark}`}
+>
+  <header class="gx-case-head">
+    <div class="container">
+      <span class="eyebrow gx-case-eyebrow">Case study {index + 1} · {b.industry}</span>
+      <h2>{b.name}</h2>
+      <p class="lede">{b.intro}</p>
+      <dl class="gx-case-facts">
+        <div><dt>Workflows</dt><dd>{automations.length}</dd></div>
+        <div><dt>Steps</dt><dd>{steps}</dd></div>
+        <div><dt>Test contacts</dt><dd>{automations.reduce((n, a) => n + a.scenarios.length, 0)}</dd></div>
+        <div><dt>Where</dt><dd class="gx-small">{b.area}</dd></div>
+      </dl>
+      <div class="gx-team">
+        <p class="gx-team-title">The sample team</p>
+        <ul>
+          {b.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
+        </ul>
+      </div>
+      <p class="gx-disclaimer">{b.disclaimer}</p>
+    </div>
+  </header>
+
+  <div class="section gx-journey-section" id={`${b.id}-journey`}>
+    <div class="container">
+      <span class="eyebrow">The system</span>
+      <h3 class="gx-h3">One pipeline, one customer journey</h3>
+      <p class="lede">Each workflow does one job and hands the contact to the next. Pick one to open it below.</p>
+      <p class="gx-pipe gx-pipe-lg"><span class="gx-pipe-name">{b.pipeline.name}</span>{b.pipeline.stages.map((st) => <span class="gx-stage">{st}</span>)}</p>
+      <ol class="gx-journey" data-count={automations.length}>
+        {automations.map((a) => (
+          <li>
+            <a href={`#${b.id}-${a.id}`} data-open-auto={`${b.id}-${a.id}`} class="gx-j">
+              <span class="gx-j-num">{a.number}</span>
+              <span class="gx-j-name">{a.name}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{a.workflow.triggers[0].title}</span>
+              <span class="gx-j-out">{b.handoff[a.id] ?? a.kicker}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+
+  <div class="section" id={`${b.id}-demo`}>
+    <div class="container">
+      <span class="eyebrow">Live demo</span>
+      <h3 class="gx-h3">The landing page, working</h3>
+      <p class="lede">Fill in the form, then watch {feedsName} run on you. It runs at your local time, so if it is late where you are, you will see texts wait for morning.</p>
+      <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} />
+      <div class="gx-landing-notes">
+        <h4>How the page is built in the funnel builder</h4>
+        <ul class="gx-note-grid">
+          {landing.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section gx-workflows" id={`${b.id}-workflows`}>
+    <div class="container">
+      <span class="eyebrow">The workflows</span>
+      <h3 class="gx-h3">Pick a workflow, pick a test contact, press Run</h3>
+      <p class="lede">Each one is shown the way it reads in the GHL builder, and the simulator follows the builder’s rules: branches never rejoin, a goal pulls the contact forward, Stop on Response ends the run, DND skips the message and time windows hold it.</p>
+      <div class="gx-tabs" role="tablist" aria-label={`${b.name} workflows`} data-case-tabs={b.id}>
+        {automations.map((a, i) => (
+          <button
+            class="gx-tab"
+            role="tab"
+            type="button"
+            id={`tab-${b.id}-${a.id}`}
+            aria-controls={`${b.id}-${a.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={a.id}
+          >
+            <span class="gx-tab-num">{a.number}</span>
+            <span class="gx-tab-name">{a.name}</span>
+            <span class="gx-tab-kicker">{a.kicker}</span>
+          </button>
+        ))}
+      </div>
+      {automations.map((a, i) => <AutomationPanel automation={a} caseId={b.id} hidden={i !== 0} />)}
+    </div>
+  </div>
+</section>

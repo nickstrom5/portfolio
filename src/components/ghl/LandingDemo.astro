@@ -1,0 +1,121 @@
+---
+/**
+ * A case study's landing page, rebuilt as a working demo. It mirrors how the
+ * page is built in the GHL funnel builder: one goal, a short single-column
+ * form, two optional SMS consent boxes and hidden UTM fields. Submitting
+ * turns the visitor into the test contact for the workflow the form feeds.
+ * Nothing is sent anywhere; src/lib/ghl/page.ts does the wiring.
+ */
+import type { LandingField, LandingPage } from '@/lib/ghl/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  caseId: string;
+  landing: LandingPage;
+  /** "01 · Speed to Lead" style name of the workflow the form feeds. */
+  feedsName: string;
+}
+const { caseId, landing: l, feedsName } = Astro.props;
+const c = l.brand.colors;
+const style = `--lp-primary:${c.primary};--lp-primary-dark:${c.primaryDark};--lp-bg:${c.bg};--lp-accent:${c.accent};--lp-accent-ink:${c.accentInk};--lp-ink:${c.ink};--lp-muted:${c.muted};--lp-logo:${c.logo}`;
+const logos = {
+  pine: 'M12 2 5 12h3l-4 6h6v4h4v-4h6l-4-6h3z',
+  leaf: 'M4 20C4 10 10 4 20 4c0 10-6 16-16 16z',
+  peak: 'M2 20 9 7l4 6 3-4 6 11z',
+};
+
+// Pair "half" fields with the field after them.
+const rows: LandingField[][] = [];
+for (let i = 0; i < l.fields.length; i++) {
+  const f = l.fields[i];
+  if (f.half && l.fields[i + 1]) rows.push([f, l.fields[++i]]);
+  else rows.push([f]);
+}
+const titleId = `${caseId}-demo-side-title`;
+---
+
+<div class="gx-demo" data-demo={caseId}>
+  <div class="gx-browser">
+    <div class="gx-chrome" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <em>{l.url}</em>
+    </div>
+    <div class="lp" style={style}>
+      <div class="lp-top">
+        <span class="lp-logo">
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d={logos[l.brand.logo]} fill="currentColor" /></svg>
+          {l.brand.name}
+        </span>
+        {l.brand.phone && <span class="lp-phone">{l.brand.phone}</span>}
+      </div>
+      <div class="lp-hero">
+        <div class="lp-copy">
+          <p class="lp-kicker">{l.kicker}</p>
+          <p class="lp-h">{l.headline}</p>
+          <p class="lp-sub">{l.sub}</p>
+          <ul class="lp-points">
+            {l.points.map((p) => <li><Icon name="check" size={16} />{p}</li>)}
+          </ul>
+        </div>
+
+        <div class="lp-card">
+          <form class="lp-form" data-lp-form novalidate>
+            <p class="lp-form-title">{l.formTitle}</p>
+            {rows.map((row) => {
+              const field = (f: LandingField) =>
+                f.type === 'select' ? (
+                  <label>{f.label}
+                    <select name={f.name} required={f.required}>
+                      {!f.initial && <option value="">Choose one</option>}
+                      {f.options!.map((o) => <option selected={o === f.initial}>{o}</option>)}
+                    </select>
+                  </label>
+                ) : (
+                  <label>{f.label}<input name={f.name} type={f.type} autocomplete={f.autocomplete} required={f.required} placeholder={f.placeholder} /></label>
+                );
+              return row.length === 2 ? <div class="lp-row">{field(row[0])}{field(row[1])}</div> : field(row[0]);
+            })}
+            <label class="lp-check"><input type="checkbox" name="sms" /><span>{l.consent.transactional}</span></label>
+            <label class="lp-check"><input type="checkbox" name="smsMarketing" /><span>{l.consent.marketing}</span></label>
+            <p class="lp-fine">{l.consent.fine}</p>
+            <p class="lp-error" data-lp-error role="alert" hidden></p>
+            <button class="lp-submit" type="submit">{l.submitLabel}</button>
+          </form>
+          <div class="lp-thanks" data-lp-thanks hidden tabindex="-1">
+            <p class="lp-form-title" data-lp-thanks-title></p>
+            <p>{l.thanks.body}</p>
+            {l.thanks.slots && (
+              <div class="lp-slots" aria-hidden="true">
+                {l.thanks.slots.map((s) => <span>{s}</span>)}
+              </div>
+            )}
+            <button type="button" class="lp-again" data-lp-again>Start over</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="gx-demo-side" aria-labelledby={titleId}>
+    <h4 id={titleId}>What happens when you submit</h4>
+    <ol class="gx-demo-steps">
+      {l.steps.map((s) => <li>{s}</li>)}
+    </ol>
+    <p class="gx-demo-feeds">The form feeds <a href={`#${caseId}-${l.feeds}`} data-open-auto={`${caseId}-${l.feeds}`}>{feedsName}</a>.</p>
+
+    <fieldset class="gx-next">
+      <legend>After you submit, what do you do?</legend>
+      {l.behaviors.map((b, i) => (
+        <label><input type="radio" name={`${caseId}-next`} value={b.value} checked={i === 0} /> {b.label}</label>
+      ))}
+    </fieldset>
+
+    <div class="gx-captured" data-captured hidden>
+      <p class="gx-captured-title">Your submission, as the contact record sees it</p>
+      <dl data-captured-list></dl>
+      <p class="gx-captured-note" data-captured-when></p>
+      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the workflow run</button>
+    </div>
+    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={`?utm_source=google&utm_medium=cpc&utm_campaign=spring-launch#${caseId}-demo`}>Reload with UTM tags</a> to see the hidden fields fill in.</p>
+  </aside>
+</div>

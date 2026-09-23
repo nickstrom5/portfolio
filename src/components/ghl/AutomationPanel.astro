@@ -1,0 +1,137 @@
+---
+/** One automation: the story, the canvas and simulator side by side, then the build notes. */
+import type { Automation } from '@/lib/ghl/types';
+import Canvas from './Canvas.astro';
+import Simulator from './Simulator.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  automation: Automation;
+  caseId: string;
+  hidden?: boolean;
+}
+const { automation: a, caseId, hidden = false } = Astro.props;
+const dm = a.dataModel;
+const uid = `${caseId}-${a.id}`;
+---
+
+<article class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
+  <header class="gx-panel-head">
+    <span class="eyebrow">{a.number} · {a.kicker}</span>
+    <h4>{a.name}</h4>
+    <p class="gx-tagline">{a.tagline}</p>
+  </header>
+
+  <div class="gx-ps">
+    <div>
+      <h5>The problem</h5>
+      <p>{a.problem}</p>
+    </div>
+    <div>
+      <h5>What I built</h5>
+      <p>{a.solution}</p>
+    </div>
+  </div>
+  {a.evidence && (
+    <figure class="gx-evidence">
+      <blockquote><p>{a.evidence.text}</p></blockquote>
+      <figcaption><a href={a.evidence.href} target="_blank" rel="noopener">{a.evidence.source}</a></figcaption>
+    </figure>
+  )}
+
+  <div class="gx-lab">
+    <div class="gx-lab-canvas">
+      <Canvas automation={a} caseId={caseId} />
+    </div>
+    <div class="gx-lab-sim">
+      <Simulator automation={a} caseId={caseId} />
+    </div>
+  </div>
+
+  <div class="gx-notes">
+    <section class="gx-build" aria-labelledby={`build-${uid}`}>
+      <h5 id={`build-${uid}`}>How I built it</h5>
+      <ol class="gx-build-list">
+        {a.build.map((b) => (
+          <li><strong>{b.title}.</strong> {b.body}</li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="gx-model" aria-labelledby={`model-${uid}`}>
+      <h5 id={`model-${uid}`}>Data model</h5>
+      {dm.customFields && dm.customFields.length > 0 && (
+        <div class="gx-table-wrap">
+          <table class="gx-table">
+            <caption class="sr-only">Custom fields</caption>
+            <thead><tr><th scope="col">Custom field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              {dm.customFields.map((f) => (
+                <tr><td><strong>{f.name}</strong><code>{f.key}</code></td><td>{f.type}</td><td>{f.note ?? ''}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {dm.tags && dm.tags.length > 0 && (
+        <dl class="gx-kv">
+          {dm.tags.map((t) => (
+            <div><dt><span class="gx-tag">{t.name}</span></dt><dd>{t.note}</dd></div>
+          ))}
+        </dl>
+      )}
+      {dm.pipeline && (
+        <p class="gx-pipe"><span class="gx-pipe-name">{dm.pipeline.name}</span>{dm.pipeline.stages.map((st) => <span class="gx-stage">{st}</span>)}</p>
+      )}
+      {dm.customValues && dm.customValues.length > 0 && (
+        <p class="gx-values">Custom values: {dm.customValues.map((v, i) => <><code>{`{{custom_values.${v.key}}}`}</code>{i < dm.customValues!.length - 1 ? ' ' : ''}</>)}</p>
+      )}
+    </section>
+
+    <section class="gx-edges" aria-labelledby={`edges-${uid}`}>
+      <h5 id={`edges-${uid}`}>Edge cases it handles</h5>
+      <ul class="gx-edge-list">
+        {a.edgeCases.map((e) => (
+          <li><strong>{e.title}</strong><span>{e.body}</span></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="gx-qa" aria-labelledby={`qa-${uid}`}>
+      <h5 id={`qa-${uid}`}>Test plan before publishing</h5>
+      <ul class="gx-qa-list">
+        {a.qa.map((q) => (
+          <li><Icon name="check" size={16} /><span>{q}</span></li>
+        ))}
+      </ul>
+    </section>
+
+    {a.snippets && a.snippets.length > 0 && (
+      <section class="gx-snips" aria-labelledby={`snips-${uid}`}>
+        <h5 id={`snips-${uid}`}>Copy-ready pieces</h5>
+        <div class="gx-snip-grid">
+          {a.snippets.map((sn) => (
+            <div class="g-snippet">
+              <div class="g-snippet-head">
+                <h6>{sn.title}</h6>
+                <button type="button" class="g-copy" data-copy><Icon name="copy" size={15} /><span>Copy</span></button>
+              </div>
+              <pre><code>{sn.code}</code></pre>
+              {sn.note && <p>{sn.note}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <div class="gx-features">
+      <p class="gx-features-title">GHL features in this build</p>
+      <ul class="tags">
+        {a.features.map((f) => <li class="tag">{f}</li>)}
+      </ul>
+      {a.proof && a.proof.length > 0 && (
+        <p class="gx-proof">{a.proof.map((p) => <a href={p.href} target="_blank" rel="noopener">{p.label}</a>)}</p>
+      )}
+    </div>
+  </div>
+</article>
