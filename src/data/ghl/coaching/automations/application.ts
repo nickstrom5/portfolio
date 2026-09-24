@@ -261,7 +261,7 @@ export const application: Automation = {
   name: 'Coaching application',
   kicker: 'Sales',
   tagline:
-    'Every application is scored the moment it arrives. Ready applicants get Devon and a booking link within the minute, and everyone else gets an honest recommendation instead of a sales call.',
+    'Every application is scored the moment it arrives. Ready applicants get Devon and a booking link within the minute, and everyone else gets a straight recommendation instead of a sales call.',
   problem:
     'Coaching applications landed in Morgan’s inbox and waited for her to forward them to Devon. Good applicants sometimes heard nothing for three days. People who were clearly not ready still got a sales call, which wasted their evening and Devon’s, and nobody could say who had booked a call and who had gone quiet.',
   evidence: {
@@ -984,7 +984,7 @@ export const application: Automation = {
     },
     {
       title: 'No reminder texts, yes to application texts',
-      body: '01 switched SMS DND on when they registered without ticking the reminders box, and tagged sms-off-no-consent as the receipt. Ticking the texts box on the application is a new opt-in, so 05 turns DND off and removes the tag right before the first text. Lifting it also lets 01’s reminder texts through if they are registered for a session; the box covers "future workshops and offers", so those are consented to as well. Someone who replied STOP has DND without that tag, so their opt-out stands and they get email only.',
+      body: '01 switched SMS DND on when they registered without ticking the reminders box, and tagged sms-off-no-consent as the receipt. Ticking the texts box on the application is a new, separate opt-in, so 05 turns DND off and removes the tag right before the first text. The case\'s rule, the same one 02 follows: a tick next to a reminders box they left unticked on the same form is not consent to reminders, but a later opt-in whose wording names future workshops is. So if they are registered for a session, 01\'s reminders now reach them too, which is what this box says. Someone who replied STOP has DND without that tag, so their opt-out stands and they get email only.',
     },
     {
       title: 'A current student or a graduate applies',

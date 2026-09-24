@@ -171,7 +171,7 @@ export const onboarding: Automation = {
     href: 'https://help.gohighlevel.com/support/solutions/articles/155000003378-workflow-action-course-grant-offer',
   },
   solution:
-    'The purchase itself starts onboarding. In the same minute the workflow stops the workshop and cart messages, grants the course, hands the student to Jules, marks the course card Won and posts to #new-students. A student with Email DND gets a call from Jules instead of a welcome that GHL would skip. Then the workflow waits up to three days for the course to start. Students who start get a plan for week one and a check on the first real exercise. Students who do not get one text if they agreed to course texts, one email that asks for 12 minutes, and a personal video from Jules. A week in, anyone still not started gets an honest note that includes the refund option.',
+    'The purchase itself starts onboarding. In the same minute the workflow stops the workshop and cart messages, grants the course, hands the student to Jules, marks the course card Won and posts to #new-students. A student with Email DND gets a call from Jules instead of a welcome that GHL would skip. Then the workflow waits up to three days for the course to start. Students who start get a plan for week one and a check on the first real exercise. Students who do not get one text if they agreed to course texts, one email that asks for 12 minutes, and a personal video from Jules. A week in, anyone still not started gets a plain note that includes the refund option.',
   workflow: {
     name: '03 · Students · Course Onboarding',
     folder: 'Students',
@@ -571,12 +571,12 @@ export const onboarding: Automation = {
                                                   kind: 'action',
                                                   action: 'send_email',
                                                   title: 'Send Email',
-                                                  label: 'Three honest options',
+                                                  label: 'Three options',
                                                   summary: 'From Jules. Start small, tell us what is in the way, or take the refund inside the guarantee. A refund they ask for beats a chargeback they file.',
                                                   message: {
                                                     channel: 'email',
                                                     subject: 'Still want to do this, {{contact.first_name}}?',
-                                                    body: `Hi {{contact.first_name}},\n\nIt has been about a week since you joined {{custom_values.course_name}}, and you have not opened it yet. No judgment. Here are three honest options:\n\n1. Start small. Lesson 1 takes about 12 minutes: {{custom_values.course_login}}\n2. Tell me what is in the way. Reply to this email and a person reads it.\n3. If it is not what you need, you are covered by our {{custom_values.refund_policy}}. Reply within 14 days of your purchase and we will refund what you paid. On the payment plan, we also cancel the payments still to come.\n\n${julesSign}${footer}`,
+                                                    body: `Hi {{contact.first_name}},\n\nIt has been about a week since you joined {{custom_values.course_name}}, and you have not opened it yet. No judgment. Here are three options:\n\n1. Start small. Lesson 1 takes about 12 minutes: {{custom_values.course_login}}\n2. Tell me what is in the way. Reply to this email and a person reads it.\n3. If it is not what you need, you are covered by our {{custom_values.refund_policy}}. Reply within 14 days of your purchase and we will refund what you paid. On the payment plan, we also cancel the payments still to come.\n\n${julesSign}${footer}`,
                                                   },
                                                 },
                                                 {
@@ -685,7 +685,7 @@ export const onboarding: Automation = {
       id: 'never',
       label: 'Never starts, opted out of texts',
       summary:
-        'Ticked the reminders box, then replied STOP to a workshop reminder. Buys late on Sunday and never opens the course: no text, the nudge waits for daytime, and a week later the honest note.',
+        'Ticked the reminders box, then replied STOP to a workshop reminder. Buys late on Sunday and never opens the course: no text, the nudge waits for daytime, and a week later the note with the refund option.',
       start: at(6, 21, 40),
       contact: checkoutBuyer(
         { current_role: 'Senior leader', goal: 'Freelancing', sms_consent: 'Yes', sms_marketing_consent: 'No', attended: 'Yes', order_total: 497 },

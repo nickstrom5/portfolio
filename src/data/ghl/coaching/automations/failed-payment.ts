@@ -242,6 +242,16 @@ export const failedPayment: Automation = {
                       message: { channel: 'email', subject: noticeSubject, body: noticeBody },
                     },
                     {
+                      id: 'date-hours',
+                      kind: 'wait',
+                      title: 'Wait',
+                      label: 'Date in their day',
+                      mode: 'time',
+                      minutes: 0,
+                      window: { start: '08:00', end: '17:00', days: ALL_WEEK },
+                      summary: "No delay, but an Advance Window of 8 AM to 5 PM in the contact's time zone. Current Date in the Math Operation is Chicago's date, and inside this window Chicago is on the same calendar day as every student from Newfoundland to Hawaii, so the date the day-5 email names is their own day plus ten.",
+                    },
+                    {
                       id: 'pause-date',
                       kind: 'action',
                       action: 'math',
@@ -572,7 +582,7 @@ Sasha${footer}`,
     {
       id: 'day-4',
       label: 'Pays on day 4, after the reminder',
-      summary: 'Bought right after a Thursday workshop in February, so installments charge at 8:05 PM. No text consent. The notice waits for 8 AM, and they pay on Monday after the day-2 reminder.',
+      summary: 'Bought at 8:05 PM right after a workshop, so installments charge at 8:05 PM. No text consent. The notice waits for 8 AM, and they pay on Monday after the day-2 reminder.',
       start: at(3, 20, 5),
       contact: student({ current_role: 'Individual contributor', goal: 'A new role', sms_consent: 'No', sms_marketing_consent: 'No', course_progress: 'Skills inventory done' }),
       events: [
@@ -684,7 +694,7 @@ Sasha${footer}`,
     },
     {
       title: 'Dates that match what we said',
-      body: 'Math Operation writes Current Date + 10 days to Access Pause Date right after the first notice, and the day-5 email quotes that date. The waits (2, 3 and 5 days) count from the same moment, so access pauses on the day the email named, never earlier. Current Date is in the sub-account’s time zone, Chicago, which inside the 8 AM to 8 PM window is the same calendar day for every US and Canadian student. On day 10 an If/Else checks Email DND again: if the day-5 email could not be delivered, nothing pauses and Sasha decides. The hand-off comes on day 24, before the next monthly installment can come due.',
+      body: 'Math Operation writes Current Date + 10 days to Access Pause Date right after the first notice, and the day-5 email quotes that date. The waits (2, 3 and 5 days) count from the same moment, so access pauses on the day the email named, never earlier. Current Date is in the sub-account’s time zone, Chicago, so a 0-minute Wait with an 8 AM to 5 PM Advance Window in the contact’s time zone runs first: at 7:30 PM in Hawaii it is already tomorrow in Chicago, and the hold keeps the date on the student’s own day. On day 10 an If/Else checks Email DND again: if the day-5 email could not be delivered, nothing pauses and Sasha decides. The hand-off comes on day 24, before the next monthly installment can come due.',
     },
     {
       title: 'Copy a stressed person can read',

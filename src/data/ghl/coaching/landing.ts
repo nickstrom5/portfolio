@@ -49,18 +49,19 @@ export const landing: LandingPage = {
   feeds: 'webinar',
   trigger: 0,
   textWindow: { start: '08:00', end: '20:00', days: [0, 1, 2, 3, 4, 5, 6] },
+  demoNote: 'It runs at your local time, and every reminder counts back from the next Thursday at 7 PM, so the log jumps to that evening.',
   behaviors: [
     {
       value: 'attends',
       label: 'Show up live',
       scenario: 'attends',
-      events: ({ start }) => [{ at: nextWorkshop(start) - start + 3, type: 'link_clicked', value: 'join' }],
+      events: ({ start }) => [{ at: nextWorkshop(start) - start + 3, type: 'link_clicked', value: 'join', label: 'Workshop Join, three minutes in' }],
     },
     {
       value: 'replay',
       label: 'Miss it, watch the replay',
       scenario: 'replay',
-      events: ({ start }) => [{ at: nextWorkshop(start) - start + 20 * 60, type: 'link_clicked', value: 'replay' }],
+      events: ({ start }) => [{ at: nextWorkshop(start) - start + 20 * 60, type: 'link_clicked', value: 'replay', label: 'Workshop Replay, from the replay email' }],
     },
     { value: 'no-show', label: 'Register and forget', scenario: 'no-show', events: () => [] },
   ],
@@ -71,7 +72,7 @@ export const landing: LandingPage = {
   ],
   notes: [
     { title: 'One promise, no income claims', body: 'The headline promises a plan, not a salary. The FTC treats earnings claims as claims that need proof, so the page and every follow-up avoid them.' },
-    { title: 'Two questions that earn their place', body: 'Current role and goal segment the follow-up emails and pre-fill the coaching application later, so nobody answers the same question twice.' },
+    { title: 'Two questions that earn their place', body: 'Current role and goal go on the contact record, so Devon sees them in every alert about this person, and the role feeds the readiness score if they apply for coaching later.' },
     { title: 'Phone optional, texts opt-in', body: 'Email is required, the phone is not. The text box is unticked and optional and says what the texts cover, and ticking it without a number asks for one.' },
     { title: 'A confirmation page that works', body: 'The workshop time in the visitor’s time zone, add-to-calendar buttons and a request to reply to the welcome email, which helps the next emails reach the inbox.' },
     { title: 'Order form on the offer step', body: 'The page after the workshop uses a Two-Step Order form with an order bump. Order Form Submission fires on submit and Order Submitted only on payment, which is what makes cart recovery possible.' },

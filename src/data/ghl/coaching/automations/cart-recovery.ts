@@ -103,7 +103,7 @@ export const cartRecovery: Automation = {
   name: 'Checkout recovery',
   kicker: 'Sales',
   tagline:
-    'Step 1 of the checkout starts it, paid or not. Buyers never hear from it. Everyone else gets two honest emails, one text only if they agreed to marketing texts, and a clean exit the moment they pay.',
+    'Step 1 of the checkout starts it, paid or not. Buyers never hear from it. Everyone else gets two plain emails, one text only if they agreed to marketing texts, and a clean exit the moment they pay.',
   problem:
     'After each Thursday workshop, some people typed their name and email into the checkout and stopped at the card step. We had their details and did nothing with them. Some only had a question, usually about refunds or the payment plan, and nobody answered it.',
   evidence: {
@@ -146,7 +146,7 @@ export const cartRecovery: Automation = {
         'One Goal Event per workflow is a GHL limit. It sits near the end of the text path. GHL moves a buyer to it from wherever they are waiting, email-only path included, and a non-buyer on that path reaches it through the Go To.',
         '03 · Students · Course Onboarding runs on the same payment and removes the contact from 02 in its first step. The steps after this goal write exactly what 03 writes (both cart tags off; the course card at Customer, Won, $497, named "{{contact.name}} · Career Pivot Blueprint"), so the contact ends up the same whichever workflow gets there first.',
         'A coaching applicant who scores under 70 stays in 02: 05’s "not yet" email recommends the same course, so the two do not disagree. At 70 or more, 05 takes them out of 02 (see the exits).',
-        'Texts need SMS consent (offers). Someone who ticked only the offers box on the workshop form has SMS DND from 01 (tag sms-off-no-consent), and 02 does not switch it off: that would also let 01’s reminder texts through, which they left unticked. They get the emails and no text. If they tick the texts box on the coaching application, 05 lifts the DND.',
+        'Texts need SMS consent (offers). Someone who ticked only the offers box on the workshop form has SMS DND from 01 (tag sms-off-no-consent), and 02 does not switch it off. The case\'s rule: a tick next to a reminders box they left unticked on the same form is not consent to reminders, and lifting DND would let 01\'s reminders through. They get the emails and no text. A later, separate opt-in is different: if they tick the texts box on the coaching application, 05 lifts the DND.',
         'Sender Details left blank: GHL then sends automated email from the assigned user, and 02 assigns Devon before the first email, so the From line matches the {{user.name}} signature. Every email ends with the business name and {{location.full_address}}, and Include Unsubscribe Link (Business Profile › General) stays on.',
         'One opportunity model across the case: the course card moves Registered, Attended, Checkout Started, Customer, and 03 marks it Won at Customer for $497; a coaching deal is a separate card that 05 creates at Applied, then Call Booked and Coaching Client. This workflow moves the course card to Checkout Started, or creates it there, and on payment writes what 03 writes. Allow Multiple Opportunities per Contact is on in Sub-Account Settings › Objects › Opportunities, so a contact whose only card is closed or a coaching deal still gets a course card here.',
       ],
@@ -598,7 +598,7 @@ export const cartRecovery: Automation = {
       note: 'The whole behavior comes from these few settings: Opt-In starts recovery at step 1, and the goal ends it at a successful payment, for either price.',
     },
     {
-      title: 'Email 1: honest FAQ',
+      title: 'Email 1: the FAQ',
       language: 'text',
       code: `Subject: ${faqSubject}\n\n${faqBody}`,
       note: 'No discount, no deadline and no promise of a job or a salary. The price, the plan and the refund policy are custom values, so a price change is one edit. The first lesson’s 12 minutes is the same figure 03 uses.',

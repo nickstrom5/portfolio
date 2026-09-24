@@ -257,18 +257,34 @@ export const webinar: Automation = {
                         }),
                       },
                       {
-                        id: 'wait-early',
+                        id: 'untag-joined',
+                        kind: 'action',
+                        action: 'remove_tag',
+                        title: 'Remove Contact Tag',
+                        label: 'workshop-joined',
+                        summary: 'Clears the tag 01a adds on a Join click, so only clicks from the 1-hour mark on count as being in the room. A test click on Tuesday is not attendance.',
+                        effect: { removeTags: ['workshop-joined'] },
+                      },
+                      {
+                        id: 'wait-doors',
                         kind: 'wait',
                         title: 'Wait',
-                        label: 'In the room early? (55 min)',
-                        mode: 'event',
-                        event: 'link_clicked',
-                        value: 'join',
-                        minutes: 55,
-                        summary: 'The contact to take an action: Clicks a trigger link, Workshop Join. Timeout 55 minutes, which ends at 6:55 PM. Clicks count from the 1-hour text on, so testing the link on Tuesday is not attendance.',
-                        branches: {
-                          met: {
+                        label: '5 minutes before',
+                        mode: 'before_appointment',
+                        offset: 5,
+                        ifPassed: 'skip_outbound',
+                        summary: 'An upcoming appointment or booking: 5 minutes before the Event Start Date, 6:55 PM Central, for everyone, however late they registered. If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so someone who registers at 6:58 PM never gets "we start in 5 minutes".',
+                      },
+                      {
+                        id: 'in-room',
+                        kind: 'ifelse',
+                        title: 'If/Else',
+                        label: 'In the room already?',
+                        branches: [
+                          {
                             label: 'Already clicked Join',
+                            // In GHL this reads the tag 01a adds on a Join click; the simulator reads the click itself.
+                            when: { type: 'event', event: 'link_clicked', value: 'join', label: 'Contact Tag includes workshop-joined' },
                             nodes: [
                               {
                                 id: 'goto-live',
@@ -279,297 +295,312 @@ export const webinar: Automation = {
                               },
                             ],
                           },
-                          timeout: {
-                            label: 'Not yet',
-                            nodes: [
-                              {
-                                id: 'sms-doors',
-                                kind: 'action',
-                                action: 'send_sms',
-                                title: 'Send SMS',
-                                label: 'Room is open',
-                                summary: 'Only for people who have not clicked Join yet. Not at 7:00, because 7 PM Central is 8 PM Eastern, the edge of the strictest state quiet-hours window: this lands at 7:55 PM on the East Coast. It carries the opt-out line because, for someone who registers in the last hour, the 1-hour text was skipped and this is their first text. Skipped for anyone on SMS DND.',
-                                message: {
-                                  channel: 'sms',
-                                  body: '{{location.name}}: the room is open, {{contact.first_name}}. We start in 5 minutes: {{trigger_link.join}} Reply STOP to opt out.',
-                                },
+                        ],
+                        otherwise: {
+                          label: 'Not yet',
+                          nodes: [
+                            {
+                              id: 'sms-doors',
+                              kind: 'action',
+                              action: 'send_sms',
+                              title: 'Send SMS',
+                              label: 'Room is open',
+                              summary: 'Only for people who have not clicked Join yet. Not at 7:00, because 7 PM Central is 8 PM Eastern, the edge of the strictest state quiet-hours window: this lands at 7:55 PM on the East Coast. It carries the opt-out line because, for someone who registers in the last hour, the 1-hour text was skipped and this is their first text. Skipped for anyone on SMS DND.',
+                              message: {
+                                channel: 'sms',
+                                body: '{{location.name}}: the room is open, {{contact.first_name}}. We start in 5 minutes: {{trigger_link.join}} Reply STOP to opt out.',
                               },
-                              {
-                                id: 'wait-join',
-                                kind: 'wait',
-                                title: 'Wait',
-                                label: 'Joined? (until 8:15 PM)',
-                                mode: 'event',
-                                event: 'link_clicked',
-                                value: 'join',
-                                minutes: 80,
-                                summary: 'Clicks a trigger link, Workshop Join, again. Timeout 80 minutes, which ends at 8:15 PM, when the hour and the Q&A are over. A click at any point before then counts as joined.',
-                                branches: {
-                                  met: {
-                                    label: 'Joined',
-                                    nodes: [
-                                      {
-                                        id: 'wait-end',
-                                        kind: 'wait',
-                                        title: 'Wait',
-                                        label: 'Until 8:15 PM',
-                                        mode: 'after_appointment',
-                                        offset: 75,
-                                        ifPassed: 'continue',
-                                        summary: 'An upcoming appointment or booking: 1 hour 15 minutes after the Event Start Date. The hour plus Q&A, so nobody gets the offer while Morgan is still answering questions. If this date has already passed: Continue to next action, so a Join click at 8:15 on the dot still gets the offer straight away.',
-                                      },
-                                      {
-                                        id: 'field-attended',
-                                        kind: 'action',
-                                        action: 'update_field',
-                                        title: 'Update Contact Field',
-                                        label: 'Attended Live = Yes',
-                                        summary: 'Keeps live attendance apart from replay views, so the show-up rate in reporting means live.',
-                                        effect: { fields: { attended: 'Yes' } },
-                                      },
-                                      {
-                                        id: 'tag-attended',
-                                        kind: 'action',
-                                        action: 'add_tag',
-                                        title: 'Add Contact Tag',
-                                        label: 'workshop-attended',
-                                        summary: 'For the "attended, not bought" Smart List and the show-up report.',
-                                        effect: { addTags: ['workshop-attended'] },
-                                      },
-                                      {
-                                        id: 'find-seen',
-                                        kind: 'ifelse',
-                                        title: 'Find Opportunity',
-                                        label: 'Open course card?',
-                                        branches: [
-                                          {
-                                            label: 'Opportunity Found',
-                                            when: {
-                                              type: 'any',
-                                              label: `Latest opportunity where Pipeline is Enrollment, Stage is not ${COACHING_LIST}, and Status is Open`,
-                                              of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })),
+                            },
+                            {
+                              id: 'wait-end',
+                              kind: 'wait',
+                              title: 'Wait',
+                              label: 'Until 8:15 PM',
+                              mode: 'after_appointment',
+                              offset: 75,
+                              ifPassed: 'continue',
+                              summary: 'An upcoming appointment or booking: 1 hour 15 minutes after the Event Start Date. The hour plus Q&A, so nobody gets the offer while Morgan is still answering questions. If this date has already passed: Continue to next action, so a Join click at 8:15 on the dot still gets the offer straight away.',
+                            },
+                            {
+                              id: 'joined',
+                              kind: 'ifelse',
+                              title: 'If/Else',
+                              label: 'Joined live?',
+                              branches: [
+                                {
+                                  label: 'Joined',
+                                  when: { type: 'event', event: 'link_clicked', value: 'join', label: 'Contact Tag includes workshop-joined' },
+                                  nodes: [
+                                    {
+                                      id: 'field-attended',
+                                      kind: 'action',
+                                      action: 'update_field',
+                                      title: 'Update Contact Field',
+                                      label: 'Attended Live = Yes',
+                                      summary: 'Keeps live attendance apart from replay views, so the show-up rate in reporting means live.',
+                                      effect: { fields: { attended: 'Yes' } },
+                                    },
+                                    {
+                                      id: 'tag-attended',
+                                      kind: 'action',
+                                      action: 'add_tag',
+                                      title: 'Add Contact Tag',
+                                      label: 'workshop-attended',
+                                      summary: 'For the "attended, not bought" Smart List and the show-up report.',
+                                      effect: { addTags: ['workshop-attended'] },
+                                    },
+                                    {
+                                      id: 'find-seen',
+                                      kind: 'ifelse',
+                                      title: 'Find Opportunity',
+                                      label: 'Open course card?',
+                                      branches: [
+                                        {
+                                          label: 'Opportunity Found',
+                                          when: {
+                                            type: 'any',
+                                            label: `Latest opportunity where Pipeline is Enrollment, Stage is not ${COACHING_LIST}, and Status is Open`,
+                                            of: COURSE_STAGES.map((stage) => ({ type: 'opportunity' as const, stage, status: 'open' as const })),
+                                          },
+                                          nodes: [
+                                            {
+                                              id: 'opp-attended',
+                                              kind: 'action',
+                                              action: 'update_opportunity',
+                                              title: 'Update Opportunity',
+                                              label: 'Attended',
+                                              summary: 'Enrollment › Attended, live or replay, on the card this Find just picked. Allow Opportunity to Move to Any Previous Stage stays off and Status is not in the step, so a card already at Checkout Started stays there.',
+                                              run: moveCard('Attended'),
                                             },
-                                            nodes: [
-                                              {
-                                                id: 'opp-attended',
-                                                kind: 'action',
-                                                action: 'update_opportunity',
-                                                title: 'Update Opportunity',
-                                                label: 'Attended',
-                                                summary: 'Enrollment › Attended, live or replay, on the card this Find just picked. Allow Opportunity to Move to Any Previous Stage stays off and Status is not in the step, so a card already at Checkout Started stays there.',
-                                                run: moveCard('Attended'),
-                                              },
-                                              {
-                                                id: 'offer-check',
-                                                kind: 'ifelse',
-                                                title: 'If/Else',
-                                                label: 'Already a student?',
-                                                branches: [
-                                                  {
-                                                    label: 'Access paused',
-                                                    when: { type: 'tag', has: 'access-paused' },
-                                                    nodes: [
-                                                      {
-                                                        id: 'end-paused',
-                                                        kind: 'end',
-                                                        title: 'End',
-                                                        summary:
-                                                          'The branch ends here, with a Sticky Note saying why: this student’s course access is paused while 04 · Billing · Failed Payment Recovery waits for an installment, so a "pick up where you left off" link would open nothing, and an offer for a course they own would be worse. 04’s emails already say how to restore access.',
-                                                      },
-                                                    ],
-                                                  },
-                                                  {
-                                                    label: 'Already a student',
-                                                    when: { type: 'field', key: 'purchase', op: 'not_empty', label: 'Purchase is not empty' },
-                                                    nodes: [
-                                                      {
-                                                        id: 'email-student',
-                                                        kind: 'action',
-                                                        action: 'send_email',
-                                                        title: 'Send Email',
-                                                        label: 'Your course login',
-                                                        summary: 'A current student came back for the live Q&A. No pitch for a course they own: the login and a line to student success.',
-                                                        message: {
-                                                          channel: 'email',
-                                                          subject: 'Good to see you again, {{contact.first_name}}',
-                                                          body: `Hi {{contact.first_name}},\n\nThanks for coming back to the workshop. You already have {{custom_values.course_name}}, so there is nothing to buy here. Pick up where you left off: {{custom_values.course_login}}\n\nStuck on a module? Reply to this email and our student success team will help.\n\n{{custom_values.founder_first_name}}${footer}`,
-                                                        },
-                                                      },
-                                                    ],
-                                                  },
-                                                ],
-                                                otherwise: {
-                                                  label: 'Not a student',
+                                            {
+                                              id: 'offer-check',
+                                              kind: 'ifelse',
+                                              title: 'If/Else',
+                                              label: 'Already a student?',
+                                              branches: [
+                                                {
+                                                  label: 'Access paused',
+                                                  when: { type: 'tag', has: 'access-paused' },
                                                   nodes: [
                                                     {
-                                                      id: 'email-offer',
+                                                      id: 'end-paused',
+                                                      kind: 'end',
+                                                      title: 'End',
+                                                      summary:
+                                                        'The branch ends here, with a Sticky Note saying why: this student’s course access is paused while 04 · Billing · Failed Payment Recovery waits for an installment, so a "pick up where you left off" link would open nothing, and an offer for a course they own would be worse. 04’s emails already say how to restore access.',
+                                                    },
+                                                  ],
+                                                },
+                                                {
+                                                  label: 'Already a student',
+                                                  when: { type: 'field', key: 'purchase', op: 'not_empty', label: 'Purchase is not empty' },
+                                                  nodes: [
+                                                    {
+                                                      id: 'email-student',
                                                       kind: 'action',
                                                       action: 'send_email',
                                                       title: 'Send Email',
-                                                      label: 'The offer',
-                                                      summary: 'Price, payment plan and refund policy in plain words, one checkout link, no countdown and no claims about jobs or pay. The P.S. links the replay, for anyone who clicked Join but left early.',
+                                                      label: 'Your course login',
+                                                      summary: 'A current student came back for the live Q&A. No pitch for a course they own: the login and a line to student success.',
                                                       message: {
                                                         channel: 'email',
-                                                        subject: 'If you want the full plan: {{custom_values.course_name}}',
-                                                        body: `Hi {{contact.first_name}},\n\nThanks for spending the hour on {{custom_values.workshop_title}}. The workshop gives you the map. {{custom_values.course_name}} is the full, self-paced version: the skills inventory, the 90-day plan and the templates from the workshop, to work through on your own schedule.\n\nIt is {{custom_values.course_price}} paid once, or {{custom_values.payment_plan}}, which comes to a little more in total. It comes with a {{custom_values.refund_policy}}: email {{custom_values.support_email}} within the guarantee period for a full refund.\n\nEnroll here: {{trigger_link.checkout}}\n\nThe price is the same next week. There is no countdown, so take the time you need.\n\nWant one-to-one help instead? {{custom_values.coaching_name}} is by application: {{trigger_link.apply}}\n\n{{custom_values.founder_first_name}}\n\nP.S. Missed part of it? The replay is here until Saturday evening: {{trigger_link.replay}}${footer}`,
+                                                        subject: 'Good to see you again, {{contact.first_name}}',
+                                                        body: `Hi {{contact.first_name}},\n\nThanks for coming back to the workshop. You already have {{custom_values.course_name}}, so there is nothing to buy here. Pick up where you left off: {{custom_values.course_login}}\n\nStuck on a module? Reply to this email and our student success team will help.\n\n{{custom_values.founder_first_name}}${footer}`,
                                                       },
                                                     },
                                                   ],
                                                 },
+                                                {
+                                                  label: 'Watched the replay',
+                                                  when: { type: 'tag', has: 'workshop-replay' },
+                                                  nodes: [
+                                                    {
+                                                      id: 'email-offer-replay',
+                                                      kind: 'action',
+                                                      action: 'send_email',
+                                                      title: 'Send Email',
+                                                      label: 'The offer, after the replay',
+                                                      summary: 'The same offer without the P.S. about the replay: it can land on Sunday morning, after the replay page has come down.',
+                                                      message: {
+                                                        channel: 'email',
+                                                        subject: 'If you want the full plan: {{custom_values.course_name}}',
+                                                        body: `Hi {{contact.first_name}},\n\nThanks for watching {{custom_values.workshop_title}}. The workshop gives you the map. {{custom_values.course_name}} is the full, self-paced version: the skills inventory, the 90-day plan and the templates from the workshop, to work through on your own schedule.\n\nIt is {{custom_values.course_price}} paid once, or {{custom_values.payment_plan}}, which comes to a little more in total. It comes with a {{custom_values.refund_policy}}: email {{custom_values.support_email}} within the guarantee period for a full refund.\n\nEnroll here: {{trigger_link.checkout}}\n\nThe price is the same next week. There is no countdown, so take the time you need.\n\nWant one-to-one help instead? {{custom_values.coaching_name}} is by application: {{trigger_link.apply}}\n\n{{custom_values.founder_first_name}}${footer}`,
+                                                      },
+                                                    },
+                                                  ],
+                                                },
+                                              ],
+                                              otherwise: {
+                                                label: 'Attended live',
+                                                nodes: [
+                                                  {
+                                                    id: 'email-offer',
+                                                    kind: 'action',
+                                                    action: 'send_email',
+                                                    title: 'Send Email',
+                                                    label: 'The offer',
+                                                    summary: 'Price, payment plan and refund policy in plain words, one checkout link, no countdown and no claims about jobs or pay. The P.S. links the replay, for anyone who clicked Join but left early.',
+                                                    message: {
+                                                      channel: 'email',
+                                                      subject: 'If you want the full plan: {{custom_values.course_name}}',
+                                                      body: `Hi {{contact.first_name}},\n\nThanks for spending the hour on {{custom_values.workshop_title}}. The workshop gives you the map. {{custom_values.course_name}} is the full, self-paced version: the skills inventory, the 90-day plan and the templates from the workshop, to work through on your own schedule.\n\nIt is {{custom_values.course_price}} paid once, or {{custom_values.payment_plan}}, which comes to a little more in total. It comes with a {{custom_values.refund_policy}}: email {{custom_values.support_email}} within the guarantee period for a full refund.\n\nEnroll here: {{trigger_link.checkout}}\n\nThe price is the same next week. There is no countdown, so take the time you need.\n\nWant one-to-one help instead? {{custom_values.coaching_name}} is by application: {{trigger_link.apply}}\n\n{{custom_values.founder_first_name}}\n\nP.S. Missed part of it? The replay is here until Saturday evening: {{trigger_link.replay}}${footer}`,
+                                                    },
+                                                  },
+                                                ],
                                               },
-                                            ],
-                                          },
-                                        ],
-                                        otherwise: {
-                                          label: 'Opportunity Not Found',
-                                          nodes: [
-                                            {
-                                              id: 'goto-offer',
-                                              kind: 'goto',
-                                              title: 'Go To',
-                                              target: 'offer-check',
-                                              summary: 'No open course card: a student’s card is Won, and a closed card is never reopened here. Nothing moves; on to the student check.',
                                             },
                                           ],
                                         },
-                                      },
-                                    ],
-                                  },
-                                  timeout: {
-                                    label: 'Missed it',
-                                    nodes: [
-                                      {
-                                        id: 'email-replay',
-                                        kind: 'action',
-                                        action: 'send_email',
-                                        title: 'Send Email',
-                                        label: 'The replay',
-                                        summary: 'At 8:15 PM. No guilt, one link, and a way in for someone with 20 minutes. The replay page stays up for 48 hours.',
-                                        message: {
-                                          channel: 'email',
-                                          subject: 'Sorry we missed you: the replay is up until Saturday',
-                                          body: `Hi {{contact.first_name}},\n\nWe missed you tonight, and that is fine. The full recording of {{custom_values.workshop_title}} is here until Saturday evening:\n\n{{trigger_link.replay}}\n\nIf you only have 20 minutes, watch the first 20. That is the skills map, and you can do it on paper while you watch.\n\n{{custom_values.founder_first_name}}${footer}`,
-                                        },
-                                      },
-                                      {
-                                        id: 'wait-replay-1',
-                                        kind: 'wait',
-                                        title: 'Wait',
-                                        label: 'Replay opened? (18 hours)',
-                                        mode: 'event',
-                                        event: 'link_clicked',
-                                        value: 'replay',
-                                        minutes: 18 * 60,
-                                        summary: 'The contact to take an action: Clicks a trigger link, Workshop Replay. Only that link counts, so a late click on Join does not. Timeout 18 hours, which ends Friday at 2:15 PM Central, a time a text can land anywhere from Eastern to Hawaii.',
-                                        branches: {
-                                          met: {
-                                            label: 'Opened the replay',
-                                            nodes: [
-                                              {
-                                                id: 'wait-watch',
-                                                kind: 'wait',
-                                                title: 'Wait',
-                                                label: 'Time to watch it',
-                                                mode: 'time',
-                                                minutes: 120,
-                                                window: { start: '08:00', end: '21:00', days: ALL_WEEK },
-                                                summary: 'Two hours, long enough to finish the recording before the offer arrives. Advance Window 8 AM to 9 PM, so a midnight viewer gets it over breakfast.',
-                                              },
-                                              {
-                                                id: 'tag-replay',
-                                                kind: 'action',
-                                                action: 'add_tag',
-                                                title: 'Add Contact Tag',
-                                                label: 'workshop-replay',
-                                                summary: 'Watched the replay, not live. Attended Live stays No, so live and replay are counted apart.',
-                                                effect: { addTags: ['workshop-replay'] },
-                                              },
-                                              {
-                                                id: 'goto-seen',
-                                                kind: 'goto',
-                                                title: 'Go To',
-                                                target: 'find-seen',
-                                                summary: 'Joins the live path at the card update: the same Find, the card to Attended, the same student check and the same offer email, so there is one offer to keep up to date.',
-                                              },
-                                            ],
+                                      ],
+                                      otherwise: {
+                                        label: 'Opportunity Not Found',
+                                        nodes: [
+                                          {
+                                            id: 'goto-offer',
+                                            kind: 'goto',
+                                            title: 'Go To',
+                                            target: 'offer-check',
+                                            summary: 'No open course card: a student’s card is Won, and a closed card is never reopened here. Nothing moves; on to the student check.',
                                           },
-                                          timeout: {
-                                            label: 'Not yet',
-                                            nodes: [
-                                              {
-                                                id: 'sms-nudge',
-                                                kind: 'action',
-                                                action: 'send_sms',
-                                                title: 'Send SMS',
-                                                label: 'Replay nudge',
-                                                summary: 'A reminder about the event they signed up for, not a pitch: no price, no checkout link. Skipped for anyone on SMS DND.',
-                                                message: {
-                                                  channel: 'sms',
-                                                  body: "{{location.name}}: Hi {{contact.first_name}}, the replay of Thursday's workshop is up until Saturday evening: {{trigger_link.replay}}",
-                                                },
-                                              },
-                                              {
-                                                id: 'wait-replay-2',
-                                                kind: 'wait',
-                                                title: 'Wait',
-                                                label: 'Replay opened? (30 hours)',
-                                                mode: 'event',
-                                                event: 'link_clicked',
-                                                value: 'replay',
-                                                minutes: 30 * 60,
-                                                summary: 'Clicks a trigger link, Workshop Replay, again. Timeout 30 hours, which ends Saturday at 8:15 PM Central, when the replay page comes down.',
-                                                branches: {
-                                                  met: {
-                                                    label: 'Opened the replay',
-                                                    nodes: [
-                                                      {
-                                                        id: 'goto-watched',
-                                                        kind: 'goto',
-                                                        title: 'Go To',
-                                                        target: 'wait-watch',
-                                                        summary: 'Joins the replay path above: time to watch, the tag, the card to Attended, then the offer.',
-                                                      },
-                                                    ],
-                                                  },
-                                                  timeout: {
-                                                    label: 'Never opened it',
-                                                    nodes: [
-                                                      {
-                                                        id: 'tag-no-show',
-                                                        kind: 'action',
-                                                        action: 'add_tag',
-                                                        title: 'Add Contact Tag',
-                                                        label: 'workshop-no-show',
-                                                        summary: 'Registered, did not join, did not watch. The card stays in Registered.',
-                                                        effect: { addTags: ['workshop-no-show'] },
-                                                      },
-                                                      {
-                                                        id: 'email-next',
-                                                        kind: 'action',
-                                                        action: 'send_email',
-                                                        title: 'Send Email',
-                                                        label: 'Next Thursday?',
-                                                        summary: 'The last step, so the run is over by the time they click: Allow Re-entry lets the new registration start a fresh run.',
-                                                        message: {
-                                                          channel: 'email',
-                                                          subject: 'Next Thursday, 7 PM Central?',
-                                                          body: `Hi {{contact.first_name}},\n\nThe replay of {{custom_values.workshop_title}} is down now. The workshop runs live every Thursday at 7 PM Central, and you are welcome at the next one: {{location.website}}/pivot-plan\n\nIf Thursday evenings do not work for you, reply and tell me what would. I read the replies.\n\n{{custom_values.founder_first_name}}${footer}`,
-                                                        },
-                                                      },
-                                                    ],
-                                                  },
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
+                                        ],
                                       },
-                                    ],
-                                  },
+                                    },
+                                  ],
                                 },
+                              ],
+                              otherwise: {
+                                label: 'Missed it',
+                                nodes: [
+                                  {
+                                    id: 'email-replay',
+                                    kind: 'action',
+                                    action: 'send_email',
+                                    title: 'Send Email',
+                                    label: 'The replay',
+                                    summary: 'At 8:15 PM. No guilt, one link, and a way in for someone with 20 minutes. The replay page stays up for 48 hours.',
+                                    message: {
+                                      channel: 'email',
+                                      subject: 'Sorry we missed you: the replay is up until Saturday',
+                                      body: `Hi {{contact.first_name}},\n\nWe missed you tonight, and that is fine. The full recording of {{custom_values.workshop_title}} is here until Saturday evening:\n\n{{trigger_link.replay}}\n\nIf you only have 20 minutes, watch the first 20. That is the skills map, and you can do it on paper while you watch.\n\n{{custom_values.founder_first_name}}${footer}`,
+                                    },
+                                  },
+                                  {
+                                    id: 'wait-replay-1',
+                                    kind: 'wait',
+                                    title: 'Wait',
+                                    label: 'Replay opened? (18 hours)',
+                                    mode: 'event',
+                                    event: 'link_clicked',
+                                    value: 'replay',
+                                    minutes: 18 * 60,
+                                    summary: 'The contact to take an action: Clicks a trigger link, Workshop Replay. Only that link counts, so a late click on Join does not. Timeout 18 hours, which ends Friday at 2:15 PM Central, a time a text can land anywhere from Eastern to Hawaii.',
+                                    branches: {
+                                      met: {
+                                        label: 'Opened the replay',
+                                        nodes: [
+                                          {
+                                            id: 'wait-watch',
+                                            kind: 'wait',
+                                            title: 'Wait',
+                                            label: 'Time to watch it',
+                                            mode: 'time',
+                                            minutes: 120,
+                                            window: { start: '08:00', end: '21:00', days: ALL_WEEK },
+                                            summary: 'Two hours, long enough to finish the recording before the offer arrives. Advance Window 8 AM to 9 PM, so a midnight viewer gets it over breakfast.',
+                                          },
+                                          {
+                                            id: 'tag-replay',
+                                            kind: 'action',
+                                            action: 'add_tag',
+                                            title: 'Add Contact Tag',
+                                            label: 'workshop-replay',
+                                            summary: 'Watched the replay, not live. Attended Live stays No, so live and replay are counted apart.',
+                                            effect: { addTags: ['workshop-replay'] },
+                                          },
+                                          {
+                                            id: 'goto-seen',
+                                            kind: 'goto',
+                                            title: 'Go To',
+                                            target: 'find-seen',
+                                            summary: 'Joins the live path at the card update: the same Find, the card to Attended, the same student check and the same offer email, so there is one offer to keep up to date.',
+                                          },
+                                        ],
+                                      },
+                                      timeout: {
+                                        label: 'Not yet',
+                                        nodes: [
+                                          {
+                                            id: 'sms-nudge',
+                                            kind: 'action',
+                                            action: 'send_sms',
+                                            title: 'Send SMS',
+                                            label: 'Replay nudge',
+                                            summary: 'A reminder about the event they signed up for, not a pitch: no price, no checkout link. It carries the opt-out line because, for someone who registered in the last few minutes before the session, it is the first text. Skipped for anyone on SMS DND.',
+                                            message: {
+                                              channel: 'sms',
+                                              body: "{{location.name}}: Hi {{contact.first_name}}, the replay of Thursday's workshop is up until Saturday evening: {{trigger_link.replay}} Reply STOP to opt out.",
+                                            },
+                                          },
+                                          {
+                                            id: 'wait-replay-2',
+                                            kind: 'wait',
+                                            title: 'Wait',
+                                            label: 'Replay opened? (30 hours)',
+                                            mode: 'event',
+                                            event: 'link_clicked',
+                                            value: 'replay',
+                                            minutes: 30 * 60,
+                                            summary: 'Clicks a trigger link, Workshop Replay, again. Timeout 30 hours, which ends Saturday at 8:15 PM Central, when the replay page comes down.',
+                                            branches: {
+                                              met: {
+                                                label: 'Opened the replay',
+                                                nodes: [
+                                                  {
+                                                    id: 'goto-watched',
+                                                    kind: 'goto',
+                                                    title: 'Go To',
+                                                    target: 'wait-watch',
+                                                    summary: 'Joins the replay path above: time to watch, the tag, the card to Attended, then the offer.',
+                                                  },
+                                                ],
+                                              },
+                                              timeout: {
+                                                label: 'Never opened it',
+                                                nodes: [
+                                                  {
+                                                    id: 'tag-no-show',
+                                                    kind: 'action',
+                                                    action: 'add_tag',
+                                                    title: 'Add Contact Tag',
+                                                    label: 'workshop-no-show',
+                                                    summary: 'Registered, did not join, did not watch. The card stays in Registered.',
+                                                    effect: { addTags: ['workshop-no-show'] },
+                                                  },
+                                                  {
+                                                    id: 'email-next',
+                                                    kind: 'action',
+                                                    action: 'send_email',
+                                                    title: 'Send Email',
+                                                    label: 'Next Thursday?',
+                                                    summary: 'The last step, so the run is over by the time they click: Allow Re-entry lets the new registration start a fresh run.',
+                                                    message: {
+                                                      channel: 'email',
+                                                      subject: 'Next Thursday, 7 PM Central?',
+                                                      body: `Hi {{contact.first_name}},\n\nThe replay of {{custom_values.workshop_title}} is down now. The workshop runs live every Thursday at 7 PM Central, and you are welcome at the next one: {{location.website}}/pivot-plan\n\nIf Thursday evenings do not work for you, reply and tell me what would. I read the replies.\n\n{{custom_values.founder_first_name}}${footer}`,
+                                                    },
+                                                  },
+                                                ],
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  },
+                                ],
                               },
-                            ],
-                          },
+                            },
+                          ],
                         },
                       },
                     ],
@@ -649,7 +680,7 @@ export const webinar: Automation = {
       events: [{ at: fromWorkshop(DAY + 12 * 60 + 40, 3), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the doors-open text' }],
       expect: {
         outcome: 'completed',
-        visits: ['can-text:1', 'find-opp:else', 'create-opp', 'goto-confirm', 'email-confirm', 'email-1d', 'sms-1h', 'save-date', 'wait-early:timeout', 'sms-doors', 'wait-join:met', 'wait-end', 'field-attended', 'tag-attended', 'find-seen:0', 'opp-attended', 'offer-check:else', 'email-offer'],
+        visits: ['can-text:1', 'find-opp:else', 'create-opp', 'goto-confirm', 'email-confirm', 'email-1d', 'sms-1h', 'save-date', 'in-room:else', 'sms-doors', 'joined:0', 'wait-end', 'field-attended', 'tag-attended', 'find-seen:0', 'opp-attended', 'offer-check:else', 'email-offer'],
         tags: ['workshop-attended'],
         stage: 'Attended',
       },
@@ -663,7 +694,7 @@ export const webinar: Automation = {
       events: [{ at: fromWorkshop(20 * 60 + 25, 20 * 60), type: 'link_clicked', value: 'replay', label: 'Workshop Replay, from the Friday text' }],
       expect: {
         outcome: 'completed',
-        visits: ['sms-doors', 'wait-join:timeout', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:met', 'goto-watched', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:0', 'opp-attended', 'offer-check:else', 'email-offer'],
+        visits: ['sms-doors', 'joined:else', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:met', 'goto-watched', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:0', 'opp-attended', 'offer-check:2', 'email-offer-replay'],
         tags: ['workshop-replay'],
         stage: 'Attended',
       },
@@ -677,7 +708,7 @@ export const webinar: Automation = {
       events: [],
       expect: {
         outcome: 'completed',
-        visits: ['email-1d', 'sms-1h', 'sms-doors', 'wait-join:timeout', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:timeout', 'tag-no-show', 'email-next'],
+        visits: ['email-1d', 'sms-1h', 'sms-doors', 'joined:else', 'email-replay', 'wait-replay-1:timeout', 'sms-nudge', 'wait-replay-2:timeout', 'tag-no-show', 'email-next'],
         tags: ['workshop-no-show'],
         stage: 'Registered',
       },
@@ -697,7 +728,7 @@ export const webinar: Automation = {
       ],
       expect: {
         outcome: 'completed',
-        visits: ['untag', 'can-text:else', 'dnd-on', 'tag-dnd', 'goto-find', 'find-opp:0', 'wait-early:timeout', 'wait-join:timeout', 'email-replay', 'wait-replay-1:met', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:else', 'goto-offer', 'offer-check:1', 'email-student'],
+        visits: ['untag', 'can-text:else', 'dnd-on', 'tag-dnd', 'goto-find', 'find-opp:0', 'in-room:else', 'joined:else', 'email-replay', 'wait-replay-1:met', 'wait-watch', 'tag-replay', 'goto-seen', 'find-seen:else', 'goto-offer', 'offer-check:1', 'email-student'],
         skips: ['sms-1h', 'sms-doors'],
         tags: ['workshop-replay', 'sms-off-no-consent'],
         stage: 'Customer',
@@ -717,7 +748,7 @@ export const webinar: Automation = {
       events: [{ at: fromWorkshop(9 * 60 + 5, 2), type: 'link_clicked', value: 'join', label: 'Workshop Join, from the doors-open text' }],
       expect: {
         outcome: 'ended',
-        visits: ['can-text:1', 'find-opp:0', 'sms-doors', 'wait-join:met', 'field-attended', 'tag-attended', 'find-seen:else', 'goto-offer', 'offer-check:0', 'end-paused'],
+        visits: ['can-text:1', 'find-opp:0', 'sms-doors', 'joined:0', 'field-attended', 'tag-attended', 'find-seen:else', 'goto-offer', 'offer-check:0', 'end-paused'],
         tags: ['workshop-attended', 'access-paused'],
         stage: 'Customer',
       },
@@ -745,7 +776,7 @@ export const webinar: Automation = {
       ],
       expect: {
         outcome: 'ended',
-        visits: ['untag', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-find-on', 'find-opp:0', 'email-confirm', 'wait-1d', 'wait-1h', 'sms-1h', 'wait-early:met', 'goto-live', 'wait-end'],
+        visits: ['untag', 'can-text:0', 'dnd-off', 'untag-dnd', 'goto-find-on', 'find-opp:0', 'email-confirm', 'wait-1d', 'wait-1h', 'sms-1h', 'in-room:0', 'goto-live', 'wait-end'],
         skips: ['email-1d'],
         stage: 'Registered',
       },
@@ -761,6 +792,7 @@ export const webinar: Automation = {
       { name: 'Purchase', key: 'purchase', type: 'Single line', note: 'Written by 03 when they buy. Read here to keep the offer away from students' },
     ],
     tags: [
+      { name: 'workshop-joined', note: 'Added by 01a · Workshop · Join Clicked on a Join click; cleared here at the 1-hour mark and read at 6:55 and 8:15 PM' },
       { name: 'workshop-attended', note: 'Clicked Join at the latest session' },
       { name: 'workshop-replay', note: 'Opened the replay of the latest session' },
       { name: 'workshop-no-show', note: 'Neither. All three are cleared when they register again' },
@@ -792,7 +824,7 @@ export const webinar: Automation = {
     },
     {
       title: 'Reading the Join click',
-      body: 'The help center documents a trigger-link click as something a Wait can listen for (The contact to take an action: Clicks a trigger link), so the post-session split is two of those waits, not an If/Else. A Goal Event on the click was the other option, but a goal pulls the contact forward from wherever they are, so a Tuesday test click would skip every reminder. The first wait starts after the 1-hour text and times out at 6:55 PM; a click there skips the doors-open text, because they are already in the room. The second starts after that text and times out at 8:15 PM. A click in either goes to a wait for 8:15 PM and then the offer. No click means the replay. Both replay waits listen only for the Replay link, so a late click on Join does not count as watching.',
+      body: 'An If/Else cannot read a trigger-link click, and a Wait for a click times out a set time after the contact reaches it, which drifts for anyone who registers in the last hour. So a one-action helper, 01a · Workshop · Join Clicked (trigger Trigger Link Clicked, Workshop Join; action Add Contact Tag workshop-joined), turns the click into a tag. This workflow clears the tag at the 1-hour mark, so a test click earlier in the week does not count, then reads it at two moments pinned to the Event Start Date: 6:55 PM, when only people not yet in the room get the doors-open text, and 8:15 PM, when the If/Else splits attended from the replay. A Goal Event on the click was the other option, but a goal pulls the contact forward from wherever they are, so a Tuesday test click would skip every reminder. Both replay waits listen only for the Replay link, so a late click on Join does not count as watching.',
     },
     {
       title: 'Consent by DND, and what it costs',
@@ -817,8 +849,8 @@ export const webinar: Automation = {
       body: 'The day-before time has already passed, and that wait is set to Skip all outbound communication actions till next wait or event start date action. The day-before email is skipped, the 1-hour wait ends the skip, and they get the confirmation, the 1-hour text and the doors-open text. The last test contact above runs exactly this.',
     },
     {
-      title: 'Clicks Join early, or leaves after five minutes',
-      body: 'A click before 6 PM Thursday, like a test on Tuesday, is ignored because the Join waits have not started. A click at 6:02 PM counts and skips the doors-open text. A five-minute visit counts as joined, so they get the offer instead of the replay email, and the offer’s P.S. links the replay.',
+      title: 'Clicks Join early, registers late, or leaves after five minutes',
+      body: 'A click before 6 PM Thursday, like a test on Tuesday, is ignored because the workflow clears the workshop-joined tag at the 1-hour mark. A click at 6:02 PM counts and skips the doors-open text. Someone who registers at 6:30 PM gets the doors-open text at 6:55 like everyone else, and someone who registers at 6:58 PM gets none, because both checks are pinned to the Event Start Date, not to when they arrived. A five-minute visit counts as joined, so they get the offer instead of the replay email, and the offer’s P.S. links the replay.',
     },
     {
       title: 'Replies STOP to the 1-hour text',
@@ -858,6 +890,7 @@ export const webinar: Automation = {
     'Event Start Date',
     'Remove Contact Tag',
     'If/Else',
+    'Trigger Link Clicked (helper 01a)',
     'Enable/Disable DND',
     'Add Contact Tag',
     'Go To',

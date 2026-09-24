@@ -308,7 +308,7 @@ export const estimateFollowUp: Automation = {
                               action: 'update_opportunity',
                               title: 'Update Opportunity',
                               label: 'Abandoned',
-                              summary: 'Status Abandoned, not Lost: they never said no, so the lost-deal report stays honest.',
+                              summary: 'Status Abandoned, not Lost: they never said no, so the lost-deal report stays accurate.',
                               effect: { opportunity: { status: 'abandoned' } },
                             },
                             {
