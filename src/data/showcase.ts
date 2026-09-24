@@ -34,7 +34,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'leaderboard';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -418,6 +418,30 @@ export const projects: Project[] = [
     tileBlurb: 'One photo. A glow score. Sixty seconds.',
     bg: 'linear-gradient(135deg, #1a1916 0%, #0e0e0c 60%, #2a2620 100%)',
     fg: '#e8e4db',
+    comingSoon: true,
+  },
+  {
+    id: 'cartworth',
+    name: 'Cartworth',
+    kicker: 'iPhone app · grocery price compare',
+    tileBlurb: 'Every store near you. Every price per unit.',
+    bg: 'linear-gradient(135deg, #e6f4e9 0%, #f7fbf8 55%, #d8ecdf 100%)',
+    fg: '#0f7a3d',
+    bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
+    fgDark: '#5fd08a',
+    tone: 'light',
+    comingSoon: true,
+  },
+  {
+    id: 'leaderboard',
+    name: 'Chicago Restaurant Leaderboard',
+    kicker: 'Web app · Illinois restaurants',
+    tileBlurb: 'Illinois restaurants, ranked by one score.',
+    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
+    fg: '#b3122b',
+    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
+    fgDark: '#ff7a86',
+    tone: 'light',
     comingSoon: true,
   },
 ];
