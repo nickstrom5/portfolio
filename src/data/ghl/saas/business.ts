@@ -15,7 +15,7 @@ export const business: Business = {
   intro:
     'Crewlo sells scheduling and dispatch software to field-service companies, with a 14-day free trial and a sales team for larger accounts. The growth lead needed demo requests routed to the right rep in seconds, trial emails driven by what people actually do in the product, a signal when a trial is worth a sales call, and a clean hand-off from closed deal to onboarding. The app sends events to GHL over Inbound Webhooks, and GHL calls the app back to extend trials and provision accounts.',
   disclaimer: 'Crewlo is a fictional software company. The people, phone numbers, prices, events and links are samples.',
-  pipeline: { name: 'New Business', stages: ['Demo Requested', 'Demo Booked', 'Trial Sales-Assist', 'Demo Held', 'Proposal', 'Closed Won', 'Onboarding'] },
+  pipeline: { name: 'New Business', stages: ['Demo Requested', 'Demo Booked', 'Trial Sales-Assist', 'Demo Held', 'Proposal', 'Onboarding'] },
   team: [
     { key: 'hana', name: 'Hana Ito', role: 'Growth lead (owns GHL)' },
     { key: 'priya', name: 'Priya Shah', role: 'Sales development rep' },
@@ -98,7 +98,7 @@ export const business: Business = {
     'trial-onboarding': 'Trial signup → activated',
     'pql-alert': 'Active trial → Trial Sales-Assist',
     'trial-ending': 'Trial ending → paid or extended',
-    'closed-won': 'Closed Won → Onboarding',
+    'closed-won': 'Won → Onboarding',
     'nps-health': 'NPS → saved, heard or referred',
   },
   tint: { light: '#4338ca', dark: '#a5b4fc' },

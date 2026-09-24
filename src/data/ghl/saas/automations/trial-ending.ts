@@ -3,6 +3,8 @@ import { formatClock, formatDay, minutesAtDate } from '@/lib/ghl/engine';
 import { business } from '../business';
 
 const DAY = 1440;
+/** The sub-account's time zone, which Event Start Date always uses. */
+const ACCOUNT_TZ = 'America/Los_Angeles';
 const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
 
 /** Minutes after Monday 00:00 of the sample week. */
@@ -12,10 +14,28 @@ const api = business.env.customValues.api_base;
 const company = (c: Contact) => String(c.fields.company ?? 'their company');
 const name = (c: Contact) => `${c.firstName} ${c.lastName}`;
 
-/** Trial Ends (MM-DD-YYYY) as simulated minutes: the start of that day on the current timeline. */
+/** Minutes a time zone is ahead of UTC at a given moment, daylight saving included. */
+function utcOffset(timeZone: string, utcMs: number): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+      .formatToParts(new Date(utcMs))
+      .map((p) => [p.type, Number(p.value)]),
+  );
+  return (Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute) - utcMs) / 60000;
+}
+
+/**
+ * Trial Ends (MM-DD-YYYY) as simulated minutes on the contact's clock. Event
+ * Start Date runs on the account time zone, so the day starts at midnight
+ * Pacific: 3 AM for a contact in New York.
+ */
 function trialEndsAt(c: Contact): number | undefined {
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(c.fields.trial_end ?? ''));
-  return m ? minutesAtDate(Number(m[3]), Number(m[1]), Number(m[2])) : undefined;
+  if (!m) return undefined;
+  const [y, mo, d] = [Number(m[3]), Number(m[1]), Number(m[2])];
+  const noon = Date.UTC(y, mo - 1, d, 12);
+  const ahead = utcOffset(c.timezone ?? ACCOUNT_TZ, noon) - utcOffset(ACCOUNT_TZ, noon);
+  return minutesAtDate(y, mo, d) + ahead;
 }
 
 /** Math Operation on a Date field: MM-DD-YYYY plus n days, written back as MM-DD-YYYY. */
@@ -62,7 +82,7 @@ const subscriptionPayload = `{
 const extendOffer = {
   subject: 'Want 7 more days with Crewlo?',
   body:
-    "Hi {{contact.first_name}},\n\nYour Crewlo trial ends in 3 days, and it looks like no jobs have gone out to a tech's phone yet. That is the point where Crewlo starts saving your office time, and 3 days may not be enough to get there.\n\nIf you want more time, click this link in the next 3 days and your trial gets 7 more days. Nothing to fill in: {{trigger_link.extend_trial}}\n\nIf it would help, I will also set it up with you on a 20-minute screen share: we load this week's jobs, invite one tech and send them their first job. Reply with two times that suit you.\n\nLeo Park\nCustomer Success, Crewlo" +
+    "Hi {{contact.first_name}},\n\nYour Crewlo trial ends in 3 days, and it looks like no jobs have gone out to a tech's phone yet. That is the point where Crewlo starts saving your office time, and 3 days may not be enough to get there.\n\nIf you want more time, click this link by the morning of your last day and your trial gets 7 more days. Nothing to fill in: {{trigger_link.extend_trial}}\n\nIf it would help, I will also set it up with you on a 20-minute screen share: we load this week's jobs, invite one tech and send them their first job. Reply with two times that suit you.\n\nLeo Park\nCustomer Success, Crewlo" +
     footer,
 };
 
@@ -120,7 +140,7 @@ export const trialEnding: Automation = {
         run: ({ contact }) => {
           const start = trialEndsAt(contact);
           if (start === undefined) return { log: 'Trial Ends is empty, so there is no date to count from. The Custom Date Reminder does not fire without one.' };
-          return { eventStart: start, log: `Event start set to ${formatClock(start)}, the start of the day Trial Ends names (${contact.fields.trial_end}). The waits below count from it.` };
+          return { eventStart: start, log: `Event start set to ${formatClock(start)} in ${contact.firstName}'s time zone: midnight Pacific, the start of the day Trial Ends names (${contact.fields.trial_end}). The waits below count from it.` };
         },
       },
       {
@@ -163,12 +183,12 @@ export const trialEnding: Automation = {
                 id: 'wait-eve',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Day before, 8 AM',
+                label: 'Day before, 8 AM Pacific',
                 mode: 'before_appointment',
                 offset: 16 * 60,
                 ifPassed: 'skip_outbound',
                 summary:
-                  "An upcoming appointment or booking, Type Appointment / Calendar Event (the Event Start Date article's Wait for Event/Appointment Time): Before, 16 hours, which is 8 AM the day before Trial Ends. If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so an \"ends tomorrow\" email can never go out on the last day.",
+                  "An upcoming appointment or booking, Type Appointment / Calendar Event (the Event Start Date article's Wait for Event/Appointment Time): Before, 16 hours, which is 8 AM Pacific the day before Trial Ends. If this date has already passed: Skip all outbound communication actions till next wait or event start date action, so an \"ends tomorrow\" email can never go out on the last day.",
               },
               {
                 id: 'email-tomorrow',
@@ -189,11 +209,11 @@ export const trialEnding: Automation = {
                 id: 'wait-last',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Last day, 8 AM',
+                label: 'Last day, 8 AM Pacific',
                 mode: 'after_appointment',
                 offset: 8 * 60,
                 ifPassed: 'continue',
-                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM on the last day of the trial. If this date has already passed: Continue to next action, because the call matters most on the last day.',
+                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM Pacific on the last day of the trial. If this date has already passed: Continue to next action, because the call matters most on the last day.',
               },
               {
                 id: 'task-owner',
@@ -215,7 +235,7 @@ export const trialEnding: Automation = {
                 mode: 'after_appointment',
                 offset: DAY + 8 * 60,
                 ifPassed: 'continue',
-                summary: 'After, 1 day 8 hours: 8 AM the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
+                summary: 'After, 1 day 8 hours: 8 AM Pacific the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
               },
               {
                 id: 'tag-expired-a',
@@ -276,11 +296,11 @@ export const trialEnding: Automation = {
                 id: 'wait-final',
                 kind: 'wait',
                 title: 'Wait',
-                label: 'Last day, 8 AM',
+                label: 'Last day, 8 AM Pacific',
                 mode: 'after_appointment',
                 offset: 8 * 60,
                 ifPassed: 'continue',
-                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM on the new last day. If this date has already passed: Continue to next action.',
+                summary: 'An upcoming appointment or booking: After, 8 hours, which is 8 AM Pacific on the new last day. If this date has already passed: Continue to next action.',
               },
               {
                 id: 'goto-last',
@@ -398,7 +418,7 @@ export const trialEnding: Automation = {
                       mode: 'after_appointment',
                       offset: DAY + 8 * 60,
                       ifPassed: 'continue',
-                      summary: 'An upcoming appointment or booking: After, 1 day 8 hours, so the tag goes on at 8 AM the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
+                      summary: 'An upcoming appointment or booking: After, 1 day 8 hours, so the tag goes on at 8 AM Pacific the morning after the last day, once the trial has really ended. If this date has already passed: Continue to next action.',
                     },
                     {
                       id: 'tag-expired',
@@ -423,15 +443,15 @@ export const trialEnding: Automation = {
       id: 'upgrades',
       label: 'Activated, then upgrades',
       summary:
-        "Rachel's crew has dispatched from Crewlo since day 2 of her trial. The reminder fires early Saturday and the pricing email waits for 8 AM. She picks a plan on Monday afternoon, after the day-before email, and the Goal Event takes her out.",
-      start: at(12, 6),
+        "Rachel's crew has dispatched from Crewlo since day 2 of her trial. The reminder fires early Sunday and the pricing email waits for 8 AM. She picks a plan on Tuesday afternoon, after the day-before email, and the Goal Event takes her out.",
+      start: at(13, 6),
       contact: {
         tags: ['trial', 'activated'],
-        fields: { company: 'Brightline HVAC', workspace_id: 'ws_7Q2M9K', plan: 'trial', trial_end: '03-17-2026', seats: 9 },
+        fields: { company: 'Brightline HVAC', workspace_id: 'ws_7Q2M9K', plan: 'trial', trial_end: '03-18-2026', seats: 9 },
       },
       events: [
-        { at: at(12, 8, 14) - at(12, 6), type: 'email_opened' },
-        { at: at(14, 14, 25) - at(12, 6), type: 'tag_added', value: 'customer', label: 'Added by 04a: the app posted subscription.created for 9 seats' },
+        { at: at(13, 8, 14) - at(13, 6), type: 'email_opened' },
+        { at: at(15, 14, 25) - at(13, 6), type: 'tag_added', value: 'customer', label: 'Added by 04a: the app posted subscription.created for 9 seats' },
       ],
       expect: {
         outcome: 'goal',

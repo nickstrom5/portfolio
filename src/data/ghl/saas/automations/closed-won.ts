@@ -31,7 +31,7 @@ const toLeo = ({ contact }: { contact: Contact }) =>
 const KICKOFF: Record<string, number> = {
   'maya@brennanheating.example': at(3, 14, 0),
   'nadia@greenwaylawn.example': at(4, 9, 30),
-  'tnovak@lakeshoreclean.example': at(8, 10, 0),
+  'ruth@ridgelinefacility.example': at(8, 10, 0),
 };
 
 const provisionBody = `{
@@ -490,7 +490,7 @@ export const closedWon: Automation = {
         source: 'Website demo form',
         tags: ['trial', 'activated', 'pql-alerted'],
         assignedTo: 'ben',
-        opportunity: { pipeline: 'New Business', stage: 'Closed Won', status: 'won', value: 6264, name: 'Brennan Heating & Air' },
+        opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 6264, name: 'Brennan Heating & Air' },
         fields: {
           company: 'Brennan Heating & Air',
           company_size: '11-50',
@@ -601,20 +601,20 @@ export const closedWon: Automation = {
       id: 'no-consent',
       label: 'No SMS consent',
       summary:
-        "Tom signs on Monday afternoon and never ticked the SMS box on the demo form. Thursday's chase is email and a call task only, and he books the morning after Leo's second email, so the late wait gives him the same tag and note.",
+        "Ruth signs on Monday afternoon and never ticked the SMS box on the demo form. Thursday's chase is email and a call task only, and she books the morning after Leo's second email, so the late wait gives her the same tag and note.",
       start: at(0, 15, 10),
       contact: {
-        firstName: 'Tom',
-        lastName: 'Novak',
-        email: 'tnovak@lakeshoreclean.example',
-        phone: '(773) 555-0151',
+        firstName: 'Ruth',
+        lastName: 'Adeyemi',
+        email: 'ruth@ridgelinefacility.example',
+        phone: '(773) 555-0158',
         timezone: 'America/Chicago',
         source: 'Website demo form',
         tags: ['trial'],
         assignedTo: 'ben',
-        opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 10440, name: 'Lakeshore Commercial Cleaning' },
+        opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 10440, name: 'Ridgeline Facility Services' },
         fields: {
-          company: 'Lakeshore Commercial Cleaning',
+          company: 'Ridgeline Facility Services',
           company_size: '51-200',
           job_role: 'Operations or dispatch',
           segment: 'mid-market',
@@ -629,7 +629,7 @@ export const closedWon: Automation = {
           at: at(4, 8, 40) - at(0, 15, 10),
           type: 'appointment_booked',
           value: 'Kickoff Call',
-          appointmentAt: KICKOFF['tnovak@lakeshoreclean.example'] - at(0, 15, 10),
+          appointmentAt: KICKOFF['ruth@ridgelinefacility.example'] - at(0, 15, 10),
           label: "Books next Tuesday 10 AM from the link in Leo's second email. 05a fills Kickoff Date.",
         },
       ],
@@ -644,7 +644,7 @@ export const closedWon: Automation = {
       id: 'expansion',
       label: 'Existing customer buys more seats',
       summary:
-        "Amy's team has run on Crewlo for a year with 23 seats. Her request for seven more went through the demo form to Aisha, who marks the deal Won on Friday morning. The workspace is set to 30 seats and #wins hears about it. Amy gets no second welcome, the contact goes back to Leo, and Leo gets an email saying why.",
+        "Amy's team has run on Crewlo for a year with 23 seats. Her request for seven more went through the demo form to Ben, the mid-market rep, who marks the deal Won on Friday morning. The workspace is set to 30 seats and #wins hears about it. Amy gets no second welcome, the contact goes back to Leo, and Leo gets an email saying why.",
       start: at(4, 11, 5),
       contact: {
         firstName: 'Amy',
@@ -654,7 +654,7 @@ export const closedWon: Automation = {
         timezone: 'America/Los_Angeles',
         source: 'Website demo form',
         tags: ['customer', 'kickoff-booked', 'nps-promoter'],
-        assignedTo: 'aisha',
+        assignedTo: 'ben',
         opportunity: { pipeline: 'New Business', stage: 'Proposal', status: 'won', value: 2436, name: 'Chen Mechanical · +7 seats' },
         fields: {
           company: 'Chen Mechanical',
@@ -707,7 +707,7 @@ export const closedWon: Automation = {
   build: [
     {
       title: 'Agree what "won" means',
-      body: 'I sat down with Hana, both AEs and Leo and wrote the hand-off down as three steps for the AE: the order form is signed, Plan and Seats are filled in on the contact, and the deal is marked Won in New Business. That is the last thing sales does by hand. Won means the status, not the Closed Won stage: only the status fires this workflow. The upgrade, the announcement, the hand-off to Leo and the chase belong to the workflow, and Leo told me what he needs to know on day one, which became his notification.',
+      body: 'I sat down with Hana, both AEs and Leo and wrote the hand-off down as three steps for the AE: the order form is signed, Plan and Seats are filled in on the contact, and the deal is marked Won in New Business. That is the last thing sales does by hand. Won means the status: the pipeline has no Closed Won stage, so there is no stage to drag a card into instead, and a won card moves straight to Onboarding. The upgrade, the announcement, the hand-off to Leo and the chase belong to the workflow, and Leo told me what he needs to know on day one, which became his notification.',
     },
     {
       title: 'A provisioning contract with engineering',
@@ -748,8 +748,8 @@ export const closedWon: Automation = {
       body: 'Plan still says trial, or Seats is empty: the app answers 422, or 400 for an empty Seats, which leaves the JSON without a number. The workspace stays as it was instead of getting zero seats, and the error reaches Hana like any failed call. She asks the AE for the numbers.',
     },
     {
-      title: 'Dragged to Closed Won, never marked Won',
-      body: "The pipeline has a Closed Won stage as well as the Won status, and only the status fires this workflow. A card dragged to the stage with the status left Open provisions nothing. Hana's Monday check is the New Business board filtered to stage Closed Won and status Open; marking those Won starts the run.",
+      title: 'A signed deal left Open',
+      body: "Only the Won status fires this workflow, and the pipeline deliberately has no Closed Won stage, so the one way to close a deal is the status. An AE who forgets to mark it still leaves the card at Proposal. Hana's Monday check is the New Business board filtered to stage Proposal, status Open and a Last Stage Change Date before last week; marking a signed one Won starts the run the same day.",
     },
     {
       title: 'An existing customer buys more, or comes back',
