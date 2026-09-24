@@ -52,6 +52,7 @@ const S = {
   quiet: at(0, 15, 40),
   saturday: at(5, 16, 50),
   dnd: at(3, 10, 20),
+  lostByHand: at(2, 9, 45),
 };
 
 const goalSetup = `Action name:   Estimate decided
@@ -72,10 +73,9 @@ When the homeowner decides:
   Signed   -> add the tag estimate-signed. The card goes Won and
               production hears about it. (Marking the card Won
               yourself also works: 05 starts and ends this follow-up.)
-  Said no  -> add the tag estimate-declined. The card goes Lost and
-              the messages stop. Then add the lost reason on the card.
-  Do not drag the card to Lost. The follow-up keeps running and
-  sends the rest of its messages.
+  Said no  -> add the tag estimate-declined, or mark the card Lost
+              yourself. Either way the messages stop. Then add the
+              lost reason on the card.
 
 Already talking to them?
   If they replied to a follow-up text or email, the workflow has
@@ -117,6 +117,10 @@ export const estimateFollowUp: Automation = {
         {
           event: 'opportunity_won',
           by: '05 · Won to Job Hand-Off fires on Won, and its first step is Remove from Workflow: 04 · Estimate Follow-Up. A card someone marks Won by hand stops these messages too.',
+        },
+        {
+          event: 'opportunity_lost',
+          by: '04a · Estimate Lost (trigger Opportunity Status Changed: In Pipeline is Roofing Sales, Moved To Status is Lost) has one action, Remove from Workflow: 04 · Estimate Follow-Up. A card an estimator marks Lost stops these messages the same minute.',
         },
       ],
       notes: [
@@ -328,7 +332,7 @@ export const estimateFollowUp: Automation = {
                             action: 'add_note',
                             title: 'Add Note',
                             label: 'Left as the rep set it',
-                            summary: 'Someone already closed the card by hand. The workflow records that and leaves the status alone instead of overwriting it with Abandoned.',
+                            summary: 'Someone already closed the card by hand. The workflow records that and leaves the status as the rep set it.',
                             run: ({ contact }) => ({ log: `Note added: the card was already ${contact.opportunity?.status ?? 'closed'} when the follow-up ended, so the workflow left it as the rep set it.` }),
                           },
                         ],
@@ -409,11 +413,20 @@ export const estimateFollowUp: Automation = {
     {
       id: 'dnd',
       label: 'Texts off, card closed by hand',
-      summary: 'Replied STOP to an earlier text, so only the email goes out. After the follow-up call Maya drags the card to Lost instead of adding the tag.',
+      summary: 'Replied STOP to an earlier text, so only the email goes out. On the follow-up call the homeowner says the house is going on the market and the roof can wait for the buyer, so Maya marks the card Abandoned instead of adding a tag. The decision step leaves it as she set it.',
       start: S.dnd,
       contact: estimateOut('maya', 9600, { dnd: { sms: true }, fields: { service_needed: 'Storm damage' } }),
-      events: [{ at: at(11, 14, 30) - S.dnd, type: 'opportunity_lost', label: 'Maya drags the card to Lost: they went with another roofer' }],
+      events: [{ at: at(11, 14, 30) - S.dnd, type: 'opportunity_abandoned', label: 'Maya marks the card Abandoned: the house is being sold' }],
       expect: { outcome: 'completed', visits: ['email-finance', 'task-call-maya', 'goal', 'decision:else', 'note-hand'], skips: ['sms-walk', 'sms-questions', 'sms-close'] },
+    },
+    {
+      id: 'lost-by-hand',
+      label: 'Card marked Lost mid-sequence',
+      summary: 'Luis calls on Thursday to answer a question the homeowner left on his voicemail. They have signed with another roofer, so he marks the card Lost from the app. 04a removes them from this workflow and nothing else goes out.',
+      start: S.lostByHand,
+      contact: estimateOut('luis', 12900, { fields: { roof_age: '10-20 years' } }),
+      events: [{ at: at(3, 16, 20) - S.lostByHand, type: 'opportunity_lost', label: 'Luis marks the card Lost: they signed with another roofer' }],
+      expect: { outcome: 'ended', visits: ['sms-walk'] },
     },
   ],
   dataModel: {
@@ -434,7 +447,7 @@ export const estimateFollowUp: Automation = {
   build: [
     {
       title: 'Agree how an estimate closes',
-      body: 'I agreed two rules with the estimators. When an estimate goes out, fill in Estimate Amount and move the card to Estimate Sent. When the homeowner decides, add a tag, estimate-signed or estimate-declined, instead of dragging the card. The Goal Event listens for the tag, so the tag is also what stops the messages.',
+      body: 'I agreed two rules with the estimators. When an estimate goes out, fill in Estimate Amount and move the card to Estimate Sent. When the homeowner decides, add a tag, estimate-signed or estimate-declined. The Goal Event listens for the tag, so the tag is also what stops the messages. Estimators close cards by hand too, so a Won card is handed off by 05 and a Lost card by the one-action helper 04a, both starting with Remove from Workflow for this one.',
     },
     {
       title: 'Trigger on the stage they already move',
@@ -469,16 +482,16 @@ export const estimateFollowUp: Automation = {
     { title: 'Estimate goes out Saturday evening', body: 'The text falls outside the Time Window, so GHL holds it until Monday at 9 AM. Nothing goes out on Sunday. The waits after it count from when it actually sent, so the rest of the sequence moves back too.' },
     { title: 'They reply with a question', body: 'Stop on Response ends the workflow on any reply to its messages, text or email, and the estimator picks up the conversation. The card stays open at Estimate Sent, and a tag added later does nothing because the workflow has let go. The SOP says so: once they have replied, the estimator marks the card Won or Lost by hand, and Won fires 05 the same way.' },
     { title: 'Yes or no on the phone', body: 'The estimator adds estimate-signed or estimate-declined. The Goal Event pulls the contact out of whatever wait they are in, so nobody gets "should I close your file?" after they have signed, and the card goes Won or Lost.' },
-    { title: 'Card dragged instead of tagged', body: 'Marking the card Won by hand fires 05, whose first step removes the contact from this workflow. Dragging it to Lost does not stop the remaining messages, and GHL\'s Goal Event guide lists no opportunity-status goal, which is why the rule is the tag. The decision step still checks the card: if it is no longer open, the workflow adds a note and leaves Lost alone instead of overwriting it with Abandoned.' },
+    { title: 'Card closed by hand instead of tagged', body: 'GHL\'s Goal Event guide lists no opportunity-status goal, so a status change cannot pull the contact out from inside this workflow. Marking the card Won fires 05, and marking it Lost fires the one-action helper 04a; both start with Remove from Workflow for this one. Abandoned has no helper, because it is the workflow\'s own ending: if a rep sets it early, the remaining messages go, and the decision step adds a note and leaves the card as the rep set it instead of overwriting it.' },
     { title: 'Second estimate for the same homeowner', body: 'A revised quote, a repeat customer, or a stalled lead that 07 brought back on a new card. Re-entry and multiple opportunities are on, so the new card gets its own two weeks. The first step clears the old decision tags, so last year\'s estimate-signed cannot mark this one Won. The one gap: if one homeowner has two open estimates at once, a tag closes both runs, so the estimator marks those cards by hand.' },
-    { title: 'No text consent, or SMS DND', body: 'The account rule is that anyone who has not agreed to texts is on SMS DND: 01 switches it on for a form lead who did not tick the box, and the office does it for anyone who says no on the phone. So this workflow relies on DND instead of repeating a consent branch. GHL does not send a text to a contact on SMS DND, and the test list checks in Execution Logs that the run goes on to the email and the call task. The decision step still closes the card after two weeks.' },
+    { title: 'No text consent, or SMS DND', body: 'Anyone without text consent on file is on SMS DND before they get here: 01 switches it on for a form lead who did not tick the box, and 03 does it at booking for anyone else with no consent recorded (the calendar form\'s box, or a yes to the office on the phone). So this workflow relies on DND instead of repeating a consent branch. GHL does not send a text to a contact on SMS DND, and the test list checks in Execution Logs that the run goes on to the email and the call task. The decision step still closes the card after two weeks.' },
   ],
   qa: [
     'Move test cards to Estimate Sent at 4:30 PM on a weekday and on Saturday afternoon: the first text shows as waiting in Execution Logs and sends at 9 AM on the next open day, never on a Sunday',
     'Reply to the text on one contact and to the email on another: both leave the workflow, and the conversation sits with the assigned estimator',
     'Add estimate-signed during a wait on one contact and estimate-declined on another: both jump to the goal, one card goes Won and 05 starts, the other goes Lost',
     'Let one run the full two weeks: card Abandoned, tag estimate-no-decision, nothing sent after the close-out text',
-    'Mark a card Won by hand mid-sequence: 05 starts and this workflow\'s Enrollment History shows "Removed by External Workflow Action". Drag another to Lost: at the end it is still Lost, with a note',
+    'Mark a card Won by hand mid-sequence: 05 starts and this workflow\'s Enrollment History shows "Removed by External Workflow Action". Mark another Lost: 04a removes it the same way and nothing else is sent. Mark a third Abandoned: at the end it is still Abandoned, with a note',
     'Contact on SMS DND with a blank Estimate Amount: the texts show as skipped, the estimator gets the blank-amount alert, and the email and the task still happen',
     'Contact with an old estimate-signed tag and a second card: the tag is removed at the start and the new card gets its own run',
     'One test estimate for Maya and one for Luis: each day-seven call task goes to the estimator who owns the contact',

@@ -23,14 +23,14 @@ const callTask = (id: string, name: string): ActionNode => ({
   action: 'add_task',
   title: 'Add Task',
   label: `Call task for ${name.split(' ')[0]}`,
-  summary: `Assign To ${name}, Due In: Now. Title "Call {{contact.first_name}} within {{contact.call_priority}}". The description has the service, roof age, score and SMS consent, so nobody texts a lead who did not tick the box.`,
+  summary: `Assign To ${name}, Due In: Now. Title "Call {{contact.first_name}} {{contact.call_priority}}". The description has the service, roof age, score and SMS consent, so nobody texts a lead who did not tick the box.`,
   run: ({ contact }) => ({
-    log: `Task for ${name}, due now: call ${contact.firstName} within ${contact.fields.call_priority}. SMS consent: ${contact.fields.sms_consent === 'Yes' ? 'yes' : 'no, so call or email only'}.`,
+    log: `Task for ${name}, due now: call ${contact.firstName} ${contact.fields.call_priority}. SMS consent: ${contact.fields.sms_consent === 'Yes' ? 'yes' : 'no, so call or email only'}.`,
   }),
 });
 
 /** Same logic as the Custom Code step below, so the simulator scores exactly like the build. */
-function score(c: Contact) {
+function score(c: Contact, now: number) {
   const service = String(c.fields.service_needed ?? '').toLowerCase();
   const age = String(c.fields.roof_age ?? '');
   let s = 20;
@@ -41,13 +41,16 @@ function score(c: Contact) {
   else if (age === '10-20 years') s += 15;
   if (String(c.source ?? '').toLowerCase().includes('facebook')) s -= 5;
   s = Math.max(0, Math.min(100, s));
-  return { lead_score: s, call_within: s >= 70 ? '15 minutes' : '1 hour' };
+  const hour = Math.floor((((now % DAY) + DAY) % DAY) / 60);
+  const afterHours = hour < 8 || hour >= 20;
+  return { lead_score: s, call_within: afterHours ? 'first thing after 8 AM' : s >= 70 ? 'within 15 minutes' : 'within 1 hour' };
 }
 
 const scoreCode = `// Custom Code step, JavaScript. Properties added in the step:
 //   service  = {{contact.service_needed}}
 //   roof_age = {{contact.roof_age}}
 //   source   = {{contact.source}}
+//   hour     = {{right_now.hour}}   (24-hour; all Harbor & Pine leads are local)
 // GHL wraps this in an async function and reads the result from \`output\`.
 const service = (inputData.service || '').toLowerCase();
 const age = inputData.roof_age || '';
@@ -64,9 +67,14 @@ else if (age === '10-20 years') score += 15;
 if ((inputData.source || '').toLowerCase().includes('facebook')) score -= 5;
 
 score = Math.max(0, Math.min(100, score));
+
+// Calls keep the same 8 AM to 8 PM hours as the texts.
+const hour = Number(inputData.hour);
+const afterHours = hour < 8 || hour >= 20;
+
 output = {
   lead_score: score,
-  call_within: score >= 70 ? '15 minutes' : '1 hour',
+  call_within: afterHours ? 'first thing after 8 AM' : score >= 70 ? 'within 15 minutes' : 'within 1 hour',
 };`;
 
 export const speedToLead: Automation = {
@@ -144,9 +152,9 @@ export const speedToLead: Automation = {
                 action: 'custom_code',
                 title: 'Custom Code',
                 label: 'Lead score',
-                summary: 'Scores the lead 0 to 100 from the service, roof age and source, and sets how fast the rep should call.',
-                run: ({ contact }) => {
-                  const out = score(contact);
+                summary: 'Scores the lead 0 to 100 from the service, roof age and source, and sets how fast the rep should call: 15 minutes or an hour, or first thing after 8 AM for a lead that arrives outside the hours the texts keep.',
+                run: ({ contact, now }) => {
+                  const out = score(contact, now);
                   return { vars: out, log: `Returned lead_score ${out.lead_score} and call_within "${out.call_within}".` };
                 },
                 code: { language: 'javascript', source: scoreCode },
@@ -184,7 +192,7 @@ export const speedToLead: Automation = {
                   channel: 'internal',
                   to: '{{user.name}} (assigned user)',
                   subject: 'New lead: {{contact.name}}, score {{contact.lead_score}}',
-                  body: '{{contact.service_needed}}, roof {{contact.roof_age}}, SMS consent {{contact.sms_consent}}. Call within {{contact.call_priority}}: {{contact.phone}}',
+                  body: '{{contact.service_needed}}, roof {{contact.roof_age}}, SMS consent {{contact.sms_consent}}. Call {{contact.call_priority}}: {{contact.phone}}',
                 },
               },
               {
@@ -307,6 +315,7 @@ export const speedToLead: Automation = {
                               summary: 'Marks the lead for the no-response report and for the 07 · Database Reactivation list later.',
                               effect: { addTags: ['stl-no-response'] },
                             },
+                            { id: 'goto-close', kind: 'goto', title: 'Go To', target: 'find-stale', summary: 'Joins the email path at the close-out, so there is one copy of it.' },
                           ],
                         },
                       ],
@@ -323,6 +332,15 @@ export const speedToLead: Automation = {
                             effect: { dnd: { sms: true } },
                             run: ({ contact }) => ({ log: contact.dnd.sms ? 'SMS DND was already on. The action leaves it on.' : 'SMS DND switched on: no SMS consent on the form.' }),
                           },
+                          {
+                            id: 'tag-nosms',
+                            kind: 'action',
+                            action: 'add_tag',
+                            title: 'Add Contact Tag',
+                            label: 'sms-off-no-consent',
+                            summary: 'A receipt for the DND above. If they tick the texts box when they book, 03 · Inspection Booked reads it as a new opt-in, lifts the DND and removes the tag.',
+                            effect: { addTags: ['sms-off-no-consent'] },
+                          },
                           { id: 'wait-1d-e', kind: 'wait', title: 'Wait', mode: 'time', minutes: DAY, summary: 'One day.' },
                           {
                             id: 'email-3',
@@ -334,7 +352,7 @@ export const speedToLead: Automation = {
                             message: {
                               channel: 'email',
                               subject: 'Still want your free inspection, {{contact.first_name}}?',
-                              body: `Hi {{contact.first_name}},\n\nWe tried to reach you about your free roof inspection. Pick any open time here: {{custom_values.booking_link}}, or call us at {{custom_values.office_phone}}.\n\n{{user.name}}${footer}`,
+                              body: `Hi {{contact.first_name}},\n\nFollowing up on your free roof inspection request. Pick any open time here: {{custom_values.booking_link}}, or call us at {{custom_values.office_phone}}.\n\n{{user.name}}${footer}`,
                             },
                           },
                           { id: 'wait-3d-e', kind: 'wait', title: 'Wait', mode: 'time', minutes: 3 * DAY, summary: 'Three days.' },
@@ -359,6 +377,52 @@ export const speedToLead: Automation = {
                             label: 'stl-no-response',
                             summary: 'Same tag as the text path, so the report counts both.',
                             effect: { addTags: ['stl-no-response'] },
+                          },
+                          {
+                            // A card made by Create earlier in this run is not in context for Update Opportunity,
+                            // so the close-out finds it again. Only a card still at New Lead is closed.
+                            id: 'find-stale',
+                            kind: 'ifelse',
+                            title: 'Find Opportunity',
+                            label: 'Still at New Lead?',
+                            branches: [
+                              {
+                                label: 'Opportunity Found',
+                                when: {
+                                  type: 'all',
+                                  label: 'Latest opportunity in Roofing Sales, Stage New Lead, Status Open',
+                                  of: [
+                                    { type: 'opportunity', stage: 'New Lead' },
+                                    { type: 'opportunity', status: 'open' },
+                                  ],
+                                },
+                                nodes: [
+                                  {
+                                    id: 'abandon',
+                                    kind: 'action',
+                                    action: 'update_opportunity',
+                                    title: 'Update Opportunity',
+                                    label: 'Abandoned',
+                                    summary: 'Status Abandoned, not Lost: they never said no. The board only shows live leads, and 07 · Database Reactivation can pick them up later without a clean-up first.',
+                                    effect: { opportunity: { status: 'abandoned' } },
+                                  },
+                                ],
+                              },
+                            ],
+                            otherwise: {
+                              label: 'Opportunity Not Found',
+                              nodes: [
+                                {
+                                  id: 'note-moved',
+                                  kind: 'action',
+                                  action: 'add_note',
+                                  title: 'Add to Notes',
+                                  label: 'Card already moved on',
+                                  summary: 'The card is past New Lead or already closed, so a rep has it. The follow-up ends and leaves the card as it is.',
+                                  run: ({ contact }) => ({ log: `Note added: the follow-up ended with the card at ${contact.opportunity?.stage ?? 'no stage'} (${contact.opportunity?.status ?? 'none'}), so it was left for the rep.` }),
+                                },
+                              ],
+                            },
                           },
                         ],
                       },
@@ -416,11 +480,11 @@ export const speedToLead: Automation = {
     {
       id: 'quiet',
       label: 'Never replies',
-      summary: 'Wants a full replacement, then goes quiet. Gets the whole week-long follow-up.',
+      summary: 'Wants a full replacement, then goes quiet. Gets the whole week-long follow-up, and the card is closed as Abandoned at the end.',
       start: 9 * 60 + 30,
       contact: { fields: { service_needed: 'Full replacement', roof_age: 'Over 20 years', sms_consent: 'Yes', utm_source: 'facebook-ads', utm_campaign: 'spring-replacement' } },
       events: [],
-      expect: { outcome: 'completed', visits: ['sms-3', 'tag-cold'], tags: ['stl-no-response'] },
+      expect: { outcome: 'completed', visits: ['sms-3', 'tag-cold', 'goto-close', 'find-stale:0', 'abandon'], tags: ['stl-no-response'] },
     },
     {
       id: 'late',
@@ -434,12 +498,17 @@ export const speedToLead: Automation = {
     {
       id: 'no-consent',
       label: 'No SMS consent',
-      summary: 'A Facebook lead who left the SMS box unticked. SMS DND goes on, and the follow-up is email and calls only.',
+      summary: 'Talked to Maya about storm damage last month, so her card is at Contacted. Comes back through a Facebook lead ad and leaves the SMS box unticked: SMS DND goes on, the follow-up is email and calls only, and at the end the card is left at Contacted for Maya.',
       start: 4 * DAY + 13 * 60 + 20,
       trigger: 1,
-      contact: { source: 'Facebook lead ad', fields: { service_needed: 'Storm damage', roof_age: 'Not sure', sms_consent: 'No' } },
+      contact: {
+        source: 'Facebook lead ad',
+        assignedTo: 'maya',
+        opportunity: { pipeline: 'Roofing Sales', stage: 'Contacted', status: 'open' },
+        fields: { service_needed: 'Storm damage', roof_age: 'Not sure', sms_consent: 'No' },
+      },
       events: [],
-      expect: { outcome: 'completed', visits: ['can-text:else', 'dnd-sms', 'email-3', 'email-4'], tags: ['stl-no-response'] },
+      expect: { outcome: 'completed', visits: ['can-text:else', 'dnd-sms', 'tag-nosms', 'email-3', 'email-4', 'find-stale:else', 'note-moved'], tags: ['stl-no-response', 'sms-off-no-consent'], stage: 'Contacted' },
     },
     {
       id: 'called-first',
@@ -465,7 +534,7 @@ export const speedToLead: Automation = {
       { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: 'The first box: texts about the inspection, estimate and job. Unticked by default, not required to submit. The If/Else reads it' },
       { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'The second box: offers and seasonal reminders. Only 07 reads it' },
       { name: 'Lead Score', key: 'lead_score', type: 'Number', note: 'Written by the Custom Code step' },
-      { name: 'Call Priority', key: 'call_priority', type: 'Single line', note: '"15 minutes" or "1 hour"' },
+      { name: 'Call Priority', key: 'call_priority', type: 'Single line', note: '"within 15 minutes", "within 1 hour", or "first thing after 8 AM" for a lead that arrives between 8 PM and 8 AM' },
       { name: 'UTM Source / Medium / Campaign', key: 'utm_source', type: 'Single line ×3', note: 'Hidden form fields filled from the URL' },
     ],
     tags: [{ name: 'stl-no-response', note: 'Finished the sequence without replying or booking. One of the two lists 07 starts from' }],
@@ -487,7 +556,7 @@ export const speedToLead: Automation = {
     { title: 'Test, publish, hand off', body: 'Six test contacts, one per scenario above, checked against Execution Logs and Enrollment History before publishing. Then a short Loom walkthrough and a one-page SOP for the office.' },
   ],
   edgeCases: [
-    { title: 'Lead comes in at midnight', body: 'The email to the lead, the rep\'s email alert and the call task happen immediately. The text waits for the Advance Window and goes out at 8 AM.' },
+    { title: 'Lead comes in at midnight', body: 'The email to the lead, the rep\'s email alert and the call task happen immediately, but the code sets Call Priority to "first thing after 8 AM", so nobody is told to phone a homeowner at midnight. The text waits for the Advance Window and goes out at 8 AM, around the same time as the call.' },
     { title: 'No SMS consent, or DND', body: 'The If/Else sends them down the email path, which turns SMS DND on first, so 02, 03 and the rest skip texts to them too. Ticking the box on a later form does not turn texts back on by itself: the office checks the new consent and switches SMS DND off by hand.' },
     { title: 'They reply on day three', body: 'Stop on Response takes them out wherever they are in the sequence, because they answered a message this workflow sent. The conversation is already assigned to their rep. An out-of-office auto-reply counts too, which is fine here: a person looks at every reply anyway.' },
     { title: 'They book without replying', body: '03 · Inspection Booked removes them from this workflow in its first step, so the follow-ups stop.' },

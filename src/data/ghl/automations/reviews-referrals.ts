@@ -420,7 +420,7 @@ export const reviewsReferrals: Automation = {
     },
     {
       title: 'Texts turned off',
-      body: 'Consent works as in 04: anyone who has not agreed to texts is on SMS DND, set at intake or by the office. The review text is about their own finished job, not an offer, so the offers box is not the gate. A customer on SMS DND has the text request skipped and logged, and the email request on day four is their ask, with the same link. I chose that over a DND If/Else at the top: the review request stays on the one path every customer walks, so it can never end up on only one side of a branch.',
+      body: 'Consent works as in 04: anyone without text consent on file is on SMS DND, set by 01 at intake or by 03 at booking. The review text is about their own finished job, not an offer, so the offers box is not the gate. A customer on SMS DND has the text request skipped and logged, and the email request on day four is their ask, with the same link. I chose that over a DND If/Else at the top: the review request stays on the one path every customer walks, so it can never end up on only one side of a branch.',
     },
     {
       title: 'They reply to the review text',
