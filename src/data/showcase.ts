@@ -34,7 +34,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'leaderboard';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -429,6 +429,18 @@ export const projects: Project[] = [
     fg: '#0f7a3d',
     bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
     fgDark: '#5fd08a',
+    tone: 'light',
+    comingSoon: true,
+  },
+  {
+    id: 'leaderboard',
+    name: 'Chicago Restaurant Leaderboard',
+    kicker: 'Web app · Illinois restaurants',
+    tileBlurb: 'Illinois restaurants, ranked by one score.',
+    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
+    fg: '#b3122b',
+    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
+    fgDark: '#ff7a86',
     tone: 'light',
     comingSoon: true,
   },
