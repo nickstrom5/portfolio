@@ -20,8 +20,8 @@ export interface Feature {
   body: string;
   screen: Screen;
   image?: string;
-  /** 'phone' (default) or 'laptop'. */
-  frame?: 'phone' | 'laptop';
+  /** 'phone' (default), 'laptop', or 'duo' for a real iPhone Duo cover-screen capture. */
+  frame?: 'phone' | 'laptop' | 'duo';
   /** Put the device on the left instead of the right. */
   flip?: boolean;
 }
@@ -47,10 +47,11 @@ export interface StoryProject {
   /** 'light' tiles and heroes use dark text on a light background. */
   tone?: 'light' | 'dark';
   comingSoon?: false;
-  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
+  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
-  split: { ai: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
+  /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
+  split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
   steps: { title: string; ai: string; me: string }[];
   prompts?: Prompt[];
   promptStats?: { value: string; label: string }[];
@@ -412,7 +413,52 @@ export const projects: Project[] = [
     bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
     fgDark: '#5fd08a',
     tone: 'light',
-    comingSoon: true,
+    hero: {
+      title: 'Which store near you is actually cheaper?',
+      sub: 'Cartworth searches the grocery stores around any US ZIP code at the same time, converts every price to the same unit, and shows where an item is cheapest right now. Every price is read from the store’s own published listing and labelled shelf, online or weekly ad. No account, no tracking. The phone shown here is the real app on an iPhone Duo, folded.',
+      screen: 'image',
+      image: '/showcase/cartworth-duo-search.jpg',
+      frame: 'duo',
+    },
+    siteShot: {
+      desktop: '/showcase/cartworth-site.jpg',
+      mobile: '/showcase/cartworth-site-mobile.jpg',
+      caption: 'cartworth.app, with privacy, terms and support pages. Behind it: a SwiftUI iPhone app of 59 Swift files and about 11,000 lines, and a Node web version of about 7,000 lines.',
+      url: 'https://cartworth.app',
+    },
+    features: [
+      {
+        eyebrow: 'A list that knows what it costs',
+        title: 'Plan the cheapest trip.',
+        body: 'Add items with a size, like “milk 1 gal”, and Cartworth prices that exact amount at every store you follow. Then it plans the trip: the cheapest single store, the best two- and three-store split, and the cherry-pick total. Recipes go in by photo, and the text recognition runs on the phone.',
+        screen: 'image',
+        image: '/showcase/cartworth-duo-list.jpg',
+        frame: 'duo',
+      },
+      {
+        eyebrow: 'Compared honestly',
+        title: 'Every price says where it came from.',
+        body: 'Nothing is crowdsourced and nothing is guessed. Where a store publishes shelf prices they are labelled shelf; where it only publishes an online listing, which can run higher, they are labelled online; weekly-ad prices come from the store’s own circular. This is an unretouched capture of the app’s store list for a Chicago ZIP code, on the Duo’s cover screen.',
+        screen: 'image',
+        image: '/showcase/cartworth-duo-stores.jpg',
+        frame: 'duo',
+        flip: true,
+      },
+    ],
+    split: {
+      aiLabel: 'Claude Code',
+      meLabel: 'Nick',
+      aiDid: 'The Node web app and its store adapters, the SwiftUI iPhone app, the test suites, the marketing site, the App Store listing and the screenshot automation that drove the real app on the iPhone Duo simulator.',
+      meDid: 'The idea, the name, the domain, running the builds on my Mac, and every call on what ships.',
+    },
+    steps: [
+      { title: 'Web app first', ai: 'Built the price search: the stores near a ZIP code, searched at once, every price converted to one unit and labelled by where it came from.', me: 'The idea: which store near me is actually cheaper for the thing I’m buying today.' },
+      { title: 'Then the iPhone app', ai: 'Wrote the SwiftUI app with search, weekly ads, a priced shopping list, trip planning, recipe scanning and price watches, plus tests that keep it in step with the web version.', me: 'Ran the builds on my Mac and reviewed the results.' },
+      { title: 'Real renders, not mockups', ai: 'Drove the real app in the simulator to capture unretouched screenshots, including the iPhone Duo’s folded cover screen, and wrote down what was and wasn’t ready to ship.', me: 'Picked the shots worth showing.' },
+      { title: 'Site and launch', ai: 'Built cartworth.app with its privacy, terms and support pages, the App Store listing copy and a launch checklist.', me: 'Put cartworth.app live. App Store submission is next.' },
+    ],
+    links: [{ label: 'Visit cartworth.app', href: 'https://cartworth.app', primary: true }],
+    status: 'In development · cartworth.app is live',
   },
   {
     id: 'leaderboard',
