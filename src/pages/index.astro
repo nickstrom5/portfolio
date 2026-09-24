@@ -11,7 +11,7 @@ import apps from '@/data/apps.json';
 import testimonials from '@/data/testimonials.json';
 import { url } from '@/lib/url';
 
-const projects = (await getCollection('projects'))
+const projects = (await getCollection('projects', ({ data }) => !data.hidden))
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.year - a.data.year)
   .slice(0, 3);

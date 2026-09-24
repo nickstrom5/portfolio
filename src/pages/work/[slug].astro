@@ -9,7 +9,7 @@ import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
+  const projects = await getCollection('projects', ({ data }) => !data.hidden);
   return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
 }
 
@@ -23,7 +23,7 @@ const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
 const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
 
 // Rotate through the category so every case study gets related links, not just the first two alphabetically.
-const peers = (await getCollection('projects'))
+const peers = (await getCollection('projects', ({ data }) => !data.hidden))
   .filter((p) => p.data.category === d.category)
   .sort((a, b) => a.id.localeCompare(b.id));
 const i = peers.findIndex((p) => p.id === project.id);

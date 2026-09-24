@@ -12,6 +12,7 @@ source: 'personal'
 links:
   live: 'https://usedamp.app'
 cover: '/showcase/damp-site.jpg'
+hidden: true
 placeholder: false
 published: 2026-09-20
 ---

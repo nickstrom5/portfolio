@@ -35,6 +35,8 @@ const projects = defineCollection({
     published: z.coerce.date().optional(),
     /** Date of the last substantive edit to the write-up, if any. */
     updated: z.coerce.date().optional(),
+    /** Keeps the write-up in the repo but off the site: no page, card or link. */
+    hidden: z.boolean().default(false),
     /** Marks starter content that must be replaced before launch. */
     placeholder: z.boolean().default(false),
   }),
