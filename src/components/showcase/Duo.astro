@@ -1,0 +1,75 @@
+---
+/**
+ * iPhone Duo frame, folded. Holds a real simulator capture of the cover
+ * screen (1398 × 2034 px, 466 × 678 pt), so the frame keeps that aspect
+ * ratio instead of the taller iPhone one in Phone.astro.
+ */
+interface Props {
+  image: string;
+  alt: string;
+  size?: 'md' | 'lg';
+  tilt?: boolean;
+}
+const { image, alt, size = 'md', tilt = false } = Astro.props;
+---
+
+<div class:list={['duo', size, { tilt }]}>
+  <div class="screen">
+    <img src={image} alt={alt} loading="lazy" decoding="async" width="700" height="1018" />
+  </div>
+  <span class="hinge" aria-hidden="true"></span>
+</div>
+
+<style>
+  .duo {
+    --w: 300px;
+    position: relative;
+    width: var(--w);
+    max-width: 100%;
+    aspect-ratio: 1398 / 2034;
+    box-sizing: content-box;
+    padding: calc(var(--w) * 0.03);
+    border-radius: calc(var(--w) * 0.11);
+    background: #0b0b0e;
+    box-shadow:
+      0 0 0 2px #2a2a31,
+      0 30px 60px -25px rgb(0 0 0 / 0.6),
+      0 18px 36px -18px rgb(0 0 0 / 0.45);
+    margin-inline: auto;
+  }
+  .duo.lg {
+    --w: 340px;
+  }
+  .duo.tilt {
+    transform: rotate(-3deg);
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: calc(var(--w) * 0.085);
+    background: #fff;
+  }
+  .screen img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* The folded edge: a thin highlight down the left side where the panels meet. */
+  .hinge {
+    position: absolute;
+    top: 12%;
+    bottom: 12%;
+    left: -3px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(#3a3a42, #1a1a1f);
+  }
+  @media (max-width: 420px) {
+    .duo,
+    .duo.lg {
+      --w: 260px;
+    }
+  }
+</style>
