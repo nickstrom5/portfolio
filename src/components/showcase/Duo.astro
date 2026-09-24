@@ -2,7 +2,8 @@
 /**
  * iPhone Duo frame, folded. Holds a real simulator capture of the cover
  * screen (1398 × 2034 px, 466 × 678 pt), so the frame keeps that aspect
- * ratio instead of the taller iPhone one in Phone.astro.
+ * ratio instead of the taller iPhone one in Phone.astro. The hinge spine on
+ * the left and the second panel's edge on the right read as a closed foldable.
  */
 interface Props {
   image: string;
@@ -13,37 +14,89 @@ interface Props {
 const { image, alt, size = 'md', tilt = false } = Astro.props;
 ---
 
-<div class:list={['duo', size, { tilt }]}>
-  <div class="screen">
-    <img src={image} alt={alt} loading="lazy" decoding="async" width="700" height="1018" />
+<figure class:list={['duo-wrap', size, { tilt }]}>
+  <div class="duo">
+    <span class="panel" aria-hidden="true"></span>
+    <span class="spine" aria-hidden="true"><i></i><i></i><i></i></span>
+    <div class="body">
+      <div class="screen">
+        <img src={image} alt={alt} loading="lazy" decoding="async" width="700" height="1018" />
+        <span class="cam" aria-hidden="true"></span>
+      </div>
+    </div>
   </div>
-  <span class="hinge" aria-hidden="true"></span>
-</div>
+  <figcaption>iPhone Duo · folded</figcaption>
+</figure>
 
 <style>
+  .duo-wrap {
+    --w: 290px;
+    margin: 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .duo-wrap.lg {
+    --w: 330px;
+  }
+  .duo-wrap.tilt .duo {
+    transform: rotate(-3deg);
+  }
   .duo {
-    --w: 300px;
     position: relative;
     width: var(--w);
-    max-width: 100%;
+    max-width: calc(100vw - 72px);
+    /* Leave room for the spine on the left and the second panel on the right. */
+    padding: 0 calc(var(--w) * 0.035) calc(var(--w) * 0.02) calc(var(--w) * 0.05);
+  }
+  /* The inner panel folded behind: its edge peeks out right and below. */
+  .panel {
+    position: absolute;
+    top: calc(var(--w) * 0.025);
+    right: 0;
+    bottom: 0;
+    left: calc(var(--w) * 0.06);
+    border-radius: calc(var(--w) * 0.12);
+    background: linear-gradient(90deg, #3b3d45, #6b6e78 55%, #2c2e35);
+    box-shadow: 0 30px 60px -25px rgb(0 0 0 / 0.6);
+  }
+  /* The hinge: a rounded titanium spine down the folded edge. */
+  .spine {
+    position: absolute;
+    top: calc(var(--w) * 0.05);
+    bottom: calc(var(--w) * 0.07);
+    left: 0;
+    width: calc(var(--w) * 0.075);
+    border-radius: calc(var(--w) * 0.04);
+    background: linear-gradient(90deg, #1b1c21 0%, #7d808a 35%, #b9bcc5 50%, #6a6d77 70%, #25262c 100%);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+  .spine i {
+    display: block;
+    width: 55%;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(0 0 0 / 0.35);
+  }
+  .body {
+    position: relative;
     aspect-ratio: 1398 / 2034;
-    box-sizing: content-box;
-    padding: calc(var(--w) * 0.03);
+    padding: calc(var(--w) * 0.028);
     border-radius: calc(var(--w) * 0.11);
     background: #0b0b0e;
     box-shadow:
-      0 0 0 2px #2a2a31,
-      0 30px 60px -25px rgb(0 0 0 / 0.6),
+      0 0 0 2px #45474f,
       0 18px 36px -18px rgb(0 0 0 / 0.45);
-    margin-inline: auto;
-  }
-  .duo.lg {
-    --w: 340px;
-  }
-  .duo.tilt {
-    transform: rotate(-3deg);
   }
   .screen {
+    position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -56,20 +109,27 @@ const { image, alt, size = 'md', tilt = false } = Astro.props;
     height: 100%;
     object-fit: cover;
   }
-  /* The folded edge: a thin highlight down the left side where the panels meet. */
-  .hinge {
+  .cam {
     position: absolute;
-    top: 12%;
-    bottom: 12%;
-    left: -3px;
-    width: 3px;
-    border-radius: 3px;
-    background: linear-gradient(#3a3a42, #1a1a1f);
+    top: calc(var(--w) * 0.022);
+    left: 50%;
+    width: calc(var(--w) * 0.04);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #0b0b0e;
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.6);
+  }
+  figcaption {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
   }
   @media (max-width: 420px) {
-    .duo,
-    .duo.lg {
-      --w: 260px;
+    .duo-wrap,
+    .duo-wrap.lg {
+      --w: 250px;
     }
   }
 </style>
