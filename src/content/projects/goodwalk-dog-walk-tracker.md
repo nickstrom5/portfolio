@@ -27,4 +27,4 @@ Your dog needs a walk every day. Good Walk turns that into a streak: a daily tar
 
 ## Why it matters
 
-It is the third app in the same experiment as Clam and Lume, and the fastest so far: from one sentence to a reviewable site in an evening. The full story is on the [AI/Projects page](/apps/#goodwalk).
+It is part of the same experiment as Clam, and the fastest so far: from one sentence to a reviewable site in an evening. The full story is on the [AI/Projects page](/apps/#goodwalk).

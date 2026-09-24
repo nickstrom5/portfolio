@@ -7,7 +7,7 @@ import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
 
-const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => b.data.year - a.data.year);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
 const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
