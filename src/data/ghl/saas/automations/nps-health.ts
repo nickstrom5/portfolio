@@ -557,15 +557,21 @@ export const npsHealth: Automation = {
       id: 'promoter',
       label: 'Promoter, first case-study ask',
       summary:
-        'Rachel answers 10 on Wednesday morning. She gets the referral email at once and opens her referral page before lunch. Four days later falls on a Sunday, so the case-study invite goes on Monday at 8 AM.',
+        'Elena, a customer since last spring, answers 10 on Wednesday morning. She gets the referral email at once and opens her referral page before lunch. Four days later falls on a Sunday, so the case-study invite goes on Monday at 8 AM.',
       start: at(2, 9, 12),
       contact: {
+        firstName: 'Elena',
+        lastName: 'Vasquez',
+        email: 'elena@vasquezelectric.example',
+        phone: '(303) 555-0172',
+        timezone: 'America/Denver',
+        source: 'Website demo form',
         tags: ['customer', 'nps-passive'],
         fields: {
-          company: 'Brightline HVAC',
+          company: 'Vasquez Electric',
           plan: 'standard-monthly',
-          seats: 9,
-          workspace_id: 'ws_7Q2M9K',
+          seats: 12,
+          workspace_id: 'ws_4KP2RD',
           account_health: 'Watch',
           nps: 10,
           nps_comment: 'Our dispatcher finally has one screen for the whole day.',
@@ -585,7 +591,7 @@ export const npsHealth: Automation = {
       id: 'promoter-asked',
       label: 'Promoter, asked before',
       summary:
-        "Amy's team signed an annual deal with Aisha last year, so 05 moved her record to Leo. She answers 9 on Thursday afternoon. She was invited to a case study last quarter, so she gets the referral email and the run ends there.",
+        "Amy's team signed an annual deal last year. This week she asked for seven more seats through the demo form, so Ben owns her record while that deal is open, and 05 hands her back to Leo when he wins it. She answers 9 on Thursday afternoon. She was invited to a case study last quarter, so she gets the referral email, from Leo as always, and the run ends there.",
       start: at(3, 13, 30),
       contact: {
         firstName: 'Amy',
@@ -595,7 +601,7 @@ export const npsHealth: Automation = {
         timezone: 'America/Los_Angeles',
         source: 'Website demo form',
         tags: ['customer', 'nps-promoter', 'case-study-invited'],
-        assignedTo: 'leo',
+        assignedTo: 'ben',
         fields: {
           company: 'Chen Mechanical',
           plan: 'standard-annual',

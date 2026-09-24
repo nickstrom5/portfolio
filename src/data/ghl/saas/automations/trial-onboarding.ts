@@ -347,10 +347,10 @@ export const trialOnboarding: Automation = {
     {
       id: 'day-two',
       label: 'Activates on day 2',
-      summary: 'Rachel starts a trial after her demo. Her techs get their first jobs on Thursday afternoon, and the remaining nudges never send.',
-      start: at(1, 10, 40),
+      summary: 'Rachel starts a trial an hour after her Wednesday demo. Her techs get their first jobs on Thursday evening, after the invite-your-team email, and the remaining nudges never send.',
+      start: at(2, 15, 30),
       contact: { source: 'Website demo form', fields: { company: 'Brightline HVAC', company_size: '11-50', job_role: 'Operations or dispatch' } },
-      events: [{ at: at(3, 15, 15) - at(1, 10, 40), type: 'tag_added', value: 'activated', label: 'Added by 02a: the app reported her first job dispatched to a tech' }],
+      events: [{ at: at(3, 17, 45) - at(2, 15, 30), type: 'tag_added', value: 'activated', label: 'Added by 02a: the app reported her first job dispatched to a tech' }],
       expect: {
         outcome: 'goal',
         visits: ['upsert', 'tag-trial', 'untag', 'if-email:0', 'email-welcome', 'wait-d1', 'email-invite', 'wait-d3', 'goal-activated', 'wait-next', 'email-next'],
