@@ -582,7 +582,7 @@ export const trialEnding: Automation = {
     },
     {
       title: 'Email only, on purpose',
-      body: "No texts here. SMS consent (service) on the demo form covers booking reminders, and SMS consent (offers) covers product news and event invites; a nudge to pay is neither, and trials that start in the app give no text consent at all. The pricing, reminder and offer emails are commercial, so they carry the full postal address and the unsubscribe link in the footer. The extension confirmation is transactional and goes at any hour.",
+      body: "No texts here. SMS consent (service) on the demo form covers demo reminders and, once they are a customer, setup and kickoff texts, and SMS consent (offers) covers product news and event invites; a nudge to pay is neither, and trials that start in the app give no text consent at all. The pricing, reminder and offer emails are commercial, so they carry the full postal address and the unsubscribe link in the footer. The extension confirmation is transactional and goes at any hour.",
     },
     {
       title: 'Test, then hand over',

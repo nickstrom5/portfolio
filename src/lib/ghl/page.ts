@@ -187,6 +187,7 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
   const sim = () => sims.get(`${caseId}-${l.feeds}`);
   let identity: Partial<Contact> | undefined;
   let start = 0;
+  let formFields: Record<string, string> = {};
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -244,8 +245,11 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
       }),
     );
     const now = new Date();
+    // The page may have been open since last week; runs are dated in the week of the submit.
+    useWeekOf(now);
     start = ((now.getDay() + 6) % 7) * DAY + now.getHours() * 60 + now.getMinutes();
-    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${texts ? 'You ticked the SMS box, so you get texts.' : 'You left the SMS box unticked, so it is email only.'}`;
+    formFields = fields;
+    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${texts ? (l.textsNote ?? 'You ticked the SMS box, so you get texts.') : 'You left the SMS box unticked, so it is email only.'}`;
     captured.hidden = false;
 
     demo.querySelector('[data-lp-thanks-title]')!.textContent = l.thanks.title.replace('{first}', who.firstName || 'there');
@@ -276,7 +280,7 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     // Replies and bookings land after the first text can actually go out.
     const firstText = texts && l.textWindow ? nextWindowOpen(start, l.textWindow) - start : 0;
     s.selectScenario(behavior.scenario);
-    s.useContact(identity, { start, events: behavior.events({ start, firstText, texts }) });
+    s.useContact(identity, { start, events: behavior.events({ start, firstText, texts, fields: formFields }) });
     openAutomation(l.feeds);
     const target = document.querySelector<HTMLElement>(`#${caseId}-${l.feeds} .g-controls`);
     scrollTo(target);

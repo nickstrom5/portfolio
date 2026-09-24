@@ -8,8 +8,9 @@
  * if a run ends differently than its `expect` block says, if any step or
  * branch is never reached by any scenario, if a message still contains an
  * unresolved {{merge_field}}, if an SMS runs past two segments, or if the
- * workflow breaks a GHL builder rule (steps after an If/Else, duplicate
- * step ids).
+ * workflow breaks a GHL builder rule (steps after an If/Else, a Go To
+ * that is not the last step of its branch, more than one Goal Event,
+ * duplicate step ids).
  */
 import { build } from 'esbuild';
 
@@ -26,7 +27,7 @@ if (only) {
   entry = `${biz} export { simulate } from './src/lib/ghl/engine.ts'; import * as m from './${only}';
     export const cases = [{ business, landing: null, automations: Object.values(m).filter((v) => v && typeof v === 'object' && 'workflow' in v) }];`;
 } else {
-  entry = "export { cases } from './src/data/ghl/index.ts'; export { simulate } from './src/lib/ghl/engine.ts';";
+  entry = "export { cases } from './src/data/ghl/index.ts'; export { simulate, nextWindowOpen } from './src/lib/ghl/engine.ts';";
 }
 const out = await build({
   stdin: { contents: entry, resolveDir: process.cwd(), loader: 'ts' },
@@ -37,7 +38,7 @@ const out = await build({
   logLevel: 'silent',
 });
 const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
-const { cases, simulate } = mod;
+const { cases, simulate, nextWindowOpen } = mod;
 
 const problems = [];
 const warnings = [];
@@ -64,7 +65,64 @@ function smsSegments(text) {
   return text.length <= 70 ? 1 : Math.ceil(text.length / 67);
 }
 
+/** Merge fields left in any message, and SMS that is not GSM-7 or runs past two segments. */
+function checkMessages(trace, where) {
+  for (const step of trace.steps) {
+    const m = step.message;
+    if (!m) continue;
+    const text = `${m.subject ?? ''} ${m.body} ${m.to ?? ''}`;
+    const left = text.match(/\{\{[^}]+\}\}/g);
+    if (left) problems.push(where(`unresolved merge field ${left.join(', ')} in "${step.title}"`));
+    if (m.channel === 'sms' && m.direction === 'out') {
+      if (!GSM.test(m.body)) {
+        const bad = [...new Set([...m.body].filter((ch) => !GSM.test(ch)))].join(' ');
+        problems.push(where(`SMS "${step.title}" has non-GSM characters (${bad}), which drops each segment to 70 characters`));
+      }
+      const segs = smsSegments(m.body);
+      if (segs > 2) problems.push(where(`SMS "${step.title}" is ${segs} segments (${m.body.length} chars)`));
+    }
+  }
+}
+
+/**
+ * The landing-page demo runs the fed workflow at the visitor's own time, so
+ * every behavior is run the way page.ts runs it: at each hour of the week,
+ * with the SMS box ticked and not, using the form's first answers.
+ */
+function sweepLanding(business, landing, fed) {
+  const who = { firstName: 'Alexandria', lastName: 'Whitman-Oyelaran', email: 'alexandria.whitman@example.com', phone: '(555) 555-0100', source: 'Website form' };
+  const answers = {};
+  for (const f of landing.fields) {
+    const v = f.initial ?? f.options?.[0] ?? (f.type === 'email' ? who.email : f.type === 'tel' ? who.phone : 'Sample');
+    if (typeof f.maps === 'object') answers[f.maps.field] = v;
+  }
+  let n = 0;
+  for (const b of landing.behaviors) {
+    const sc = fed.scenarios.find((x) => x.id === b.scenario);
+    if (!sc) continue;
+    for (const texts of [true, false]) {
+      const fields = { ...answers, sms_consent: texts ? 'Yes' : 'No', sms_marketing_consent: 'No' };
+      for (let start = 0; start < 7 * 1440; start += 60) {
+        const firstText = texts && landing.textWindow ? nextWindowOpen(start, landing.textWindow) - start : 0;
+        const where = (m) => `${business.id}: landing demo "${b.value}" at minute ${start}${texts ? '' : ', no texts'}: ${m}`;
+        let trace;
+        try {
+          const events = b.events({ start, firstText, texts, fields });
+          trace = simulate(fed, { ...sc, start, events }, business.sampleContact, business.env, { ...who, fields });
+        } catch (e) {
+          problems.push(where(`threw ${e.message}`));
+          continue;
+        }
+        n++;
+        checkMessages(trace, where);
+      }
+    }
+  }
+  return n;
+}
+
 let automationCount = 0;
+let demoRuns = 0;
 for (const { business, landing, automations } of cases) {
 const { env, sampleContact } = business;
 const ids = new Set();
@@ -85,6 +143,7 @@ for (const a of automations) {
   const branchKeys = new Set();
   const nodes = new Set();
   const gotos = [];
+  let goals = 0;
   walk(a.workflow.steps, (s, _depth, isLast) => {
     if (nodeIds.has(s.id)) problems.push(where(`duplicate step id ${s.id}`));
     nodeIds.add(s.id);
@@ -99,9 +158,16 @@ for (const a of automations) {
       branchKeys.add(`${s.id}:timeout`);
     }
     if (s.kind === 'wait' && s.mode === 'event' && !s.event) problems.push(where(`event wait ${s.id} has no event`));
-    if (s.kind === 'goto') gotos.push(s);
+    if (s.kind === 'goto') {
+      gotos.push(s);
+      // Help center, Go To: "can only be added as a last step of a workflow or a branch".
+      if (!isLast) problems.push(where(`Go To ${s.id} must be the last step of its branch`));
+    }
+    if (s.kind === 'goal') goals++;
   });
   for (const g of gotos) if (!nodeIds.has(g.target)) problems.push(where(`Go To ${g.id} points at missing step ${g.target}`));
+  // Help center, Goal Event: "Only one Goal Event action can be added per workflow."
+  if (goals > 1) problems.push(where(`${goals} Goal Events: GHL allows one per workflow`));
   if (!a.scenarios.length) problems.push(where('no scenarios'));
 
   // Runs.
@@ -123,25 +189,13 @@ for (const a of automations) {
     for (const v of ex.skips ?? []) if (!trace.skipped.includes(v)) problems.push(where(`scenario ${sc.id} did not skip ${v}`));
     for (const tag of ex.tags ?? []) if (!trace.contact.tags.includes(tag)) problems.push(where(`scenario ${sc.id} ended without tag ${tag}`));
     if (ex.stage && trace.contact.opportunity?.stage !== ex.stage) problems.push(where(`scenario ${sc.id} ended in stage "${trace.contact.opportunity?.stage}", expected "${ex.stage}"`));
-    for (const step of trace.steps) {
-      const m = step.message;
-      if (!m) continue;
-      const text = `${m.subject ?? ''} ${m.body} ${m.to ?? ''}`;
-      const left = text.match(/\{\{[^}]+\}\}/g);
-      if (left) problems.push(where(`scenario ${sc.id}: unresolved merge field ${left.join(', ')} in "${step.title}"`));
-      if (m.channel === 'sms' && m.direction === 'out') {
-        if (!GSM.test(m.body)) {
-          const bad = [...new Set([...m.body].filter((ch) => !GSM.test(ch)))].join(' ');
-          problems.push(where(`SMS "${step.title}" has non-GSM characters (${bad}), which drops each segment to 70 characters`));
-        }
-        const segs = smsSegments(m.body);
-        if (segs > 2) problems.push(where(`SMS "${step.title}" is ${segs} segments (${m.body.length} chars)`));
-      }
-    }
+    checkMessages(trace, (m) => where(`scenario ${sc.id}: ${m}`));
   }
   for (const n of nodes) if (!seen.has(n)) problems.push(where(`step ${n} is never reached by any scenario`));
   for (const k of branchKeys) if (!seen.has(k)) problems.push(where(`branch ${k} is never taken by any scenario`));
 }
+const fed = landing && automations.find((a) => a.id === landing.feeds);
+if (fed) demoRuns += sweepLanding(business, landing, fed);
 }
 
 for (const w of warnings) console.log('warn: ' + w);
@@ -149,4 +203,4 @@ if (problems.length) {
   console.log('GHL check FAILED:\n' + problems.map((p) => '  - ' + p).join('\n'));
   process.exit(1);
 }
-console.log(`GHL check clean: ${cases.length} case${cases.length === 1 ? '' : 's'}, ${automationCount} automations, ${runs} scenario runs, every step and branch reached.`);
+console.log(`GHL check clean: ${cases.length} case${cases.length === 1 ? '' : 's'}, ${automationCount} automations, ${runs} scenario runs, every step and branch reached${demoRuns ? `; ${demoRuns} landing-demo runs across the week` : ''}.`);

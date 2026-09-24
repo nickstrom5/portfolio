@@ -82,7 +82,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
     <div class="container">
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The landing page, working</h3>
-      <p class="lede">Fill in the form, then watch {feedsName} run on you. It runs at your local time, so if it is late where you are, you will see texts wait for morning.</p>
+      <p class="lede">Fill in the form, then watch {feedsName} run on you. {landing.demoNote ?? 'It runs at your local time, so if it is late where you are, you will see texts wait for morning.'}</p>
       <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} />
       <div class="gx-landing-notes">
         <h4>How the page is built in the funnel builder</h4>

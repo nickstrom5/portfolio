@@ -96,10 +96,8 @@ export class Simulator {
     root.querySelector('[data-instant]')?.addEventListener('click', () => this.run(true));
     root.querySelector('[data-reset]')?.addEventListener('click', () => this.reset());
     root.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach((r) =>
-      r.addEventListener('change', () => {
-        this.timing = undefined;
-        this.reset();
-      }),
+      // A sample contact runs as described, so the visitor's form details and timing go.
+      r.addEventListener('change', () => this.useContact(undefined)),
     );
     root.querySelector('[data-clear-override]')?.addEventListener('click', () => {
       this.useContact(undefined);
@@ -276,7 +274,7 @@ export class Simulator {
       trace.outcome === 'completed' ? 'Workflow complete' : trace.outcome === 'goal' ? 'Goal reached, workflow complete' : trace.outcome === 'stopped' ? 'Stopped on reply' : (last?.title ?? 'Ended');
     const opp = trace.contact.opportunity;
     const parts = [
-      `${sent} message${sent === 1 ? '' : 's'} to the contact over ${trace.end > trace.start ? formatDuration(trace.end - trace.start) : 'under a minute'}`,
+      `${sent} message${sent === 1 ? '' : 's'} to the contact ${trace.end > trace.start ? `over ${formatDuration(trace.end - trace.start)}` : 'in under a minute'}`,
       skipped ? `${skipped} step${skipped === 1 ? '' : 's'} skipped` : '',
       opp ? `opportunity in ${opp.stage} (${opp.status})` : '',
     ].filter(Boolean);
