@@ -422,10 +422,11 @@ export interface LandingBehavior {
   /** Scenario of the fed automation whose label and settings to use. */
   scenario: string;
   /**
-   * Events for the visitor's run. `start` is their submit time and
-   * `firstText` the minutes until the first text can go out (quiet hours).
+   * Events for the visitor's run. `start` is their submit time,
+   * `firstText` the minutes until the first text can go out (quiet hours)
+   * and `fields` the custom-field values the form wrote.
    */
-  events: (ctx: { start: number; firstText: number; texts: boolean }) => ScenarioEvent[];
+  events: (ctx: { start: number; firstText: number; texts: boolean; fields: Record<string, string> }) => ScenarioEvent[];
 }
 
 export interface LandingPage {
@@ -454,6 +455,10 @@ export interface LandingPage {
   trigger?: number;
   /** Sending window for the first text, so demo replies land after it. */
   textWindow?: { start: string; end: string; days: number[] };
+  /** What the visitor should watch for in their own run, shown above the demo. */
+  demoNote?: string;
+  /** Shown after submit when the SMS box is ticked, if the fed workflow does not simply text them. */
+  textsNote?: string;
   behaviors: LandingBehavior[];
   /** "What happens when you submit", in order. */
   steps: string[];

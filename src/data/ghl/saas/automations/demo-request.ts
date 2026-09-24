@@ -708,7 +708,7 @@ export const demoRequest: Automation = {
       { name: 'Job Role', key: 'job_role', type: 'Dropdown (single)', note: 'Owner or executive · Operations or dispatch · IT · Other' },
       { name: 'Fit Score', key: 'fit_score', type: 'Number', note: '0 to 100, written by the Custom Code step' },
       { name: 'Segment', key: 'segment', type: 'Dropdown (single)', note: 'enterprise · mid-market · small, lowercase so the code output matches an option. 03 routes on the same values' },
-      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: "Unticked and optional. It covers the calendar's booking reminders; this workflow sends no texts" },
+      { name: 'SMS consent (service)', key: 'sms_consent', type: 'Checkbox', note: "Unticked and optional. It covers the demo calendar's reminders and, for customers, setup and kickoff texts; this workflow sends no texts" },
       { name: 'SMS consent (offers)', key: 'sms_marketing_consent', type: 'Checkbox', note: 'Unticked and optional: product news and event invites. Nothing here reads it' },
       { name: 'UTM Source / Medium / Campaign', key: 'utm_source', type: 'Single line ×3', note: 'Hidden form fields filled from the page URL' },
     ],

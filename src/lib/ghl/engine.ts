@@ -38,6 +38,7 @@ export function useWeekOf(date: Date): void {
 }
 const DAY = 1440;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MS_DAY = 86400000;
 
@@ -220,10 +221,11 @@ function mergeContext(contact: Contact, env: MergeEnv, appt: Appointment | undef
     trigger_link: env.triggerLinks ?? {},
     appointment: appt
       ? {
-          start_time: formatClock(appt.start),
-          only_start_date: formatDay(appt.start),
+          // The formats GHL's merge-field list gives: "Wed, Nov 5, 2025 3:30 PM", "Nov 5, 2025", "Monday".
+          start_time: `${formatDay(appt.start)}, ${calendarDate(appt.start).getUTCFullYear()} ${formatTime(appt.start)}`,
+          only_start_date: `${formatDay(appt.start).slice(5)}, ${calendarDate(appt.start).getUTCFullYear()}`,
           only_start_time: formatTime(appt.start),
-          day_of_week: DAYS[Math.floor(appt.start / DAY) % 7],
+          day_of_week: DAY_NAMES[Math.floor(appt.start / DAY) % 7],
           reschedule_link: `${env.location.website}/reschedule`,
           cancellation_link: `${env.location.website}/cancel`,
           meeting_location: 'At your property',

@@ -538,7 +538,7 @@ export const closedWon: Automation = {
         fields: {
           company: 'Greenway Lawn & Landscape',
           company_size: '11-50',
-          sms_consent: 'Yes',
+          sms_consent: 'No',
           plan: 'standard-monthly',
           seats: 14,
           workspace_id: 'ws_3RV6KE',
@@ -690,7 +690,7 @@ export const closedWon: Automation = {
         name: 'SMS consent (service)',
         key: 'sms_consent',
         type: 'Checkbox',
-        note: 'The demo form\'s service box, "Text me about my demo booking and reminders." The kickoff nudge is a booking message about what they bought, with no offer, so it uses this box and not SMS consent (offers).',
+        note: 'The demo form\'s service box, "Text me about my demo and, if I become a customer, account setup and kickoff scheduling." The kickoff nudge is exactly that, with no offer, so it uses this box and not SMS consent (offers).',
       },
     ],
     tags: [
@@ -761,7 +761,7 @@ export const closedWon: Automation = {
     },
     {
       title: 'No SMS consent, SMS DND, or no demo form',
-      body: "The If/Else skips the text, and the call task's description shows SMS consent, so nobody texts from a personal phone. Contacts who signed up in the app never saw the consent box, so they get email and a call only. The consent covers booking and reminder texts; anything promotional would need SMS consent (offers).",
+      body: "The If/Else skips the text, and the call task's description shows SMS consent, so nobody texts from a personal phone. Contacts who signed up in the app never saw the consent box, so they get email and a call only. The consent covers demo texts and, for customers, setup and kickoff texts; anything promotional would need SMS consent (offers).",
     },
   ],
   qa: [

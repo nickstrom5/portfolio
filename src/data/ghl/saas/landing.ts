@@ -1,4 +1,5 @@
 import type { LandingPage } from '@/lib/ghl/types';
+import { nextDayAt, nextWeekdayAt } from '@/lib/ghl/engine';
 
 export const landing: LandingPage = {
   url: 'crewlo.example/demo',
@@ -30,24 +31,30 @@ export const landing: LandingPage = {
     { name: 'phone', label: 'Mobile phone (optional)', type: 'tel', autocomplete: 'tel', placeholder: '(415) 555-0100', maps: 'phone' },
   ],
   consent: {
-    transactional: 'Text me about my demo booking and reminders from Crewlo. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
+    transactional: 'Text me about my demo and, if I become a customer, account setup and kickoff scheduling from Crewlo. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
     marketing: 'Also text me product news and event invites. Reply STOP to opt out.',
     fine: 'Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service',
   },
   thanks: {
     title: 'Thanks, {first}. Pick a time that suits you.',
-    body: 'Step 2 of 2: in the live funnel, the Product Demo calendar sits here. It is round robin with Always Book with Assigned User on, so once the workflow has picked your rep, you see their times and book with them.',
+    body: 'Step 2 of 2: in the live funnel, the Product Demo calendar sits here. It is round robin with Always Book with Assigned User on, so once the workflow has picked your rep, you see their times and book with them. Teams of 1 to 10 never see it: a Conditional Logic rule on the form redirects them to a step with the Weekly Live Demo calendar instead.',
     slots: ['Tue 11:00 AM', 'Wed 2:30 PM', 'Thu 10:00 AM'],
   },
   feeds: 'demo-request',
   trigger: 0,
   textWindow: { start: '08:00', end: '20:00', days: [0, 1, 2, 3, 4, 5, 6] },
+  demoNote: 'It runs at your local time. 01 answers by email, from the rep the routing picks, whatever the hour.',
+  textsNote: 'You ticked the SMS box. 01 sends email only; the consent is saved for the demo calendar\'s reminders and, if you buy, setup texts.',
   behaviors: [
     {
       value: 'books',
       label: 'Book a time on the next page',
       scenario: 'books',
-      events: () => [{ at: 2, type: 'appointment_booked', value: 'Product Demo', appointmentAt: 26 * 60 }],
+      // Teams of 1 to 10 book the Thursday 11 AM live demo; everyone else the next weekday 11 AM slot.
+      events: ({ start, fields }) =>
+        fields.company_size === '1-10'
+          ? [{ at: 2, type: 'appointment_booked', value: 'Weekly Live Demo', appointmentAt: nextDayAt(start, 3, 11 * 60, 60) - start }]
+          : [{ at: 2, type: 'appointment_booked', value: 'Product Demo', appointmentAt: nextWeekdayAt(start, 11 * 60) - start }],
     },
     {
       value: 'replies',
@@ -65,7 +72,7 @@ export const landing: LandingPage = {
   notes: [
     { title: 'Qualify with the form, not a call', body: 'Team size and role are the two questions routing needs, so the form asks exactly those. Company size ranges match the Custom Code thresholds, word for word.' },
     { title: 'Work email, optional phone', body: 'B2B buyers expect email. The phone is optional and texting is opt-in with its own consent box, so nobody gets a text they did not ask for.' },
-    { title: 'Round-robin calendar on the thank-you step', body: 'The Product Demo calendar is round robin across the reps, with Always Book with Assigned User on, the form first in the widget and Allow Staff Selection off, so the booking lands with the rep the routing chose. Booking straight after the form catches people while they still care.' },
+    { title: 'Round-robin calendar on the thank-you step', body: 'The Product Demo calendar is round robin across the reps, with Always Book with Assigned User on, the form first in the widget and Allow Staff Selection off, so the booking lands with the rep the routing chose. A Conditional Logic v2 rule (Redirect to URL) sends teams of 1 to 10 to a step with the Weekly Live Demo calendar, so one-to-one time goes to bigger teams. Booking straight after the form catches people while they still care.' },
     { title: 'Fast, even on a site full of scripts', body: 'Optimize JavaScript defers the chat widget and analytics until the page is interactive, and the hero is a compressed screenshot, not a video.' },
     { title: 'Source you can trust', body: 'UTM hidden fields plus GHL’s own First and Latest Attribution. The Custom Webhook to Slack includes the source, so reps know whether they are talking to a Google ad click or a referral.' },
     { title: 'One page per audience', body: 'Paid campaigns for HVAC, plumbing and cleaning companies each get a split-test variation of the headline and screenshot, measured by opt-in rate in the Stats tab.' },

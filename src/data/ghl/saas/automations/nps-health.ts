@@ -120,7 +120,7 @@ export const npsHealth: Automation = {
         'Stop on Response off: the passive path waits for a reply on purpose. With it on, that reply would end the run instead of taking the Replied branch to Leo. A "thanks" to the referral email should not cancel the case-study invite either.',
         "No workflow Time Window. The settings article says it holds communication actions and not tags or field updates, but GHL files Internal Notification and Add Task under its communication actions, and a detractor alert must not wait for Monday. Each email to the customer sits behind its own zero-length Wait instead, with an Advance Window of Monday to Friday, 8 AM to 6 PM. Timezone is Contact, so that is the customer's 8 AM; a contact with no time zone falls back to the account's.",
         'Sender Details: From Name Leo Park, From Email leo@crewlo.example. Every email here is from him, so replies reach the person who can act on them.',
-        "Email only. The demo form's service box covers demo bookings and reminders and its offers box covers product news and event invites; neither covers survey follow-ups or referral asks, and self-serve customers never saw either box.",
+        "Email only. The demo form's service box covers demo reminders and setup and kickoff texts, and its offers box covers product news and event invites; neither covers survey follow-ups or referral asks, and self-serve customers never saw either box.",
         'Custom Webhook is a premium action, billed per execution, and it runs for detractors only. Workflow error notifications go to Hana, so a Slack post that fails reaches her inbox and the Needs Review tab.',
       ],
     },
