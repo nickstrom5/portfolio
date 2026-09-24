@@ -480,7 +480,7 @@ export const reactivation: Automation = {
               message: {
                 channel: 'email',
                 subject: 'Is your roof still on your list, {{contact.first_name}}?',
-                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we can come out for a free roof inspection. It takes about 45 minutes, and you get photos of anything we find and a written estimate.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is taken care of, there is no need to reply. Thanks,\n{{user.name}}' + footer,
+                body: 'Hi {{contact.first_name}},\n\nYou asked us about your roof a while back, so I wanted to check in. If it is still on your list, we can come out for a free inspection and bring your estimate up to date, or write one if you never got that far. It takes about 45 minutes, and you get photos of anything we find.\n\nPick a time that suits you: {{custom_values.booking_link}}\n\nIf the roof is taken care of, there is no need to reply. Thanks,\n{{user.name}}' + footer,
               },
             },
             { id: 'wait-4d', kind: 'wait', title: 'Wait', mode: 'time', minutes: 4 * DAY, summary: 'Four days.' },
@@ -586,7 +586,7 @@ export const reactivation: Automation = {
   build: [
     {
       title: 'Clean the list before the tag goes on',
-      body: 'The Smart List takes old leads and undecided estimates with no activity for 90 days, and leaves out anyone with an open card, anyone who opted out before and anyone on DND for all channels. Old New Lead cards from 01 were still open, so first I marked the untouched ones Abandoned in bulk, which kept those leads on the list. Everyone left has an owner, because the texts are signed with {{user.first_name}}, and contacts owned by anyone who has left the company are reassigned before the tag goes on.',
+      body: 'The Smart List takes old leads and undecided estimates with no activity for 90 days, and leaves out anyone with an open card, anyone who opted out before and anyone on DND for all channels. New Lead cards from before 01 closed its own were still open, so for the first campaign I marked the untouched ones Abandoned in bulk, which kept those leads on the list. 01 now marks a card Abandoned when its week ends with no reply, so later lists need no clean-up. Everyone left has an owner, because the texts are signed with {{user.first_name}}, and contacts owned by anyone who has left the company are reassigned before the tag goes on.',
     },
     {
       title: 'Consent picks the channel',

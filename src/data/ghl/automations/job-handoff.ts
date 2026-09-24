@@ -453,7 +453,7 @@ export const jobHandoff: Automation = {
     },
     {
       title: 'Slack through a Custom Webhook',
-      body: "A Slack incoming webhook on #production, called by Custom Webhook with Event CUSTOM, Method POST, Content-Type application/json and a raw JSON body. GHL's Send Slack Message action would also work and is premium too; I used the webhook because it takes Slack's Block Kit JSON, so the post reads as fields on a phone. Free-text fields stay out of the body: a double quote or line break in a merge value can break the JSON. The URL is the credential, so it lives only in this action, and a leaked one is revoked in Slack and replaced.",
+      body: "A Slack incoming webhook on #production, called by Custom Webhook with Event CUSTOM, Method POST, Content-Type application/json and a raw JSON body. GHL's Send Slack Message action would also work and is premium too; I used the webhook because it takes Slack's Block Kit JSON, so the post reads as fields on a phone. Notes and multi-line fields stay out of the body, because a line break in a merge value breaks the JSON. The name and address are single-line, but a double quote in either could still break it, so the test list sends a name with one and checks for a 200 in Execution Logs. The URL is the credential, so it lives only in this action, and a leaked one is revoked in Slack and replaced.",
     },
     {
       title: 'The job sheet Sam already uses',
@@ -511,6 +511,7 @@ export const jobHandoff: Automation = {
     'Draft copy with a 5-minute timeout: Jordan gets an alert that opens the opportunity and the contact goes back into the wait; with the deal marked Lost first, a note and no alert',
     'Set the finished test card to Open and back to Won: one note on the contact, nothing in Slack, the sheet, the task list or the homeowner\'s inbox, and job-complete still on the contact',
     "A name with an apostrophe, an address with an ampersand and a $14,800 estimate: the Slack post shows one dollar sign, and the sheet row lands in the right columns with the amount totaling",
+    'A homeowner named Robert "Bob" Lane: the Custom Webhook still returns 200 in Execution Logs and the Slack post shows the name as typed',
   ],
   snippets: [
     { title: 'Slack post (Custom Webhook raw body)', language: 'json', code: slackPayload, note: 'Posted to a Slack incoming webhook for #production. "text" is what shows in the phone notification; the blocks lay the job out as fields.' },

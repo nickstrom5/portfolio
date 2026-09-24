@@ -48,8 +48,9 @@ const taskFor = (id: string, why: string, next: Step): Step => ({
 const unknownCaller = (phone: string): Partial<Contact> => ({ firstName: '', lastName: '', email: '', phone, source: 'Inbound call' });
 
 const sop = `When a missed-call alert comes in:
-1. Call back within 15 minutes, from the GHL app or the office line,
-   not your own number.
+1. Call back within 15 minutes between 8 AM and 8 PM, from the GHL
+   app or the office line, not your own number. After 8 PM, call
+   first thing after 8 AM.
 2. Got through? Move the card to Contacted, or book the inspection
    on the calendar. Either one stops the follow-up text.
 3. Not a homeowner (supplier, sales call, wrong number)? Mark the
@@ -264,7 +265,7 @@ export const missedCall: Automation = {
                       channel: 'internal',
                       to: '{{user.name}} (assigned user)',
                       subject: 'Missed call: {{contact.phone}}, new lead',
-                      body: 'No open or won deal, so there is now a New Lead card with source Missed call. Call back within 15 minutes, and check Conversations first in case they have texted.',
+                      body: 'No open or won deal, so there is now a New Lead card with source Missed call. Call back within 15 minutes, or first thing after 8 AM if it came in after 8 PM, and check Conversations first in case they have texted.',
                     },
                   },
                   taskFor(

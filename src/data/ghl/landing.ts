@@ -12,7 +12,7 @@ export const roofingLanding: LandingPage = {
   },
   kicker: 'Chicago suburbs · Free inspection',
   headline: 'Storm damage? Get a free roof inspection this week.',
-  sub: 'A local crew checks your roof, photographs anything that needs attention and leaves a written estimate. No pressure and no cost.',
+  sub: 'One of our estimators checks your roof, photographs anything that needs attention and sends you a written estimate within 24 hours. No pressure and no cost.',
   points: ['Licensed and insured', 'Photos of every issue we find', 'Help with insurance claims'],
   formTitle: 'Book your free inspection',
   submitLabel: 'Get my free inspection',

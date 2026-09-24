@@ -128,6 +128,7 @@ const EVENT_LABEL: Record<EventType, string> = {
   payment: 'Payment received',
   opportunity_won: 'Opportunity marked won',
   opportunity_lost: 'Opportunity marked lost',
+  opportunity_abandoned: 'Opportunity marked abandoned',
   tag_added: 'Tag added',
   review_left: 'Review left',
   survey_submitted: 'Survey submitted',
@@ -457,6 +458,9 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         break;
       case 'opportunity_lost':
         if (contact.opportunity) contact.opportunity.status = 'lost';
+        break;
+      case 'opportunity_abandoned':
+        if (contact.opportunity) contact.opportunity.status = 'abandoned';
         break;
       case 'tag_added':
         if (ev.value && !contact.tags.includes(String(ev.value))) contact.tags.push(String(ev.value));

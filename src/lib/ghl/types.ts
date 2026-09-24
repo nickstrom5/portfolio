@@ -22,6 +22,7 @@ export type EventType =
   | 'payment'
   | 'opportunity_won'
   | 'opportunity_lost'
+  | 'opportunity_abandoned'
   | 'tag_added'
   | 'review_left'
   | 'survey_submitted'
