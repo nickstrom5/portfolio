@@ -34,7 +34,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -418,6 +418,18 @@ export const projects: Project[] = [
     tileBlurb: 'One photo. A glow score. Sixty seconds.',
     bg: 'linear-gradient(135deg, #1a1916 0%, #0e0e0c 60%, #2a2620 100%)',
     fg: '#e8e4db',
+    comingSoon: true,
+  },
+  {
+    id: 'cartworth',
+    name: 'Cartworth',
+    kicker: 'iPhone app · grocery price compare',
+    tileBlurb: 'Every store near you. Every price per unit.',
+    bg: 'linear-gradient(135deg, #e6f4e9 0%, #f7fbf8 55%, #d8ecdf 100%)',
+    fg: '#0f7a3d',
+    bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
+    fgDark: '#5fd08a',
+    tone: 'light',
     comingSoon: true,
   },
 ];
