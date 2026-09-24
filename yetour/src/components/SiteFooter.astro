@@ -1,0 +1,50 @@
+---
+import { url } from '@/lib/url';
+import { tour, shows, played, upcoming } from '@/data/tour';
+import { site } from '@/data/site';
+
+const legsLinks = [
+  { href: '/', label: 'All dates' },
+  { href: '/globe/', label: 'The globe' },
+];
+
+const meta = [
+  { href: '/discography/', label: 'Discography player' },
+  { href: '/andre/', label: 'André Troutman' },
+];
+---
+
+<footer class="tfoot">
+  <div class="wrap">
+    <div class="tfoot-grid">
+      <div>
+        <h2>YE — {tour.display} {tour.year}</h2>
+        <p>
+          An unofficial, fan-built archive of all {shows.length} announced dates: {played.length} played,
+          {upcoming.length} still to come. Every fact on this site is footnoted to a public source. Album
+          art comes from Spotify and stage photography from YouTube; the rest of the artwork is original.
+        </p>
+      </div>
+      <div>
+        <div class="tfoot-title">The tour</div>
+        <ul>
+          {legsLinks.map((l) => <li><a href={url(l.href)}>{l.label}</a></li>)}
+        </ul>
+      </div>
+      <div>
+        <div class="tfoot-title">Deep cuts</div>
+        <ul>
+          {meta.map((l) => <li><a href={url(l.href)}>{l.label}</a></li>)}
+          <li><a href={tour.officialSite} rel="noopener nofollow">Official tour site ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="tfoot-base">
+      <span>
+        {site.domain} {'\u00B7'} unofficial fan project, not affiliated with Ye, YZY, Gamma or any
+        promoter. Built by <a href={site.authorUrl} rel="noopener">{site.author}</a>.
+      </span>
+      <span>Last compiled {site.compiled}</span>
+    </div>
+  </div>
+</footer>

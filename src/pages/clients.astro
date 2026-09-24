@@ -19,7 +19,7 @@ const sectors = [
 ];
 ---
 
-<Base title="Clients" description="Featured clients and the largest engagements from 300+ contracts, 257 of them on Upwork.">
+<Base title="Clients: SPARC, Symplicity, BARBRI, Rippling" description="Who Nick Soderstrom has worked with: SPARC.science, Symplicity, BARBRI, Rippling, Blackdove Art and OFFX, plus client feedback from 300+ contracts since 2015.">
   <section class="section">
     <div class="container">
       <span class="eyebrow">Clients</span>
@@ -54,7 +54,7 @@ const sectors = [
               <p class="blurb muted">{c.blurb}</p>
               <div class="foot">
                 <span class="tag scale">{c.scale}</span>
-                {c.slug && <a href={url(`/work/${c.slug}`)}>Case study →</a>}
+                {c.slug && <a href={url(`/work/${c.slug}`)}>{c.name} case study →</a>}
               </div>
             </div>
           </li>
@@ -80,7 +80,7 @@ const sectors = [
               <p class="blurb muted">{c.blurb}</p>
               <div class="foot">
                 <span class="tag scale">{c.scale}</span>
-                {c.slug && <a href={url(`/work/${c.slug}`)}>Case study →</a>}
+                {c.slug && <a href={url(`/work/${c.slug}`)}>{c.name} case study →</a>}
               </div>
             </div>
           </li>

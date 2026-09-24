@@ -7,11 +7,11 @@ interface Props {
 const { image, alt = '' } = Astro.props;
 ---
 
-<div class="laptop" role="img" aria-label={alt}>
+<div class="laptop">
   <div class="lid">
     <div class="cam" aria-hidden="true"></div>
     <div class="display">
-      <img src={image} alt="" loading="lazy" width="1440" height="900" />
+      <img src={image} alt={alt} loading="lazy" width="1440" height="900" />
     </div>
   </div>
   <div class="base" aria-hidden="true"><span class="notch"></span></div>
