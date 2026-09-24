@@ -1,0 +1,65 @@
+---
+/**
+ * The small generated mark on each date box. No <defs>, no ids — many of these
+ * render on one page and duplicate ids would be an accessibility bug.
+ * Geometry is derived from the show's position so no two boxes look alike.
+ */
+interface Props {
+  seed: number;
+  status: 'played' | 'upcoming' | 'cancelled';
+}
+
+const { seed, status } = Astro.props;
+
+const R = 52;
+const CX = 130;
+const CY = 66;
+
+const meridianCount = 5 + (seed % 4);
+const tilt = 0.2 + ((seed * 7) % 5) * 0.05;
+/** Which meridian is "lit" — walks around the sphere across the itinerary. */
+const lit = seed % meridianCount;
+
+const meridians = Array.from({ length: meridianCount }, (_, i) => {
+  const phase = (i / meridianCount) * Math.PI;
+  return { rx: Math.abs(Math.cos(phase)) * R, on: i === lit };
+});
+
+const lats = [-50, -25, 0, 25, 50].map((deg) => {
+  const a = (deg * Math.PI) / 180;
+  return { y: CY - R * Math.sin(a) * 0.88, rx: R * Math.cos(a) };
+});
+
+const ink = status === 'cancelled' ? '#4a5157' : 'var(--ye-accent)';
+const faint = status === 'cancelled' ? 0.3 : 0.45;
+---
+
+<svg viewBox="0 0 260 132" role="presentation" focusable="false" aria-hidden="true">
+  <g fill="none" stroke={ink} stroke-width="1">
+    <circle cx={CX} cy={CY} r={R} opacity={status === 'cancelled' ? 0.4 : 0.85} stroke-width="1.6" />
+    {lats.map((l) => <ellipse cx={CX} cy={l.y} rx={l.rx} ry={Math.max(l.rx * tilt, 0.6)} opacity={faint} />)}
+    {
+      meridians.map((m) => (
+        <ellipse
+          cx={CX}
+          cy={CY}
+          rx={Math.max(m.rx, 0.6)}
+          ry={R}
+          opacity={m.on ? 0.95 : faint}
+          stroke-width={m.on ? 1.8 : 1}
+        />
+      ))
+    }
+    <ellipse cx={CX} cy={CY} rx={R + 16} ry={(R + 16) * tilt} opacity="0.22" />
+    <path d={`M8 ${CY} H${CX - R - 24}`} opacity="0.3" />
+    <path d={`M${CX + R + 24} ${CY} H252`} opacity="0.3" />
+  </g>
+  {status === 'cancelled' && <path d={`M${CX - R} ${CY - R} L${CX + R} ${CY + R}`} stroke="#5a6067" stroke-width="1.4" />}
+</svg>
+
+<style>
+  svg {
+    width: 100%;
+    height: auto;
+  }
+</style>

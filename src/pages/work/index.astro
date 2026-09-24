@@ -7,19 +7,19 @@ import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
 
-const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => b.data.year - a.data.year);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
 const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
-<Base title="Work" description="Case studies and featured roles from 300+ freelance contracts: project management, operations, CRM, events and app builds.">
+<Base title="Project management and operations case studies" description="Case studies from 300+ freelance contracts: project management, operations, executive assistant work, webinars, Zapier/HubSpot/Zoho automation and AI-built apps.">
   <section class="section">
     <div class="container">
       <span class="eyebrow">Work</span>
       <h1>Client projects</h1>
-      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements.</p>
+      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">
@@ -63,7 +63,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
               <strong>{r.title}</strong>
               <span class="company">{r.company}</span>
             </span>
-            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>Details →</a> : <span />}
+            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>{r.company.split(' · ')[0]} case study →</a> : <span />}
           </li>
         ))}
       </ol>
@@ -164,6 +164,10 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     }
     .years {
       grid-column: 1 / -1;
+    }
+    .detail {
+      white-space: normal;
+      text-align: right;
     }
   }
   .toolbar {

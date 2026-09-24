@@ -11,7 +11,7 @@ import apps from '@/data/apps.json';
 import testimonials from '@/data/testimonials.json';
 import { url } from '@/lib/url';
 
-const projects = (await getCollection('projects'))
+const projects = (await getCollection('projects', ({ data }) => !data.hidden))
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.year - a.data.year)
   .slice(0, 3);
@@ -23,7 +23,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   <section class="hero">
     <div class="container">
       <div class="who">
-        <img class="portrait" src={url(site.photo)} alt="" width="56" height="56" loading="eager" />
+        <img class="portrait" src={url(site.photo)} alt={site.name} width="56" height="56" loading="eager" />
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
@@ -62,6 +62,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
             <ul>
               {s.bullets.map((b) => <li>{b}</li>)}
             </ul>
+            {s.links && <p class="service-links">{s.links.map((l) => <a href={url(l.href)}>{l.label} →</a>)}</p>}
           </article>
         ))}
       </div>
@@ -234,6 +235,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     padding-left: 1.1rem;
     color: var(--text-muted);
     font-size: 0.95rem;
+  }
+  .service-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
   }
   .cta-band {
     background: var(--bg-muted);

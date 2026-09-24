@@ -3,6 +3,7 @@ import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
 import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
+import { ids } from '@/lib/schema';
 
 const skills = {
   'AI & development': [
@@ -33,21 +34,30 @@ const connect = [
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
 ---
 
-<Base title="About" description={`About ${site.name}, freelance ${site.role.toLowerCase()} in Chicago since 2015: background, skills, Upwork history and how to get in touch.`}>
+<Base
+  title={`About ${site.name} · Freelance project manager in Chicago`}
+  description="Nick (Nicholas) Soderstrom, Chicago-based freelance senior project manager and operations lead since 2015: background, skills, Upwork history and contact."
+  ogType="profile"
+  pageType="ProfilePage"
+  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z' }}
+>
   <section class="section">
     <div class="container about">
       <div class="prose">
         <img class="portrait" src={url(site.photo)} alt={`${site.name}`} width="128" height="128" loading="eager" />
         <span class="eyebrow">About</span>
-        <h1>Hi, I'm {site.firstName}.</h1>
+        <h1>Hi, I'm {site.name}.</h1>
         <p class="lede">
-          I'm a senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
+          Nicholas on paper, Nick to everyone else. I'm a freelance senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
         </p>
         <p>
           That range means I've seen how organizations of every size actually operate. I can step into your team, learn your systems and start moving things forward in days, not weeks.
         </p>
         <p>
           What I do best is take ownership of the moving parts, the projects, timelines, tools, people and processes, so you can stay focused on growth. Clients keep me around for years, with my longest engagements running past 3,000 hours, because I'm consistent, detail-oriented and easy to work with.
+        </p>
+        <p>
+          I've freelanced full-time since 2015: 300+ contracts, 257 of them on Upwork, 18,000+ hours billed, Top Rated Plus with 100% Job Success. Longer roles include <a href={url('/work/sparc-portal-digital-coordinator')}>Digital Coordinator for the SPARC Portal</a>, project manager at <a href={url('/work/symplicity-design-projects')}>Symplicity</a> and <a href={url('/work/barbri-video-production')}>BARBRI</a>, and executive assistant at <a href={url('/work/rippling-executive-support')}>Rippling</a>. I studied at DePaul University in Chicago.
         </p>
         <p>
           I flex my schedule around your time zone. Based in {site.location.split(' · ')[0]}, working with clients across North America, Europe and Australia.

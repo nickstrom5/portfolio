@@ -1,0 +1,104 @@
+---
+/**
+ * Three generated plates per show, standing in for photography. Original
+ * vector work derived from the show record — a stage plot at the venue's
+ * scale, a lighting elevation, and a crowd field sized to capacity.
+ * No <defs>/ids so several sets can share a page safely.
+ */
+import { type Show, shortPlace } from '@/data/tour';
+
+interface Props {
+  show: Show;
+  accent: string;
+}
+
+const { show, accent } = Astro.props;
+
+let h = 0;
+for (const ch of show.slug) h = (h * 33 + ch.charCodeAt(0)) >>> 0;
+
+/** Deterministic 0..1 stream. */
+let s = h || 1;
+const rnd = () => {
+  s ^= s << 13;
+  s ^= s >>> 17;
+  s ^= s << 5;
+  return ((s >>> 0) % 10000) / 10000;
+};
+
+const cap = show.capacity ?? 45000;
+/** Crowd density scaled to capacity: 24k -> ~200 marks, 80k -> ~520. */
+const marks = Math.round(150 + (cap / 80000) * 420);
+const crowd = Array.from({ length: marks }, () => {
+  const a = rnd() * Math.PI * 2;
+  const r = Math.sqrt(rnd()) * 138;
+  return { x: 180 + Math.cos(a) * r * 1.22, y: 118 + Math.sin(a) * r * 0.62, o: 0.18 + rnd() * 0.6 };
+});
+
+const beams = Array.from({ length: 11 }, (_, i) => {
+  const x = 30 + i * 32;
+  const spread = 26 + rnd() * 44;
+  return { x, spread, o: 0.06 + rnd() * 0.14 };
+});
+
+const rings = [40, 74, 108, 140];
+const caption3 = show.attendance
+  ? `Crowd field · ${show.attendance.toLocaleString('en-US')} reported`
+  : `Crowd field · ${cap.toLocaleString('en-US')} capacity`;
+---
+
+<div class="gallery">
+  <figure class="plate">
+    <svg viewBox="0 0 360 236" role="img" aria-label={`Stage plot: the globe centred in ${show.venue}`}>
+      <rect width="360" height="236" fill="#0b0d0f" />
+      {rings.map((r) => <ellipse cx="180" cy="118" rx={r * 1.25} ry={r * 0.62} fill="none" stroke={accent} stroke-opacity="0.16" />)}
+      <ellipse cx="180" cy="118" rx="172" ry="86" fill="none" stroke={accent} stroke-opacity="0.3" stroke-dasharray="3 7" />
+      <circle cx="180" cy="118" r="30" fill="none" stroke={accent} stroke-opacity="0.9" stroke-width="1.6" />
+      <circle cx="180" cy="118" r="30" fill={accent} fill-opacity="0.07" />
+      <ellipse cx="180" cy="118" rx="30" ry="9" fill="none" stroke={accent} stroke-opacity="0.5" />
+      <path d="M180 88 V148 M150 118 H210" stroke={accent} stroke-opacity="0.45" />
+      <path d="M180 148 V196" stroke={accent} stroke-opacity="0.35" stroke-width="10" />
+      <path d="M12 12 h26 M12 12 v26 M348 12 h-26 M348 12 v26 M12 224 h26 M12 224 v-26 M348 224 h-26 M348 224 v-26" stroke="#2b3138" />
+      <text x="180" y="222" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="3" fill="#767d85">
+        GLOBE {'Ø'} CENTRE {'·'} 360{'°'}
+      </text>
+    </svg>
+    <figcaption>Stage plot · {show.venue}</figcaption>
+  </figure>
+
+  <figure class="plate">
+    <svg viewBox="0 0 360 236" role="img" aria-label="Lighting elevation: truss, beams and the sphere in section">
+      <rect width="360" height="236" fill="#0b0d0f" />
+      {
+        beams.map((b) => (
+          <path
+            d={`M${b.x} 28 L${b.x - b.spread} 214 L${b.x + b.spread} 214 Z`}
+            fill={accent}
+            fill-opacity={b.o}
+          />
+        ))
+      }
+      <path d="M14 26 H346 M14 34 H346" stroke="#333b42" stroke-width="1.4" />
+      {Array.from({ length: 16 }, (_, i) => <path d={`M${18 + i * 21} 26 l16 8 M${34 + i * 21} 26 l-16 8`} stroke="#242a30" />)}
+      <circle cx="180" cy="128" r="44" fill="#0e1115" stroke={accent} stroke-opacity="0.75" stroke-width="1.6" />
+      <ellipse cx="180" cy="128" rx="44" ry="12" fill="none" stroke={accent} stroke-opacity="0.35" />
+      <ellipse cx="180" cy="128" rx="14" ry="44" fill="none" stroke={accent} stroke-opacity="0.35" />
+      <path d="M0 214 H360" stroke="#2b3138" stroke-width="1.4" />
+      <text x="16" y="230" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="3" fill="#767d85">ELEVATION</text>
+    </svg>
+    <figcaption>Lighting elevation · rotating sphere</figcaption>
+  </figure>
+
+  <figure class="plate">
+    <svg viewBox="0 0 360 236" role="img" aria-label={`Crowd field for ${shortPlace(show)}, drawn to the venue's reported scale`}>
+      <rect width="360" height="236" fill="#0b0d0f" />
+      {crowd.map((c) => <rect x={c.x} y={c.y} width="1.6" height="1.6" fill={accent} fill-opacity={c.o} />)}
+      <circle cx="180" cy="118" r="16" fill="#0b0d0f" stroke={accent} stroke-opacity="0.85" stroke-width="1.4" />
+      <path d="M12 12 h26 M12 12 v26 M348 224 h-26 M348 224 v-26" stroke="#2b3138" />
+      <text x="344" y="230" text-anchor="end" font-family="'JetBrains Mono', monospace" font-size="11" letter-spacing="3" fill="#767d85">
+        {(show.attendance ?? cap).toLocaleString('en-US')}
+      </text>
+    </svg>
+    <figcaption>{caption3}</figcaption>
+  </figure>
+</div>

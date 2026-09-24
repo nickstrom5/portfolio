@@ -22,12 +22,14 @@ interface Props {
   tilt?: boolean;
 }
 const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
+// Screenshots carry their own alt text; hand-built mockups are labelled on the frame.
+const isShot = screen === 'image' && !!image;
 ---
 
-<div class:list={['phone', size, { tilt }]} role="img" aria-label={alt || `${screen} screen mockup`}>
+<div class:list={['phone', size, { tilt }]} role={isShot ? undefined : 'img'} aria-label={isShot ? undefined : alt || `${screen} screen mockup`}>
   <div class="island" aria-hidden="true"></div>
   <div class:list={['screen', screen.split('-')[0]]}>
-    {screen === 'image' && image && <img src={image} alt="" loading="lazy" width="390" height="844" />}
+    {isShot && <img src={image} alt={alt} loading="lazy" width="390" height="844" />}
 
     {screen === 'clam-home' && (
       <div class="ui clam-ui">
@@ -119,7 +121,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" />
+          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" loading="lazy" decoding="async" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
@@ -148,7 +150,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>5:32</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="gw-card">
-          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" />
+          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" loading="lazy" decoding="async" />
           <div class="gw-card-body">
             <strong>Rex</strong>
             <span>14 days in a row · 41 walks total</span>
@@ -209,7 +211,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     overflow: hidden;
     background: #121217;
     color: #fff;
-    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    font-family: -apple-system, var(--font-inter);
     font-size: calc(var(--w) * 0.05);
     line-height: 1.3;
   }

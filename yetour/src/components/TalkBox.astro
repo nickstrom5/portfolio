@@ -1,0 +1,146 @@
+---
+/**
+ * How a talk box works, drawn: amp into a horn driver, driver into a tube,
+ * tube into the mouth, mouth into a microphone.
+ *
+ * The mouth is the filter — that is the whole idea — so the head sits at the
+ * centre and the signal is traced through it. Parts are numbered on the figure
+ * and keyed to a legend, which keeps leader lines off the artwork entirely.
+ */
+interface Props {
+  accent?: string;
+}
+
+const { accent = '#f0821e' } = Astro.props;
+const MONO = "'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace";
+const ink = '#0a0b0d';
+
+const legend = [
+  { n: 1, term: 'DRIVER', note: 'a horn in a sealed box' },
+  { n: 2, term: 'TUBE', note: 'sound, not electricity' },
+  { n: 3, term: 'MOUTH', note: 'the filter' },
+  { n: 4, term: 'MIC', note: 'picks up the words' },
+];
+
+/** Numbered markers on the figure, keyed to the legend. */
+const marks = [
+  { n: 1, x: 412, y: 281 },
+  { n: 2, x: 366, y: 192 },
+  { n: 3, x: 278, y: 176 },
+  { n: 4, x: 200, y: 186 },
+];
+---
+
+<svg viewBox="0 0 520 340" role="img" aria-label="How a talk box works: an amplifier drives a horn driver inside a floor box, the sound travels up a plastic tube into the player's mouth, the mouth shapes it into words, and a microphone at the lips picks up the result.">
+  <rect width="520" height="340" fill={ink} />
+
+  <!-- floor -->
+  <path d="M0 302 H520" stroke="#2b3138" stroke-width="1.4" fill="none" />
+  {Array.from({ length: 26 }, (_, i) => <path d={`M${i * 20} 302 l-9 11`} stroke="#171c21" stroke-width="1" fill="none" />)}
+
+  <!-- ============================================== head, in profile -->
+  <g fill="none" stroke={accent} stroke-linejoin="round" stroke-linecap="round">
+    <path
+      d="M392 66
+         C 344 56, 306 84, 300 116
+         C 298 124, 294 128, 288 133
+         L 275 143
+         C 272 146, 273 149, 277 150
+         L 292 154
+         C 289 161, 291 166, 297 168
+         C 293 176, 295 183, 303 186
+         C 300 196, 306 203, 318 205
+         C 352 212, 390 202, 406 180
+         C 424 154, 422 94, 392 66 Z"
+      stroke-width="2"
+      stroke-opacity="0.95"
+    />
+    <path d="M320 78 C 350 66, 384 70, 402 88" stroke-width="1.6" stroke-opacity="0.4" />
+    <path d="M304 114 q14 -6 26 -3" stroke-width="1.6" stroke-opacity="0.55" />
+    <path d="M312 126 q9 -6 18 -1 q-9 7 -18 1 Z" stroke-width="1.4" stroke-opacity="0.65" />
+    <circle cx="321" cy="126" r="2.6" fill={accent} fill-opacity="0.75" stroke="none" />
+    <path d="M360 148 q13 -9 20 3 q-7 13 -19 6" stroke-width="1.6" stroke-opacity="0.45" />
+    <!-- lips, parted around the tube -->
+    <path d="M285 152 q14 -5 26 -1" stroke-width="2" stroke-opacity="0.9" />
+    <path d="M288 161 q12 4 23 -2" stroke-width="2" stroke-opacity="0.9" />
+    <!-- neck -->
+    <path d="M336 209 v30" stroke-width="1.6" stroke-opacity="0.35" />
+    <path d="M392 203 v36" stroke-width="1.6" stroke-opacity="0.35" />
+    <path d="M336 239 q28 10 56 0" stroke-width="1.6" stroke-opacity="0.25" />
+  </g>
+
+  <!-- ============================================== tube, box to mouth -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M404 250 C 404 212, 378 190, 334 180 C 320 177, 308 170, 303 161" stroke={ink} stroke-width="13" />
+    <path d="M404 250 C 404 212, 378 190, 334 180 C 320 177, 308 170, 303 161" stroke={accent} stroke-width="9" stroke-opacity="0.85" />
+    <path d="M404 250 C 404 212, 378 190, 334 180 C 320 177, 308 170, 303 161" stroke="#ffffff" stroke-width="2" stroke-opacity="0.2" />
+    <!-- gaffer tape -->
+    <path d="M392 214 l11 -4" stroke={ink} stroke-width="8" stroke-opacity="0.8" />
+    <path d="M352 184 l10 -7" stroke={ink} stroke-width="8" stroke-opacity="0.8" />
+  </g>
+
+  <!-- ============================================== the box, on the floor -->
+  <g fill="none" stroke={accent} stroke-linejoin="round">
+    <path d="M356 302 L368 252 H462 L474 302 Z" stroke-width="2" stroke-opacity="0.9" fill={accent} fill-opacity="0.05" />
+    <path d="M368 252 H462" stroke-width="2" stroke-opacity="0.45" />
+    <path d="M394 296 L394 268 L430 258 L430 296 Z" stroke-width="1.5" stroke-opacity="0.5" />
+    <circle cx="412" cy="281" r="11" stroke-width="1.5" stroke-opacity="0.7" />
+    <circle cx="412" cy="281" r="4" stroke-width="1.5" stroke-opacity="0.45" />
+    <circle cx="376" cy="288" r="6" stroke-width="1.6" stroke-opacity="0.65" />
+    <circle cx="456" cy="288" r="5" stroke-width="1.6" stroke-opacity="0.65" />
+    <path d="M396 252 h16 v-6 h-16 z" stroke-width="1.6" stroke-opacity="0.75" />
+  </g>
+
+  <path d="M520 278 C 496 278, 472 288, 462 288" fill="none" stroke={accent} stroke-width="2" stroke-opacity="0.4" stroke-dasharray="7 5" />
+
+  <!-- ============================================== microphone on a stand -->
+  <g fill="none" stroke={accent} stroke-linejoin="round">
+    <g transform="rotate(-24 218 158)">
+      <rect x="186" y="148" width="64" height="20" rx="10" stroke-width="2" stroke-opacity="0.9" />
+      <circle cx="198" cy="158" r="7" stroke-width="1.5" stroke-opacity="0.55" />
+      {[0, 1, 2, 3].map((i) => <path d={`M${214 + i * 8} 150 v16`} stroke-width="1.2" stroke-opacity="0.3" />)}
+    </g>
+    <!-- clip and pole, meeting the capsule's lower end -->
+    <path d="M247 146 L258 172" stroke-width="2.2" stroke-opacity="0.7" />
+    <path d="M258 172 V300" stroke-width="2.4" stroke-opacity="0.6" />
+    <path d="M230 302 H286" stroke-width="2.4" stroke-opacity="0.6" />
+  </g>
+  <path d="M258 300 C 214 308, 150 300, 118 288 L 0 288" fill="none" stroke={accent} stroke-width="2" stroke-opacity="0.4" stroke-dasharray="7 5" />
+
+  <!-- ============================================== numbered marks -->
+  {
+    marks.map((m) => (
+      <g>
+        <circle cx={m.x} cy={m.y} r="10" fill={ink} stroke={accent} stroke-width="1.6" />
+        <text x={m.x} y={m.y + 4} text-anchor="middle" font-family={MONO} font-size="11.5" fill={accent}>
+          {m.n}
+        </text>
+      </g>
+    ))
+  }
+
+  <!-- ============================================== legend -->
+  {
+    legend.map((l, i) => (
+      <g transform={`translate(24 ${58 + i * 34})`}>
+        <circle cx="10" cy="-4" r="10" fill="none" stroke={accent} stroke-width="1.6" stroke-opacity="0.75" />
+        <text x="10" y="0" text-anchor="middle" font-family={MONO} font-size="11.5" fill={accent}>{l.n}</text>
+        <text x="30" y="0" font-family={MONO} font-size="12" letter-spacing="2" fill="#dfe3e7">{l.term}</text>
+        <text x="30" y="15" font-family={MONO} font-size="11" letter-spacing="0.6" fill="#7d848c">{l.note}</text>
+      </g>
+    ))
+  }
+
+  <g font-family={MONO} font-size="11" letter-spacing="2" fill="#6f767e">
+    <text x="506" y="326" text-anchor="end">FROM AMP</text>
+    <text x="14" y="278">TO PA</text>
+  </g>
+</svg>
+
+<style>
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>
