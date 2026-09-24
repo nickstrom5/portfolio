@@ -415,7 +415,7 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Which store near you is actually cheaper?',
-      sub: 'Cartworth searches the grocery stores around any US ZIP code at the same time, converts every price to the same unit, and shows where an item is cheapest right now. Every price is read from the store’s own published listing and labelled shelf, online or weekly ad. No account, no tracking. The screen shown here is the real app, searching basmati rice in Chicago.',
+      sub: 'Cartworth searches the grocery stores around any US ZIP code at the same time, converts every price to the same unit, and shows where an item is cheapest right now. Every price is read from the store’s own published listing and labelled shelf, online or weekly ad. No account, no tracking.',
       screen: 'image',
       image: '/showcase/cartworth-iphone-compare.jpg',
     },
@@ -444,7 +444,7 @@ export const projects: Project[] = [
       {
         eyebrow: 'Also on the iPhone Duo',
         title: 'Every price says where it came from.',
-        body: 'Nothing is crowdsourced and nothing is guessed. Shelf prices are labelled shelf, online listings, which can run higher, are labelled online, and weekly-ad prices come from the store’s own circular. This is the app’s store list for a Chicago ZIP code on the Duo’s folded cover screen.',
+        body: 'Nothing is crowdsourced and nothing is guessed. Shelf prices are labelled shelf, online listings, which can run higher, are labelled online, and weekly-ad prices come from the store’s own circular.',
         screen: 'image',
         image: '/showcase/cartworth-duo-stores.jpg',
         frame: 'duo',
