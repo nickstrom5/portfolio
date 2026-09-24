@@ -69,7 +69,7 @@ Now that you have finished {{custom_values.course_name}}, would you tell us how 
 
 {{custom_values.testimonial_link}}
 
-We ask everyone who finishes, and we want the honest version. If something fell short, there is a box for that, and only our team sees it.
+We ask everyone who finishes, good experience or not. If something fell short, there is a box for that, and only our team sees it.
 
 The form also asks whether we may quote you and how to show your name. Nothing is published without that yes, we never change what you meant, and you can ask us to take it down at any time.
 
@@ -140,7 +140,7 @@ export const completion: Automation = {
   name: 'Completion, testimonial and upgrade',
   kicker: 'Students',
   tagline:
-    'A graduate gets congratulations the minute they finish, an honest request for their story two days later, and one invitation to coaching, and Devon hears about it the moment they click Apply.',
+    'A graduate gets congratulations the minute they finish, a request for their story two days later, and one invitation to coaching, and Devon hears about it the moment they click Apply.',
   problem:
     'Students who finished the course heard nothing. Nobody asked them how it went, so the sales page ran on three quotes from people Morgan already knew. The coaching offer went to workshop attendees but never to the people best placed to use it, students who had just done all the work, and when a graduate did click through to the application, Devon only found out if they submitted it.',
   evidence: {
@@ -442,7 +442,7 @@ export const completion: Automation = {
       id: 'ignores',
       label: 'Finishes, never clicks',
       summary:
-        'Applied for coaching two months ago, a month into the course; 05 scored it 45 and said to finish the course first. Stalled after the skills inventory, came back and finished on a Monday. Gets the invitation 05 promised, opens it, never clicks Apply.',
+        'Applied for coaching two months ago, a month into the course; 05 scored it 45 and suggested putting the course’s 90-day plan to work before adding coaching. Stalled after the skills inventory, came back and finished on a Monday. Gets the invitation, opens it, never clicks Apply.',
       start: at(0, 12, 50),
       contact: graduate({ current_role: 'Individual contributor', goal: 'A new role', application_score: 45 }, ['workshop-replay', 'not-a-fit-yet', 'course-stalled']),
       events: [{ at: at(7, 21, 15) - at(0, 12, 50), type: 'email_opened', label: 'Opens the coaching invitation. An open is not a click, so the wait keeps waiting' }],
@@ -506,7 +506,7 @@ export const completion: Automation = {
   dataModel: {
     customFields: [
       { name: 'Course Progress', key: 'course_progress', type: 'Dropdown (single)', note: 'Not started · Started · Skills inventory done · Completed. 03 writes the first three; this workflow writes Completed' },
-      { name: 'Application Score', key: 'application_score', type: 'Number', note: 'Written by 05 · Sales · Coaching Application. 70 or more means Devon has them, so no invitation; under 70 means 05 said "finish the course first", so they get one' },
+      { name: 'Application Score', key: 'application_score', type: 'Number', note: 'Written by 05 · Sales · Coaching Application. 70 or more means Devon has them, so no invitation; under 70 means 05 suggested working through the course first, so finishing is the moment to ask again' },
       { name: 'Current Role / Goal', key: 'current_role', type: 'Dropdown (single) ×2', note: 'From the workshop form. Quoted in Devon’s email, so a follow-up starts with context' },
     ],
     tags: [
@@ -514,7 +514,7 @@ export const completion: Automation = {
       { name: 'upgrade-clicked', note: 'Clicked Apply in the coaching invitation. Devon’s Smart List; the application in 05 is the real signal' },
       { name: 'course-stalled / course-not-started', note: 'From 03. Removed here the moment they finish' },
       { name: 'payment-failed / access-paused', note: 'From 04 · Billing · Failed Payment Recovery. Read here: no coaching invitation while a payment is failing or access is paused' },
-      { name: 'not-a-fit-yet', note: 'From 05. Left alone here, because Morgan and Devon review that list monthly. It does not block the invitation: for a student it meant "finish the course, then apply again"' },
+      { name: 'not-a-fit-yet', note: 'From 05. Left alone here, because Morgan and Devon review that list monthly. It does not block the invitation: for a student it meant "put the course to work first"' },
     ],
     customValues: [
       { name: 'Testimonial Link', key: 'testimonial_link', value: 'trailheadcareers.example/share' },
@@ -573,7 +573,7 @@ export const completion: Automation = {
     },
     {
       title: 'Already applied, or told "not yet"',
-      body: 'Application Score is written by 05 on every application. At 70 or more the graduate is already Devon’s, booked, followed up or a client, so there is no invitation to apply again; Devon gets a note that they finished, a better opener for the next call than another form. Under 70, 05 told a student to finish the course and then apply again, so finishing is exactly when they get the invitation. The rare clash is a graduate who applies on their own in the week before the invitation and scores under 70: 05’s "not yet" and this invitation would land days apart. Nothing on the record here can tell that "not yet" from an earlier one, so the fix sits where the "not yet" is sent: a Remove from Workflow step in 05 that takes a graduate out of this one.',
+      body: 'Application Score is written by 05 on every application. At 70 or more the graduate is already Devon’s, booked, followed up or a client, so there is no invitation to apply again; Devon gets a note that they finished, a better opener for the next call than another form. Under 70, 05 suggested a student put the course’s plan to work before adding coaching, so finishing is a natural moment to ask again. The rare clash is a graduate who applies on their own in the week before the invitation and scores under 70: 05’s "not yet" and this invitation would land days apart. Nothing on the record here can tell that "not yet" from an earlier one, so the fix sits where the "not yet" is sent: a Remove from Workflow step in 05 that takes a graduate out of this one.',
     },
     {
       title: 'A payment is failing',
@@ -611,7 +611,7 @@ export const completion: Automation = {
       title: 'Coaching invitation email',
       language: 'text',
       code: `Subject: ${inviteSubject}\n\n${inviteBody}`,
-      note: 'Sent at least five days after the story request, on a weekday, and only to graduates Devon does not already have, with no failing payment and no Email DND. The Apply link is the Apply trigger link, so the wait after it can see the click. No outcome, salary or job promise, and the "not a fit" path is described as honestly as the call.',
+      note: 'Sent at least five days after the story request, on a weekday, and only to graduates Devon does not already have, with no failing payment and no Email DND. The Apply link is the Apply trigger link, so the wait after it can see the click. No outcome, salary or job promise, and the "not a fit" path is described as plainly as the call.',
     },
   ],
   features: [

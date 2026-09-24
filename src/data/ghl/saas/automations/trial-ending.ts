@@ -196,7 +196,7 @@ export const trialEnding: Automation = {
                 action: 'send_email',
                 title: 'Send Email',
                 label: 'Ends tomorrow',
-                summary: 'Short and plain: the deadline, where to pay, what happens to their data, and an honest question about what is in the way.',
+                summary: 'Short and plain: the deadline, where to pay, what happens to their data, and one question about what is in the way.',
                 message: {
                   channel: 'email',
                   subject: 'Your Crewlo trial ends tomorrow',
