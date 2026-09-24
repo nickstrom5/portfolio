@@ -43,6 +43,30 @@
     "placeholder": false
   },
   {
+    "name": "Cartworth",
+    "tagline": "Compare grocery prices at every store near you, anywhere in the US. Every price is converted to the same unit so package sizes compare fairly, plus each store's weekly ad.",
+    "platforms": [
+      "iOS",
+      "Web"
+    ],
+    "stack": [
+      "SwiftUI",
+      "Node.js",
+      "CoreLocation",
+      "MapKit",
+      "Swift Charts",
+      "StoreKit"
+    ],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "",
+    "status": "Coming soon",
+    "icon": "CW",
+    "placeholder": false
+  },
+  {
     "name": "Damp",
     "tagline": "Drink less, not never. A one-tap dry-night tracker that counts your streak, the money you kept and the calories you skipped. No account, nothing leaves the phone.",
     "platforms": [
