@@ -71,6 +71,8 @@ export interface SoonProject {
   bgDark?: string;
   fgDark?: string;
   tone?: 'light' | 'dark';
+  /** Optional landing page: the tile links out instead of sitting still. */
+  href?: string;
   comingSoon: true;
 }
 
@@ -205,6 +207,7 @@ export const projects: Project[] = [
     bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
     fgDark: '#ff7a86',
     tone: 'light',
+    href: 'https://chicago.eatsranked.com/',
     comingSoon: true,
   },
 
@@ -488,6 +491,7 @@ export const projects: Project[] = [
     bgDark: 'linear-gradient(135deg, #11261a 0%, #12161f 55%, #2e2610 100%)',
     fgDark: '#f2c230',
     tone: 'light',
+    href: 'https://wisconsin.eatsranked.com/',
     comingSoon: true,
   },
 ];
