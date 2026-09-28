@@ -18,17 +18,34 @@ import { url } from '@/lib/url';
 
       <div class="tiles" role="tablist" aria-label="Projects">
         {projects.map((p, i) => p.comingSoon ? (
-          <div
-            class="tile soon"
-            data-project={p.id}
-            data-tone={p.tone ?? 'dark'}
-            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
-          >
-            <span class="t-kicker">{p.kicker}</span>
-            <span class="t-name">{p.name}</span>
-            <span class="t-blurb">{p.tileBlurb}</span>
-            <span class="t-cta">Coming soon</span>
-          </div>
+          p.href ? (
+            <a
+              class="tile soon linked"
+              href={p.href}
+              target="_blank"
+              rel="noopener"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon · Visit site ↗</span>
+            </a>
+          ) : (
+            <div
+              class="tile soon"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon</span>
+            </div>
+          )
         ) : (
           <button
             class="tile"
@@ -224,7 +241,8 @@ import { url } from '@/lib/url';
 </Base>
 
 <script>
-  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile');
+  // Only story tiles switch stories; coming-soon tiles are static or link out.
+  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile:not(.soon)');
   const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canObserve = 'IntersectionObserver' in window && !reduce;
@@ -339,6 +357,14 @@ import { url } from '@/lib/url';
   }
   .tile.soon .t-cta {
     opacity: 0.8;
+  }
+  .tile.soon.linked {
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .tile.soon.linked:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
   }
   .tile.active,
   .tile[aria-selected='true'] {
