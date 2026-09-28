@@ -34,7 +34,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'leaderboard' | 'wisconsin';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -198,19 +198,18 @@ export const projects: Project[] = [
     status: 'In development · cartworth.app is live',
   },
   {
-    id: 'leaderboard',
-    name: 'Chicago Restaurant Leaderboard',
-    kicker: 'Web app · Illinois restaurants',
-    tileBlurb: 'Illinois restaurants, ranked by one score.',
+    id: 'eatsranked',
+    name: 'Eats Ranked',
+    kicker: 'Web + iPhone app · restaurant rankings',
+    tileBlurb: 'Restaurants, ranked state by state. Illinois and Wisconsin first.',
     bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
     fg: '#b3122b',
     bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
     fgDark: '#ff7a86',
     tone: 'light',
-    href: 'https://chicago.eatsranked.com/',
+    href: 'https://eatsranked.com/',
     comingSoon: true,
   },
-
   {
     id: 'launchneat',
     name: 'LaunchNeat',
@@ -480,18 +479,5 @@ export const projects: Project[] = [
     ],
     status: 'Live · signalrig.dev',
     caseStudy: 'signalrig-gtm-engineering-showcase',
-  },
-  {
-    id: 'wisconsin',
-    name: 'Wisconsin Restaurant Leaderboard',
-    kicker: 'Web app · Wisconsin restaurants',
-    tileBlurb: 'Supper clubs, fish fries and custard stands, ranked.',
-    bg: 'linear-gradient(135deg, #e9f1ea 0%, #fbfaf2 55%, #fbefc9 100%)',
-    fg: '#1d5b36',
-    bgDark: 'linear-gradient(135deg, #11261a 0%, #12161f 55%, #2e2610 100%)',
-    fgDark: '#f2c230',
-    tone: 'light',
-    href: 'https://wisconsin.eatsranked.com/',
-    comingSoon: true,
   },
 ];
