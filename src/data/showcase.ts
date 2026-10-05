@@ -20,8 +20,8 @@ export interface Feature {
   body: string;
   screen: Screen;
   image?: string;
-  /** 'phone' (default) or 'laptop'. */
-  frame?: 'phone' | 'laptop';
+  /** 'phone' (default), 'laptop', or 'duo' for a real iPhone Duo cover-screen capture. */
+  frame?: 'phone' | 'laptop' | 'duo';
   /** Put the device on the left instead of the right. */
   flip?: boolean;
 }
@@ -34,7 +34,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'leaderboard';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -47,10 +47,11 @@ export interface StoryProject {
   /** 'light' tiles and heroes use dark text on a light background. */
   tone?: 'light' | 'dark';
   comingSoon?: false;
-  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' };
+  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo' };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
-  split: { ai: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
+  /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
+  split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
   steps: { title: string; ai: string; me: string }[];
   prompts?: Prompt[];
   promptStats?: { value: string; label: string }[];
@@ -70,6 +71,8 @@ export interface SoonProject {
   bgDark?: string;
   fgDark?: string;
   tone?: 'light' | 'dark';
+  /** Optional landing page: the tile links out instead of sitting still. */
+  href?: string;
   comingSoon: true;
 }
 
@@ -133,116 +136,79 @@ export const projects: Project[] = [
     caseStudy: 'goodwalk-dog-walk-tracker',
   },
   {
-    id: 'clam',
-    name: 'Clam',
-    kicker: 'iPhone app · focus blocker',
-    tileBlurb: 'Fold your phone shut. Your apps stay shut.',
-    bg: 'linear-gradient(135deg, #1b1b22 0%, #121217 60%, #2a2412 100%)',
-    fg: '#fad159',
+    id: 'cartworth',
+    name: 'Cartworth',
+    kicker: 'iPhone app · grocery price compare',
+    tileBlurb: 'Every store near you. Every price per unit.',
+    bg: 'linear-gradient(135deg, #e6f4e9 0%, #f7fbf8 55%, #d8ecdf 100%)',
+    fg: '#0f7a3d',
+    bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
+    fgDark: '#5fd08a',
+    tone: 'light',
     hero: {
-      title: 'One tap. Your distracting apps lock for exactly as long as you choose.',
-      sub: 'Clam uses Apple’s Screen Time entitlement for real blocking, keeps the countdown on your lock screen or the iPhone Duo outer display, and never sends a byte off the phone.',
-      screen: 'clam-home',
-    },
-    siteShot: {
-      desktop: '/showcase/clam-site.jpg',
-      mobile: '/showcase/clam-site-mobile.jpg',
-      caption: 'getclam.app, the landing page. Written and styled by the models, served from GitHub Pages.',
-      url: 'https://getclam.app',
-    },
-    features: [
-      {
-        eyebrow: 'The block screen',
-        title: 'Open Instagram? Nope.',
-        body: 'A Shield Configuration extension draws a branded block screen the moment you open a locked app. It shows what’s locked, how long is left, and that quitting early costs a ten-second hold and your streak.',
-        screen: 'clam-block',
-      },
-      {
-        eyebrow: 'Live Activity',
-        title: 'The timer follows you to the lock screen.',
-        body: 'ActivityKit puts the countdown on the lock screen and in the Dynamic Island. On iPhone Duo it lives on the outer display, so the fold itself becomes the ritual.',
-        screen: 'clam-live',
-        flip: true,
-      },
-    ],
-    split: {
-      ai: 95,
-      aiLabel: 'Claude & Grok',
-      meLabel: 'Nick',
-      aiDid: 'Market research, strategy doc, nine onboarding screens, SwiftUI app, three extensions, StoreKit 2 paywall, unit tests, Xcode project, App Store listing, entitlement request, landing site, legal pages, social kit.',
-      meDid: 'The idea, the “nothing leaves the phone” rule, every product decision, running builds on a real iPhone, pasting errors back, domains, accounts and the launch calendar.',
-    },
-    steps: [
-      { title: 'Research the category', ai: 'Studied Opal, Jomo and Brick, priced the market and wrote a 30-day plan.', me: 'Chose the fold as the hook and set the no-backend constraint.' },
-      { title: 'Design the loop', ai: 'Wrote each onboarding screen and the belief it has to move, then the paywall.', me: 'Read it as a user and cut anything that felt like a pitch.' },
-      { title: 'Generate the app', ai: 'Produced the app, shield, monitor and widget targets file by file.', me: 'Ran the builds, reported what broke on device, repeated.' },
-      { title: 'Prepare the launch', ai: 'Listing, screenshots plan, privacy labels, creator brief, landing page.', me: 'Registered getclam.app, set up Pages and the developer account.' },
-    ],
-    links: [
-      { label: 'getclam.app', href: 'https://getclam.app', primary: true },
-      { label: 'Source on GitHub', href: 'https://github.com/nickstrom5/Claude' },
-    ],
-    status: 'In development · App Store link goes live with the listing',
-    caseStudy: 'clam-focus-blocker',
-  },
-  {
-    id: 'signalrig',
-    name: 'SignalRig',
-    kicker: 'GTM engineering · demo site',
-    tileBlurb: 'Five working go-to-market demos, a prompt lab and the commercial foundation behind them. One working session, live on Vercel.',
-    bg: 'linear-gradient(135deg, #1e1410 0%, #121217 60%, #2c1a0e 100%)',
-    fg: '#ff7a2f',
-    hero: {
-      title: 'GTM systems that compound.',
-      sub: 'SignalRig is a client-facing showcase for GTM engineering: five working demos of the pipeline that replaces manual SDR and RevOps volume, enrichment, scoring, routing, signal detection and reporting, plus a prompt lab and the commercial foundation behind it. Every demo runs on labelled sample data in the browser. The whole site was built in one working session.',
+      title: 'Which store near you is actually cheaper?',
+      sub: 'Cartworth searches the grocery stores around any US ZIP code at the same time, converts every price to the same unit, and shows where an item is cheapest right now. Every price is read from the store’s own published listing and labelled shelf, online or weekly ad. No account, no tracking.',
       screen: 'image',
-      image: '/showcase/signalrig-site.jpg',
-      frame: 'laptop',
+      image: '/showcase/cartworth-iphone-compare.jpg',
     },
     siteShot: {
-      desktop: '/showcase/signalrig-site.jpg',
-      mobile: '/showcase/signalrig-site-mobile.jpg',
-      caption: 'signalrig.dev. Next.js 16 App Router, TypeScript and Tailwind v4: 58 source files and about 4,500 lines, no backend, no analytics, deployed on Vercel.',
-      url: 'https://signalrig.dev',
+      desktop: '/showcase/cartworth-site.jpg',
+      mobile: '/showcase/cartworth-site-mobile.jpg',
+      caption: 'cartworth.app, with privacy, terms and support pages. Behind it: a SwiftUI iPhone app of 59 Swift files and about 11,000 lines, and a Node web version of about 7,000 lines.',
+      url: 'https://cartworth.app',
     },
     features: [
       {
-        eyebrow: 'Five working demos',
-        title: 'Timing beats fit.',
-        body: 'The scoring demo ranks eight accounts across five signal types with explicit weights. Flip between ranking by fit and by timing, toggle decay on year-old signals, and watch a 72-fit account with three fresh signals outrank a 95-fit account with none. The other four demos, enrichment, routing, signals and reporting, are wired the same way: real logic on sample data, not a slide.',
+        eyebrow: 'Compared per unit',
+        title: 'The cheaper tag isn’t always the cheaper buy.',
+        body: 'Every row is converted to the same unit, with its store, pack size and a shelf, online or national label. On this screen Trader Joe’s 2 lb bag works out to $1.50/lb, Tony’s 20 lb bag to $1.30/lb and Walmart’s 20 lb bag to $1.02/lb. Only real matches count: “milk chocolate” never wins a search for milk.',
         screen: 'image',
-        image: '/showcase/signalrig-scoring.jpg',
-        frame: 'laptop',
+        image: '/showcase/cartworth-iphone-unit-prices.jpg',
       },
       {
-        eyebrow: 'Prompt lab',
-        title: 'Prompts that hold at volume.',
-        body: 'The same task, score a company against an ICP, written two ways side by side. The vague prompt looks fine on ten companies and falls apart on ten thousand. The one that holds uses binary tests with weights, names its disqualifiers, forbids invention and scores unknowns as zero, so every run is auditable and cheap to re-run.',
+        eyebrow: 'A list that knows what it costs',
+        title: 'Plan the cheapest trip.',
+        body: 'Add items with a size, like “milk 1 gal”, and Cartworth prices that exact amount at every store you follow. Then it plans the trip: here, four items cost $12.75 at one store or $8.68 split across two. Recipes go in by photo, and the text recognition runs on the phone.',
         screen: 'image',
-        image: '/showcase/signalrig-promptlab.jpg',
-        frame: 'laptop',
+        image: '/showcase/cartworth-iphone-trip.jpg',
         flip: true,
+      },
+      {
+        eyebrow: 'Also on the iPhone Duo',
+        title: 'Every price says where it came from.',
+        body: 'Nothing is crowdsourced and nothing is guessed. Shelf prices are labelled shelf, online listings, which can run higher, are labelled online, and weekly-ad prices come from the store’s own circular.',
+        screen: 'image',
+        image: '/showcase/cartworth-duo-stores.jpg',
+        frame: 'duo',
       },
     ],
     split: {
-      ai: 96,
       aiLabel: 'Claude Code',
       meLabel: 'Nick',
-      aiDid: 'Positioning, every section, the five interactive demos and their sample data, the prompt lab, the ICP and funnel foundation, the social image, sitemap and SEO pass, the Vercel deploy setup, and a build log documenting each phase.',
-      meDid: 'The brief: a client-facing proof of GTM engineering, not a resume site. The order of the five systems, the name, the domain, and a review of every demo before merge.',
+      aiDid: 'The Node web app and its store adapters, the SwiftUI iPhone app, the test suites, the marketing site, the App Store listing and the screenshot automation that drove the real app on iPhone and iPhone Duo simulators.',
+      meDid: 'The idea, the name, the domain, running the builds on my Mac, and every call on what ships.',
     },
     steps: [
-      { title: 'Read the brief', ai: 'Turned the prompt into a plan: five demos in pipeline order, a prompt lab, the commercial foundation, one Next.js app deployable in one command.', me: '“A client-facing proof artifact, not a resume site.”' },
-      { title: 'Scaffold and design', ai: 'Set up Next.js 16 with Tailwind v4, bundled fonts and design tokens, and wrote the page sections.', me: 'Picked the dark, orange-accent look and the name.' },
-      { title: 'Data, then demos', ai: 'Wrote eleven JSON data files first, then built each demo against them so every number on screen is traceable.', me: 'Checked the sample ICP and signal weights made sense.' },
-      { title: 'QA, ship, deploy', ai: 'Type-checked and linted, opened the pull request, deployed to Vercel and set the canonical URL.', me: 'Merged, pointed signalrig.dev at it, and asked for this story.' },
+      { title: 'Web app first', ai: 'Built the price search: the stores near a ZIP code, searched at once, every price converted to one unit and labelled by where it came from.', me: 'The idea: which store near me is actually cheaper for the thing I’m buying today.' },
+      { title: 'Then the iPhone app', ai: 'Wrote the SwiftUI app with search, weekly ads, a priced shopping list, trip planning, recipe scanning and price watches, plus tests that keep it in step with the web version.', me: 'Ran the builds on my Mac and reviewed the results.' },
+      { title: 'Real renders, not mockups', ai: 'Drove the real app in the simulator to capture unretouched screenshots, on iPhone and on the iPhone Duo’s folded cover screen, and wrote down what was and wasn’t ready to ship.', me: 'Picked the shots worth showing.' },
+      { title: 'Site and launch', ai: 'Built cartworth.app with its privacy, terms and support pages, the App Store listing copy and a launch checklist.', me: 'Put cartworth.app live. App Store submission is next.' },
     ],
-    links: [
-      { label: 'Visit signalrig.dev', href: 'https://signalrig.dev', primary: true },
-      { label: 'See the demos', href: 'https://signalrig.dev/#demos' },
-    ],
-    status: 'Live · signalrig.dev',
-    caseStudy: 'signalrig-gtm-engineering-showcase',
+    links: [{ label: 'Visit cartworth.app', href: 'https://cartworth.app', primary: true }],
+    status: 'In development · cartworth.app is live',
+  },
+  {
+    id: 'eatsranked',
+    name: 'Eats Ranked',
+    kicker: 'Web + iPhone app · restaurant rankings',
+    tileBlurb: 'Restaurants, ranked state by state. Illinois and Wisconsin first.',
+    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
+    fg: '#b3122b',
+    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
+    fgDark: '#ff7a86',
+    tone: 'light',
+    href: 'https://eatsranked.com/',
+    comingSoon: true,
   },
   {
     id: 'launchneat',
@@ -403,27 +369,115 @@ export const projects: Project[] = [
     status: 'Live · updated by prompt',
   },
   {
-    id: 'cartworth',
-    name: 'Cartworth',
-    kicker: 'iPhone app · grocery price compare',
-    tileBlurb: 'Every store near you. Every price per unit.',
-    bg: 'linear-gradient(135deg, #e6f4e9 0%, #f7fbf8 55%, #d8ecdf 100%)',
-    fg: '#0f7a3d',
-    bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
-    fgDark: '#5fd08a',
-    tone: 'light',
-    comingSoon: true,
+    id: 'clam',
+    name: 'Clam',
+    kicker: 'iPhone app · focus blocker',
+    tileBlurb: 'Fold your phone shut. Your apps stay shut.',
+    bg: 'linear-gradient(135deg, #1b1b22 0%, #121217 60%, #2a2412 100%)',
+    fg: '#fad159',
+    hero: {
+      title: 'One tap. Your distracting apps lock for exactly as long as you choose.',
+      sub: 'Clam uses Apple’s Screen Time entitlement for real blocking, keeps the countdown on your lock screen or the iPhone Duo outer display, and never sends a byte off the phone.',
+      screen: 'clam-home',
+    },
+    siteShot: {
+      desktop: '/showcase/clam-site.jpg',
+      mobile: '/showcase/clam-site-mobile.jpg',
+      caption: 'getclam.app, the landing page. Written and styled by the models, served from GitHub Pages.',
+      url: 'https://getclam.app',
+    },
+    features: [
+      {
+        eyebrow: 'The block screen',
+        title: 'Open Instagram? Nope.',
+        body: 'A Shield Configuration extension draws a branded block screen the moment you open a locked app. It shows what’s locked, how long is left, and that quitting early costs a ten-second hold and your streak.',
+        screen: 'clam-block',
+      },
+      {
+        eyebrow: 'Live Activity',
+        title: 'The timer follows you to the lock screen.',
+        body: 'ActivityKit puts the countdown on the lock screen and in the Dynamic Island. On iPhone Duo it lives on the outer display, so the fold itself becomes the ritual.',
+        screen: 'clam-live',
+        flip: true,
+      },
+    ],
+    split: {
+      ai: 95,
+      aiLabel: 'Claude & Grok',
+      meLabel: 'Nick',
+      aiDid: 'Market research, strategy doc, nine onboarding screens, SwiftUI app, three extensions, StoreKit 2 paywall, unit tests, Xcode project, App Store listing, entitlement request, landing site, legal pages, social kit.',
+      meDid: 'The idea, the “nothing leaves the phone” rule, every product decision, running builds on a real iPhone, pasting errors back, domains, accounts and the launch calendar.',
+    },
+    steps: [
+      { title: 'Research the category', ai: 'Studied Opal, Jomo and Brick, priced the market and wrote a 30-day plan.', me: 'Chose the fold as the hook and set the no-backend constraint.' },
+      { title: 'Design the loop', ai: 'Wrote each onboarding screen and the belief it has to move, then the paywall.', me: 'Read it as a user and cut anything that felt like a pitch.' },
+      { title: 'Generate the app', ai: 'Produced the app, shield, monitor and widget targets file by file.', me: 'Ran the builds, reported what broke on device, repeated.' },
+      { title: 'Prepare the launch', ai: 'Listing, screenshots plan, privacy labels, creator brief, landing page.', me: 'Registered getclam.app, set up Pages and the developer account.' },
+    ],
+    links: [
+      { label: 'getclam.app', href: 'https://getclam.app', primary: true },
+      { label: 'Source on GitHub', href: 'https://github.com/nickstrom5/Claude' },
+    ],
+    status: 'In development · App Store link goes live with the listing',
+    caseStudy: 'clam-focus-blocker',
   },
   {
-    id: 'leaderboard',
-    name: 'Chicago Restaurant Leaderboard',
-    kicker: 'Web app · Illinois restaurants',
-    tileBlurb: 'Illinois restaurants, ranked by one score.',
-    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
-    fg: '#b3122b',
-    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
-    fgDark: '#ff7a86',
-    tone: 'light',
-    comingSoon: true,
+    id: 'signalrig',
+    name: 'SignalRig',
+    kicker: 'GTM engineering · demo site',
+    tileBlurb: 'Five working go-to-market demos, a prompt lab and the commercial foundation behind them. One working session, live on Vercel.',
+    bg: 'linear-gradient(135deg, #1e1410 0%, #121217 60%, #2c1a0e 100%)',
+    fg: '#ff7a2f',
+    hero: {
+      title: 'GTM systems that compound.',
+      sub: 'SignalRig is a client-facing showcase for GTM engineering: five working demos of the pipeline that replaces manual SDR and RevOps volume, enrichment, scoring, routing, signal detection and reporting, plus a prompt lab and the commercial foundation behind it. Every demo runs on labelled sample data in the browser. The whole site was built in one working session.',
+      screen: 'image',
+      image: '/showcase/signalrig-site.jpg',
+      frame: 'laptop',
+    },
+    siteShot: {
+      desktop: '/showcase/signalrig-site.jpg',
+      mobile: '/showcase/signalrig-site-mobile.jpg',
+      caption: 'signalrig.dev. Next.js 16 App Router, TypeScript and Tailwind v4: 58 source files and about 4,500 lines, no backend, no analytics, deployed on Vercel.',
+      url: 'https://signalrig.dev',
+    },
+    features: [
+      {
+        eyebrow: 'Five working demos',
+        title: 'Timing beats fit.',
+        body: 'The scoring demo ranks eight accounts across five signal types with explicit weights. Flip between ranking by fit and by timing, toggle decay on year-old signals, and watch a 72-fit account with three fresh signals outrank a 95-fit account with none. The other four demos, enrichment, routing, signals and reporting, are wired the same way: real logic on sample data, not a slide.',
+        screen: 'image',
+        image: '/showcase/signalrig-scoring.jpg',
+        frame: 'laptop',
+      },
+      {
+        eyebrow: 'Prompt lab',
+        title: 'Prompts that hold at volume.',
+        body: 'The same task, score a company against an ICP, written two ways side by side. The vague prompt looks fine on ten companies and falls apart on ten thousand. The one that holds uses binary tests with weights, names its disqualifiers, forbids invention and scores unknowns as zero, so every run is auditable and cheap to re-run.',
+        screen: 'image',
+        image: '/showcase/signalrig-promptlab.jpg',
+        frame: 'laptop',
+        flip: true,
+      },
+    ],
+    split: {
+      ai: 96,
+      aiLabel: 'Claude Code',
+      meLabel: 'Nick',
+      aiDid: 'Positioning, every section, the five interactive demos and their sample data, the prompt lab, the ICP and funnel foundation, the social image, sitemap and SEO pass, the Vercel deploy setup, and a build log documenting each phase.',
+      meDid: 'The brief: a client-facing proof of GTM engineering, not a resume site. The order of the five systems, the name, the domain, and a review of every demo before merge.',
+    },
+    steps: [
+      { title: 'Read the brief', ai: 'Turned the prompt into a plan: five demos in pipeline order, a prompt lab, the commercial foundation, one Next.js app deployable in one command.', me: '“A client-facing proof artifact, not a resume site.”' },
+      { title: 'Scaffold and design', ai: 'Set up Next.js 16 with Tailwind v4, bundled fonts and design tokens, and wrote the page sections.', me: 'Picked the dark, orange-accent look and the name.' },
+      { title: 'Data, then demos', ai: 'Wrote eleven JSON data files first, then built each demo against them so every number on screen is traceable.', me: 'Checked the sample ICP and signal weights made sense.' },
+      { title: 'QA, ship, deploy', ai: 'Type-checked and linted, opened the pull request, deployed to Vercel and set the canonical URL.', me: 'Merged, pointed signalrig.dev at it, and asked for this story.' },
+    ],
+    links: [
+      { label: 'Visit signalrig.dev', href: 'https://signalrig.dev', primary: true },
+      { label: 'See the demos', href: 'https://signalrig.dev/#demos' },
+    ],
+    status: 'Live · signalrig.dev',
+    caseStudy: 'signalrig-gtm-engineering-showcase',
   },
 ];
