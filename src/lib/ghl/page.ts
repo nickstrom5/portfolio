@@ -155,9 +155,17 @@ export function initGhlPage() {
   });
 
   // Links last, so a bad hash can never stop the rest of the page from working.
+  type Saved = { gxCase: string; y: number };
+  const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];
   document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
     a.addEventListener('click', (e) => {
-      if (go(a.dataset.openAuto!, true, true)) e.preventDefault();
+      const target = a.dataset.openAuto!;
+      if (!caseIds.some((c) => target === c || target.startsWith(`${c}-`))) return;
+      e.preventDefault();
+      // Remember where the reader is, then give the jump its own history entry so Back returns here.
+      history.replaceState({ gxCase: shownCase(), y: window.scrollY } satisfies Saved, '');
+      if (location.hash !== `#${target}`) history.pushState(null, '', `#${target}`);
+      go(target, true, true);
     }),
   );
   const fromHash = () => {
@@ -166,6 +174,14 @@ export function initGhlPage() {
       target = decodeURIComponent(target);
     } catch {
       // Not a valid escape sequence; use it as written.
+    }
+    const saved = history.state as Saved | null;
+    if (saved?.gxCase) {
+      // Back or Forward onto a spot this page saved: show the same case and put the scroll back.
+      if (!go(target, false)) selectCase(saved.gxCase, false, false);
+      history.replaceState(saved, ''); // go() may have cleared it
+      window.scrollTo({ top: saved.y, behavior: 'instant' }); // html has scroll-behavior: smooth
+      return;
     }
     go(target, true);
   };
@@ -255,9 +271,13 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     demo.querySelector('[data-lp-thanks-title]')!.textContent = l.thanks.title.replace('{first}', who.firstName || 'there');
     form.hidden = true;
     thanks.hidden = false;
-    thanks.focus({ preventScroll: true });
-    // On one-column layouts the next step sits below the form; bring it into view.
-    if (window.matchMedia('(max-width: 900px)').matches) captured.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+    // On one-column layouts the next step sits below the form: move focus there and bring it into view.
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      focusQuietly(captured.querySelector<HTMLElement>('.gx-captured-title'));
+      captured.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+    } else {
+      thanks.focus({ preventScroll: true });
+    }
   });
 
   demo.querySelector('[data-lp-again]')?.addEventListener('click', () => {
@@ -282,7 +302,8 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     s.selectScenario(behavior.scenario);
     s.useContact(identity, { start, events: behavior.events({ start, firstText, texts, fields: formFields }) });
     openAutomation(l.feeds);
-    const target = document.querySelector<HTMLElement>(`#${caseId}-${l.feeds} .g-controls`);
+    // The "Running on your form details" line, just shown by useContact(), with the controls and log under it.
+    const target = document.querySelector<HTMLElement>(`#${caseId}-${l.feeds} [data-override]`);
     scrollTo(target);
     focusQuietly(s.logElement);
     s.runLater(reduceMotion() ? 0 : 500);

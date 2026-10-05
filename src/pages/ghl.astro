@@ -170,7 +170,7 @@ const description =
             <span class="gx-switch-state" aria-hidden="true">Showing</span>
             <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
             <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
-            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}>{c.business.industry}. {c.business.blurb} {plural(c.automations.length, 'workflow', 'workflows')} and a working landing page.</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}><span class="sr-only">{c.business.industry}.</span> {c.business.blurb} <span class="sr-only">{plural(c.automations.length, 'workflow', 'workflows')} and a working landing page.</span></span>
             <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
           </button>
         ))}

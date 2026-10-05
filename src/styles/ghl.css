@@ -837,7 +837,7 @@
 .g-outcome {
   margin: 0;
   padding: 0.8rem 1rem;
-  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background: var(--bg-muted);
   font-size: 0.9rem;
 }
@@ -1312,6 +1312,13 @@
   font-size: 0.86rem;
   color: var(--text-muted);
 }
+/* Links inside prose are underlined, so colour is not the only cue. */
+.gx-demo-note a,
+.gx-demo-feeds a,
+.gx-where a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 @media (max-width: 900px) {
   .gx-demo {
     grid-template-columns: 1fr;
@@ -1661,9 +1668,6 @@
   color: var(--text-muted);
 }
 
-.gx-panel {
-  scroll-margin-top: 80px;
-}
 .gx-panel-head h4 {
   font-size: clamp(1.7rem, 3.5vw, 2.3rem);
   margin-bottom: 0.4rem;
@@ -1721,7 +1725,6 @@
   gap: 1.5rem;
   align-items: start;
   margin-top: 2rem;
-  scroll-margin-top: 80px;
 }
 .gx-lab-sim {
   position: sticky;
@@ -1740,6 +1743,11 @@
 @media (max-width: 960px) {
   .gx-lab {
     grid-template-columns: 1fr;
+  }
+  /* The canvas comes first in the DOM but sits below the simulator here; keep the
+     growing log from anchoring the page to it. */
+  .gx-lab-canvas {
+    overflow-anchor: none;
   }
   .gx-lab-sim {
     position: static;
@@ -1822,7 +1830,7 @@
 }
 .gx-kv div {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: fit-content(45%) minmax(0, 1fr);
   gap: 0.6rem;
   align-items: baseline;
   font-size: 0.88rem;
@@ -1839,6 +1847,11 @@
   background: var(--g-crm-bg);
   color: var(--g-crm);
   white-space: nowrap;
+}
+/* In the data model a long tag list wraps inside its column instead of pushing the row wide. */
+.gx-kv .gx-tag {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .gx-pipe {
   display: flex;
@@ -2090,7 +2103,6 @@
 
 .gx-switch {
   padding-block: 0 2.5rem;
-  scroll-margin-top: 72px;
 }
 .gx-switch-grid {
   display: grid;
@@ -2160,7 +2172,6 @@
 }
 
 .gx-case {
-  scroll-margin-top: 64px;
 }
 .gx-case-head {
   padding-block: clamp(2.5rem, 6vw, 4rem);
@@ -2239,14 +2250,9 @@
 .gx-case .gx-j:hover {
   border-color: var(--case-use);
 }
-
-/* Anchored sections clear the sticky header. */
-.gx-case [id],
-#compliance,
-#audit,
-#process,
-#cases {
-  scroll-margin-top: 84px;
+:root:has(.gx-hero) {
+  /* Anchor jumps, scrollIntoView and keyboard focus all stop below the sticky nav. */
+  scroll-padding-top: 80px;
 }
 
 /* ---------- Build-note tabs ---------- */

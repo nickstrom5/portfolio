@@ -38,19 +38,19 @@ const uid = `${caseId}-${a.id}`;
       <span class="g-clock-now" data-clock>{formatClock(a.scenarios[0].start)}</span>
       <span class="g-clock-elapsed" data-elapsed>Not started</span>
     </div>
+    <p class="g-outcome" data-outcome hidden></p>
     <div class="g-views" role="tablist" aria-label="Simulator output">
       <button type="button" role="tab" class="g-view" id={`log-tab-${uid}`} aria-controls={`log-${uid}`} aria-selected="true" data-view="log">Execution log</button>
       <button type="button" role="tab" class="g-view" id={`rec-tab-${uid}`} aria-controls={`rec-${uid}`} aria-selected="false" tabindex="-1" data-view="record">Contact record <span class="g-view-dot" data-rec-dot hidden aria-hidden="true"></span></button>
     </div>
     <div role="tabpanel" id={`log-${uid}`} aria-labelledby={`log-tab-${uid}`} data-view-panel="log">
-      <ol class="g-log" data-log tabindex="-1" aria-label="Execution log">
+      <ol class="g-log" data-log tabindex="0" aria-label="Execution log">
         <li class="g-log-empty">Run the workflow to see each step with its timestamp.</li>
       </ol>
     </div>
     <div role="tabpanel" id={`rec-${uid}`} aria-labelledby={`rec-tab-${uid}`} data-view-panel="record" hidden>
       <div class="g-record" data-record></div>
     </div>
-    <p class="g-outcome" data-outcome hidden></p>
     <p class="sr-only" role="status" data-announce></p>
   </div>
 </div>

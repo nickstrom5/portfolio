@@ -110,5 +110,5 @@ export const business: Business = {
     application: 'Applied → Call Booked',
     completion: 'Course completed → testimonial, upgrade',
   },
-  tint: { light: '#b4531a', dark: '#f5a25d' },
+  tint: { light: '#a84b15', dark: '#f5a25d' },
 };
