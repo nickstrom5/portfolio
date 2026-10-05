@@ -178,6 +178,45 @@
 .g-canvas-body {
   container-type: inline-size;
   padding: 1.25rem 1rem 1.5rem;
+  /* One screen of the diagram at a time; the run scrolls it, the button below opens it all. */
+  max-height: min(80vh, 760px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.g-canvas.is-expanded .g-canvas-body {
+  max-height: none;
+  overflow: visible;
+}
+.g-canvas-body:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.g-canvas-hint {
+  margin: 0;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.g-canvas-more {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.g-canvas-more:hover {
+  text-decoration: underline;
+}
+.g-canvas-more[hidden] {
+  display: none;
 }
 
 .g-triggers {
@@ -841,8 +880,21 @@
   background: var(--bg-muted);
   font-size: 0.9rem;
 }
-.g-outcome strong {
+.g-outcome-plain {
   display: block;
+  line-height: 1.5;
+}
+.g-outcome-plain strong {
+  font-weight: 700;
+}
+.g-outcome-tech {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.g-outcome-tech strong {
+  font-weight: 600;
 }
 
 .g-record {
@@ -983,6 +1035,10 @@
   color: var(--text);
   border-color: var(--text-faint);
 }
+.g-snippet pre[data-lang='text'] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .g-snippet p {
   margin: 0.4rem 0 0;
   font-size: 0.88rem;
@@ -1065,6 +1121,138 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Hero: what GHL is on the left, one real lead's messages on the right. */
+.gx-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+}
+.gx-hero-sub {
+  max-width: 65ch;
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+}
+.gx-peek {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+  font-size: 0.88rem;
+}
+.gx-peek-kicker {
+  font-weight: 700;
+  margin: 0;
+}
+.gx-peek-sub,
+.gx-peek-end {
+  color: var(--text-muted);
+  margin: 0.3rem 0 0.75rem;
+}
+.gx-peek-end {
+  margin: 0.75rem 0 0;
+}
+.gx-peek-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.gx-peek-when {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.gx-peek-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+@media (max-width: 960px) {
+  .gx-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* How to use this page */
+.gx-howto {
+  margin-top: 2.5rem;
+}
+.gx-howto-title {
+  font-size: 1.05rem;
+  margin: 0;
+}
+.gx-howto ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.25rem;
+}
+.gx-howto li::marker {
+  font-weight: 800;
+  color: var(--accent);
+}
+.gx-howto li {
+  color: var(--text-muted);
+}
+.gx-howto li strong {
+  color: var(--text);
+}
+.gx-howto-hurry {
+  margin: 1rem 0 0;
+  color: var(--text-muted);
+  max-width: 75ch;
+  font-size: 0.92rem;
+}
+.gx-howto-hurry a,
+.gx-real a,
+.gx-builder-note a,
+.gx-notes-intro a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .gx-howto ol {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Are these real? / Who built this */
+.gx-real {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  font-size: 0.92rem;
+}
+.gx-real-title {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+.gx-real p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.gx-real .gx-real-links {
+  margin-top: 0.6rem;
+}
+@media (max-width: 760px) {
+  .gx-real {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The word decoder: a collapsed glossary that links on the page open. */
 
 /* Journey map */
 .gx-journey-section {
@@ -1768,7 +1956,38 @@
 }
 .gx-notes-title {
   font-size: 1.25rem;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+.gx-notes-intro {
+  max-width: 75ch;
+  margin: 0 0 0.9rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-builder-note {
+  max-width: 75ch;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-notes-plain {
+  max-width: 75ch;
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+.gx-notes-more > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.35rem 0;
+}
+.gx-notes-more > summary .g-count {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-notes-more > .gx-note-grid {
+  margin-top: 0.75rem;
 }
 .gx-features {
   margin-top: 2rem;
@@ -2060,6 +2279,32 @@
 }
 @media (max-width: 560px) {
   .gx-conventions div {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
+/* The word decoder in the hero: the conventions box, collapsed. */
+.gx-conventions.gx-decoder {
+  margin-top: 1rem;
+  padding: 0;
+}
+.gx-decoder > summary {
+  cursor: pointer;
+  padding: 0.85rem 1.25rem;
+  font-weight: 700;
+}
+.gx-decoder > summary .g-count {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.gx-decoder > dl {
+  padding: 0 1.25rem 1.25rem;
+}
+.gx-conventions.gx-decoder div {
+  grid-template-columns: 15rem 1fr;
+}
+@media (max-width: 640px) {
+  .gx-conventions.gx-decoder div {
     grid-template-columns: 1fr;
     gap: 0.1rem;
   }

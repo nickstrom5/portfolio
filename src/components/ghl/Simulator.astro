@@ -14,7 +14,7 @@ const uid = `${caseId}-${a.id}`;
 
 <div class="g-sim" data-sim={a.id} data-case={caseId}>
   <fieldset class="g-scen">
-    <legend>Pick a test contact</legend>
+    <legend>Pick a sample customer</legend>
     <div class="g-scen-list">
       {a.scenarios.map((s, i) => (
         <label class="g-scen-opt">
@@ -25,8 +25,8 @@ const uid = `${caseId}-${a.id}`;
     </div>
   </fieldset>
   <p class="g-override" data-override hidden>
-    Running on your form details: <strong data-override-name></strong>, at your local time. Nothing is sent or stored.
-    <button type="button" class="g-link" data-clear-override>Use the sample contact</button>
+    Running with you as the customer: <strong data-override-name></strong>, at your local time, with your form answers. The option ticked above only sets what you do next. Nothing is sent or stored.
+    <button type="button" class="g-link" data-clear-override>Use a sample customer instead</button>
   </p>
   <div class="g-controls">
     <button type="button" class="btn btn-primary" data-run><Icon name="play" size={16} />Run workflow</button>
@@ -45,7 +45,7 @@ const uid = `${caseId}-${a.id}`;
     </div>
     <div role="tabpanel" id={`log-${uid}`} aria-labelledby={`log-tab-${uid}`} data-view-panel="log">
       <ol class="g-log" data-log tabindex="0" aria-label="Execution log">
-        <li class="g-log-empty">Run the workflow to see each step with its timestamp.</li>
+        <li class="g-log-empty">Pick a sample customer above, then press Run workflow. Each line is one step, with the time it would happen: blue bubbles are texts, boxes are emails, and notes marked To: or Slack go to the team. Days of waiting are fast-forwarded.</li>
       </ol>
     </div>
     <div role="tabpanel" id={`rec-${uid}`} aria-labelledby={`rec-tab-${uid}`} data-view-panel="record" hidden>

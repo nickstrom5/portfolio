@@ -13,10 +13,11 @@ interface Props {
 const { automation: a, caseId, hidden = false } = Astro.props;
 const dm = a.dataModel;
 const uid = `${caseId}-${a.id}`;
+// "What if…" leads: the unusual cases in plain words are what most readers want first.
 const notes = [
+  { key: 'edges', label: `What if… (${a.edgeCases.length})` },
   { key: 'build', label: 'How I built it' },
   { key: 'model', label: 'Data model' },
-  { key: 'edges', label: `Edge cases (${a.edgeCases.length})` },
   { key: 'qa', label: `Test plan (${a.qa.length})` },
   ...(a.snippets && a.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
 ];
@@ -57,13 +58,22 @@ const notes = [
 
   <div class="gx-notes">
     <h5 class="gx-notes-title">Build notes</h5>
+    <p class="gx-notes-intro">The detail a GoHighLevel admin would check before trusting this workflow. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
     <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
       {notes.map((n, i) => (
         <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
       ))}
     </div>
 
-    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build">
+    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
+      <ul class="gx-edge-list">
+        {a.edgeCases.map((e) => (
+          <li><strong>{e.title}</strong><span>{e.body}</span></li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
       <ol class="gx-build-list">
         {a.build.map((b) => (
           <li><strong>{b.title}.</strong> {b.body}</li>
@@ -100,14 +110,6 @@ const notes = [
       )}
     </div>
 
-    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges" hidden>
-      <ul class="gx-edge-list">
-        {a.edgeCases.map((e) => (
-          <li><strong>{e.title}</strong><span>{e.body}</span></li>
-        ))}
-      </ul>
-    </div>
-
     <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
       <ul class="gx-qa-list">
         {a.qa.map((q) => (
@@ -125,7 +127,7 @@ const notes = [
                 <h6>{sn.title}</h6>
                 <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
               </div>
-              <pre><code>{sn.code}</code></pre>
+              <pre data-lang={sn.language}><code>{sn.code}</code></pre>
               {sn.note && <p>{sn.note}</p>}
             </div>
           ))}

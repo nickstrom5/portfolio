@@ -60,7 +60,8 @@ const noteCount = (s.notes?.length ?? 0) + (s.exits?.length ?? 0);
       </ul>
     </details>
   )}
-  <div class="g-canvas-body">
+  <p class="g-canvas-hint">The workflow as it reads in GoHighLevel’s builder. Scroll inside it; each step gets a green tick when the run reaches it.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Steps of ${wf.name}`} tabindex="0">
     <div class="g-triggers">
       <span class="g-kind">{wf.triggers.length > 1 ? 'Workflow triggers' : 'Workflow trigger'}</span>
       <ul>
@@ -73,4 +74,5 @@ const noteCount = (s.notes?.length ?? 0) + (s.exits?.length ?? 0);
       <Steps steps={wf.steps} names={names} />
     </ol>
   </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole workflow (${countSteps(wf.steps)} steps)`}>Show the whole workflow ({countSteps(wf.steps)} steps)</button>
 </figure>

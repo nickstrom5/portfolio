@@ -9,11 +9,11 @@ import type { Business } from '@/lib/ghl/types';
 export const business: Business = {
   id: 'saas',
   name: 'Crewlo',
-  industry: 'B2B software (SaaS)',
+  industry: 'Business software (SaaS)',
   area: 'Remote team, customers in the US and Canada',
-  blurb: 'A software company whose product talks to GHL: demo routing, trial onboarding from product events, lead scoring and hand-offs.',
+  blurb: 'A software company with a free trial: demo requests routed to the right salesperson, trial emails based on what people do in the app, and a heads-up when a trial is ready for a sales call. The most technical of the three.',
   intro:
-    'Crewlo sells scheduling and dispatch software to field-service companies, with a 14-day free trial and a sales team for larger accounts. The growth lead needed demo requests routed to the right rep in seconds, trial emails driven by what people actually do in the product, a signal when a trial is worth a sales call, and a clean hand-off from closed deal to onboarding. The app sends events to GHL over Inbound Webhooks, and GHL calls the app back to extend trials and provision accounts.',
+    'Crewlo sells scheduling and dispatch software to field-service companies, with a 14-day free trial and a sales team for larger accounts. The growth lead needed demo requests routed to the right rep in seconds, trial emails driven by what people actually do in the product, a signal when a trial is worth a sales call, and a clean hand-off from closed deal to onboarding. The app tells GHL what each user does (over Inbound Webhooks), and GHL calls the app back to extend trials and set up new customer accounts.',
   disclaimer: 'Crewlo is a fictional software company. The people, phone numbers, prices, events and links are samples.',
   pipeline: { name: 'New Business', stages: ['Demo Requested', 'Demo Booked', 'Trial Sales-Assist', 'Demo Held', 'Proposal', 'Onboarding'] },
   team: [

@@ -683,7 +683,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         const b = idx >= 0 ? node.branches[idx] : node.otherwise;
         const key = `${node.id}:${idx >= 0 ? idx : 'else'}`;
         visited.push(key);
-        log({ kind: 'branch', nodeId: node.id, branch: key, title: `${node.label ?? node.title}: ${b.label}`, detail: idx >= 0 ? describeCondition(node.branches[idx].when) : `No condition matched, so the ${node.otherwise.label} branch runs.` });
+        log({ kind: 'branch', nodeId: node.id, branch: key, title: `${node.label ?? node.title}: ${b.label}`, detail: idx >= 0 ? describeCondition(node.branches[idx].when) : `None of the other branches applied, so it goes the “${node.otherwise.label}” way.` });
         return b.nodes;
       }
       case 'goal': {

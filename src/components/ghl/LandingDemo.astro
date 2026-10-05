@@ -89,7 +89,7 @@ const titleId = `${caseId}-demo-side-title`;
             <p>{l.thanks.body}</p>
             {l.thanks.slots && (
               <>
-                <p class="lp-slots-caption">Calendar preview</p>
+                <p class="lp-slots-caption">Preview only (not clickable)</p>
                 <div class="lp-slots" aria-hidden="true">
                   {l.thanks.slots.map((s) => <span>{s}</span>)}
                 </div>
@@ -110,19 +110,19 @@ const titleId = `${caseId}-demo-side-title`;
     <p class="gx-demo-feeds">The form feeds <a href={`#${caseId}-${l.feeds}`} data-open-auto={`${caseId}-${l.feeds}`}>{feedsName}</a>.</p>
 
     <fieldset class="gx-next">
-      <legend>After you submit, what do you do?</legend>
+      <legend>Play the customer: what do you do next?</legend>
       {l.behaviors.map((b, i) => (
         <label><input type="radio" name={`${caseId}-next`} value={b.value} checked={i === 0} /> {b.label}</label>
       ))}
     </fieldset>
 
     <div class="gx-captured" data-captured hidden>
-      <p class="gx-captured-title">Your submission, as the contact record sees it</p>
+      <p class="gx-captured-title">What GoHighLevel saved about you (your contact record)</p>
       <dl data-captured-list></dl>
       <p class="gx-captured-note" data-captured-when></p>
       <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the workflow run</button>
     </div>
-    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. <a href={`?utm_source=google&utm_medium=cpc&utm_campaign=spring-launch#${caseId}-demo`}>Reload with UTM tags</a> to see the hidden fields fill in.</p>
-    <p class="gx-demo-note" id={`${caseId}-policies`}>In the live funnel, Privacy Policy and Terms of Service link to the business’s own pages, with an SMS section saying mobile numbers are never shared for marketing. A2P reviewers check both.</p>
+    <p class="gx-demo-note">Nothing is sent or stored. The form and the workflow run in your browser. Want to see ad tracking? <a href={`?utm_source=google&utm_medium=cpc&utm_campaign=spring-launch#${caseId}-demo`}>Reload as if you came from a Google ad</a> (this clears the form) and the three ad fields fill in.</p>
+    <p class="gx-demo-note" id={`${caseId}-policies`}>In the live funnel, Privacy Policy and Terms of Service link to the business’s own pages, with an SMS section saying mobile numbers are never shared for marketing. The reviewers for carriers’ texting registration (A2P 10DLC) check both.</p>
   </aside>
 </div>

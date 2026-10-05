@@ -20,7 +20,7 @@ export const business: Business = {
   name: 'Trailhead Career Coaching',
   industry: 'Online coaching and courses',
   area: 'Online, US and Canada',
-  blurb: 'An online coach who runs on funnels and payments: a free workshop, a $497 course and an application for 1:1 coaching.',
+  blurb: 'An online coach who sells through web pages and online checkout: a free workshop, a $497 course and an application for 1:1 coaching.',
   intro:
     'Trailhead helps mid-career professionals change fields. People find it through a free weekly workshop, buy a self-paced course, and the best fits apply for 1:1 coaching. The founder needed the workshop to fill and show up, abandoned checkouts recovered, new students actually started, failed payments chased politely, and applications routed to the enrollment advisor without anyone copying data between tools.',
   disclaimer: 'Trailhead Career Coaching is a fictional business. The people, phone numbers, prices and links are samples.',
