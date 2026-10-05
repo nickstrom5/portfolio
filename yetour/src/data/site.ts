@@ -14,5 +14,5 @@ export const site = {
   /** The official tour site the header button points at. */
   official: 'https://tour.yeezy.com/ye-tour',
   /** Shown in the footer so readers know how fresh the data is. */
-  compiled: '20 September 2026',
+  compiled: '5 October 2026',
 } as const;
