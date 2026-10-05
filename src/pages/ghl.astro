@@ -9,7 +9,7 @@ import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
 import CaseStudyView from '@/components/ghl/CaseStudy.astro';
 import { cases as allCases } from '@/data/ghl';
-import { countSteps, simulate } from '@/lib/ghl/engine';
+import { countSteps, formatDuration, formatTime, simulate } from '@/lib/ghl/engine';
 import type { Step } from '@/lib/ghl/types';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
@@ -40,11 +40,33 @@ for (const { c, a } of all) {
   for (const s of a.scenarios) simulate(a, s, c.business.sampleContact, c.business.env).visited.forEach((v) => v.includes(':') && taken.add(`${c.business.id}/${a.id}/${v}`));
 }
 const stats = [
-  { value: String(all.length), label: 'Working workflows' },
-  { value: String(all.reduce((n, { a }) => n + countSteps(a.workflow.steps), 0)), label: 'Workflow steps' },
-  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test contacts you can run' },
-  { value: `${taken.size}/${branches}`, label: 'Branches reached by a test' },
+  { value: String(all.length), label: 'Workflows you can run' },
+  { value: String(all.reduce((n, { a }) => n + countSteps(a.workflow.steps), 0)), label: 'Automatic steps inside them' },
+  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Sample customers to test with' },
+  { value: `${taken.size}/${branches}`, label: 'Possible paths, each one reached by a test' },
 ];
+
+// The hero's preview is one real run of the first case's first workflow and first sample customer,
+// so its messages can never drift from the workflow.
+const peekCase = cases[0];
+const peekAuto = peekCase.automations[0];
+const peekRun = simulate(peekAuto, peekAuto.scenarios[0], peekCase.business.sampleContact, peekCase.business.env);
+const lead = peekRun.contact.firstName || 'The lead';
+const owner = peekRun.contact.assignedTo ? peekCase.business.env.users[peekRun.contact.assignedTo]?.name.split(' ')[0] : undefined;
+const peek = peekRun.steps
+  .filter((s) => s.message)
+  .map((s) => {
+    const m = s.message!;
+    const when = s.t === peekRun.start ? 'Right away' : `${formatDuration(s.t - peekRun.start)} later`;
+    if (m.channel === 'sms') return { when: `${when} · ${m.direction === 'in' ? `${lead} replies` : `text to ${lead}`}`, cls: `g-bubble ${m.direction}`, body: m.body };
+    // The email's greeting and first paragraph are enough to show what it says.
+    if (m.channel === 'email') return { when: `${when} · email to ${lead}`, cls: 'g-mail', subject: m.subject, body: `${m.body.split('\n\n').slice(0, 2).join('\n\n')} …` };
+    return { when: `${when} · alert to ${(m.to ?? 'the team').replace(/ \(.*\)$/, '')}`, cls: 'g-note', label: 'To the team', subject: m.subject, body: m.body };
+  });
+const peekEnd =
+  peekRun.outcome === 'stopped'
+    ? `${lead} replied, so the automatic messages stop${owner ? ` and ${owner} takes it from here` : ' and a person takes it from here'}.`
+    : 'The follow-up runs on from here, and the simulator shows every step.';
 
 /** Links to workflows by "case/automation"; missing ones are skipped. */
 const find = (ref: string) => {
@@ -113,11 +135,36 @@ const process = [
   { title: 'Data model', body: 'Custom fields, dropdown values, tags, pipeline stages and custom values first, named so the next person can guess them.' },
   { title: 'Build in draft', body: 'One workflow per job, named NN · Folder · Name, with the settings chosen on purpose rather than left at the defaults.' },
   { title: 'Test with test contacts', body: 'A test contact for every path, checked against Execution Logs and Enrollment History. Real phones and real inboxes for the copy.' },
-  { title: 'Publish and hand off', body: 'Published in a quiet hour, then a short Loom walkthrough and a one-page SOP: what it does, what to change, what never to touch.' },
+  { title: 'Publish and hand off', body: 'Published in a quiet hour, then a short screen-recorded walkthrough (Loom) and a one-page how-to for the team (SOP): what it does, what to change, what never to touch.' },
   { title: 'Watch it', body: 'Trigger Statistics and Execution Logs checked in the first week, then monthly. Errors fixed before anyone notices them.' },
 ];
 
 const caseWord = words[cases.length] ?? String(cases.length);
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Plain-English meanings for the GoHighLevel words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['GoHighLevel (GHL, HighLevel)', 'An all-in-one sales and marketing platform: contacts, landing pages, texts, emails, calendars and sales tracking in one place. Agencies often run it for their clients.'],
+  ['Sub-account', 'One business’s own space inside GoHighLevel, with its own contacts, workflows, phone numbers and settings.'],
+  ['Workflow', 'A set of automatic steps that runs on its own, such as “email the lead, assign a salesperson, wait a day, text again.”'],
+  ['Trigger (the orange lightning bolt)', 'The event that starts a workflow: a form sent, a missed call, a booking, a deal card moving.'],
+  ['Contact, contact record', 'A person in the account, and everything saved about them: details, answers, tags, owner and history.'],
+  ['Custom field, tag', 'A custom field is an extra box on the record for the business’s own answers, like roof age. A tag is a short label, like stl-no-response, that other workflows can react to.'],
+  ['Pipeline, opportunity, stage', 'The sales board. Each deal is a card (GoHighLevel calls it an opportunity) that moves through stages such as New Lead and Job Complete. Its status is Open, Won, Lost or Abandoned.'],
+  ['Round robin', 'Handing new leads to salespeople in turn, so the work is shared evenly.'],
+  ['If/Else, branch', 'A fork in the workflow: “Agreed to texts? Yes: text them. No: email only.” Each path is a branch.'],
+  ['Wait, Go To, goal', 'A Wait pauses for a set time or until something happens. Go To jumps to another step. A goal lets the contact skip ahead once they do what the workflow was after, like booking.'],
+  ['Stop on Response', 'A setting that ends the automatic follow-up as soon as the customer replies, so a person can take over.'],
+  ['DND (Do Not Disturb)', 'A switch on a contact that blocks texts, emails or calls. Texting STOP turns it on for texts; these workflows also turn it on for anyone who didn’t agree to texts.'],
+  ['Quiet hours, time window, Advance Window', 'Settings that hold a message until an allowed time, so nobody gets a sales text at night.'],
+  ['Re-entry', 'Whether someone who already went through a workflow can go through it again later, like a past lead who asks again next year.'],
+  ['A2P 10DLC', 'The registration US phone carriers require before a business can send texts from an ordinary local number. Reviewers check how people opt in.'],
+  ['UTM tags', 'Labels on a link, like utm_source=google, that record which ad or email brought a visitor.'],
+  ['Landing page, funnel', 'A one-purpose web page, or a short series of pages, built to get one action, like booking an inspection.'],
+  ['Merge fields, custom values', 'Placeholders like {{contact.first_name}} that fill in each person’s details when a message goes out. Custom values keep things like the booking link in one place.'],
+  ['Execution log', 'GoHighLevel’s step-by-step record of what a workflow did for one contact, with times. The simulator here shows the same kind of log.'],
+  ['Custom Code, webhook', 'Custom Code runs a short script inside a workflow, here to score leads. A webhook is an automatic message from one app to another, like “trial started.”'],
+];
 const title = 'GoHighLevel automation case studies';
 const description =
   cases.length === 3
@@ -128,25 +175,78 @@ const description =
 <Base title={title} description={description}>
   <section class="gx-hero">
     <div class="container">
-      <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-      <h1>{all.length}&nbsp;GoHighLevel {all.length === 1 ? 'workflow' : 'workflows'} across {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one.</h1>
-      <p class="lede">
-        {cases.length === 3
-          ? 'Three case studies, each built as its own sub-account: a roofing company that lives on the phone, a software company whose product talks to GHL, and an online coach who lives on funnels and payments.'
-          : `${caseWord} ${cases.length === 1 ? 'case study' : 'case studies'}, each built as its own sub-account.`}{' '}
-        Each has a working landing page, a set of connected workflows and the notes behind every decision. Every workflow runs in a simulator on this page, on sample contacts or on you.
-      </p>
-      <div class="gx-cta">
-        <a class="btn btn-primary" href="#cases">Pick a case study</a>
-        <a class="btn btn-secondary" href="#process">How I work</a>
-        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
+          <h1>{all.length}&nbsp;GoHighLevel {all.length === 1 ? 'workflow' : 'workflows'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Try every one yourself.</h1>
+          <p class="lede">GoHighLevel is an all-in-one sales and marketing platform: contacts, landing pages, texts, emails, calendars and a sales board in one place. A workflow is a set of automatic steps inside it. When someone fills in a form or calls, a workflow can email and text them, hand the lead to a salesperson, remind that person to call, and stop the moment the customer replies.</p>
+          <p class="gx-hero-sub">
+            {cases.length === 3
+              ? `I built ${all.length} of them for three made-up businesses: a roofer, a software company and an online coach. Each one also has a working landing page. Everything runs here in your browser, on sample customers or with your own name.`
+              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a working landing page. Everything runs here in your browser, on sample customers or with your own name.`}
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one new lead gets</p>
+          <p class="gx-peek-sub">{lead} fills in {peekCase.business.name}’s website form at {formatTime(peekRun.start)}. Workflow {peekAuto.number} · {peekAuto.name} does the rest:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.when}</span>
+                <div class={p.cls}>
+                  {p.label && <span class="g-note-to">{p.label}</span>}
+                  {p.subject && <span class="g-mail-subj">{p.subject}</span>}
+                  {p.body}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">{peekEnd}</p>
+          <a class="gx-peek-link" href={`#${peekCase.business.id}-${peekAuto.id}`} data-open-auto={`${peekCase.business.id}-${peekAuto.id}`}>Run it yourself →</a>
+        </aside>
       </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick a business.</strong> New to GoHighLevel? Start with the roofer.</li>
+          <li><strong>Be the customer.</strong> Fill in its sign-up form with any name, or pick a sample customer such as “Never replies” or “Submits at 11:48 PM”.</li>
+          <li><strong>Press Run.</strong> Watch every email, text and task go out, with the time each would happen. Days of waiting are fast-forwarded.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each workflow opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The diagrams and <strong>Build notes</strong> are the detail a GoHighLevel builder would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
       <dl class="gx-stats">
         {stats.map((s) => (
           <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
         ))}
       </dl>
-      <p class="gx-disclaimer">The businesses and people are fictional. The workflows use GHL’s real triggers, actions and settings, checked against HighLevel’s help center, so each one can be rebuilt step for step in a sub-account. Nothing on this page sends a message.</p>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real businesses?</h2>
+          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every workflow can be shown end to end with its real messages and tried by anyone. The workflows themselves use GoHighLevel’s real triggers, actions and settings, checked against HighLevel’s help center, so each one can be rebuilt step for step in a real account. Nothing on this page sends a message or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead who also builds CRM automations in GoHighLevel, HubSpot, Zoho and Zapier. My client work includes a 2025 Upwork contract for GoHighLevel, Zapier and Slack automations (<a href={`${url('/work')}#contracts`}>see recent contracts</a>). This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI/Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>GoHighLevel words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
     </div>
   </section>
 
@@ -186,7 +286,7 @@ const description =
       <div class="section-head">
         <h2 id="compliance-title">Compliance is part of the build, not a checkbox</h2>
       </div>
-      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows in every case study.</p>
+      <p class="lede">A workflow that texts the wrong person at the wrong time costs more than it earns. These rules are built into the workflows in every case study. In plain words: no texts to anyone who didn’t agree to them, no sales texts at night, anyone who asks to stop is stopped, every customer gets the same review request, and emails are set up to reach the inbox.</p>
       <ul class="gx-cards">
         {compliance.map((x) => {
           const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
@@ -254,8 +354,8 @@ const description =
   <section class="section gx-closing">
     <div class="container gx-closing-inner">
       <div>
-        <h2>Need workflows like these in your account?</h2>
-        <p class="muted">I build, fix and document GoHighLevel sub-accounts: workflows, pipelines, funnels and the compliance around them.</p>
+        <h2>Hiring for GoHighLevel, or need it built?</h2>
+        <p class="muted">I build, fix and document GoHighLevel accounts: workflows, sales pipelines, landing pages, and the texting and email rules around them. If you’re hiring for a GoHighLevel role or need this for your business, I’d like to hear about it.</p>
       </div>
       <div class="gx-cta">
         <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>

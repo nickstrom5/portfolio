@@ -31,7 +31,7 @@ export const roofingLanding: LandingPage = {
   },
   thanks: {
     title: 'Thanks, {first}. Your request is in.',
-    body: 'Step 2 of 2: pick a time. In the live funnel, the Roof Inspection calendar sits here, already filled in with your details by Sticky Contact.',
+    body: 'Step 2 of 2: pick a time. On the live page the Roof Inspection calendar sits here, with your details already filled in (GoHighLevel’s Sticky Contact). The times below are a preview only. To see what booking does, choose “Book from the link” under Play the customer, then press Watch the workflow run.',
     slots: ['Thu 10:00 AM', 'Thu 2:30 PM', 'Fri 9:00 AM'],
   },
   feeds: 'speed-to-lead',
@@ -53,10 +53,11 @@ export const roofingLanding: LandingPage = {
     { value: 'quiet', label: 'Ignore everything', scenario: 'quiet', events: () => [] },
   ],
   steps: [
-    'The form creates the contact and saves each answer to a custom field, plus hidden UTM fields read from the page URL.',
-    'Form Submitted fires 01 · Lead Intake · Speed to Lead.',
+    'GoHighLevel saves you as a new contact, with each answer in its own custom field. Hidden fields also record which ad or link brought you (UTM tags), if any.',
+    'That starts workflow 01 · Speed to lead. Its trigger is Form Submitted.',
     'A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.',
   ],
+  notesSummary: 'In short: one goal and no menu, a six-question form, separate unticked boxes for service texts and for offers, hidden fields that record which ad brought the visitor, and the booking calendar on the thank-you page.',
   notes: [
     { title: 'One goal, one action', body: 'No navigation menu on the step, and every button on the page leads to the same form. The copy is short, plain and specific to the offer.' },
     { title: 'A short, honest form', body: 'Single column, labels above the fields, six questions. The two SMS consent boxes are separate (inspection updates, and offers), unticked and optional, with the Privacy Policy and Terms linked, which is what A2P reviewers look for.' },

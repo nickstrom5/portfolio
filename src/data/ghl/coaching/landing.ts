@@ -43,7 +43,7 @@ export const landing: LandingPage = {
   },
   thanks: {
     title: 'You are in, {first}.',
-    body: 'Step 2 of 2: the confirmation page. In the live funnel it shows the workshop time in your time zone, add-to-calendar buttons and a short welcome video from Morgan.',
+    body: 'Step 2 of 2: the confirmation page. On the live page it shows the workshop time in your time zone, add-to-calendar buttons and a short welcome video from Morgan. The buttons below are a preview only.',
     slots: ['Add to Google Calendar', 'Add to Outlook'],
   },
   feeds: 'webinar',
@@ -66,10 +66,11 @@ export const landing: LandingPage = {
     { value: 'no-show', label: 'Register and forget', scenario: 'no-show', events: () => [] },
   ],
   steps: [
-    'The form creates the contact, saves their current role and goal, and records which consent boxes they ticked.',
-    'Form Submitted fires 01 · Workshop · Registration and Reminders, which sets the workshop date with Event Start Date.',
+    'GoHighLevel saves you as a new contact with your current role and goal, and records which consent boxes you ticked.',
+    'That starts workflow 01 · Workshop registration and reminders (trigger: Form Submitted), which saves the workshop date to your record (Event Start Date).',
     'Reminders count back from that date: an email the day before, a text an hour before if you ticked the box, and the replay if you miss it.',
   ],
+  notesSummary: 'In short: no income promises, a short form with an optional phone and opt-in texts, a confirmation page with add-to-calendar buttons, an order form that makes abandoned-checkout follow-up possible, and ad tracking that counts sales.',
   notes: [
     { title: 'One promise, no income claims', body: 'The headline promises a plan, not a salary. The FTC treats earnings claims as claims that need proof, so the page and every follow-up avoid them.' },
     { title: 'Two questions that earn their place', body: 'Current role and goal go on the contact record, so Devon sees them in every alert about this person, and the role feeds the readiness score if they apply for coaching later.' },

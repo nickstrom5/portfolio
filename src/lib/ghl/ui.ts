@@ -92,8 +92,14 @@ export class Simulator {
       });
     });
 
-    this.runBtn.addEventListener('click', () => this.run(false));
-    root.querySelector('[data-instant]')?.addEventListener('click', () => this.run(true));
+    this.runBtn.addEventListener('click', () => {
+      this.run(false);
+      this.showScreen();
+    });
+    root.querySelector('[data-instant]')?.addEventListener('click', () => {
+      this.run(true);
+      this.showScreen();
+    });
     root.querySelector('[data-reset]')?.addEventListener('click', () => this.reset());
     root.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach((r) =>
       // A sample contact runs as described, so the visitor's form details and timing go.
@@ -150,7 +156,7 @@ export class Simulator {
 
   reset() {
     this.stop();
-    this.log.replaceChildren(el('li', 'g-log-empty', 'Pick a test contact, then run the workflow. Waits are fast-forwarded; every step keeps its real timestamp.'));
+    this.log.replaceChildren(el('li', 'g-log-empty', 'Pick a sample customer above, then press Run workflow. Each line is one step, with the time it would happen: blue bubbles are texts, boxes are emails, and notes marked To: or Slack go to the team. Days of waiting are fast-forwarded.'));
     const s = this.scenario;
     this.clock.textContent = formatClock(s.start);
     this.elapsed.textContent = 'Not started';
@@ -163,8 +169,19 @@ export class Simulator {
     if (this.announce) this.announce.textContent = '';
   }
 
+  /** On one-column layouts the log sits below the controls: bring it up so Run visibly does something. */
+  private showScreen() {
+    if (!window.matchMedia('(max-width: 960px)').matches) return;
+    const screen = this.root.querySelector<HTMLElement>('.g-screen');
+    if (screen && screen.getBoundingClientRect().top > window.innerHeight * 0.55) {
+      screen.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+  }
+
   private clearCanvas() {
     if (!this.canvas) return;
+    const body = this.canvas.querySelector<HTMLElement>('.g-canvas-body');
+    if (body) body.scrollTop = 0;
     this.canvas.classList.remove('is-running', 'is-ran');
     this.canvas.querySelectorAll('.is-done, .is-active, .is-skipped, .is-taken, .is-dim').forEach((n) => n.classList.remove('is-done', 'is-active', 'is-skipped', 'is-taken', 'is-dim'));
   }
@@ -249,6 +266,12 @@ export class Simulator {
     if (step.kind === 'skip') node.classList.add('is-skipped');
     else if (step.kind !== 'hold') node.classList.add('is-done');
     node.classList.add('is-active');
+    // The diagram is capped to one screen: scroll it, never the page, so the active step stays in view.
+    const body = c.querySelector<HTMLElement>('.g-canvas-body');
+    if (body && body.scrollHeight > body.clientHeight + 4) {
+      const top = node.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - body.clientHeight / 3;
+      body.scrollTo({ top: Math.max(0, top), behavior: c.classList.contains('is-running') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+    }
     if (step.branch) {
       const branch = c.querySelector<HTMLElement>(`[data-branch="${step.branch}"]`);
       if (!branch) return;
@@ -278,7 +301,11 @@ export class Simulator {
       skipped ? `${skipped} step${skipped === 1 ? '' : 's'} skipped` : '',
       opp ? `opportunity in ${opp.stage} (${opp.status})` : '',
     ].filter(Boolean);
-    this.outcome.replaceChildren(el('strong', undefined, label), document.createTextNode(parts.join(' · ')));
+    const plain = el('span', 'g-outcome-plain');
+    plain.append(el('strong', undefined, 'What happened: '), document.createTextNode(this.plain(trace, last)));
+    const tech = el('span', 'g-outcome-tech');
+    tech.append(el('strong', undefined, label), document.createTextNode(` · ${parts.join(' · ')}`));
+    this.outcome.replaceChildren(plain, tech);
     this.outcome.hidden = false;
     // In the sticky column the result can sit below its visible edge; scroll the column, never the page.
     const col = this.root.closest<HTMLElement>('.gx-lab-sim');
@@ -287,7 +314,57 @@ export class Simulator {
       const over = this.outcome.getBoundingClientRect().bottom - visBottom;
       if (over > 0) col.scrollTop += over + 8;
     }
-    if (this.announce) this.announce.textContent = `${label}. ${parts.join(', ')}.`;
+    if (this.announce) this.announce.textContent = `${this.plain(trace, last)} ${label}.`;
+  }
+
+  /** The run in one or two plain sentences, for readers who will not read the log. */
+  private plain(trace: Trace, last: TraceStep | undefined): string {
+    const who = trace.contact.firstName || 'The customer';
+    const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
+    const out = trace.steps.filter((s) => s.message?.direction === 'out');
+    const count = (...ch: string[]) => out.filter((s) => ch.includes(s.message!.channel)).length;
+    const toContact = out.filter((s) => s.message!.channel === 'sms' || s.message!.channel === 'email' || s.message!.channel === 'voicemail');
+    const got = [
+      count('email') && n(count('email'), 'email', 'emails'),
+      count('sms') && n(count('sms'), 'text', 'texts'),
+      count('voicemail') && n(count('voicemail'), 'voicemail', 'voicemails'),
+    ].filter(Boolean) as string[];
+    const lastSent = toContact.length ? toContact[toContact.length - 1].t - trace.start : 0;
+    const team = count('internal', 'slack');
+    const goal = trace.steps.find((s) => s.kind === 'goal' && s.title.startsWith('Goal met: '));
+    const stopAt = last ? trace.steps.lastIndexOf(last) : -1;
+    const exitEvent = stopAt > 0 ? trace.steps.slice(0, stopAt).reverse().find((s) => s.kind === 'event') : undefined;
+    const status: Record<string, string> = { open: 'still open', won: 'marked won', lost: 'marked lost', abandoned: 'closed as gone quiet (Abandoned)' };
+    const ending =
+      trace.outcome === 'stopped'
+        ? `${who} replied, so the automatic messages stopped and a person takes it from here.`
+        : trace.outcome === 'goal'
+          ? `Its goal was met${goal ? ` (${goal.title.replace(/^Goal met: /, '')})` : ''}, so it ${goal?.detail?.includes('skips straight here') ? 'skipped the remaining follow-up and finished' : 'finished'}.`
+          : trace.outcome === 'completed'
+            ? 'The workflow ran to the end.'
+            : last?.title === 'Removed from this workflow'
+              ? exitEvent
+                ? `After “${exitEvent.title}”, another workflow took over and took ${trace.contact.firstName || 'them'} out of this one.`
+                : `${who} left this workflow early because another workflow took over. The last line of the log says which.`
+              : last?.title === 'Pulled out of this run'
+                ? 'The appointment was cancelled or missed, so this run ended.'
+                : last?.title === 'Goal not met: End this workflow'
+                  ? `${who} never did what the workflow was waiting for, so it ended as designed.`
+                  : last?.title === 'Still waiting on the goal'
+                    ? `${who} has not done what the workflow is waiting for yet. In GoHighLevel they would keep waiting.`
+                    : last?.kind === 'end'
+                      ? 'It reached an End step on this path, as designed.'
+                      : 'It ended early. The last line of the log says why.';
+    const opp = trace.contact.opportunity;
+    return [
+      got.length ? `${who} got ${got.join(' and ')} ${lastSent > 0 ? `within ${formatDuration(lastSent)}` : 'right away'}.` : `${who} got no messages from this workflow.`,
+      team ? `The team got ${n(team, 'alert', 'alerts')}.` : '',
+      trace.steps.some((s) => s.kind === 'hold') ? 'Some steps waited for the allowed sending hours.' : '',
+      ending,
+      opp ? `The deal card is at ${opp.stage}, ${status[opp.status] ?? opp.status}.` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   private renderRecord(c: Contact, animate: boolean) {
@@ -316,8 +393,8 @@ export class Simulator {
     const opp = c.opportunity;
     row('Pipeline stage', opp ? `${opp.stage}${opp.status !== 'open' ? ` · ${opp.status}` : ''}` : 'No opportunity', prev?.opportunity, opp);
     row('Assigned to', c.assignedTo ? (this.env.env.users[c.assignedTo]?.name ?? c.assignedTo) : 'Unassigned', prev?.assignedTo, c.assignedTo);
-    const dnd = Object.entries(c.dnd).filter(([, v]) => v).map(([k]) => k.toUpperCase());
-    row('DND', dnd.length ? dnd.join(', ') : 'Off', prev?.dnd, c.dnd);
+    const dnd = Object.entries(c.dnd).filter(([, v]) => v).map(([k]) => ({ sms: 'texts', email: 'email', calls: 'calls' })[k] ?? k);
+    row('Do not disturb (DND)', dnd.length ? `On for ${dnd.join(', ')}` : 'Off', prev?.dnd, c.dnd);
     for (const [key, label] of Object.entries(this.env.fieldLabels)) {
       if (c.fields[key] === undefined || c.fields[key] === '') continue;
       row(label, String(c.fields[key]), prev?.fields[key], c.fields[key]);

@@ -112,6 +112,13 @@ export function initGhlPage() {
     if (hash) history.replaceState(null, '', `#${id}`);
   };
   const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
+  // On phones the case opens below the cards, out of sight: bring its heading up after a tap.
+  caseTabs.forEach((t) =>
+    t.addEventListener('click', () => {
+      const panel = document.getElementById(t.dataset.caseTab!);
+      if (panel && panel.getBoundingClientRect().top > window.innerHeight * 0.8) scrollTo(panel);
+    }),
+  );
 
   /**
    * Resolves "#case", "#case-automation" and "#case-section" to the right view.
@@ -131,6 +138,30 @@ export function initGhlPage() {
     if (focus) focusQuietly(isAutomation ? el?.querySelector<HTMLElement>('[data-panel-heading]') : el);
     return true;
   }
+
+  // Each diagram is capped to one screen; its button opens the whole thing. Short ones need no button.
+  document.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
+    const canvas = btn.closest<HTMLElement>('.g-canvas')!;
+    const body = canvas.querySelector<HTMLElement>('.g-canvas-body')!;
+    btn.addEventListener('click', () => {
+      const open = canvas.classList.toggle('is-expanded');
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Show less' : btn.dataset.more!;
+      if (!open && canvas.getBoundingClientRect().top < 0) scrollTo(canvas);
+    });
+    // Sizes are only known once a panel is shown, so check whenever the body's box changes.
+    new ResizeObserver(() => {
+      if (!canvas.classList.contains('is-expanded') && body.clientHeight > 0) btn.hidden = body.scrollHeight <= body.clientHeight + 4;
+    }).observe(body);
+  });
+
+  // The decoder in the hero opens itself when a link points at it.
+  document.querySelectorAll<HTMLAnchorElement>('a[href="#decoder"]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const d = document.getElementById('decoder');
+      if (d instanceof HTMLDetailsElement) d.open = true;
+    }),
+  );
 
   // Copy buttons on snippets.
   document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
@@ -248,7 +279,8 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     }
     identity = { ...who, fields };
     rows.push(['SMS consent (service)', fields.sms_consent], ['SMS consent (offers)', fields.sms_marketing_consent]);
-    for (const k of ['utm_source', 'utm_medium', 'utm_campaign'] as const) rows.push([k, utm[k] || '(not in the URL)']);
+    const utmLabels = { utm_source: 'Ad source (utm_source)', utm_medium: 'Ad type (utm_medium)', utm_campaign: 'Ad campaign (utm_campaign)' };
+    for (const k of ['utm_source', 'utm_medium', 'utm_campaign'] as const) rows.push([utmLabels[k], utm[k] || 'None (no ad link)']);
     list.replaceChildren(
       ...rows.map(([k, v]) => {
         const d = document.createElement('div');
@@ -265,7 +297,7 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     useWeekOf(now);
     start = ((now.getDay() + 6) % 7) * DAY + now.getHours() * 60 + now.getMinutes();
     formFields = fields;
-    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${texts ? (l.textsNote ?? 'You ticked the SMS box, so you get texts.') : 'You left the SMS box unticked, so it is email only.'}`;
+    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. ${texts ? (l.textsNote ?? 'You ticked the SMS box, so you get texts.') : 'You left the SMS box unticked, so it is email only.'} The button below jumps to the workflow and plays it with your details.`;
     captured.hidden = false;
 
     demo.querySelector('[data-lp-thanks-title]')!.textContent = l.thanks.title.replace('{first}', who.firstName || 'there');

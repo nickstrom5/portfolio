@@ -37,7 +37,7 @@ export const landing: LandingPage = {
   },
   thanks: {
     title: 'Thanks, {first}. Pick a time that suits you.',
-    body: 'Step 2 of 2: in the live funnel, the Product Demo calendar sits here. It is round robin with Always Book with Assigned User on, so once the workflow has picked your rep, you see their times and book with them. Teams of 1 to 10 never see it: a Conditional Logic rule on the form redirects them to a step with the Weekly Live Demo calendar instead.',
+    body: 'Step 2 of 2: on the live page, the Product Demo calendar sits here. It shares bookings among the reps (round robin) with Always Book with Assigned User on, so once the workflow has picked your rep, you see their times and book with them. Teams of 1 to 10 never see it: a Conditional Logic rule on the form sends them to a step with the Weekly Live Demo calendar instead. The times below are a preview only.',
     slots: ['Tue 11:00 AM', 'Wed 2:30 PM', 'Thu 10:00 AM'],
   },
   feeds: 'demo-request',
@@ -65,10 +65,11 @@ export const landing: LandingPage = {
     { value: 'quiet', label: 'Close the tab and forget', scenario: 'quiet', events: () => [] },
   ],
   steps: [
-    'The form creates the contact with their company, team size and role, and records the optional text consent.',
-    'Form Submitted fires 01 · Inbound · Demo Request, where Custom Code scores the fit and picks the segment.',
-    'The segment decides who gets you: enterprise to Aisha, mid-market to Ben, small teams to the weekly live demo with Priya following up. The rep hears about it in Slack within seconds.',
+    'GoHighLevel saves you as a new contact with your company, team size and role, and records whether you agreed to texts.',
+    'That starts workflow 01 · Demo request (trigger: Form Submitted). A short script (Custom Code) scores how well you fit and sorts you by company size.',
+    'That decides who gets you: enterprise to Aisha, mid-market to Ben, small teams to the weekly live demo with Priya following up. The rep hears about it in Slack within seconds.',
   ],
+  notesSummary: 'In short: the form asks only what routing needs (team size and role), texting is opt-in, the thank-you page books the demo with the rep the workflow picked, and every lead carries the ad or link that brought them.',
   notes: [
     { title: 'Qualify with the form, not a call', body: 'Team size and role are the two questions routing needs, so the form asks exactly those. Company size ranges match the Custom Code thresholds, word for word.' },
     { title: 'Work email, optional phone', body: 'B2B buyers expect email. The phone is optional and texting is opt-in with its own consent box, so nobody gets a text they did not ask for.' },

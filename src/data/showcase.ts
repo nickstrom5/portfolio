@@ -508,7 +508,7 @@ export const projects: Project[] = [
     id: 'ghl',
     name: 'GHL case studies',
     kicker: 'GoHighLevel · workflows and funnels',
-    tileBlurb: `Three sample businesses, their landing pages and ${ghlWorkflows} working workflows. Run every one in your browser.`,
+    tileBlurb: `Automatic follow-up for three sample businesses: ${ghlWorkflows} GoHighLevel workflows and their landing pages. Try every one in your browser.`,
     bg: 'linear-gradient(135deg, #ecebfd 0%, #f9f9fc 55%, #e3e1fb 100%)',
     fg: '#4f46e5',
     bgDark: 'linear-gradient(135deg, #1d1b3d 0%, #12161f 55%, #221d44 100%)',

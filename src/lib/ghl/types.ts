@@ -463,6 +463,8 @@ export interface LandingPage {
   behaviors: LandingBehavior[];
   /** "What happens when you submit", in order. */
   steps: string[];
+  /** The funnel notes in one plain sentence, shown above them. */
+  notesSummary: string;
   /** How the page is built in the GHL funnel builder. */
   notes: { title: string; body: string }[];
 }
