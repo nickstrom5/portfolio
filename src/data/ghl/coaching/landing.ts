@@ -66,7 +66,7 @@ export const landing: LandingPage = {
     { value: 'no-show', label: 'Register and forget', scenario: 'no-show', events: () => [] },
   ],
   steps: [
-    'GoHighLevel saves you as a new contact with your current role and goal, and records which consent boxes you ticked.',
+    'GoHighLevel creates your contact, or updates it if your email or phone is already on file, with your current role and goal, and records which consent boxes you ticked.',
     'That starts workflow 01 · Workshop registration and reminders (trigger: Form Submitted), which saves the workshop date to your record (Event Start Date).',
     'Reminders count back from that date: an email the day before, a text an hour before if you ticked the box, and the replay if you miss it.',
   ],

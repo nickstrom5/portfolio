@@ -183,7 +183,7 @@ export class Simulator {
     const body = this.canvas.querySelector<HTMLElement>('.g-canvas-body');
     if (body) body.scrollTop = 0;
     this.canvas.classList.remove('is-running', 'is-ran');
-    this.canvas.querySelectorAll('.is-done, .is-active, .is-skipped, .is-taken, .is-dim').forEach((n) => n.classList.remove('is-done', 'is-active', 'is-skipped', 'is-taken', 'is-dim'));
+    this.canvas.querySelectorAll('.is-done, .is-active, .is-skipped, .is-cut, .is-taken, .is-dim').forEach((n) => n.classList.remove('is-done', 'is-active', 'is-skipped', 'is-cut', 'is-taken', 'is-dim'));
   }
 
   run(instant: boolean) {
@@ -289,6 +289,9 @@ export class Simulator {
     this.canvas?.classList.remove('is-running');
     this.canvas?.classList.add('is-ran');
     this.canvas?.querySelectorAll('.is-active').forEach((n) => n.classList.remove('is-active'));
+    // A wait the run ended inside (a reply, a booking, another workflow) was reached, not finished.
+    const lastNode = [...trace.steps].reverse().find((s) => s.nodeId);
+    if (lastNode?.kind === 'wait' && trace.outcome !== 'completed') this.canvas?.querySelector(`[data-node="${lastNode.nodeId}"]`)?.classList.replace('is-done', 'is-cut');
     const sent = trace.steps.filter((s) => s.message && s.message.direction === 'out' && (s.message.channel === 'sms' || s.message.channel === 'email')).length;
     const skipped = trace.skipped.length;
     // Name what actually ended the run: a removal by another workflow, an End step, a goal…
@@ -297,7 +300,8 @@ export class Simulator {
       trace.outcome === 'completed' ? 'Workflow complete' : trace.outcome === 'goal' ? 'Goal reached, workflow complete' : trace.outcome === 'stopped' ? 'Stopped on reply' : (last?.title ?? 'Ended');
     const opp = trace.contact.opportunity;
     const parts = [
-      `${sent} message${sent === 1 ? '' : 's'} to the contact ${trace.end > trace.start ? `over ${formatDuration(trace.end - trace.start)}` : 'in under a minute'}`,
+      `${sent} message${sent === 1 ? '' : 's'} to the contact`,
+      trace.end > trace.start ? `run ended at +${formatDuration(trace.end - trace.start)}` : 'run ended in under a minute',
       skipped ? `${skipped} step${skipped === 1 ? '' : 's'} skipped` : '',
       opp ? `opportunity in ${opp.stage} (${opp.status})` : '',
     ].filter(Boolean);
@@ -334,7 +338,15 @@ export class Simulator {
     const goal = trace.steps.find((s) => s.kind === 'goal' && s.title.startsWith('Goal met: '));
     const stopAt = last ? trace.steps.lastIndexOf(last) : -1;
     const exitEvent = stopAt > 0 ? trace.steps.slice(0, stopAt).reverse().find((s) => s.kind === 'event') : undefined;
-    const status: Record<string, string> = { open: 'still open', won: 'marked won', lost: 'marked lost', abandoned: 'closed as gone quiet (Abandoned)' };
+    const byHand = trace.steps.some((s) => s.kind === 'event' && s.title === 'Opportunity marked abandoned');
+    const status: Record<string, string> = { open: 'still open', won: 'marked won', lost: 'marked lost', abandoned: byHand ? 'closed by hand (Abandoned)' : 'closed as gone quiet (Abandoned)' };
+    // A reply the run carried on through (Stop on Response covers the rest) is often what the sample is about.
+    const reply = trace.outcome === 'stopped' ? undefined : trace.steps.find((s) => s.kind === 'event' && s.message?.direction === 'in');
+    const quote = reply?.message ? `“${reply.message.body.length > 60 ? `${reply.message.body.slice(0, 57)}…` : reply.message.body}”` : '';
+    const optedOut = !!reply && trace.contact.dnd.sms && !trace.steps[0].contact.dnd.sms;
+    const replied = reply ? `${who} replied ${quote} at ${formatTime(reply.t)}.${optedOut ? ' Texts to them are now off (SMS DND).' : ''}` : '';
+    // "03 · Inspection Booked" from the exit's description, when it names the workflow that took over.
+    const takeover = last?.detail?.match(/\b\d{2}[a-z]? · [^,(]+?(?=,| \(| whose)/)?.[0];
     const ending =
       trace.outcome === 'stopped'
         ? `${who} replied, so the automatic messages stopped and a person takes it from here.`
@@ -344,7 +356,7 @@ export class Simulator {
             ? 'The workflow ran to the end.'
             : last?.title === 'Removed from this workflow'
               ? exitEvent
-                ? `After “${exitEvent.title}”, another workflow took over and took ${trace.contact.firstName || 'them'} out of this one.`
+                ? `After “${exitEvent.title}”, ${takeover ? `workflow ${takeover}` : 'another workflow'} took over and took ${trace.contact.firstName || 'them'} out of this one.`
                 : `${who} left this workflow early because another workflow took over. The last line of the log says which.`
               : last?.title === 'Pulled out of this run'
                 ? 'The appointment was cancelled or missed, so this run ended.'
@@ -357,9 +369,12 @@ export class Simulator {
                       : 'It ended early. The last line of the log says why.';
     const opp = trace.contact.opportunity;
     return [
-      got.length ? `${who} got ${got.join(' and ')} ${lastSent > 0 ? `within ${formatDuration(lastSent)}` : 'right away'}.` : `${who} got no messages from this workflow.`,
+      got.length
+        ? `${who} got ${got.join(' and ')}${lastSent > 0 ? `, ${toContact.length === 1 ? '' : 'the last '}${formatDuration(lastSent)} after the start` : ' right away'}.`
+        : `${who} got no messages from this workflow.`,
       team ? `The team got ${n(team, 'alert', 'alerts')}.` : '',
       trace.steps.some((s) => s.kind === 'hold') ? 'Some steps waited for the allowed sending hours.' : '',
+      replied,
       ending,
       opp ? `The deal card is at ${opp.stage}, ${status[opp.status] ?? opp.status}.` : '',
     ]

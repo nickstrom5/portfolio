@@ -328,7 +328,7 @@ export const demoRequest: Automation = {
                             title: 'Custom Webhook',
                             label: 'Post to #demo-requests',
                             summary:
-                              "POST to the channel's Slack incoming webhook: Event CUSTOM, Content-Type application/json, Block Kit in the Raw Body. Source, UTM and fit in the post; no email or phone. The webhook URL is the only secret, and it lives in the action's URL field.",
+                              "POST to the channel's Slack incoming webhook: Event CUSTOM, Content-Type application/json, Block Kit in the Raw Body. Source, UTM and fit in the post; no email or phone. A visitor who came without an ad link has empty UTM fields, so that line reads \"UTM: / /\". The webhook URL is the only secret, and it lives in the action's URL field.",
                             message: {
                               channel: 'slack',
                               to: '#demo-requests',
