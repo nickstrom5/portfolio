@@ -57,7 +57,7 @@ text, and text contrast against whatever is actually painted behind it — plus 
 (title and description length and uniqueness, canonical, robots, Open Graph, JSON-LD nodes,
 sitemap coverage, outbound `rel` hygiene) and ten interaction checks covering the date
 filters, the countdown, the discography player and its theme swap, deep links, the video
-facades and the full prev/next chain across all twenty dates.
+facades and the full prev/next chain across every date.
 
 Playwright is deliberately not a dependency of this project — installing it pulls
 browser binaries, which would land in every deploy build for no reason. Install it when
@@ -80,7 +80,7 @@ Everything the pages render comes from `src/data/`, one file per subject:
 
 | File | What it holds |
 | --- | --- |
-| `tour.ts` | The twenty dates, legs, songs, the reference set, and per-show sources |
+| `tour.ts` | Every announced date (played, upcoming and cancelled), legs, songs, the reference set, and per-show sources |
 | `globe.ts` | The stage, its eight states, and the verified video ids |
 | `discography.ts` | The albums, their palettes and their verified Spotify ids |
 | `credits.ts` | Guest verses, production for others, and non-music ventures |
