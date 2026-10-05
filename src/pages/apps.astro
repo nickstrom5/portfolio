@@ -2,11 +2,12 @@
 import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
+import Duo from '@/components/showcase/Duo.astro';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="AI-built apps and websites" description="iPhone apps and websites Nick Soderstrom built by directing AI: Good Walk, Clam, SignalRig, LaunchNeat and this site, each shown as a scroll-through story.">
+<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Clam, Cartworth, SignalRig, LaunchNeat and this site, each told as a scroll-through story.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI / Projects</span>
@@ -17,17 +18,34 @@ import { url } from '@/lib/url';
 
       <div class="tiles" role="tablist" aria-label="Projects">
         {projects.map((p, i) => p.comingSoon ? (
-          <div
-            class="tile soon"
-            data-project={p.id}
-            data-tone={p.tone ?? 'dark'}
-            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
-          >
-            <span class="t-kicker">{p.kicker}</span>
-            <span class="t-name">{p.name}</span>
-            <span class="t-blurb">{p.tileBlurb}</span>
-            <span class="t-cta">Coming soon</span>
-          </div>
+          p.href ? (
+            <a
+              class="tile soon linked"
+              href={p.href}
+              target="_blank"
+              rel="noopener"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon · Visit site ↗</span>
+            </a>
+          ) : (
+            <div
+              class="tile soon"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon</span>
+            </div>
+          )
         ) : (
           <button
             class="tile"
@@ -78,6 +96,8 @@ import { url } from '@/lib/url';
           <div class="hero-art" data-reveal>
             {p.hero.frame === 'laptop' && p.hero.image ? (
               <Laptop image={url(p.hero.image)} alt={`${p.name} on a laptop`} />
+            ) : p.hero.frame === 'duo' && p.hero.image ? (
+              <Duo image={url(p.hero.image)} size="lg" alt={`${p.name} on the iPhone Duo`} />
             ) : (
               <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
             )}
@@ -108,6 +128,8 @@ import { url } from '@/lib/url';
             <div class="feature-art" data-reveal>
               {f.frame === 'laptop' && f.image ? (
                 <Laptop image={url(f.image)} alt={`${p.name}: ${f.title}`} />
+              ) : f.frame === 'duo' && f.image ? (
+                <Duo image={url(f.image)} tilt alt={`${p.name}: ${f.title}`} />
               ) : (
                 <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
               )}
@@ -122,10 +144,12 @@ import { url } from '@/lib/url';
             <h2>Who did what</h2>
           </div>
           <div data-reveal>
+            {p.split.ai !== undefined && (
             <div class="bar" role="img" aria-label={`About ${p.split.ai} percent by ${p.split.aiLabel}, ${100 - p.split.ai} percent by ${p.split.meLabel}`}>
               <span class="ai" style={`width: ${p.split.ai}%`}>{p.split.aiLabel} · ~{p.split.ai}%</span>
               <span class="me" style={`width: ${100 - p.split.ai}%`}></span>
             </div>
+            )}
             <div class="legend">
               <div><strong>{p.split.aiLabel} wrote</strong><span class="muted">{p.split.aiDid}</span></div>
               <div><strong>{p.split.meLabel} did</strong><span class="muted">{p.split.meDid}</span></div>
@@ -217,7 +241,8 @@ import { url } from '@/lib/url';
 </Base>
 
 <script>
-  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile');
+  // Only story tiles switch stories; coming-soon tiles are static or link out.
+  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile:not(.soon)');
   const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canObserve = 'IntersectionObserver' in window && !reduce;
@@ -332,6 +357,14 @@ import { url } from '@/lib/url';
   }
   .tile.soon .t-cta {
     opacity: 0.8;
+  }
+  .tile.soon.linked {
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .tile.soon.linked:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
   }
   .tile.active,
   .tile[aria-selected='true'] {
