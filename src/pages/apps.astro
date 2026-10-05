@@ -16,7 +16,7 @@ import { url } from '@/lib/url';
         Projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
       </p>
 
-      <div class="tiles" role="tablist" aria-label="Projects">
+      <div class="tiles" role="group" aria-label="Projects">
         {projects.map((p, i) => p.comingSoon ? (
           p.href ? (
             <a
@@ -46,13 +46,25 @@ import { url } from '@/lib/url';
               <span class="t-cta">Coming soon</span>
             </div>
           )
+        ) : 'page' in p ? (
+          <a
+            class="tile page"
+            href={url(p.href)}
+            data-project={p.id}
+            data-tone={p.tone ?? 'dark'}
+            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+          >
+            <span class="t-kicker">{p.kicker}</span>
+            <span class="t-name">{p.name}</span>
+            <span class="t-blurb">{p.tileBlurb}</span>
+            <span class="t-cta">{p.cta}</span>
+          </a>
         ) : (
           <button
             class="tile"
-            role="tab"
             id={`tab-${p.id}`}
             aria-controls={p.id}
-            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-pressed={i === 0 ? 'true' : 'false'}
             data-project={p.id}
             data-tone={p.tone ?? 'dark'}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
@@ -68,12 +80,10 @@ import { url } from '@/lib/url';
     </div>
   </section>
 
-  {projects.filter((p): p is StoryProject => !p.comingSoon).map((p, i) => (
+  {projects.filter((p): p is StoryProject => !p.comingSoon && !('page' in p)).map((p, i) => (
     <article
       class="story"
       id={p.id}
-      role="tabpanel"
-      aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
       data-tone={p.tone ?? 'dark'}
       hidden={i !== 0}
@@ -241,8 +251,8 @@ import { url } from '@/lib/url';
 </Base>
 
 <script>
-  // Only story tiles switch stories; coming-soon tiles are static or link out.
-  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile:not(.soon)');
+  // Only story tiles switch stories; coming-soon and page tiles are static or link out.
+  const tiles = document.querySelectorAll<HTMLButtonElement>('button.tile[aria-controls]');
   const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canObserve = 'IntersectionObserver' in window && !reduce;
@@ -273,7 +283,7 @@ import { url } from '@/lib/url';
   function show(id: string, scroll: boolean) {
     tiles.forEach((t) => {
       const on = t.dataset.project === id;
-      t.setAttribute('aria-selected', String(on));
+      t.setAttribute('aria-pressed', String(on));
       t.classList.toggle('active', on);
     });
     stories.forEach((s) => {
@@ -358,7 +368,8 @@ import { url } from '@/lib/url';
   .tile.soon .t-cta {
     opacity: 0.8;
   }
-  .tile.soon.linked {
+  .tile.soon.linked,
+  .tile.page {
     cursor: pointer;
     text-decoration: none;
   }
@@ -367,7 +378,7 @@ import { url } from '@/lib/url';
     transform: translateY(-2px);
   }
   .tile.active,
-  .tile[aria-selected='true'] {
+  .tile[aria-pressed='true'] {
     border-color: var(--tile-fg-use);
   }
   .t-kicker {

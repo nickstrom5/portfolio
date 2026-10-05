@@ -46,6 +46,7 @@ const actionIcon: Record<ActionKind, IconName> = {
   charge: 'card',
   course_access: 'book',
   event_date: 'calendar',
+  follower: 'user',
   ai: 'ai',
 };
 
@@ -115,9 +116,9 @@ const needsEnd = !last || !(last.kind === 'ifelse' || last.kind === 'end' || las
       )}
     </li>
   ) : s.kind === 'ifelse' ? (
-    <li class="g-step g-tone-logic g-has-branches" data-node={s.id}>
+    <li class={`g-step g-has-branches ${/^AI /.test(s.title) ? 'g-tone-dev' : /Find /.test(s.title) ? 'g-tone-crm' : 'g-tone-logic'}`} data-node={s.id}>
       <div class="g-card g-card-logic">
-        <span class="g-ico"><Icon name="split" /></span>
+        <span class="g-ico"><Icon name={/^AI /.test(s.title) ? 'ai' : /Find /.test(s.title) ? 'pipeline' : 'split'} /></span>
         <div class="g-txt">
           <span class="g-kind">{s.title}</span>
           {s.label && <span class="g-name">{s.label}</span>}
