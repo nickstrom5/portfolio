@@ -82,7 +82,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
     <div class="container">
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The landing page, working</h3>
-      <p class="lede">Fill in the form as if you were a customer. Use any name and a made-up number if you like: nothing is sent or stored. Then press Watch the workflow run to see each email, text and task you would get from {feedsName}, and when. {landing.demoNote ?? 'It runs at your local time, so if it is late where you are, you will see texts wait for morning.'}</p>
+      <p class="lede">Fill in the form as if you were a customer and press {landing.submitLabel}. Use any name and a made-up number if you like: nothing is sent or stored. Then press Watch the workflow run, which appears once you submit, to see each email, text and task you would get from {feedsName}, and when. {landing.demoNote ?? 'It runs at your local time, so if it is late where you are, you will see texts wait for morning.'}</p>
       <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} />
       <div class="gx-landing-notes">
         <p class="gx-notes-plain">{landing.notesSummary}</p>

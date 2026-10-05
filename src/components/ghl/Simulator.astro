@@ -1,7 +1,8 @@
 ---
 /** Controls and live output for one automation. Wired up by src/lib/ghl/ui.ts. */
 import type { Automation } from '@/lib/ghl/types';
-import { formatClock } from '@/lib/ghl/engine';
+import { formatClock, startContact } from '@/lib/ghl/engine';
+import { cases } from '@/data/ghl';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -10,6 +11,12 @@ interface Props {
 }
 const { automation: a, caseId } = Astro.props;
 const uid = `${caseId}-${a.id}`;
+// Each sample customer's name, so "Dana got…" in the result matches the option picked.
+const sample = cases.find((c) => c.business.id === caseId)?.business.sampleContact;
+const nameOf = (s: Automation['scenarios'][number]) => {
+  const c = sample && startContact(sample, s);
+  return (c && `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim()) || 'No name on file yet';
+};
 ---
 
 <div class="g-sim" data-sim={a.id} data-case={caseId}>
@@ -19,13 +26,13 @@ const uid = `${caseId}-${a.id}`;
       {a.scenarios.map((s, i) => (
         <label class="g-scen-opt">
           <input type="radio" name={`scenario-${uid}`} value={s.id} checked={i === 0} />
-          <span><strong>{s.label}</strong><span>{s.summary}</span></span>
+          <span><strong>{s.label}</strong><span><em class="g-scen-who">{nameOf(s)}.</em> {s.summary}</span></span>
         </label>
       ))}
     </div>
   </fieldset>
   <p class="g-override" data-override hidden>
-    Running with you as the customer: <strong data-override-name></strong>, at your local time, with your form answers. The option ticked above only sets what you do next. Nothing is sent or stored.
+    Running with you as the customer: <strong data-override-name></strong>, at your local time, with your form answers. What you do next: <strong data-override-next></strong> (your choice under Play the customer, on the landing page). Nothing is sent or stored.
     <button type="button" class="g-link" data-clear-override>Use a sample customer instead</button>
   </p>
   <div class="g-controls">

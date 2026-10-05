@@ -65,7 +65,7 @@ export const landing: LandingPage = {
     { value: 'quiet', label: 'Close the tab and forget', scenario: 'quiet', events: () => [] },
   ],
   steps: [
-    'GoHighLevel saves you as a new contact with your company, team size and role, and records whether you agreed to texts.',
+    'GoHighLevel creates your contact, or updates it if your email is already on file, with your company, team size and role, and records whether you agreed to texts.',
     'That starts workflow 01 · Demo request (trigger: Form Submitted). A short script (Custom Code) scores how well you fit and sorts you by company size.',
     'That decides who gets you: enterprise to Aisha, mid-market to Ben, small teams to the weekly live demo with Priya following up. The rep hears about it in Slack within seconds.',
   ],

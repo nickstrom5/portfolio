@@ -53,7 +53,7 @@ export const roofingLanding: LandingPage = {
     { value: 'quiet', label: 'Ignore everything', scenario: 'quiet', events: () => [] },
   ],
   steps: [
-    'GoHighLevel saves you as a new contact, with each answer in its own custom field. Hidden fields also record which ad or link brought you (UTM tags), if any.',
+    'GoHighLevel creates your contact, or updates it if your email or phone is already on file. Name, phone and email go in the standard fields, and the roof answers in custom fields. Hidden fields also record which ad or link brought you (UTM tags), if any.',
     'That starts workflow 01 · Speed to lead. Its trigger is Form Submitted.',
     'A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.',
   ],

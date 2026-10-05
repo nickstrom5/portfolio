@@ -149,6 +149,7 @@ const decoder: [string, string][] = [
   ['Workflow', 'A set of automatic steps that runs on its own, such as “email the lead, assign a salesperson, wait a day, text again.”'],
   ['Trigger (the orange lightning bolt)', 'The event that starts a workflow: a form sent, a missed call, a booking, a deal card moving.'],
   ['Contact, contact record', 'A person in the account, and everything saved about them: details, answers, tags, owner and history.'],
+  ['Lead score', 'A number from 0 to 100 that a workflow gives each new lead from their answers. For the roofer it comes from the service, the roof’s age and where the lead came from. The higher it is, the sooner someone should call.'],
   ['Custom field, tag', 'A custom field is an extra box on the record for the business’s own answers, like roof age. A tag is a short label, like stl-no-response, that other workflows can react to.'],
   ['Pipeline, opportunity, stage', 'The sales board. Each deal is a card (GoHighLevel calls it an opportunity) that moves through stages such as New Lead and Job Complete. Its status is Open, Won, Lost or Abandoned.'],
   ['Round robin', 'Handing new leads to salespeople in turn, so the work is shared evenly.'],
@@ -183,7 +184,8 @@ const description =
           <p class="gx-hero-sub">
             {cases.length === 3
               ? `I built ${all.length} of them for three made-up businesses: a roofer, a software company and an online coach. Each one also has a working landing page. Everything runs here in your browser, on sample customers or with your own name.`
-              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a working landing page. Everything runs here in your browser, on sample customers or with your own name.`}
+              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a working landing page. Everything runs here in your browser, on sample customers or with your own name.`}{' '}
+            Need this for your business, or hiring for GoHighLevel? <a href={url('/contact')}>Get in touch</a>.
           </p>
           <div class="gx-cta">
             <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>

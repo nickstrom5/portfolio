@@ -312,6 +312,17 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     }
   });
 
+  // A field's red outline goes as soon as it is fixed, and the message once nothing is left to fix.
+  const clearFixed = (e: Event) => {
+    const input = e.target as HTMLInputElement | HTMLSelectElement;
+    const v = input.value?.trim() ?? '';
+    if (input.getAttribute('aria-invalid') !== 'true' || !v || (input.type === 'email' && !/^\S+@\S+\.\S+$/.test(v))) return;
+    input.removeAttribute('aria-invalid');
+    if (!form.querySelector('[aria-invalid="true"]')) error.hidden = true;
+  };
+  form.addEventListener('input', clearFixed);
+  form.addEventListener('change', clearFixed);
+
   demo.querySelector('[data-lp-again]')?.addEventListener('click', () => {
     form.reset();
     form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
@@ -334,9 +345,11 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
     s.selectScenario(behavior.scenario);
     s.useContact(identity, { start, events: behavior.events({ start, firstText, texts, fields: formFields }) });
     openAutomation(l.feeds);
-    // The "Running on your form details" line, just shown by useContact(), with the controls and log under it.
-    const target = document.querySelector<HTMLElement>(`#${caseId}-${l.feeds} [data-override]`);
-    scrollTo(target);
+    const panel = document.getElementById(`${caseId}-${l.feeds}`);
+    const next = panel?.querySelector('[data-override-next]');
+    if (next) next.textContent = behavior.label;
+    // Two columns: the diagram's title and the sample list at the top. One column: the "Running with you" line, with the controls and log under it.
+    scrollTo(window.matchMedia('(max-width: 960px)').matches ? panel?.querySelector('[data-override]') : panel?.querySelector('.gx-lab'));
     focusQuietly(s.logElement);
     s.runLater(reduceMotion() ? 0 : 500);
   });

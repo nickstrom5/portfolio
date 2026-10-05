@@ -82,7 +82,7 @@ export const speedToLead: Automation = {
   number: '01',
   name: 'Speed to lead',
   kicker: 'Lead intake',
-  tagline: 'Every new lead gets an email, a text if they asked for one, an owner and a call task within seconds, and a person takes over the moment they reply.',
+  tagline: 'Every new lead gets an email, an owner and a call task within seconds, and a text if they asked for one (at night it waits until 8 AM). A person takes over the moment they reply.',
   problem: 'Leads from the website and Facebook sat in the inbox until someone noticed. By the time a rep called, the homeowner had booked another roofer.',
   evidence: {
     text: 'Companies that tried to reach a web lead within an hour were nearly seven times as likely to qualify it as those that waited even one hour longer, and over sixty times as likely as those that waited a day or more.',
@@ -191,7 +191,7 @@ export const speedToLead: Automation = {
                 message: {
                   channel: 'internal',
                   to: '{{user.name}} (assigned user)',
-                  subject: 'New lead: {{contact.name}}, score {{contact.lead_score}}',
+                  subject: 'New lead: {{contact.name}}, score {{contact.lead_score}}/100',
                   body: '{{contact.service_needed}}, roof {{contact.roof_age}}, SMS consent {{contact.sms_consent}}. Call {{contact.call_priority}}: {{contact.phone}}',
                 },
               },
@@ -489,7 +489,7 @@ export const speedToLead: Automation = {
     {
       id: 'late',
       label: 'Submits at 11:48 PM',
-      summary: 'The email to the lead, the rep alert and the call task happen now. The text waits for quiet hours to end.',
+      summary: 'The email to the lead, the rep alert and the call task happen now. The text waits for quiet hours to end, and Dana answers it at 8:28 AM.',
       start: 2 * DAY + 23 * 60 + 48,
       contact: { fields: { service_needed: 'Storm damage', roof_age: '10-20 years', sms_consent: 'Yes', utm_source: 'google', utm_campaign: 'storm-season' } },
       events: [{ at: 8 * 60 + 40, type: 'reply', value: 'Morning! Yes please, call me after 10.' }],
@@ -557,7 +557,7 @@ export const speedToLead: Automation = {
   ],
   edgeCases: [
     { title: 'Lead comes in at midnight', body: 'The email to the lead, the rep\'s email alert and the call task happen immediately, but the code sets Call Priority to "first thing after 8 AM", so nobody is told to phone a homeowner at midnight. The text waits for the Advance Window and goes out at 8 AM, around the same time as the call.' },
-    { title: 'No SMS consent, or DND', body: 'The If/Else sends them down the email path, which turns SMS DND on first, so 02, 03 and the rest skip texts to them too. Ticking the box on a later form does not turn texts back on by itself: the office checks the new consent and switches SMS DND off by hand.' },
+    { title: 'No SMS consent, or DND', body: 'The If/Else sends them down the email path, which turns SMS DND on first, so 02, 03 and the rest skip texts to them too. Ticking the box on the inspection form again does not turn texts back on. Ticking it on the booking calendar does: 03 · Inspection Booked treats that as a new opt-in and lifts a DND that carries the sms-off-no-consent tag, never one from a STOP. Any other new consent, the office checks and switches SMS DND off by hand.' },
     { title: 'They reply on day three', body: 'Stop on Response takes them out wherever they are in the sequence, because they answered a message this workflow sent. The conversation is already assigned to their rep. An out-of-office auto-reply counts too, which is fine here: a person looks at every reply anyway.' },
     { title: 'They book without replying', body: '03 · Inspection Booked removes them from this workflow in its first step, so the follow-ups stop.' },
     { title: 'Called first, then filled in the form', body: '02 made a New Lead card from the missed call and may still be waiting to send its own follow-up. The first step takes them out of 02, Find Opportunity finds that card and renames it, and Only Apply to Unassigned Contacts keeps the rep 02 assigned.' },
