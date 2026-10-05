@@ -162,8 +162,12 @@ npm run ghl:check -- src/data/ghl/saas/automations/pql-alert.ts   # one file
 It runs every test scenario through the simulator and fails if a run ends
 differently than its `expect` block says, a step or branch is never reached,
 a message has an unresolved `{{merge_field}}`, an SMS is longer than two
-segments or contains characters that force UCS-2 encoding, or a landing
-page points at a workflow or scenario that does not exist.
+segments or contains characters that force UCS-2 encoding, a workflow breaks
+a builder rule (steps after an If/Else, a Go To that is not the last step of
+its branch, more than one Goal Event), or a landing page points at a
+workflow or scenario that does not exist. The full run also plays each
+landing-page choice at every hour of the week, with the SMS box ticked and
+not, the way a visitor's own run works.
 
 Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
 of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To

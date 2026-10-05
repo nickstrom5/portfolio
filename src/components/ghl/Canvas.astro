@@ -37,6 +37,7 @@ const settings = [
   { k: 'Timezone', v: s.timezone === 'contact' ? 'Contact' : 'Account' },
   s.allowMultipleOpportunities !== undefined && { k: 'Multiple opportunities', v: s.allowMultipleOpportunities ? 'Allowed' : 'Off' },
 ].filter(Boolean) as { k: string; v: string }[];
+const noteCount = (s.notes?.length ?? 0) + (s.exits?.length ?? 0);
 ---
 
 <figure class="g-canvas" data-canvas={`${caseId}:${a.id}`} aria-label={`Workflow: ${wf.name}, ${countSteps(wf.steps)} steps`}>
@@ -50,7 +51,17 @@ const settings = [
       <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
     ))}
   </dl>
-  <div class="g-canvas-body">
+  {noteCount > 0 && (
+    <details class="g-settings-more">
+      <summary>Why these settings{s.exits?.length ? ', and when it stops early' : ''} <span class="g-count">({noteCount})</span></summary>
+      <ul class="g-settings-notes">
+        {s.notes?.map((n) => <li>{n}</li>)}
+        {s.exits?.map((x) => <li><strong>Leaves early:</strong> {x.by}</li>)}
+      </ul>
+    </details>
+  )}
+  <p class="g-canvas-hint">The workflow as it reads in GoHighLevel’s builder. Scroll inside it; each step gets a green tick when the run reaches it.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Steps of ${wf.name}`} tabindex="0">
     <div class="g-triggers">
       <span class="g-kind">{wf.triggers.length > 1 ? 'Workflow triggers' : 'Workflow trigger'}</span>
       <ul>
@@ -63,4 +74,5 @@ const settings = [
       <Steps steps={wf.steps} names={names} />
     </ol>
   </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole workflow (${countSteps(wf.steps)} steps)`}>Show the whole workflow ({countSteps(wf.steps)} steps)</button>
 </figure>

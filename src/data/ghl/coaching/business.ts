@@ -10,9 +10,9 @@ import { nextDayAt } from '@/lib/ghl/engine';
 /** The free workshop runs every Thursday at 7 PM (contact's time zone in the sample). */
 export const WORKSHOP = { dow: 3, minute: 19 * 60, lengthMinutes: 60 };
 
-/** The next workshop at least two hours after `from`, as the Event Start Date step would set it. */
+/** The next Thursday 7 PM still ahead of `from`, as Event Start Date (Specific Day, by day of the week) sets it. */
 export function nextWorkshop(from: number): number {
-  return nextDayAt(from, WORKSHOP.dow, WORKSHOP.minute, 120);
+  return nextDayAt(from, WORKSHOP.dow, WORKSHOP.minute);
 }
 
 export const business: Business = {
@@ -20,7 +20,7 @@ export const business: Business = {
   name: 'Trailhead Career Coaching',
   industry: 'Online coaching and courses',
   area: 'Online, US and Canada',
-  blurb: 'An online coach who runs on funnels and payments: a free workshop, a $497 course and an application for 1:1 coaching.',
+  blurb: 'An online coach who sells through web pages and online checkout: a free workshop, a $497 course and an application for 1:1 coaching.',
   intro:
     'Trailhead helps mid-career professionals change fields. People find it through a free weekly workshop, buy a self-paced course, and the best fits apply for 1:1 coaching. The founder needed the workshop to fill and show up, abandoned checkouts recovered, new students actually started, failed payments chased politely, and applications routed to the enrollment advisor without anyone copying data between tools.',
   disclaimer: 'Trailhead Career Coaching is a fictional business. The people, phone numbers, prices and links are samples.',
@@ -35,8 +35,11 @@ export const business: Business = {
     location: {
       name: 'Trailhead Career Coaching',
       phone: '(312) 555-0130',
-      address: '222 W Merchandise Mart Plaza, Suite 1200, Chicago, IL',
+      address: '222 W Merchandise Mart Plaza, Suite 1200',
       city: 'Chicago',
+      state: 'IL',
+      postal_code: '60654',
+      full_address: '222 W Merchandise Mart Plaza, Suite 1200, Chicago, IL 60654',
       website: 'trailheadcareers.example',
     },
     users: {
@@ -59,6 +62,7 @@ export const business: Business = {
       call_booking_link: 'trailheadcareers.example/strategy-call',
       testimonial_link: 'trailheadcareers.example/share',
       founder_first_name: 'Morgan',
+      workshop_room_url: 'trailheadcareers.example/live-room',
     },
     triggerLinks: {
       join: 'trailheadcareers.example/l/join',
@@ -81,15 +85,22 @@ export const business: Business = {
   fieldLabels: {
     current_role: 'Current role',
     goal: 'Goal',
-    sms_consent: 'SMS consent',
-    sms_marketing_consent: 'Marketing texts',
+    sms_consent: 'SMS consent (service)',
+    sms_marketing_consent: 'SMS consent (offers)',
     workshop_date: 'Workshop',
     attended: 'Attended live',
     purchase: 'Purchase',
     payment_plan: 'Payment plan',
+    order_total: 'Order total',
+    access_pause_date: 'Access pauses',
     course_progress: 'Course progress',
+    pivot_timeline: 'Timeline',
+    weekly_hours: 'Hours a week',
+    coaching_budget: 'Budget',
     application_score: 'Application score',
     reply_intent: 'Reply intent',
+    utm_source: 'UTM source',
+    utm_campaign: 'UTM campaign',
   },
   handoff: {
     webinar: 'Registered → attended, or the replay',
@@ -99,5 +110,5 @@ export const business: Business = {
     application: 'Applied → Call Booked',
     completion: 'Course completed → testimonial, upgrade',
   },
-  tint: { light: '#b4531a', dark: '#f5a25d' },
+  tint: { light: '#a84b15', dark: '#f5a25d' },
 };

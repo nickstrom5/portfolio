@@ -23,8 +23,11 @@ export const env: MergeEnv = {
   location: {
     name: 'Harbor & Pine Roofing',
     phone: '(312) 555-0142',
-    address: '1200 W Lake St, Oak Park, IL',
+    address: '1200 W Lake St',
     city: 'Oak Park',
+    state: 'IL',
+    postal_code: '60302',
+    full_address: '1200 W Lake St, Oak Park, IL 60302',
     website: 'harborpine.example',
   },
   users: {
@@ -38,6 +41,7 @@ export const env: MergeEnv = {
     office_phone: '(312) 555-0142',
     booking_link: 'harborpine.example/book',
     review_link: 'harborpine.example/review',
+    feedback_link: 'harborpine.example/how-did-we-do',
     financing_link: 'harborpine.example/financing',
     referral_link: 'harborpine.example/refer',
     warranty_link: 'harborpine.example/warranty',
@@ -76,7 +80,8 @@ export const sampleContact: Contact = {
 export const fieldLabels: Record<string, string> = {
   service_needed: 'Service needed',
   roof_age: 'Roof age',
-  sms_consent: 'SMS consent',
+  sms_consent: 'SMS consent (service)',
+  sms_marketing_consent: 'SMS consent (offers)',
   lead_score: 'Lead score',
   call_priority: 'Call priority',
   utm_source: 'UTM source',
@@ -93,7 +98,7 @@ export const roofingBusiness: Business = {
   name: business.name,
   industry: 'Residential roofing',
   area: 'Chicago suburbs',
-  blurb: 'A local roofer that lives on the phone: speed to lead, missed calls, inspections, estimates, reviews.',
+  blurb: 'A local roofer that lives on the phone: answering new leads in seconds, texting back missed calls, inspection reminders, estimate follow-up and reviews. The easiest place to start.',
   intro:
     'Harbor & Pine is a local roofing company with two estimators, an office manager and a production crew. Leads came from the website, Facebook and the phone, and too many went cold before anyone called back. The owner needed every lead answered in seconds, inspections that people actually show up to, estimates that get a decision, a clean hand-off to the crew, and reviews from every finished job.',
   disclaimer: business.disclaimer,

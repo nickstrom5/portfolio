@@ -39,7 +39,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
       <dl class="gx-case-facts">
         <div><dt>Workflows</dt><dd>{automations.length}</dd></div>
         <div><dt>Steps</dt><dd>{steps}</dd></div>
-        <div><dt>Test contacts</dt><dd>{automations.reduce((n, a) => n + a.scenarios.length, 0)}</dd></div>
+        <div><dt>Sample customers</dt><dd>{automations.reduce((n, a) => n + a.scenarios.length, 0)}</dd></div>
         <div><dt>Where</dt><dd class="gx-small">{b.area}</dd></div>
       </dl>
       <div class="gx-team">
@@ -49,6 +49,11 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
         </ul>
       </div>
       <p class="gx-disclaimer">{b.disclaimer}</p>
+      <ul class="gx-jump" aria-label={`Jump to a part of the ${b.name} case study`}>
+        <li><a href={`#${b.id}-journey`} data-open-auto={`${b.id}-journey`}>The system</a></li>
+        <li><a href={`#${b.id}-demo`} data-open-auto={`${b.id}-demo`}>The landing page</a></li>
+        <li><a href={`#${b.id}-workflows`} data-open-auto={`${b.id}-workflows`}>The workflows</a></li>
+      </ul>
     </div>
   </header>
 
@@ -56,7 +61,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
     <div class="container">
       <span class="eyebrow">The system</span>
       <h3 class="gx-h3">One pipeline, one customer journey</h3>
-      <p class="lede">Each workflow does one job and hands the contact to the next. Pick one to open it below.</p>
+      <p class="lede">Each workflow does one job and hands the customer to the next. The orange text with the lightning bolt on each card is its trigger: the event that starts it. The grey chips are the stages of the sales board (GoHighLevel calls it a pipeline), where each customer’s card moves from left to right. Pick a card to open that workflow below.</p>
       <p class="gx-pipe gx-pipe-lg"><span class="gx-pipe-name">{b.pipeline.name}</span>{b.pipeline.stages.map((st) => <span class="gx-stage">{st}</span>)}</p>
       <ol class="gx-journey" data-count={automations.length}>
         {automations.map((a) => (
@@ -77,13 +82,16 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
     <div class="container">
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The landing page, working</h3>
-      <p class="lede">Fill in the form, then watch {feedsName} run on you. It runs at your local time, so if it is late where you are, you will see texts wait for morning.</p>
+      <p class="lede">Fill in the form as if you were a customer and press {landing.submitLabel}. Use any name and a made-up number if you like: nothing is sent or stored. Then press Watch the workflow run, which appears once you submit, to see each email, text and task you would get from {feedsName}, and when. {landing.demoNote ?? 'It runs at your local time, so if it is late where you are, you will see texts wait for morning.'}</p>
       <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} />
       <div class="gx-landing-notes">
-        <h4>How the page is built in the funnel builder</h4>
-        <ul class="gx-note-grid">
-          {landing.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
-        </ul>
+        <p class="gx-notes-plain">{landing.notesSummary}</p>
+        <details class="gx-notes-more">
+          <summary>How the page is built in GoHighLevel’s funnel builder <span class="g-count">({landing.notes.length} notes for builders)</span></summary>
+          <ul class="gx-note-grid">
+            {landing.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
+          </ul>
+        </details>
       </div>
     </div>
   </div>
@@ -91,8 +99,9 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
   <div class="section gx-workflows" id={`${b.id}-workflows`}>
     <div class="container">
       <span class="eyebrow">The workflows</span>
-      <h3 class="gx-h3">Pick a workflow, pick a test contact, press Run</h3>
-      <p class="lede">Each one is shown the way it reads in the GHL builder, and the simulator follows the builder’s rules: branches never rejoin, a goal pulls the contact forward, Stop on Response ends the run, DND skips the message and time windows hold it.</p>
+      <h3 class="gx-h3">Pick a workflow, pick a sample customer, press Run</h3>
+      <p class="lede">Each tab below is one workflow. Read The problem and What I built for the short version. Then pick a sample customer and press Run workflow: the log lists every email, text and task in order, with the time it would happen, and the diagram ticks off each step as it runs.</p>
+      <p class="gx-builder-note">For GoHighLevel builders: the diagram reads as it does in the workflow builder, and the simulator follows the builder’s rules: branches never rejoin, a goal pulls the contact forward, Stop on Response ends the run, DND skips the message and time windows hold it. <a href="#decoder">New to the words? Open the decoder.</a></p>
       <div class="gx-tabs" role="tablist" aria-label={`${b.name} workflows`} data-case-tabs={b.id}>
         {automations.map((a, i) => (
           <button
