@@ -280,6 +280,13 @@ export class Simulator {
     ].filter(Boolean);
     this.outcome.replaceChildren(el('strong', undefined, label), document.createTextNode(parts.join(' · ')));
     this.outcome.hidden = false;
+    // In the sticky column the result can sit below its visible edge; scroll the column, never the page.
+    const col = this.root.closest<HTMLElement>('.gx-lab-sim');
+    if (col) {
+      const visBottom = Math.min(col.getBoundingClientRect().bottom, window.innerHeight);
+      const over = this.outcome.getBoundingClientRect().bottom - visBottom;
+      if (over > 0) col.scrollTop += over + 8;
+    }
     if (this.announce) this.announce.textContent = `${label}. ${parts.join(', ')}.`;
   }
 

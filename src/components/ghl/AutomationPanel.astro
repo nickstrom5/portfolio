@@ -22,7 +22,7 @@ const notes = [
 ];
 ---
 
-<article class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
+<div class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
   <header class="gx-panel-head">
     <span class="eyebrow">{a.number} · {a.kicker}</span>
     <h4 tabindex="-1" data-panel-heading>{a.name}</h4>
@@ -143,4 +143,4 @@ const notes = [
       )}
     </div>
   </div>
-</article>
+</div>
