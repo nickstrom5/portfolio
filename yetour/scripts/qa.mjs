@@ -281,9 +281,24 @@ const up = await shown();
 if (up === 0 || up === total) findings.push(`filters: upcoming shows ${up} of ${total}`);
 await page.tap('[data-filter="continent"][data-value="Asia"]');
 if ((await shown()) === 0) findings.push('filters: upcoming + Asia matched nothing (expected Jakarta)');
-await page.tap('[data-filter="status"][data-value="cancelled"]');
-if ((await shown()) !== 0) findings.push('filters: cancelled + Asia should match nothing');
-if (!(await page.evaluate(() => !document.querySelector('[data-empty]').hidden))) findings.push('filters: empty state did not appear');
+// Find a status/region pair no date has, from the cards themselves, so the
+// check survives dates being added or cancelled.
+const nothing = await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('[data-show]')];
+  const values = (f) => [...document.querySelectorAll(`[data-filter="${f}"]`)].map((c) => c.dataset.value).filter((v) => v !== 'all');
+  for (const status of values('status')) {
+    for (const continent of values('continent')) {
+      if (!cards.some((c) => c.dataset.status === status && c.dataset.continent === continent)) return { status, continent };
+    }
+  }
+  return null;
+});
+if (nothing) {
+  await page.tap(`[data-filter="status"][data-value="${nothing.status}"]`);
+  await page.tap(`[data-filter="continent"][data-value="${nothing.continent}"]`);
+  if ((await shown()) !== 0) findings.push(`filters: ${nothing.status} + ${nothing.continent} should match nothing`);
+  if (!(await page.evaluate(() => !document.querySelector('[data-empty]').hidden))) findings.push('filters: empty state did not appear');
+}
 await page.tap('[data-filter="status"][data-value="all"]');
 await page.tap('[data-filter="continent"][data-value="all"]');
 if ((await shown()) !== total) findings.push('filters: reset did not restore every date');
@@ -314,7 +329,7 @@ const pad = await page.evaluate(() => ({
 }));
 if (!(pad.pad >= pad.h)) findings.push(`discography: body padding ${pad.pad}px < fixed player ${pad.h}px`);
 
-await page.goto(base + '/about/', { waitUntil: 'load' }); // a hash-only goto would not reload
+await page.goto(base + '/globe/', { waitUntil: 'load' }); // a hash-only goto would not reload
 await page.goto(base + '/discography/#808s-and-heartbreak', { waitUntil: 'load' });
 await page.waitForTimeout(400);
 if ((await page.evaluate(() => [...document.querySelectorAll('.sq[aria-pressed="true"]')].map((e) => e.dataset.record).join())) !== '808s-and-heartbreak') {
@@ -332,14 +347,17 @@ if (frames.length !== 1 || !frames[0].includes('youtube-nocookie.com/embed/')) {
   findings.push('globe: facade did not swap in the embed — ' + frames.join());
 }
 
-await page.goto(base + '/shows/inglewood-2026-04-01/', { waitUntil: 'load' });
-for (let i = 0; i < 19; i++) {
+// Walk the prev/next chain from the first date to the last, as the homepage orders them.
+await page.goto(base + '/', { waitUntil: 'load' });
+const chain = await page.evaluate(() => [...document.querySelectorAll('[data-grid] [data-show]')].map((c) => (c.matches('a') ? c : c.querySelector('a')).getAttribute('href')));
+await page.goto(base + chain[0], { waitUntil: 'load' });
+for (let i = 0; i < chain.length - 1; i++) {
   const next = await page.evaluate(() => document.querySelector('.pager .next')?.getAttribute('href'));
   if (!next || !next.startsWith('/shows/')) { findings.push(`pager: chain broke after ${i} hops at ${page.url()}`); break; }
   await page.goto(base + next, { waitUntil: 'load' });
 }
-if (!page.url().endsWith('/shows/glendale-2026-11-21/')) {
-  findings.push('pager: 19 hops from the opener did not reach the finale — ' + page.url());
+if (!page.url().endsWith(chain.at(-1))) {
+  findings.push(`pager: ${chain.length - 1} hops from the opener did not reach the finale — ` + page.url());
 }
 
 await ctx.close();
