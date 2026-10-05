@@ -6,7 +6,7 @@ import { globe, specs, quotes, globeSources } from '@/data/globe';
 import { shows, shortPlace, longDate } from '@/data/tour';
 import { tourStills } from '@/lib/stills';
 
-const venues = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) => s.venue)).size;
+const venues = new Set(shows.filter((s) => s.status === 'played').map((s) => s.venue)).size;
 const gallery = tourStills(shows);
 const filmed = shows.filter((s) => s.videos?.length);
 const unfilmed = shows.filter((s) => s.status === 'played' && !s.videos?.length);

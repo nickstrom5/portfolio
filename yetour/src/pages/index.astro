@@ -11,6 +11,8 @@ const countries = new Set(shows.filter((s) => s.status !== 'cancelled').map((s) 
 const continents = ['North America', 'Europe', 'Asia'] as const;
 const regionCount = (c: string) => shows.filter((s) => s.continent === c).length;
 
+const cancelledCountries = new Set(cancelled.map((s) => s.country)).size;
+
 const marquee = shows.map((s) => ({ city: s.city.toUpperCase(), n: String(s.n).padStart(2, '0'), status: s.status }));
 
 const jsonLd = [
@@ -44,7 +46,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
 
 <Layout
   title="Every Date of the 2026 Tour"
-  description="Every date of Ye's 2026 Live Concert Tour behind BULLY: 20 announced shows, setlists, guests, venues, attendance and sources for every single night."
+  description={`Every date of Ye's 2026 Live Concert Tour behind BULLY: ${shows.length} announced shows, setlists, guests, venues, attendance and sources for every single night.`}
   jsonLd={jsonLd}
 >
   <section class="hero">
@@ -60,7 +62,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
       </h1>
       <p class="hero-sub">
         {shows.length} announced dates. {played.length} played, {upcoming.length} to come and{' '}
-        {cancelled.length} taken off him by governments. One spinning globe, {continents.length} continents,
+        {cancelled.length} cancelled. One spinning globe, {continents.length} continents,
         and the first Ye tour since 2016. Pick a night.
       </p>
 
@@ -115,7 +117,7 @@ const nextParts = nextShow ? parts(nextShow.date) : null;
           <b>118K</b><span>Biggest crowd</span><i>Istanbul, 30 May — a claimed world record</i>
         </div>
         <div class="stat"><b>$32.6M</b><span>Two nights at SoFi</span><i>$16.3M a night — a record for any rapper</i></div>
-        <div class="stat"><b>{cancelled.length}</b><span>Cancelled</span><i>London and Reggio Emilia</i></div>
+        <div class="stat"><b>{cancelled.length}</b><span>Cancelled</span><i>Across {cancelledCountries} countries</i></div>
       </div>
     </div>
   </section>
