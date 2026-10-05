@@ -1,7 +1,10 @@
 /**
- * The AI-built projects on the AI/Projects page. Each renders as a
- * scroll-through story; the tiles at the top switch between them.
+ * The AI-built projects on the AI/Projects page. Most render as a
+ * scroll-through story that the tiles at the top switch between; a few
+ * tiles are coming soon, and a page tile opens its own page on this site.
  */
+import { cases as ghlCases } from './ghl';
+
 export type Screen =
   | 'clam-home'
   | 'clam-block'
@@ -76,7 +79,28 @@ export interface SoonProject {
   comingSoon: true;
 }
 
-export type Project = StoryProject | SoonProject;
+/** A tile that opens its own page on this site instead of a story below. */
+export interface PageProject {
+  id: 'ghl';
+  name: string;
+  kicker: string;
+  tileBlurb: string;
+  bg: string;
+  fg: string;
+  bgDark?: string;
+  fgDark?: string;
+  tone?: 'light' | 'dark';
+  /** Site-relative path, e.g. /ghl/. */
+  href: string;
+  /** The tile's call to action, in place of "View story →". */
+  cta: string;
+  page: true;
+  comingSoon?: false;
+}
+
+export type Project = StoryProject | SoonProject | PageProject;
+
+const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
 
 export const projects: Project[] = [
   {
@@ -479,5 +503,19 @@ export const projects: Project[] = [
     ],
     status: 'Live · signalrig.dev',
     caseStudy: 'signalrig-gtm-engineering-showcase',
+  },
+  {
+    id: 'ghl',
+    name: 'GHL case studies',
+    kicker: 'GoHighLevel · workflows and funnels',
+    tileBlurb: `Three sample businesses, their landing pages and ${ghlWorkflows} working workflows. Run every one in your browser.`,
+    bg: 'linear-gradient(135deg, #ecebfd 0%, #f9f9fc 55%, #e3e1fb 100%)',
+    fg: '#4f46e5',
+    bgDark: 'linear-gradient(135deg, #1d1b3d 0%, #12161f 55%, #221d44 100%)',
+    fgDark: '#a5b4fc',
+    tone: 'light',
+    href: '/ghl/',
+    cta: 'Open the case studies →',
+    page: true,
   },
 ];
