@@ -111,4 +111,9 @@ export const business: Business = {
     completion: 'Course completed → testimonial, upgrade',
   },
   tint: { light: '#a84b15', dark: '#f5a25d' },
+  page: {
+    title: 'GoHighLevel automation for an online coach',
+    description: 'Trailhead Career Coaching, a sample online coach: {n} GoHighLevel workflows, from workshop sign-ups and checkout recovery to onboarding and failed payments.',
+    h1: '{n} GoHighLevel workflows for an online coach. Try every one yourself.',
+  },
 };

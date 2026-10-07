@@ -1,9 +1,10 @@
 ---
 /**
- * /ghl/ — GoHighLevel case studies: three businesses, each a sample
- * sub-account with a working landing page and its workflows. Content lives
- * in src/data/ghl; the simulator is src/lib/ghl. Run `npm run ghl:check`
- * after editing a workflow.
+ * A /ghl/ page. Each of the three case studies has its own page: the first
+ * case is /ghl/ itself, which also carries the overview (stats, compliance,
+ * troubleshooting, how I work); the others are /ghl/<id>/. Content lives in
+ * src/data/ghl; the simulator is src/lib/ghl. Run `npm run ghl:check` after
+ * editing a workflow.
  */
 import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
@@ -14,8 +15,20 @@ import type { Step } from '@/lib/ghl/types';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
-// A case appears once it has workflows, so a half-finished case never ships as an empty tab.
+interface Props {
+  /** Business id of the case this page shows. */
+  caseId: string;
+}
+const { caseId } = Astro.props;
+
+// A case appears once it has workflows, so a half-finished case never ships as an empty page.
 const cases = allCases.filter((c) => c.automations.length > 0);
+const index = Math.max(0, cases.findIndex((c) => c.business.id === caseId));
+const study = cases[index];
+const hub = index === 0;
+/** The page a case lives on, and a link to a section of the overview from any page. */
+const pageOf = (id: string) => (id === cases[0].business.id ? url('/ghl') : url(`/ghl/${id}`));
+const onHub = (fragment: string) => (hub ? `#${fragment}` : `${url('/ghl')}#${fragment}`);
 const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -46,9 +59,9 @@ const stats = [
   { value: `${taken.size}/${branches}`, label: 'Possible paths, each one reached by a test' },
 ];
 
-// The hero's preview is one real run of the first case's first workflow and first sample customer,
+// The hero's preview is one real run of this case's first workflow and first sample customer,
 // so its messages can never drift from the workflow.
-const peekCase = cases[0];
+const peekCase = study;
 const peekAuto = peekCase.automations[0];
 const peekRun = simulate(peekAuto, peekAuto.scenarios[0], peekCase.business.sampleContact, peekCase.business.env);
 const lead = peekRun.contact.firstName || 'The lead';
@@ -73,7 +86,9 @@ const find = (ref: string) => {
   const [cid, aid] = ref.split('/');
   const c = cases.find((x) => x.business.id === cid);
   const a = c?.automations.find((x) => x.id === aid);
-  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.business.name} ${a.number} · ${a.name}` } : undefined;
+  if (!c || !a) return undefined;
+  const here = cid === caseId;
+  return { href: `${here ? '' : pageOf(cid)}#${cid}-${aid}`, open: here ? `${cid}-${aid}` : undefined, label: `${c.business.name} ${a.number} · ${a.name}` };
 };
 
 const compliance = [
@@ -166,30 +181,35 @@ const decoder: [string, string][] = [
   ['Execution log', 'GoHighLevel’s step-by-step record of what a workflow did for one contact, with times. The simulator here shows the same kind of log.'],
   ['Custom Code, webhook', 'Custom Code runs a short script inside a workflow, here to score leads. A webhook is an automatic message from one app to another, like “trial started.”'],
 ];
-const title = 'GoHighLevel automation case studies';
-const description =
-  cases.length === 3
+const own = !hub ? study.business.page : undefined;
+const count = (text: string) => text.replaceAll('{n}', String(study.automations.length));
+const title = own ? own.title : 'GoHighLevel automation case studies';
+const description = own
+  ? count(own.description)
+  : cases.length === 3
     ? `Three GoHighLevel automation case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and their landing pages.`
     : `GoHighLevel automation case studies you can test: ${plural(all.length, 'working workflow', 'working workflows')}, working landing pages and the build notes behind each.`;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} breadcrumbs={hub ? undefined : [{ name: 'GoHighLevel case studies', path: '/ghl/' }, { name: study.business.name, path: `/ghl/${study.business.id}/` }]}>
   <section class="gx-hero">
     <div class="container">
       <div class="gx-hero-grid">
         <div>
-          <span class="eyebrow">GoHighLevel · Workflows and landing pages</span>
-          <h1>{all.length}&nbsp;GoHighLevel {all.length === 1 ? 'workflow' : 'workflows'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Try every one yourself.</h1>
+          <span class="eyebrow">{hub ? 'GoHighLevel · Workflows and landing pages' : `GoHighLevel case study ${index + 1} of ${cases.length} · ${study.business.name}`}</span>
+          {own ? <h1>{count(own.h1)}</h1> : <h1>{all.length}&nbsp;GoHighLevel {all.length === 1 ? 'workflow' : 'workflows'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Try every one yourself.</h1>}
           <p class="lede">GoHighLevel is an all-in-one sales and marketing platform: contacts, landing pages, texts, emails, calendars and a sales board in one place. A workflow is a set of automatic steps inside it. When someone fills in a form or calls, a workflow can email and text them, hand the lead to a salesperson, remind that person to call, and stop the moment the customer replies.</p>
           <p class="gx-hero-sub">
-            {cases.length === 3
+            {!hub
+              ? `${study.business.name} is one of ${caseWord.toLowerCase()} made-up businesses I built GoHighLevel workflows for, each with a working landing page. Everything runs here in your browser, on sample customers or with your own name.`
+              : cases.length === 3
               ? `I built ${all.length} of them for three made-up businesses: a roofer, a software company and an online coach. Each one also has a working landing page. Everything runs here in your browser, on sample customers or with your own name.`
               : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a working landing page. Everything runs here in your browser, on sample customers or with your own name.`}{' '}
             Need this for your business, or hiring for GoHighLevel? <a href={url('/contact')}>Get in touch</a>.
           </p>
           <div class="gx-cta">
-            <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>
-            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
+            <a class="btn btn-primary" href={`#${study.business.id}-demo`} data-open-auto={`${study.business.id}-demo`}>Try it: fill in a form</a>
+            <a class="btn btn-secondary" href="#cases">{hub ? 'See the' : 'See all'} {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
             <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
           </div>
         </div>
@@ -216,18 +236,20 @@ const description =
       <div class="gx-howto">
         <h2 class="gx-howto-title">How to use this page</h2>
         <ol>
-          <li><strong>Pick a business.</strong> New to GoHighLevel? Start with the roofer.</li>
+          <li><strong>Pick a business.</strong> New to GoHighLevel? {hub ? 'Start with the roofer, below.' : <a href={url('/ghl')}>Start with the roofer</a>}{hub ? '' : '.'}</li>
           <li><strong>Be the customer.</strong> Fill in its sign-up form with any name, or pick a sample customer such as “Never replies” or “Submits at 11:48 PM”.</li>
           <li><strong>Press Run.</strong> Watch every email, text and task go out, with the time each would happen. Days of waiting are fast-forwarded.</li>
         </ol>
         <p class="gx-howto-hurry">Short on time? Each workflow opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The diagrams and <strong>Build notes</strong> are the detail a GoHighLevel builder would check. <a href="#decoder">Words you may not know</a></p>
       </div>
 
-      <dl class="gx-stats">
-        {stats.map((s) => (
-          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
-        ))}
-      </dl>
+      {hub && (
+        <dl class="gx-stats">
+          {stats.map((s) => (
+            <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+          ))}
+        </dl>
+      )}
 
       <div class="gx-real">
         <div>
@@ -237,7 +259,7 @@ const description =
         <div>
           <h2 class="gx-real-title">Who built this</h2>
           <p>I’m {site.name}, a project and operations lead who also builds CRM automations in GoHighLevel, HubSpot, Zoho and Zapier. My client work includes a 2025 Upwork contract for GoHighLevel, Zapier and Slack automations (<a href={`${url('/work')}#contracts`}>see recent contracts</a>). This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI/Projects page</a>.</p>
-          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href={onHub('process')}>How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
         </div>
       </div>
 
@@ -252,36 +274,34 @@ const description =
     </div>
   </section>
 
-  <div class="gx-switch" id="cases">
+  <nav class="gx-switch" id="cases" aria-label="GoHighLevel case studies">
     <div class="container">
-      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+      <ul class="gx-switch-grid">
         {cases.map((c, i) => (
-          <button
-            type="button"
-            role="tab"
-            class="gx-switch-tab"
-            id={`case-tab-${c.business.id}`}
-            aria-controls={c.business.id}
-            aria-selected={i === 0 ? 'true' : 'false'}
-            aria-labelledby={`case-name-${c.business.id}`}
-            aria-describedby={`case-blurb-${c.business.id}`}
-            tabindex={i === 0 ? 0 : -1}
-            data-case-tab={c.business.id}
-            style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
-          >
-            <span class="gx-switch-state" aria-hidden="true">Showing</span>
-            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
-            <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
-            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}><span class="sr-only">{c.business.industry}.</span> {c.business.blurb} <span class="sr-only">{plural(c.automations.length, 'workflow', 'workflows')} and a working landing page.</span></span>
-            <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
-          </button>
+          <li>
+            <a
+              class="gx-switch-tab"
+              href={`${pageOf(c.business.id)}#cases`}
+              aria-current={c.business.id === caseId ? 'page' : undefined}
+              data-case-link={c.business.id}
+              style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
+            >
+              <span class="gx-switch-state" aria-hidden="true">Showing</span>
+              <span class="gx-switch-kicker">Case study {i + 1} · {c.business.industry}</span>
+              <span class="gx-switch-name">{c.business.name}</span>
+              <span class="gx-switch-blurb">{c.business.blurb}</span>
+              <span class="gx-switch-meta">{plural(c.automations.length, 'workflow', 'workflows')} · a working landing page</span>
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
-  </div>
+  </nav>
 
-  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+  <CaseStudyView study={study} index={index} />
 
+  {hub ? (
+    <Fragment>
   <section class="section" id="compliance" aria-labelledby="compliance-title">
     <div class="container">
       <span class="eyebrow">Compliance</span>
@@ -352,6 +372,22 @@ const description =
       </div>
     </div>
   </section>
+
+    </Fragment>
+  ) : (
+    <section class="section gx-more" aria-labelledby="more-title">
+      <div class="container">
+        <span class="eyebrow">Across all three case studies</span>
+        <h2 id="more-title">Compliance, troubleshooting and how I work</h2>
+        <p class="lede">The rules every workflow follows, what I check first in an inherited account, and how a build goes from brief to hand-off, on the overview page.</p>
+        <ul class="gx-more-links">
+          <li><a href={onHub('compliance')}>Compliance is part of the build →</a></li>
+          <li><a href={onHub('audit')}>What I check first when I inherit an account →</a></li>
+          <li><a href={onHub('process')}>From a brief to a workflow the team trusts →</a></li>
+        </ul>
+      </div>
+    </section>
+  )}
 
   <section class="section gx-closing">
     <div class="container gx-closing-inner">

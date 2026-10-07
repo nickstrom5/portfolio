@@ -1,0 +1,16 @@
+---
+/** /ghl/<id>/ — one page per GoHighLevel case study after the first. See src/components/ghl/GhlPage.astro. */
+import GhlPage from '@/components/ghl/GhlPage.astro';
+import { cases } from '@/data/ghl';
+
+export function getStaticPaths() {
+  return cases
+    .filter((c) => c.automations.length > 0)
+    .slice(1)
+    .map((c) => ({ params: { case: c.business.id } }));
+}
+
+const { case: caseId } = Astro.params;
+---
+
+<GhlPage caseId={caseId} />

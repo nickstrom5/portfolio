@@ -102,4 +102,9 @@ export const business: Business = {
     'nps-health': 'NPS → saved, heard or referred',
   },
   tint: { light: '#4338ca', dark: '#a5b4fc' },
+  page: {
+    title: 'GoHighLevel automation for a SaaS company',
+    description: 'Crewlo, a sample B2B software company: {n} GoHighLevel workflows, from demo routing and trial onboarding to sales alerts and customer health.',
+    h1: '{n} GoHighLevel workflows for a software company. Try every one yourself.',
+  },
 };

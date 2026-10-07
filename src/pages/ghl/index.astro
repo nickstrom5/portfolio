@@ -1,0 +1,7 @@
+---
+/** /ghl/ — the GoHighLevel overview and the first case study. See src/components/ghl/GhlPage.astro. */
+import GhlPage from '@/components/ghl/GhlPage.astro';
+import { cases } from '@/data/ghl';
+---
+
+<GhlPage caseId={cases[0].business.id} />
