@@ -16,7 +16,7 @@ const skillGroups = services.map((s) => ({ label: s.title, items: s.bullets }));
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
   ...site.stats.map((s) => ({ value: s.value, label: s.label.replace(' on Upwork', '') })),
-  { value: 'Since 2015', label: 'Full-time freelance' },
+  { value: 'Since 2015', label: 'Freelancing' },
 ];
 const freelance = {
   title: 'Operations & Project Manager · Chief of Staff',
@@ -50,6 +50,7 @@ const ld = {
 const contacts = [
   { href: `mailto:${site.email}`, label: site.email },
   { href: site.url, label: domain },
+  ...(site.links.linkedin ? [{ href: site.links.linkedin, label: site.links.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') }] : []),
 ];
 ---
 
@@ -328,6 +329,16 @@ const contacts = [
       .job a.title:hover {
         color: var(--accent);
       }
+      /* On screen, links in the résumé text are underlined; the printed page stays clean. */
+      @media screen {
+        .job a.title,
+        .contact a,
+        .note a {
+          text-decoration: underline;
+          text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+          text-underline-offset: 0.18em;
+        }
+      }
       .job .co {
         display: block;
         color: var(--muted);
@@ -381,7 +392,7 @@ const contacts = [
         font-weight: 500;
         line-height: 1.3;
         padding: 0.22rem 0.55rem;
-        border-radius: 999px;
+        border-radius: 8px;
         background: var(--accent-soft);
         color: var(--ink);
         border: 1px solid transparent;
@@ -474,7 +485,11 @@ const contacts = [
         margin: 0.4in 0.6in;
       }
       @media print {
-        :root {
+        /* Matches the dark-theme selectors' weight, so a dark-mode visitor still prints black on white. */
+        :root,
+        :root[data-theme],
+        :root:not([data-theme='light']) {
+          color-scheme: light;
           --ink: #17181a;
           --muted: #4d5158;
           --faint: #5c6168;
@@ -521,6 +536,11 @@ const contacts = [
         .contact {
           font-size: 8.75pt;
           line-height: 1.55;
+        }
+        /* Wide tracking splits words for résumé parsers ('EXP ER I EN CE'). */
+        h2,
+        .foot .edu-label {
+          letter-spacing: 0.04em;
         }
         .highlights {
           grid-template-columns: repeat(5, 1fr);
@@ -701,7 +721,7 @@ const contacts = [
             <span class="edu-label">Education</span>
             <span class="edu-value">{education.map((e) => `${e.school}, ${e.location}`).join('; ')}</span>
           </div>
-          <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
+          <p class="note">Full contract history and client feedback on <a href={site.links.upwork}>Upwork</a>. References on request.</p>
         </footer>
       </article>
     </main>

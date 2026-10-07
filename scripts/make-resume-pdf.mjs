@@ -45,7 +45,8 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.goto(`http://127.0.0.1:${port}/resume/`, { waitUntil: 'networkidle' });
 await page.emulateMedia({ media: 'print' });
-await page.pdf({ path: out, format: 'Letter', printBackground: true, preferCSSPageSize: true });
+// Tagged with an outline, so screen readers get headings and reading order.
+await page.pdf({ path: out, format: 'Letter', printBackground: true, preferCSSPageSize: true, tagged: true, outline: true });
 await browser.close();
 server.close();
 console.log(`Wrote ${out}`);
