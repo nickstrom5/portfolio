@@ -68,6 +68,14 @@ is already wired for Formspree's spam filter.
 Add a 1200×630 PNG at `public/og.png`. Until then link previews on LinkedIn
 and Upwork messages will show no image.
 
+## Personal photos (About page)
+
+Drop photos in `public/personal/` (create the folder) and list them in
+`src/data/personal.json`, for example
+`{ "src": "/personal/cats-01.jpg", "alt": "Two cats asleep on a laptop", "caption": "Quality control." }`.
+Keep each JPEG under about 400 KB (about 1600px on the long side). The section on
+the About page appears once the list is non-empty.
+
 ## Deploying
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
