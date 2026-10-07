@@ -5,8 +5,10 @@ import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
 import testimonials from '@/data/testimonials.json';
-import { site } from '@/data/site';
+import { site, categoryLabel } from '@/data/site';
 import { url } from '@/lib/url';
+import { ids } from '@/lib/schema';
+import { lastCommit } from '@/lib/git-date.mjs';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.hidden);
@@ -34,8 +36,15 @@ const iso = (dt: Date) => dt.toISOString().slice(0, 10);
 const shortDate = (dt: Date) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
+const category = categoryLabel[d.category] ?? d.category;
+// Builds get 'Stack' and 'Build something similar'; client engagements read as the work they were.
+const isBuild = d.source === 'personal' || ['development', 'mobile', 'web', 'backend', 'automation'].includes(d.category);
+const platforms = d.platforms.filter((p) => p !== 'Remote');
+// Same source as the sitemap's <lastmod>, so search engines see one date.
+const modified = lastCommit([`src/content/projects/${project.id}.md`]) ?? (d.published ? iso(d.updated ?? d.published) : undefined);
 const links = [
-  d.links.live && { label: d.source === 'personal' ? 'Live site' : 'Client website', href: d.links.live },
+  // A client's site is already linked from the Client row.
+  d.links.live && d.source === 'personal' && { label: 'Live site', href: d.links.live },
   d.links.appStore && { label: 'App Store', href: d.links.appStore },
   d.links.playStore && { label: 'Google Play', href: d.links.playStore },
   d.links.repo && { label: 'Source', href: d.links.repo },
@@ -58,11 +67,12 @@ const links = [
       url: pageUrl,
       image: [new URL(d.cover ?? '/og.png', Astro.site).href],
       inLanguage: 'en-US',
-      isPartOf: { '@id': `${site.url}/#website` },
+      isPartOf: { '@id': ids.website },
       keywords: d.stack.join(', '),
-      ...(d.published ? { datePublished: iso(d.published), dateModified: iso(d.updated ?? d.published) } : {}),
-      author: { '@type': 'Person', '@id': `${site.url}/#person`, name: site.name, url: `${site.url}/about/` },
-      publisher: { '@id': `${site.url}/#person` },
+      ...(d.published ? { datePublished: iso(d.published) } : {}),
+      ...(modified ? { dateModified: modified } : {}),
+      author: { '@id': ids.person },
+      publisher: { '@id': ids.person },
       mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
       // Only clients already named and linked on the page; anonymized clients have no live link.
       ...(d.source !== 'personal' && d.links.live ? { about: { '@type': 'Organization', name: d.client, url: d.links.live } } : {}),
@@ -72,15 +82,20 @@ const links = [
   <article class="section">
     <div class="container">
       <a class="back" href={url('/work')}>← All work</a>
-      <span class="eyebrow">{d.category} · {d.year}</span>
+      <span class="eyebrow">{category} · {d.year}</span>
       <h1>{d.title}</h1>
       <p class="lede">{d.summary}</p>
+      {d.cover && (
+        <figure class="cover">
+          <img src={url(d.cover)} alt={coverAlt} width="1600" height="1000" decoding="async" />
+        </figure>
+      )}
 
       <div class="layout">
         <div class="prose">
           <Content />
         </div>
-        <aside class="facts card">
+        <section class="facts card" aria-label="Project facts">
           <dl>
             <dt>Client</dt>
             <dd>
@@ -98,13 +113,13 @@ const links = [
                 <dd><time datetime={iso(d.published)}>{shortDate(d.published)}</time></dd>
               </>
             )}
-            {d.platforms.length > 0 && (
+            {platforms.length > 0 && (
               <>
                 <dt>Platforms</dt>
-                <dd>{d.platforms.join(', ')}</dd>
+                <dd>{platforms.join(', ')}</dd>
               </>
             )}
-            <dt>Stack</dt>
+            <dt>{isBuild ? 'Stack' : 'Skills & tools'}</dt>
             <dd>
               <ul class="tags">
                 {d.stack.map((s) => <li class="tag">{s}</li>)}
@@ -119,8 +134,8 @@ const links = [
               </>
             )}
           </dl>
-          <a class="btn btn-primary full" href={url('/contact')}>Build something similar</a>
-        </aside>
+          <a class="btn btn-primary full" href={url('/contact')}>{isBuild ? 'Build something similar' : 'Talk about similar work'}</a>
+        </section>
       </div>
     </div>
   </article>
@@ -140,7 +155,7 @@ const links = [
     <section class="section">
       <div class="container">
         <div class="section-head">
-          <h2>More {d.category} work</h2>
+          <h2>More {category.toLowerCase()} work</h2>
         </div>
         <div class="grid grid-2">
           {related.map((p) => <ProjectCard project={p} />)}
@@ -157,6 +172,17 @@ const links = [
     margin-bottom: 1.5rem;
     color: var(--text-muted);
     font-size: 0.9rem;
+  }
+  .cover {
+    margin: 2rem 0 0;
+  }
+  .cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
   }
   .layout {
     display: grid;

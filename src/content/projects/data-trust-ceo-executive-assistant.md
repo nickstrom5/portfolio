@@ -2,7 +2,7 @@
 title: 'Executive assistant to the CEO of a global biodata nonprofit'
 shortTitle: 'Executive assistant to a nonprofit CEO'
 client: 'Global biodata nonprofit'
-summary: 'U.S.-based executive assistant to the CEO of a nonprofit data trust: calendar, inbox, follow-ups and the logistics that keep a distributed leader on schedule.'
+summary: 'U.S.-based executive assistant to the CEO of a nonprofit data trust: calendar, inbox, follow-ups and the logistics that keep a distributed leader on time.'
 category: 'admin'
 platforms: ['Remote']
 stack: ['Google Workspace', 'Calendar management', 'Inbox triage', 'Meeting prep', 'Follow-up tracking']

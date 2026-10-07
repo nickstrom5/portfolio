@@ -51,3 +51,17 @@ export const footerNav = [
 
 /** Header/nav only. Resume and the GHL showcase stay in the footer, not the top nav. */
 export const nav = footerNav.filter((item) => item.href !== '/resume' && item.href !== '/ghl');
+
+/** Display names for the case-study categories (the schema in src/content.config.ts holds the keys). */
+export const categoryLabel: Record<string, string> = {
+  consulting: 'Consulting',
+  operations: 'Operations',
+  admin: 'Admin & executive support',
+  automation: 'Automation',
+  video: 'Events & video',
+  development: 'Development',
+  mobile: 'Mobile',
+  web: 'Web',
+  backend: 'Backend',
+  other: 'Other',
+};

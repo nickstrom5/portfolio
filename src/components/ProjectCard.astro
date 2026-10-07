@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/data/site';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -10,17 +11,18 @@ interface Props {
 const { project, level = 3 } = Astro.props;
 const { title, client, summary, stack, year, category, platforms, placeholder } = project.data;
 const showBadge = import.meta.env.DEV && placeholder;
+const shownPlatforms = platforms.filter((p) => p !== 'Remote');
 const Heading = `h${level}` as 'h2' | 'h3';
 ---
 
 <article class="card project">
   {showBadge && <span class="placeholder-badge">Sample</span>}
   <div class="meta">
-    <span class="tag">{category}</span>
+    <span class="tag">{categoryLabel[category] ?? category}</span>
     <span class="muted">{year}</span>
   </div>
   <Heading class="title"><a href={url(`/work/${project.id}`)}>{title}</a></Heading>
-  <p class="muted client">{client}{platforms.length ? ` · ${platforms.join(' / ')}` : ''}</p>
+  <p class="muted client">{client}{shownPlatforms.length ? ` · ${shownPlatforms.join(' / ')}` : ''}</p>
   <p class="summary">{summary}</p>
   <ul class="tags">
     {stack.slice(0, 5).map((s) => <li class="tag">{s}</li>)}
@@ -34,6 +36,33 @@ const Heading = `h${level}` as 'h2' | 'h3';
     flex-direction: column;
     gap: 0.5rem;
     height: 100%;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+  }
+  /* The whole card is the link: show it on hover, and ring the card (not the title) on keyboard focus. */
+  .project:hover {
+    border-color: var(--text-faint);
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.04),
+      0 14px 32px -14px rgb(0 0 0 / 0.18);
+  }
+  .project:has(.title a:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .project .title a:focus-visible {
+    outline: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project {
+      transition: none;
+    }
+    .project:hover {
+      transform: none;
+    }
   }
   .meta {
     display: flex;

@@ -2,7 +2,7 @@
 title: 'Project management and hiring support for an author'
 shortTitle: 'Project management and hiring for an author'
 client: 'Author and small business owner'
-summary: 'Two fixed-price milestones in early 2026: managed a consignment task, posted and interviewed for two hires, and secured fifteen contacts for a book outreach push.'
+summary: 'Two fixed-price milestones in early 2026: ran a consignment task, recruited for two roles, and secured fifteen contacts for a book outreach push.'
 category: 'operations'
 platforms: ['Remote']
 stack: ['Job posting & screening', 'Interview scheduling', 'Outreach tracking', 'Milestone reporting']

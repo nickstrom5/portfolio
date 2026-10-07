@@ -14,7 +14,8 @@ const projects = defineCollection({
     /** Short version for the browser tab and search results (≤ 45 chars). */
     shortTitle: z.string().max(45).optional(),
     client: z.string(),
-    summary: z.string().max(200),
+    /** Also the meta description, so keep it to what Google shows (≤ 155 chars). */
+    summary: z.string().max(155),
     category: z.enum(['consulting', 'operations', 'admin', 'video', 'development', 'mobile', 'web', 'backend', 'automation', 'other']),
     platforms: z.array(z.string()).default([]),
     stack: z.array(z.string()).default([]),

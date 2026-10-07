@@ -6,6 +6,7 @@ import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
 
 const skills = {
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
   'AI & development': [
     'Claude Code',
     'Grok',
@@ -16,7 +17,6 @@ const skills = {
     'GitHub Actions & Pages',
     'Cloudflare DNS',
   ],
-  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
   'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
   'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho One', 'Zapier', 'Google Sheets + AI'],
   'Operations & finance': ['QuickBooks Online', 'Google Workspace', 'Slack', 'Vendor & billing coordination', 'Hiring & onboarding', 'Client onboarding'],
@@ -46,7 +46,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
       <div class="prose">
         <img class="portrait" src={url(site.photo)} alt={`${site.name}`} width="128" height="128" loading="eager" />
         <span class="eyebrow">About</span>
-        <h1>Hi, I'm {site.name}.</h1>
+        <h1>Hi, I’m {site.name}.</h1>
         <p class="lede">
           Nicholas on paper, Nick to everyone else. I'm a freelance senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
         </p>
@@ -70,7 +70,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
         </div>
       </div>
 
-      <aside>
+      <div class="side">
         <div class="card connect">
           <h2 class="h3">Connect</h2>
           <ul>
@@ -99,7 +99,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
             </div>
           ))}
         </div>
-      </aside>
+      </div>
     </div>
   </section>
 

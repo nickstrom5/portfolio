@@ -71,7 +71,7 @@ for (const p of pages) {
   if (!title) findings.push(`${p}: missing <title>`);
   if (title.length > 65 && !noindex) findings.push(`${p}: title ${title.length} chars (>65): "${title}"`);
   if (!desc) findings.push(`${p}: missing meta description`);
-  else if (!noindex && (desc.length < 50 || desc.length > 165)) findings.push(`${p}: description ${desc.length} chars (want 50–165)`);
+  else if (!noindex && (desc.length < 50 || desc.length > 158)) findings.push(`${p}: description ${desc.length} chars (want 50–158)`);
   if (!canonical) findings.push(`${p}: missing canonical`);
   else if (!canonical.endsWith(p)) findings.push(`${p}: canonical ${canonical} does not match path`);
   if (!robots) findings.push(`${p}: missing robots meta`);

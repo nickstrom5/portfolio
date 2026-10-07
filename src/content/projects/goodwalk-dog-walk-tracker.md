@@ -24,7 +24,7 @@ Your dog needs a walk every day. Good Walk turns that into a streak: a daily tar
 
 - Set the concept and the constraints, then directed Claude Code through the screens, the reminder and streak logic, and the launch plan.
 - Had the landing site built first: how it works, pricing, an FAQ, three guides on how long and how often to walk a dog, plus privacy and terms.
-- Registered getgoodwalk.app and set the launch target for Walk Your Dog Week, 1 to 7 October 2026.
+- Registered getgoodwalk.app and planned the App Store launch.
 
 ## Why it matters
 

@@ -7,7 +7,7 @@ import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel automation case studies.">
+<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel automations.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI / Projects</span>
@@ -86,6 +86,7 @@ import { url } from '@/lib/url';
       id={p.id}
       data-story={p.id}
       data-tone={p.tone ?? 'dark'}
+      aria-labelledby={`${p.id}-title`}
       hidden={i !== 0}
       style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}; --story-bg-dark: ${p.bgDark ?? p.bg}; --story-fg-dark: ${p.fgDark ?? p.fg}`}
     >
@@ -93,7 +94,7 @@ import { url } from '@/lib/url';
         <div class:list={['container', 'hero-inner', { wide: p.hero.frame === 'laptop' }]}>
           <div class="hero-copy" data-reveal>
             <span class="kicker">{p.kicker}</span>
-            <h2>{p.hero.title}</h2>
+            <h2 id={`${p.id}-title`}>{p.hero.title}</h2>
             <p>{p.hero.sub}</p>
             <div class="actions">
               {p.links.map((l) => (
@@ -150,6 +151,7 @@ import { url } from '@/lib/url';
 
       <section class="section split-section">
         <div class="container">
+          <span class="eyebrow">The split</span>
           <div class="section-head">
             <h2>Who did what</h2>
           </div>
@@ -294,6 +296,12 @@ import { url } from '@/lib/url';
     if (scroll) {
       const target = document.getElementById(id);
       target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      // Keyboard and screen-reader users continue from the story they opened, not the tile above it.
+      const heading = target?.querySelector<HTMLElement>('.hero h2');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
     }
   }
 
@@ -505,10 +513,15 @@ import { url } from '@/lib/url';
     color: #121217;
   }
   @media (max-width: 860px) {
-    .hero-inner {
+    /* .wide outranks .hero-inner, so name it too or laptop-framed stories stay two columns on phones. */
+    .hero-inner,
+    .hero-inner.wide {
       grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
     }
+  }
+  .hero h2:focus {
+    outline: none;
   }
 
   .shot .browser {
