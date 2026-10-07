@@ -9,6 +9,8 @@
   --text-muted: #5b5f66;
   --text-faint: #686d75;
   --border: #e3e3dd;
+  /* Form field outlines: 3:1 against the card and the field fill (WCAG 1.4.11). */
+  --border-strong: #8a8f97;
   --accent: #1f5fd0;
   --accent-strong: #174aa6;
   --accent-soft: #e7eefc;
@@ -34,6 +36,8 @@
     --text-muted: #a4abb5;
     --text-faint: #858d99;
     --border: #262c34;
+  --border-strong: #6f7783;
+    --border-strong: #6f7783;
     --accent: #6f9cff;
     --accent-strong: #8fb2ff;
     --accent-soft: #1a2740;
