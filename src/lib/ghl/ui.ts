@@ -55,6 +55,7 @@ export class Simulator {
   private timing: { start: number; events: ScenarioEvent[] } | undefined;
   private prev: Contact | undefined;
   private lastDay = -1;
+  private canvasScrolled = false;
 
   constructor(root: HTMLElement, env: SimEnv) {
     this.root = root;
@@ -180,8 +181,12 @@ export class Simulator {
 
   private clearCanvas() {
     if (!this.canvas) return;
-    const body = this.canvas.querySelector<HTMLElement>('.g-canvas-body');
-    if (body) body.scrollTop = 0;
+    // Writing scrollTop forces a layout, so only undo a scroll a run actually made.
+    if (this.canvasScrolled) {
+      const body = this.canvas.querySelector<HTMLElement>('.g-canvas-body');
+      if (body) body.scrollTop = 0;
+      this.canvasScrolled = false;
+    }
     this.canvas.classList.remove('is-running', 'is-ran');
     this.canvas.querySelectorAll('.is-done, .is-active, .is-skipped, .is-cut, .is-taken, .is-dim').forEach((n) => n.classList.remove('is-done', 'is-active', 'is-skipped', 'is-cut', 'is-taken', 'is-dim'));
   }
@@ -196,14 +201,25 @@ export class Simulator {
     if (this.announce) this.announce.textContent = `Running ${this.auto.name}: ${this.scenario.label}.`;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (instant || reduce) {
-      trace.steps.forEach((s, i) => this.apply(s, trace, i === trace.steps.length - 1, false));
+      // Build the whole log off-screen and measure once, instead of a layout per line.
+      const lines = document.createDocumentFragment();
+      trace.steps.forEach((s) => {
+        this.logLine(s, lines);
+        this.markClasses(s);
+      });
+      this.log.append(lines);
+      this.log.scrollTop = this.log.scrollHeight;
+      const last = trace.steps[trace.steps.length - 1];
+      this.showTime(last, trace);
+      this.renderRecord(last.contact, false);
+      this.scrollCanvasTo([...trace.steps].reverse().find((s) => s.nodeId));
       this.finish(trace);
       return;
     }
     let i = 0;
     const tick = () => {
       const s = trace.steps[i];
-      this.apply(s, trace, i === trace.steps.length - 1, true);
+      this.apply(s, trace);
       i++;
       if (i < trace.steps.length) this.timer = window.setTimeout(tick, s.kind === 'wait' || s.kind === 'hold' ? STEP_MS * 1.4 : STEP_MS);
       else this.finish(trace);
@@ -211,11 +227,26 @@ export class Simulator {
     tick();
   }
 
-  private apply(step: TraceStep, trace: Trace, _last: boolean, animate: boolean) {
-    // Day separator.
+  /** One animated step: its log line, the clock, the record and the diagram. */
+  private apply(step: TraceStep, trace: Trace) {
+    this.logLine(step, this.log);
+    this.log.scrollTop = this.log.scrollHeight;
+    this.showTime(step, trace);
+    this.renderRecord(step.contact, true);
+    this.markClasses(step);
+    this.scrollCanvasTo(step);
+  }
+
+  private showTime(step: TraceStep, trace: Trace) {
+    this.clock.textContent = formatClock(step.t);
+    this.elapsed.textContent = step.t === trace.start ? 'Start' : `+${formatDuration(step.t - trace.start)}`;
+  }
+
+  /** Adds a step's log line, after a day separator when the day changes. */
+  private logLine(step: TraceStep, into: ParentNode) {
     const day = Math.floor(step.t / 1440);
     if (day !== this.lastDay) {
-      this.log.append(el('li', 'g-day', formatDay(step.t)));
+      into.append(el('li', 'g-day', formatDay(step.t)));
       this.lastDay = day;
     }
     const li = el('li', `g-li k-${step.kind}`);
@@ -226,13 +257,7 @@ export class Simulator {
     if (step.detail) body.append(el('span', 'g-li-detail', step.detail));
     if (step.message) body.append(this.renderMessage(step.message));
     li.append(time, body);
-    this.log.append(li);
-    this.log.scrollTop = this.log.scrollHeight;
-
-    this.clock.textContent = formatClock(step.t);
-    this.elapsed.textContent = step.t === trace.start ? 'Start' : `+${formatDuration(step.t - trace.start)}`;
-    this.renderRecord(step.contact, animate);
-    this.markCanvas(step);
+    into.append(li);
   }
 
   private renderMessage(m: NonNullable<TraceStep['message']>): HTMLElement {
@@ -255,7 +280,8 @@ export class Simulator {
     return box;
   }
 
-  private markCanvas(step: TraceStep) {
+  /** Ticks the step off on the diagram. Class changes only, so a whole run can be marked without a layout. */
+  private markClasses(step: TraceStep) {
     const c = this.canvas;
     if (!c) return;
     c.querySelectorAll('.is-active').forEach((n) => n.classList.remove('is-active'));
@@ -266,12 +292,6 @@ export class Simulator {
     if (step.kind === 'skip') node.classList.add('is-skipped');
     else if (step.kind !== 'hold') node.classList.add('is-done');
     node.classList.add('is-active');
-    // The diagram is capped to one screen: scroll it, never the page, so the active step stays in view.
-    const body = c.querySelector<HTMLElement>('.g-canvas-body');
-    if (body && body.scrollHeight > body.clientHeight + 4) {
-      const top = node.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - body.clientHeight / 3;
-      body.scrollTo({ top: Math.max(0, top), behavior: c.classList.contains('is-running') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
-    }
     if (step.branch) {
       const branch = c.querySelector<HTMLElement>(`[data-branch="${step.branch}"]`);
       if (!branch) return;
@@ -282,6 +302,17 @@ export class Simulator {
         if (b !== branch && !b.classList.contains('is-taken')) b.classList.add('is-dim');
       });
     }
+  }
+
+  /** The diagram is capped to one screen: scroll it, never the page, so the step stays in view. */
+  private scrollCanvasTo(step: TraceStep | undefined) {
+    const c = this.canvas;
+    const node = step?.nodeId ? c?.querySelector<HTMLElement>(`[data-node="${step.nodeId}"]`) : null;
+    const body = c?.querySelector<HTMLElement>('.g-canvas-body');
+    if (!c || !node || !body || body.scrollHeight <= body.clientHeight + 4) return;
+    const top = node.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - body.clientHeight / 3;
+    body.scrollTo({ top: Math.max(0, top), behavior: c.classList.contains('is-running') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+    this.canvasScrolled = true;
   }
 
   private finish(trace: Trace) {

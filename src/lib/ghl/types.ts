@@ -399,6 +399,8 @@ export interface Business {
   handoff: Record<string, string>;
   /** Accent colours for the switcher card (light and dark theme). */
   tint: { light: string; dark: string };
+  /** The case's own page, /ghl/<id>/. The first case is /ghl/ itself and needs none. */
+  page?: { title: string; description: string; h1: string };
 }
 
 export interface LandingField {

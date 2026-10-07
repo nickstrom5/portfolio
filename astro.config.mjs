@@ -18,7 +18,9 @@ const pageSources = {
   '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro'],
-  '/ghl/': ['src/pages/ghl.astro', 'src/components/ghl', 'src/data/ghl'],
+  '/ghl/': ['src/pages/ghl', 'src/components/ghl', 'src/lib/ghl', 'src/data/ghl/index.ts', 'src/data/ghl/roofing.ts', 'src/data/ghl/business.ts', 'src/data/ghl/landing.ts', 'src/data/ghl/automations'],
+  '/ghl/saas/': ['src/pages/ghl', 'src/components/ghl', 'src/lib/ghl', 'src/data/ghl/saas'],
+  '/ghl/coaching/': ['src/pages/ghl', 'src/components/ghl', 'src/lib/ghl', 'src/data/ghl/coaching'],
   '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };

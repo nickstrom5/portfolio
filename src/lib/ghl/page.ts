@@ -1,12 +1,13 @@
 /**
- * Wires up /ghl/: the case-study switcher, each case's workflow tabs, the
- * simulators, copy buttons and the landing-page demos that turn the visitor
- * into the test contact for a case's first workflow.
+ * Wires up a /ghl/ page: its case study's workflow tabs, simulators, copy
+ * buttons and the landing-page demo that turns the visitor into the test
+ * contact for the case's first workflow. Each case has its own page and
+ * loads only its own data.
  *
- * Deep links: #roofing opens a case; #roofing-speed-to-lead opens a case
- * and one of its workflows; #roofing-demo scrolls to a case's landing page.
+ * Deep links: #roofing-speed-to-lead opens a workflow; #roofing-demo scrolls
+ * to the landing page. A hash naming another case is forwarded to its page.
  */
-import { cases } from '@/data/ghl';
+import { loadCase } from '@/data/ghl/load';
 import { formatDay, formatTime, nextWindowOpen, useWeekOf } from './engine';
 import type { CaseStudy, Contact } from './types';
 import { Simulator, envFor } from './ui';
@@ -69,78 +70,83 @@ function mark(tabs: HTMLButtonElement[], key: string, id: string, focus: boolean
   });
 }
 
-export function initGhlPage() {
+export async function initGhlPage() {
   // Dates in the log and in messages follow the visitor's own week.
   useWeekOf(new Date());
-  const sims = new Map<string, Simulator>();
-  document.querySelectorAll<HTMLElement>('[data-sim]').forEach((root) => {
-    const study = cases.find((c) => c.business.id === root.dataset.case);
-    if (study) sims.set(`${root.dataset.case}-${root.dataset.sim}`, new Simulator(root, envFor(study)));
-  });
+  const panel = document.querySelector<HTMLElement>('[data-case-panel]');
+  if (!panel) return;
+  const caseId = panel.dataset.casePanel!;
 
-  // Workflow tabs inside each case.
-  const openAutomation = new Map<string, (id: string, focus?: boolean) => void>();
-  document.querySelectorAll<HTMLElement>('[data-case-tabs]').forEach((list) => {
-    const caseId = list.dataset.caseTabs!;
-    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-    const panels = [...document.querySelectorAll<HTMLElement>(`[data-case-panel="${caseId}"] [data-panel]`)];
-    const select = (id: string, focus = false) => {
-      mark(tabs, 'tab', id, focus);
-      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
-      history.replaceState(null, '', `#${caseId}-${id}`);
-    };
-    tablist(tabs, 'tab', (id, focus) => select(id, focus));
-    openAutomation.set(caseId, select);
-  });
+  // The switcher links to every case's page. A hash meant for another case (an old
+  // /ghl/#saas-pql-alert, say) is forwarded there before anything else happens.
+  const caseLinks = new Map([...document.querySelectorAll<HTMLAnchorElement>('[data-case-link]')].map((a) => [a.dataset.caseLink!, a]));
+  const forward = (target: string) => {
+    const other = [...caseLinks.keys()].find((id) => id !== caseId && (target === id || target.startsWith(`${id}-`)));
+    if (!other) return false;
+    location.replace(`${caseLinks.get(other)!.href.split('#')[0]}#${target}`);
+    return true;
+  };
+  if (forward(currentHash())) return;
+
+  const study = await loadCase[caseId]?.();
+  if (!study) return;
+  const env = envFor(study);
+
+  // A workflow's simulator is set up the first time its panel is shown.
+  const sims = new Map<string, Simulator>();
+  const getSim = (id: string) => {
+    let sim = sims.get(id);
+    if (!sim) {
+      const root = panel.querySelector<HTMLElement>(`[data-sim="${id}"]`);
+      if (!root) return undefined;
+      sim = new Simulator(root, env);
+      sims.set(id, sim);
+    }
+    return sim;
+  };
+
+  // Workflow tabs.
+  const list = panel.querySelector<HTMLElement>('[data-case-tabs]');
+  const tabs = [...(list?.querySelectorAll<HTMLButtonElement>('[data-tab]') ?? [])];
+  const panels = [...panel.querySelectorAll<HTMLElement>('[data-panel]')];
+  const openAutomation = (id: string, focus = false) => {
+    mark(tabs, 'tab', id, focus);
+    panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+    getSim(id);
+    history.replaceState(null, '', `#${caseId}-${id}`);
+  };
+  tablist(tabs, 'tab', (id, focus) => openAutomation(id, focus));
+  const shown = panels.find((p) => !p.hidden)?.dataset.panel;
+  if (shown) getSim(shown);
 
   // Build-note tabs inside each workflow panel.
-  document.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((list) => {
-    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-note-tab]')];
-    const panels = [...(list.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])];
-    tablist(tabs, 'noteTab', (id, focus) => {
-      mark(tabs, 'noteTab', id, focus);
-      panels.forEach((p) => (p.hidden = p.dataset.notePanel !== id));
+  panel.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((notes) => {
+    const noteTabs = [...notes.querySelectorAll<HTMLButtonElement>('[data-note-tab]')];
+    const notePanels = [...(notes.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])];
+    tablist(noteTabs, 'noteTab', (id, focus) => {
+      mark(noteTabs, 'noteTab', id, focus);
+      notePanels.forEach((p) => (p.hidden = p.dataset.notePanel !== id));
     });
   });
 
-  // The case switcher.
-  const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
-  const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
-  const selectCase = (id: string, focus = false, hash = true) => {
-    mark(caseTabs, 'caseTab', id, focus);
-    casePanels.forEach((p) => (p.hidden = p.dataset.casePanel !== id));
-    if (hash) history.replaceState(null, '', `#${id}`);
-  };
-  const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
-  // On phones the case opens below the cards, out of sight: bring its heading up after a tap.
-  caseTabs.forEach((t) =>
-    t.addEventListener('click', () => {
-      const panel = document.getElementById(t.dataset.caseTab!);
-      if (panel && panel.getBoundingClientRect().top > window.innerHeight * 0.8) scrollTo(panel);
-    }),
-  );
-
   /**
-   * Resolves "#case", "#case-automation" and "#case-section" to the right view.
+   * Resolves "#case", "#case-automation" and "#case-section" on this page.
    * With `focus`, keyboard focus follows (the workflow's heading, or the section).
    */
-  function go(target: string, scroll: boolean, focus = false) {
-    const caseId = caseIds.find((c) => target === c || target.startsWith(`${c}-`));
-    if (!caseId) return false;
-    selectCase(caseId, false, false);
+  function go(target: string, scroll: boolean, focus = false, instant = false) {
+    if (target !== caseId && !target.startsWith(`${caseId}-`)) return false;
     const rest = target.slice(caseId.length + 1);
-    const study = cases.find((c) => c.business.id === caseId);
-    const isAutomation = !!rest && !!study?.automations.some((a) => a.id === rest);
-    if (isAutomation) openAutomation.get(caseId)?.(rest);
+    const isAutomation = !!rest && study!.automations.some((a) => a.id === rest);
+    if (isAutomation) openAutomation(rest);
     else history.replaceState(null, '', `#${target}`);
     const el = document.getElementById(target);
-    if (scroll) scrollTo(el);
+    if (scroll) el?.scrollIntoView({ behavior: instant || reduceMotion() ? 'instant' : 'smooth', block: 'start' });
     if (focus) focusQuietly(isAutomation ? el?.querySelector<HTMLElement>('[data-panel-heading]') : el);
     return true;
   }
 
   // Each diagram is capped to one screen; its button opens the whole thing. Short ones need no button.
-  document.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
+  panel.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
     const canvas = btn.closest<HTMLElement>('.g-canvas')!;
     const body = canvas.querySelector<HTMLElement>('.g-canvas-body')!;
     btn.addEventListener('click', () => {
@@ -164,7 +170,7 @@ export function initGhlPage() {
   );
 
   // Copy buttons on snippets.
-  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
+  panel.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
     btn.addEventListener('click', async () => {
       const code = btn.closest('.g-snippet')?.querySelector('pre')?.textContent ?? '';
       const label = btn.querySelector('span');
@@ -180,47 +186,51 @@ export function initGhlPage() {
     }),
   );
 
-  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((demo) => {
-    const study = cases.find((c) => c.business.id === demo.dataset.demo);
-    if (study) initLandingDemo(demo, study, sims, (id) => openAutomation.get(study.business.id)?.(id));
-  });
+  const demo = panel.querySelector<HTMLElement>('[data-demo]');
+  if (demo) initLandingDemo(demo, study, getSim, openAutomation);
 
   // Links last, so a bad hash can never stop the rest of the page from working.
-  type Saved = { gxCase: string; y: number };
-  const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];
+  type Saved = { y: number };
   document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
     a.addEventListener('click', (e) => {
       const target = a.dataset.openAuto!;
-      if (!caseIds.some((c) => target === c || target.startsWith(`${c}-`))) return;
+      if (target !== caseId && !target.startsWith(`${caseId}-`)) return;
       e.preventDefault();
       // Remember where the reader is, then give the jump its own history entry so Back returns here.
-      history.replaceState({ gxCase: shownCase(), y: window.scrollY } satisfies Saved, '');
+      history.replaceState({ y: window.scrollY } satisfies Saved, '');
       if (location.hash !== `#${target}`) history.pushState(null, '', `#${target}`);
       go(target, true, true);
     }),
   );
-  const fromHash = () => {
-    let target = location.hash.slice(1);
-    try {
-      target = decodeURIComponent(target);
-    } catch {
-      // Not a valid escape sequence; use it as written.
-    }
+  const fromHash = (initial = false) => {
+    const target = currentHash();
+    if (forward(target)) return;
     const saved = history.state as Saved | null;
-    if (saved?.gxCase) {
-      // Back or Forward onto a spot this page saved: show the same case and put the scroll back.
-      if (!go(target, false)) selectCase(saved.gxCase, false, false);
+    if (typeof saved?.y === 'number') {
+      // Back or Forward onto a spot this page saved: put the view and the scroll back.
+      go(target, false);
       history.replaceState(saved, ''); // go() may have cleared it
       window.scrollTo({ top: saved.y, behavior: 'instant' }); // html has scroll-behavior: smooth
       return;
     }
-    go(target, true);
+    // Arriving from another page lands on the spot at once; html's smooth scrolling is for jumps within the page.
+    if (!go(target, true, false, initial) && initial && target) document.getElementById(target)?.scrollIntoView({ behavior: 'instant', block: 'start' });
   };
-  window.addEventListener('hashchange', fromHash);
-  fromHash();
+  window.addEventListener('hashchange', () => fromHash());
+  fromHash(true);
 }
 
-function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, Simulator>, openAutomation: (id: string) => void) {
+/** The URL fragment, decoded when it can be. */
+function currentHash() {
+  const raw = location.hash.slice(1);
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw; // Not a valid escape sequence; use it as written.
+  }
+}
+
+function initLandingDemo(demo: HTMLElement, study: CaseStudy, getSim: (id: string) => Simulator | undefined, openAutomation: (id: string) => void) {
   const l = study.landing;
   const caseId = study.business.id;
   const form = demo.querySelector<HTMLFormElement>('[data-lp-form]')!;
@@ -231,7 +241,7 @@ function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, 
   const when = demo.querySelector<HTMLElement>('[data-captured-when]')!;
   const params = new URLSearchParams(location.search);
   const utm = { utm_source: params.get('utm_source') ?? '', utm_medium: params.get('utm_medium') ?? '', utm_campaign: params.get('utm_campaign') ?? '' };
-  const sim = () => sims.get(`${caseId}-${l.feeds}`);
+  const sim = () => getSim(l.feeds);
   let identity: Partial<Contact> | undefined;
   let start = 0;
   let formFields: Record<string, string> = {};
