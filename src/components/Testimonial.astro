@@ -17,9 +17,10 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
 <figure class="card quote">
   {showBadge && <span class="placeholder-badge">Sample</span>}
   <div class="head">
-    <span class="rating" aria-label={`Rated ${rating} out of 5`}>
+    <span class="rating">
       <span class="star" aria-hidden="true">★</span>
-      {rating.toFixed(1)}
+      <span aria-hidden="true">{rating.toFixed(1)}</span>
+      <span class="sr-only">Rated {rating} out of 5</span>
     </span>
     {hoursLabel && <span class="muted small">{hoursLabel}</span>}
   </div>

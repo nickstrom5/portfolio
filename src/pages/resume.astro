@@ -58,6 +58,7 @@ const contacts = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="profile" />
     <meta property="og:site_name" content={site.name} />
@@ -608,11 +609,11 @@ const contacts = [
   </head>
   <body>
     <a class="skip web-only" href="#resume">Skip to resume</a>
-    <div class="chrome web-only">
+    <header class="chrome web-only">
       <a class="back" href={url('/')}>Back to site</a>
       <a class="btn" href={url(site.resumePdf)} download>Download PDF</a>
-    </div>
-    <div class="wrap">
+    </header>
+    <main class="wrap">
       <article class="sheet" id="resume">
         <header class="masthead">
           <div>
@@ -703,6 +704,6 @@ const contacts = [
           <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
         </footer>
       </article>
-    </div>
+    </main>
   </body>
 </html>

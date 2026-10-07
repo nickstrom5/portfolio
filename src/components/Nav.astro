@@ -47,10 +47,26 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
 <script>
   const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
   const menu = document.getElementById('site-menu');
-  toggle?.addEventListener('click', () => {
-    const open = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!open));
-    menu?.classList.toggle('open', !open);
+  const isOpen = () => toggle?.getAttribute('aria-expanded') === 'true';
+  function setOpen(open: boolean) {
+    toggle?.setAttribute('aria-expanded', String(open));
+    menu?.classList.toggle('open', open);
+  }
+  toggle?.addEventListener('click', () => setOpen(!isOpen()));
+  // A disclosure, not a modal: close it on Escape, when focus leaves it, or on a click outside.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOpen()) {
+      setOpen(false);
+      toggle?.focus();
+    }
+  });
+  menu?.addEventListener('focusout', (e) => {
+    const to = e.relatedTarget as Node | null;
+    if (isOpen() && to && !menu.contains(to) && to !== toggle) setOpen(false);
+  });
+  document.addEventListener('click', (e) => {
+    const t = e.target as Node;
+    if (isOpen() && !menu?.contains(t) && !toggle?.contains(t)) setOpen(false);
   });
 
   document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {

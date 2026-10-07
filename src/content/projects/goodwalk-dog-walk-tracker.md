@@ -1,7 +1,7 @@
 ---
 title: 'Good Walk: a dog walk tracker with a daily streak'
 shortTitle: 'Good Walk dog walk tracker'
-client: 'Own product'
+client: 'Own product · getgoodwalk.app'
 summary: 'An iPhone app in development: a daily walk target for your dog, one tap from the reminder, and a streak. No collar, no map, no account.'
 category: 'development'
 platforms: ['iOS']
@@ -9,7 +9,8 @@ stack: ['SwiftUI', 'Notifications', 'Streaks', 'Claude Code']
 year: 2026
 featured: false
 source: 'personal'
-links: {}
+links:
+  live: 'https://getgoodwalk.app'
 cover: '/showcase/goodwalk-site.jpg'
 placeholder: false
 published: 2026-09-20
