@@ -1,5 +1,8 @@
 ---
 import { url } from '@/lib/url';
+import { getImage } from 'astro:assets';
+import Shot from '@/components/Shot.astro';
+import { showcaseImage } from '@/lib/showcase-images';
 /**
  * CSS iPhone frame with hand-built screen mockups. Screens are concept
  * renders of the real app flows, not screenshots of the shipped builds.
@@ -24,12 +27,14 @@ interface Props {
 const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
 // Screenshots carry their own alt text; hand-built mockups are labelled on the frame.
 const isShot = screen === 'image' && !!image;
+// The Good Walk dog photo shows at 96 and 240 px; one WebP at 2x covers both.
+const dog = screen.startsWith('goodwalk') ? await getImage({ src: showcaseImage('/showcase/goodwalk-dog.jpg'), width: 480, format: 'webp' }) : undefined;
 ---
 
 <div class:list={['phone', size, { tilt }]} role={isShot ? undefined : 'img'} aria-label={isShot ? undefined : alt || `${screen} screen mockup`}>
   <div class="island" aria-hidden="true"></div>
   <div class:list={['screen', screen.split('-')[0]]}>
-    {isShot && <img src={image} alt={alt} loading="lazy" width="390" height="844" />}
+    {isShot && <Shot src={image!} alt={alt} widths={[300, 390, 660]} sizes="(min-width: 861px) 320px, 280px" />}
 
     {screen === 'clam-home' && (
       <div class="ui clam-ui">
@@ -121,7 +126,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" loading="lazy" decoding="async" />
+          <img class="dog" src={dog?.src} alt="" width="96" height="96" loading="lazy" decoding="async" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
@@ -150,7 +155,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:32</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="gw-card">
-          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" loading="lazy" decoding="async" />
+          <img class="gw-photo" src={dog?.src} alt="" width="240" height="240" loading="lazy" decoding="async" />
           <div class="gw-card-body">
             <strong>Rex</strong>
             <span>14 days in a row · 41 walks total</span>
@@ -215,7 +220,7 @@ const isShot = screen === 'image' && !!image;
     font-size: calc(var(--w) * 0.05);
     line-height: 1.3;
   }
-  .screen img {
+  .screen :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;

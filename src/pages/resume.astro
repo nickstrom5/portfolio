@@ -1,9 +1,10 @@
 ---
 /**
- * Print-optimized résumé. Linked from the site nav, homepage and About.
+ * Print-optimized résumé. Linked from the footer, homepage and About.
  * Also used to generate the PDF in /public via `npm run resume:pdf`.
  */
 import { Font } from 'astro:assets';
+import { shareCard } from '@/lib/share-card';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
@@ -30,8 +31,9 @@ const freelance = {
 const pageTitle = `${site.name} resume · Freelance project manager, Chicago`;
 const pageDesc = `Resume of ${site.name}, project manager and operations lead in Chicago: 300+ freelance contracts since 2015 and roles at SPARC, Symplicity and BARBRI.`;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
-const ogImage = new URL('/og.png', Astro.site).href;
-const ogAlt = `${site.name}, ${site.role}`;
+const card = shareCard(Astro.url.pathname);
+const ogImage = new URL(card, Astro.site).href;
+const ogAlt = card === '/og.png' ? `${site.name}, ${site.role}` : pageTitle;
 const ld = {
   '@context': 'https://schema.org',
   '@graph': [

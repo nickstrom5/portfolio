@@ -1,17 +1,22 @@
 ---
 /** CSS laptop frame around a desktop screenshot. */
+import Shot from '@/components/Shot.astro';
+
 interface Props {
   image: string;
   alt?: string;
+  /** Rendered width of the screen for `sizes`; defaults to a half-width feature column. */
+  sizes?: string;
 }
-const { image, alt = '' } = Astro.props;
+// The frame is at most 760px wide with a 14px bezel each side, so the screen never passes 732px.
+const { image, alt = '', sizes = '(min-width: 1120px) 492px, (min-width: 761px) calc(50vw - 68px), min(732px, calc(100vw - 60px))' } = Astro.props;
 ---
 
 <div class="laptop">
   <div class="lid">
     <div class="cam" aria-hidden="true"></div>
     <div class="display">
-      <img src={image} alt={alt} loading="lazy" width="1440" height="900" />
+      <Shot src={image} alt={alt} widths={[480, 560, 732, 1100, 1464]} sizes={sizes} />
     </div>
   </div>
   <div class="base" aria-hidden="true"><span class="notch"></span></div>
@@ -48,7 +53,7 @@ const { image, alt = '' } = Astro.props;
     background: #000;
     aspect-ratio: 16 / 10;
   }
-  .display img {
+  .display :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;

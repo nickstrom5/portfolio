@@ -1,4 +1,6 @@
 ---
+import { Picture } from 'astro:assets';
+import portrait from '@/assets/nick-soderstrom.jpg';
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
 import personal from '@/data/personal.json';
@@ -44,7 +46,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
   <section class="section">
     <div class="container about">
       <div class="prose">
-        <img class="portrait" src={url(site.photo)} alt={`${site.name}`} width="128" height="128" loading="eager" />
+        <Picture class="portrait" src={portrait} formats={["avif", "webp"]} width={128} height={128} densities={[1, 2, 3]} alt={`${site.name}`} loading="eager" />
         <span class="eyebrow">About</span>
         <h1>Hi, I’m {site.name}.</h1>
         <p class="lede">
@@ -133,7 +135,8 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
     gap: 3rem;
     align-items: start;
   }
-  .portrait {
+  /* The <img> comes from astro:assets' Picture, outside this page's style scope. */
+  :global(img.portrait) {
     width: 128px;
     height: 128px;
     border-radius: 50%;

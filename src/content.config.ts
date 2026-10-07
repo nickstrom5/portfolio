@@ -30,8 +30,8 @@ const projects = defineCollection({
         repo: z.url().optional(),
       })
       .default({}),
-    /** Optional path under /public, e.g. /work/acme-cover.png */
-    cover: z.string().optional(),
+    /** Optional screenshot in src/assets/showcase, named '/showcase/<file>', e.g. /showcase/acme-site.jpg */
+    cover: z.string().regex(/^\/showcase\/[^/]+$/, 'cover must be /showcase/<file> (the file lives in src/assets/showcase/)').optional(),
     /** Date this write-up was first published on the site (not the engagement date). */
     published: z.coerce.date().optional(),
     /** Date of the last substantive edit to the write-up, if any. */

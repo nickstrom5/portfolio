@@ -5,6 +5,8 @@
  * ratio instead of the taller iPhone one in Phone.astro. The hinge spine on
  * the left and the second panel's edge on the right read as a closed foldable.
  */
+import Shot from '@/components/Shot.astro';
+
 interface Props {
   image: string;
   alt: string;
@@ -20,7 +22,7 @@ const { image, alt, size = 'md', tilt = false } = Astro.props;
     <span class="spine" aria-hidden="true"><i></i><i></i><i></i></span>
     <div class="body">
       <div class="screen">
-        <img src={image} alt={alt} loading="lazy" decoding="async" width="700" height="1018" />
+        <Shot src={image} alt={alt} widths={[320, 466, 700]} sizes="(min-width: 861px) 340px, 300px" />
         <span class="cam" aria-hidden="true"></span>
       </div>
     </div>
@@ -103,7 +105,7 @@ const { image, alt, size = 'md', tilt = false } = Astro.props;
     border-radius: calc(var(--w) * 0.085);
     background: #fff;
   }
-  .screen img {
+  .screen :global(img) {
     display: block;
     width: 100%;
     height: 100%;

@@ -72,6 +72,15 @@
   box-sizing: border-box;
 }
 
+/* <picture> (AVIF/WebP screenshots) lays out as if its <img> were there alone. */
+picture {
+  display: contents;
+}
+/* …and its <source> tags must not become zero-width flex or grid items. */
+picture > source {
+  display: none;
+}
+
 /* Form controls use the page's typeface instead of the browser's (Arial on buttons). */
 button,
 input,
