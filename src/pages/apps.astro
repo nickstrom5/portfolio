@@ -7,7 +7,7 @@ import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
 ---
 
-<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Clam, Cartworth, SignalRig, LaunchNeat and this site, each told as a scroll-through story.">
+<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel automation case studies.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI / Projects</span>
@@ -105,11 +105,11 @@ import { url } from '@/lib/url';
           </div>
           <div class="hero-art" data-reveal>
             {p.hero.frame === 'laptop' && p.hero.image ? (
-              <Laptop image={url(p.hero.image)} alt={`${p.name} on a laptop`} />
+              <Laptop image={url(p.hero.image)} alt={p.hero.alt ?? `${p.name} on a laptop`} />
             ) : p.hero.frame === 'duo' && p.hero.image ? (
-              <Duo image={url(p.hero.image)} size="lg" alt={`${p.name} on the iPhone Duo`} />
+              <Duo image={url(p.hero.image)} size="lg" alt={p.hero.alt ?? `${p.name} on the iPhone Duo`} />
             ) : (
-              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
+              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={p.hero.alt ?? `${p.name} main screen`} />
             )}
           </div>
         </div>
@@ -137,11 +137,11 @@ import { url } from '@/lib/url';
             </div>
             <div class="feature-art" data-reveal>
               {f.frame === 'laptop' && f.image ? (
-                <Laptop image={url(f.image)} alt={`${p.name}: ${f.title}`} />
+                <Laptop image={url(f.image)} alt={f.alt ?? `${p.name}: ${f.title}`} />
               ) : f.frame === 'duo' && f.image ? (
-                <Duo image={url(f.image)} tilt alt={`${p.name}: ${f.title}`} />
+                <Duo image={url(f.image)} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               ) : (
-                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
+                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               )}
             </div>
           </div>
@@ -216,7 +216,7 @@ import { url } from '@/lib/url';
             </ol>
             <details class="more-prompts">
               <summary><span class="btn btn-secondary">Show all {p.prompts.length} prompts</span></summary>
-              <ol class="prompts">
+              <ol class="prompts" tabindex="-1" aria-label={`All ${p.prompts.length} prompts`}>
                 {p.prompts.map((pr) => (
                   <li>
                     <div class="said"><span class="who">Nick</span><p>“{pr.said}”</p></div>
@@ -312,6 +312,15 @@ import { url } from '@/lib/url';
   }
   window.addEventListener('hashchange', () => fromHash(true));
   fromHash(false);
+
+  // The summary hides itself once the list opens; move focus to the list so keyboard
+  // and screen-reader users keep their place.
+  document.querySelectorAll<HTMLDetailsElement>('.more-prompts').forEach((d) =>
+    d.addEventListener('toggle', () => {
+      const a = document.activeElement;
+      if (d.open && (a === document.body || d.contains(a))) d.querySelector<HTMLElement>('.prompts')?.focus({ preventScroll: true });
+    }),
+  );
 </script>
 
 <style>
@@ -391,6 +400,7 @@ import { url } from '@/lib/url';
   .t-name {
     font-size: 1.6rem;
     font-weight: 800;
+    overflow-wrap: anywhere;
     letter-spacing: -0.02em;
     line-height: 1.1;
   }
@@ -420,7 +430,8 @@ import { url } from '@/lib/url';
   }
 
   .story {
-    scroll-margin-top: 64px;
+    /* html scroll-padding-top is 80px; this lands story heroes flush under the 64px nav. */
+    scroll-margin-top: -16px;
   }
   .hero {
     background: var(--story-bg-use);
@@ -495,7 +506,7 @@ import { url } from '@/lib/url';
   }
   @media (max-width: 860px) {
     .hero-inner {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
     }
   }
@@ -730,6 +741,13 @@ import { url } from '@/lib/url';
   }
   .more-prompts[open] summary {
     display: none;
+  }
+  .more-prompts .prompts:focus {
+    outline: none;
+  }
+  /* The light-theme accent ring is too dark on the always-dark story heroes. */
+  .story:not([data-tone='light']) .hero :focus-visible {
+    outline-color: #fff;
   }
   .more-prompts[open] .prompts {
     margin-top: 0;

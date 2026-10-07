@@ -25,6 +25,8 @@ export interface Feature {
   image?: string;
   /** 'phone' (default), 'laptop', or 'duo' for a real iPhone Duo cover-screen capture. */
   frame?: 'phone' | 'laptop' | 'duo';
+  /** Describes the screenshot; defaults to the product name plus the heading. */
+  alt?: string;
   /** Put the device on the left instead of the right. */
   flip?: boolean;
 }
@@ -50,7 +52,7 @@ export interface StoryProject {
   /** 'light' tiles and heroes use dark text on a light background. */
   tone?: 'light' | 'dark';
   comingSoon?: false;
-  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo' };
+  hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo'; alt?: string };
   siteShot: { desktop: string; mobile: string; caption: string; url: string };
   features: Feature[];
   /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
@@ -115,7 +117,7 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Every dog deserves a good walk.',
-      sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. Launching on the App Store for Walk Your Dog Week, 1 to 7 October.',
+      sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. Coming soon to the App Store.',
       screen: 'goodwalk-home',
     },
     siteShot: {
@@ -150,13 +152,13 @@ export const projects: Project[] = [
       { title: 'Pick the idea', ai: 'Turned one sentence into a concept: a daily walk streak for your dog, nothing else.', me: '“A dog walk tracker. Keep it simple.”' },
       { title: 'Design the loop', ai: 'Worked out the reminder, the one-tap answer and what the streak screen shows.', me: 'Insisted on no collar, no map and no account.' },
       { title: 'Build the site first', ai: 'Wrote the landing page, three guides, FAQ, privacy and terms, then served a preview from the Mac.', me: 'Reviewed it in the browser pane, bought getgoodwalk.app and set the prices.' },
-      { title: 'Ship for the week', ai: 'Prepares the App Store listing and the launch checklist.', me: 'Launch target: Walk Your Dog Week, 1 to 7 October.' },
+      { title: 'Ship for the week', ai: 'Prepares the App Store listing and the launch checklist.', me: 'First launch target: Walk Your Dog Week, October 2026.' },
     ],
     links: [
       { label: 'getgoodwalk.app', href: 'https://getgoodwalk.app', primary: true },
       { label: 'Source on GitHub', href: 'https://github.com/nickstrom5/goodwalk' },
     ],
-    status: 'In development · App Store launch planned for 1 to 7 October 2026',
+    status: 'In development · App Store launch coming soon',
     caseStudy: 'goodwalk-dog-walk-tracker',
   },
   {
@@ -174,6 +176,7 @@ export const projects: Project[] = [
       sub: 'Cartworth searches the grocery stores around any US ZIP code at the same time, converts every price to the same unit, and shows where an item is cheapest right now. Every price is read from the store’s own published listing and labelled shelf, online or weekly ad. No account, no tracking.',
       screen: 'image',
       image: '/showcase/cartworth-iphone-compare.jpg',
+      alt: 'Cartworth on iPhone: the best price per pound for basmati rice and the cheapest match at each nearby store',
     },
     siteShot: {
       desktop: '/showcase/cartworth-site.jpg',
@@ -188,6 +191,7 @@ export const projects: Project[] = [
         body: 'Every row is converted to the same unit, with its store, pack size and a shelf, online or national label. On this screen Trader Joe’s 2 lb bag works out to $1.50/lb, Tony’s 20 lb bag to $1.30/lb and Walmart’s 20 lb bag to $1.02/lb. Only real matches count: “milk chocolate” never wins a search for milk.',
         screen: 'image',
         image: '/showcase/cartworth-iphone-unit-prices.jpg',
+        alt: 'Cartworth search results for basmati rice, sorted by unit price, with sale and ad labels',
       },
       {
         eyebrow: 'A list that knows what it costs',
@@ -195,6 +199,7 @@ export const projects: Project[] = [
         body: 'Add items with a size, like “milk 1 gal”, and Cartworth prices that exact amount at every store you follow. Then it plans the trip: here, four items cost $12.75 at one store or $8.68 split across two. Recipes go in by photo, and the text recognition runs on the phone.',
         screen: 'image',
         image: '/showcase/cartworth-iphone-trip.jpg',
+        alt: 'Cartworth trip plan: one, two or three stores, with the two-store trip saving $4.07',
         flip: true,
       },
       {
@@ -203,6 +208,7 @@ export const projects: Project[] = [
         body: 'Nothing is crowdsourced and nothing is guessed. Shelf prices are labelled shelf, online listings, which can run higher, are labelled online, and weekly-ad prices come from the store’s own circular.',
         screen: 'image',
         image: '/showcase/cartworth-duo-stores.jpg',
+        alt: 'Cartworth on the iPhone Duo cover screen: nearby stores, each labelled shelf prices, online prices or weekly ad',
         frame: 'duo',
       },
     ],
@@ -354,7 +360,7 @@ export const projects: Project[] = [
     prompts: [
       { pick: true, said: 'Build me a portfolio website. I freelance and have had countless clients. We can feature clients, work, projects and the mobile apps I’ve developed. We need a domain too.', did: 'Scaffolded an Astro site with a data-driven content model, six pages, light and dark themes, a GitHub Pages workflow and a domain shortlist.' },
       { said: 'Upwork emails are in nickstrom5 inbox.', did: 'Searched the connected mailboxes, found a live Upwork engagement in an Outlook thread and wrote it up under NDA-safe wording.' },
-      { pick: true, said: '(three screenshots of the Upwork profile)', did: 'Rewrote the positioning from developer to senior project manager and operations lead, with the real 257 contracts, 17,800+ hours and Top Rated Plus.' },
+      { pick: true, said: '(three screenshots of the Upwork profile)', did: 'Rewrote the positioning from developer to senior project manager and operations lead, with the real Upwork contract count, hours and Top Rated Plus.' },
       { said: 'Apps built getclam.app and lume.', did: 'Cloned both public repos, read the strategy and listing docs, and wrote accurate case studies and app cards.' },
       { said: '(four screenshots of LinkedIn experience)', did: 'Replaced every sample case study with SPARC, BARBRI, Symplicity, Rippling, OFFX and Blackdove, and built the experience timeline.' },
       { said: 'work-with-nick.com purchased. Mobile apps are in development.', did: 'Pointed the site at the domain, added the CNAME, wrote out the Cloudflare DNS records and updated the app status.' },
@@ -382,9 +388,9 @@ export const projects: Project[] = [
       { said: 'SignalRig can get a story and link out now.', did: 'Built the SignalRig app from its folder in this repo, screenshotted the home page, the scoring demo and the prompt lab, and promoted the tile to a full story.' },
     ],
     promptStats: [
-      { value: '~85', label: 'Messages from Nick' },
-      { value: '23', label: 'Screenshots' },
-      { value: '47', label: 'Commits' },
+      { value: '~85', label: 'Messages to Sept 20' },
+      { value: '23', label: 'Screenshots to Sept 20' },
+      { value: '47', label: 'Commits to Sept 20' },
       { value: '97%', label: 'Written by Claude Code' },
     ],
     links: [

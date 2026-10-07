@@ -48,17 +48,41 @@ export default defineConfig({
       },
     }),
   ],
-  // Self-hosted Inter (latin variable subset, SIL OFL) instead of Google Fonts.
+  // Self-hosted Inter (latin variable subset, weights 400-800, SIL OFL) instead of Google Fonts.
+  // display 'optional' avoids the layout shift of a late font swap; the preload makes it land in time.
   fonts: [
     {
       provider: fontProviders.local(),
       name: 'Inter',
       cssVariable: '--font-inter',
+      display: 'optional',
       fallbacks: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       options: {
-        variants: [{ src: ['./src/assets/fonts/inter-latin-var.woff2'], weight: '100 900', style: 'normal' }],
+        variants: [{ src: ['./src/assets/fonts/inter-latin-var.woff2'], weight: '400 800', style: 'normal' }],
       },
     },
   ],
   build: { format: 'directory', inlineStylesheets: 'always' },
+  // Content-Security-Policy as a <meta> tag (GitHub Pages cannot send headers).
+  // Astro hashes bundled scripts and styles itself; the two is:inline theme
+  // scripts are hashed below. If either is edited, recompute its hash: the
+  // browser then logs a CSP console error, which `npm run qa` reports.
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self' https://formspree.io",
+      ],
+      scriptDirective: {
+        hashes: [
+          'sha256-htx73Zx4L46jpbHrcdh+/riOTxDnEic9o6+JZKf+PU8=', // Base.astro theme script
+          'sha256-7+7AWq7XfGD2rwhSmmyfxI/cWjETO1iSmENMs3kgPng=', // resume.astro theme script
+        ],
+      },
+      styleDirective: { resources: [{ resource: "'unsafe-inline'", kind: 'attribute' }] },
+    },
+  },
 });
