@@ -53,7 +53,7 @@ export interface StoryProject {
   tone?: 'light' | 'dark';
   comingSoon?: false;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo'; alt?: string };
-  siteShot: { desktop: string; mobile: string; caption: string; url: string };
+  siteShot: { desktop: string; caption: string; url: string };
   features: Feature[];
   /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
   split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
@@ -122,7 +122,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/goodwalk-site.jpg',
-      mobile: '/showcase/goodwalk-site.jpg',
       caption: 'getgoodwalk.app, live: a landing page with how it works, pricing and an FAQ, three dog-walking guides, a support page, and privacy and terms. Served from GitHub Pages.',
       url: 'https://getgoodwalk.app',
     },
@@ -180,7 +179,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/cartworth-site.jpg',
-      mobile: '/showcase/cartworth-site-mobile.jpg',
       caption: 'cartworth.app, with privacy, terms and support pages. Behind it: a SwiftUI iPhone app of 59 Swift files and about 11,000 lines, and a Node web version of about 7,000 lines.',
       url: 'https://cartworth.app',
     },
@@ -259,7 +257,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/launchneat-site.jpg',
-      mobile: '/showcase/launchneat-site-mobile.jpg',
       caption: 'launchneat.com. Five marketing pages and fifteen demo sites, a static Astro build of about 540 KB in total, no backend and no tracking.',
       url: 'https://launchneat.com',
     },
@@ -321,7 +318,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/site-home.jpg',
-      mobile: '/showcase/site-home-mobile.jpg',
       caption: 'The home page. Astro, plain CSS, no frameworks, deployed by a GitHub Actions workflow the model also wrote.',
       url: 'https://work-with-nick.com',
     },
@@ -412,7 +408,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/clam-site.jpg',
-      mobile: '/showcase/clam-site-mobile.jpg',
       caption: 'getclam.app, the landing page. Written and styled by the models, served from GitHub Pages.',
       url: 'https://getclam.app',
     },
@@ -467,7 +462,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/signalrig-site.jpg',
-      mobile: '/showcase/signalrig-site-mobile.jpg',
       caption: 'signalrig.dev. Next.js 16 App Router, TypeScript and Tailwind v4: 58 source files and about 4,500 lines, no backend, no analytics, deployed on Vercel.',
       url: 'https://signalrig.dev',
     },

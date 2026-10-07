@@ -10,7 +10,7 @@ KEYFILE="$(find "$ROOT/docs" "$ROOT/public" -maxdepth 1 -name '*.txt' 2>/dev/nul
 [ -n "$KEYFILE" ] || { echo "No IndexNow key file found in docs/ or public/."; exit 1; }
 KEY="$(basename "$KEYFILE" .txt)"
 if [ $# -gt 0 ]; then URLS=("$@"); else
-  SM="https://$HOST/sitemap.xml"; curl -fsS -o /dev/null "$SM" 2>/dev/null || SM="https://$HOST/sitemap-0.xml"
+  SM="https://$HOST/sitemap-0.xml"
   URLS=(); while IFS= read -r u; do URLS+=("$u"); done < <(curl -fsS "$SM" | grep -o '<loc>[^<]*' | sed 's/<loc>//')
 fi
 [ "$(curl -fsS "https://$HOST/$KEY.txt" | tr -d '[:space:]')" = "$KEY" ] || { echo "Key file is not live at https://$HOST/$KEY.txt yet. Push first, then retry."; exit 1; }
