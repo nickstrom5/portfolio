@@ -83,7 +83,14 @@ for (const p of pages) {
   if (noindex && !noindexAllowed.has(p)) findings.push(`${p}: unexpectedly noindex`);
   if (!noindex && !sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: indexable but not in sitemap`);
   if (noindex && sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: noindex but listed in sitemap`);
-  if (!noindex && !/<meta property="og:image"/.test(html)) findings.push(`${p}: missing og:image`);
+  const ogImage = (html.match(/<meta property="og:image" content="([^"]*)"/) || [])[1];
+  if (!noindex && !ogImage) findings.push(`${p}: missing og:image`);
+  if (ogImage) {
+    const imgPath = new URL(ogImage).pathname;
+    if (!existsSync(join(dist, imgPath))) findings.push(`${p}: og:image ${imgPath} is not in the build`);
+    if (!/<meta property="og:image:width" content="1200"/.test(html)) findings.push(`${p}: og:image has no 1200px width tag`);
+    if (!noindex && imgPath === '/og.png' && p !== '/') warnings.push(`${p}: uses the default share card (run \`npm run og\`)`);
+  }
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }

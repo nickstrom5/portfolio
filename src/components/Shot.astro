@@ -1,0 +1,26 @@
+---
+/**
+ * A screenshot from src/assets/showcase, served as AVIF or WebP at the width
+ * the layout needs (and twice that for Retina), with a JPEG fallback.
+ */
+import { Picture } from 'astro:assets';
+import { showcaseImage } from '@/lib/showcase-images';
+
+interface Props {
+  /** '/showcase/<file>', as the data files name it. */
+  src: string;
+  alt: string;
+  /** Image widths to generate. Astro skips any wider than the source. */
+  widths: number[];
+  sizes: string;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+  /** 'high' for the page's main (LCP) image. */
+  fetchpriority?: 'high' | 'low' | 'auto';
+}
+const { src, alt, widths, sizes, class: className, loading = 'lazy', fetchpriority } = Astro.props;
+// Reading the import's width or height here would make Astro ship the full-size original too.
+const img = showcaseImage(src);
+---
+
+<Picture src={img} alt={alt} widths={widths} sizes={sizes} formats={['avif', 'webp']} fallbackFormat="jpg" loading={loading} fetchpriority={fetchpriority} decoding="async" class={className} />

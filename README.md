@@ -52,10 +52,21 @@ their message and an email link. Without JavaScript it is a normal post. Clear
 `contactEndpoint` to fall back to opening the visitor's email client. The
 `_gotcha` field is Formspree's honeypot.
 
-### Social preview image
+### Social preview images and screenshots
 
-`public/og.png` (1200×630) is the default share image for every page that
-does not set its own.
+Every page has its own 1200×630 share card: `public/og.png` for the home page
+(and as the fallback), `public/og/<path>.jpg` for the rest (slashes become
+hyphens, e.g. `public/og/work-barbri-video-production.jpg`), picked up by
+`src/lib/share-card.ts`. Product case studies share the top of their own
+screenshot instead. The cards are rendered from the built pages, so after
+changing a page heading or the headline stats run
+`npm run build && npm run og && npm run build`. `npm run qa` warns about a
+page still on the fallback card.
+
+Screenshots of this site on `/apps/` live in `src/assets/showcase/` and are
+regenerated with `npm run build && npm run shots && npm run build` (add
+`-- clam` to the shots command to recapture getclam.app too). Everything in `src/assets/` is resized and served as AVIF
+and WebP at build time, so drop in the full-size image.
 
 ## Personal photos (About page)
 

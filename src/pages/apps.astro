@@ -1,4 +1,5 @@
 ---
+import Shot from '@/components/Shot.astro';
 import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
@@ -106,11 +107,11 @@ import { url } from '@/lib/url';
           </div>
           <div class="hero-art" data-reveal>
             {p.hero.frame === 'laptop' && p.hero.image ? (
-              <Laptop image={url(p.hero.image)} alt={p.hero.alt ?? `${p.name} on a laptop`} />
+              <Laptop image={p.hero.image} alt={p.hero.alt ?? `${p.name} on a laptop`} sizes="(min-width: 1120px) 544px, (min-width: 861px) calc(55vw - 72px), min(732px, calc(100vw - 60px))" />
             ) : p.hero.frame === 'duo' && p.hero.image ? (
-              <Duo image={url(p.hero.image)} size="lg" alt={p.hero.alt ?? `${p.name} on the iPhone Duo`} />
+              <Duo image={p.hero.image} size="lg" alt={p.hero.alt ?? `${p.name} on the iPhone Duo`} />
             ) : (
-              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={p.hero.alt ?? `${p.name} main screen`} />
+              <Phone screen={p.hero.screen} image={p.hero.image} size="lg" alt={p.hero.alt ?? `${p.name} main screen`} />
             )}
           </div>
         </div>
@@ -121,7 +122,7 @@ import { url } from '@/lib/url';
           <div class="browser" data-reveal>
             <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
             <a href={p.siteShot.url} target="_blank" rel="noopener">
-              <img src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} loading="lazy" width="1440" height="900" />
+              <Shot src={p.siteShot.desktop} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} widths={[480, 800, 1086, 1440, 2172]} sizes="(min-width: 1120px) 1086px, calc(100vw - 32px)" />
             </a>
           </div>
           <p class="caption muted">{p.siteShot.caption}</p>
@@ -138,11 +139,11 @@ import { url } from '@/lib/url';
             </div>
             <div class="feature-art" data-reveal>
               {f.frame === 'laptop' && f.image ? (
-                <Laptop image={url(f.image)} alt={f.alt ?? `${p.name}: ${f.title}`} />
+                <Laptop image={f.image} alt={f.alt ?? `${p.name}: ${f.title}`} />
               ) : f.frame === 'duo' && f.image ? (
-                <Duo image={url(f.image)} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
+                <Duo image={f.image} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               ) : (
-                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
+                <Phone screen={f.screen} image={f.image} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               )}
             </div>
           </div>
@@ -556,7 +557,7 @@ import { url } from '@/lib/url';
     flex: 1;
     text-align: center;
   }
-  .browser img {
+  .browser :global(img) {
     width: 100%;
     height: auto;
     display: block;

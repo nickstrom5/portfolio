@@ -1,4 +1,6 @@
 ---
+import { Picture } from 'astro:assets';
+import portrait from '@/assets/nick-soderstrom.jpg';
 import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
@@ -23,7 +25,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   <section class="hero">
     <div class="container">
       <div class="who">
-        <img class="portrait" src={url(site.photo)} alt={site.name} width="56" height="56" loading="eager" />
+        <Picture class="portrait" src={portrait} formats={["avif", "webp"]} width={56} height={56} densities={[1, 2, 3]} alt={site.name} loading="eager" />
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
@@ -140,7 +142,8 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     gap: 0.9rem;
     margin-bottom: 1.25rem;
   }
-  .portrait {
+  /* The <img> comes from astro:assets' Picture, outside this page's style scope. */
+  :global(img.portrait) {
     width: 56px;
     height: 56px;
     border-radius: 50%;

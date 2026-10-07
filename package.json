@@ -13,7 +13,9 @@
     "resume:pdf": "node scripts/make-resume-pdf.mjs",
     "qa": "node scripts/qa.mjs",
     "astro": "astro",
-    "ghl:check": "node scripts/ghl-check.mjs"
+    "ghl:check": "node scripts/ghl-check.mjs",
+    "shots": "node scripts/make-shots.mjs",
+    "og": "node scripts/make-og.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
