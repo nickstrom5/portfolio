@@ -77,6 +77,8 @@ export default defineConfig({
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://formspree.io",
+        // The contact form sends in the background and stays on the page if that fails.
+        "connect-src 'self' https://formspree.io",
       ],
       scriptDirective: {
         hashes: [
