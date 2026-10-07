@@ -5,6 +5,7 @@ import Footer from '@/components/Footer.astro';
 import { Font } from 'astro:assets';
 import { site } from '@/data/site';
 import { ids, personNode, websiteNode } from '@/lib/schema';
+import { themeInit } from '@/lib/theme-init.mjs';
 
 interface Props {
   title?: string;
@@ -119,15 +120,7 @@ const graph = [
 
     <Font cssVariable="--font-inter" preload />
 
-    <script is:inline>
-      // Apply the saved theme before first paint to avoid a flash.
-      try {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.dataset.theme = saved;
-        }
-      } catch {}
-    </script>
+    <script is:inline set:html={themeInit} />
 
     <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
   </head>

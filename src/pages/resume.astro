@@ -9,6 +9,7 @@ import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
 import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
+import { themeInit } from '@/lib/theme-init.mjs';
 
 const summary =
   'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production.';
@@ -29,6 +30,8 @@ const freelance = {
 const pageTitle = `${site.name} resume · Freelance project manager, Chicago`;
 const pageDesc = `Resume of ${site.name}, project manager and operations lead in Chicago: 300+ freelance contracts since 2015 and roles at SPARC, Symplicity and BARBRI.`;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL('/og.png', Astro.site).href;
+const ogAlt = `${site.name}, ${site.role}`;
 const ld = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -63,13 +66,22 @@ const contacts = [
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="profile" />
     <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDesc} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDesc} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogAlt} />
+    <meta name="author" content={site.name} />
+    <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
     <meta name="description" content={pageDesc} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
@@ -78,14 +90,7 @@ const contacts = [
     <title>{pageTitle}</title>
     <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <Font cssVariable="--font-inter" preload />
-    <script is:inline>
-      try {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.dataset.theme = saved;
-        }
-      } catch {}
-    </script>
+    <script is:inline set:html={themeInit} />
     <style>
       :root {
         --ink: #17181a;

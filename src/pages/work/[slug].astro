@@ -8,7 +8,7 @@ import testimonials from '@/data/testimonials.json';
 import { site, categoryLabel } from '@/data/site';
 import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
-import { lastCommit } from '@/lib/git-date.mjs';
+import { lastCommit, projectSources } from '@/lib/git-date.mjs';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.hidden);
@@ -41,7 +41,7 @@ const category = categoryLabel[d.category] ?? d.category;
 const isBuild = d.source === 'personal' || ['development', 'mobile', 'web', 'backend', 'automation'].includes(d.category);
 const platforms = d.platforms.filter((p) => p !== 'Remote');
 // Same source as the sitemap's <lastmod>, so search engines see one date.
-const modified = lastCommit([`src/content/projects/${project.id}.md`]) ?? (d.published ? iso(d.updated ?? d.published) : undefined);
+const modified = lastCommit(projectSources(project.id)) ?? (d.published ? iso(d.updated ?? d.published) : undefined);
 const links = [
   // A client's site is already linked from the Client row.
   d.links.live && d.source === 'personal' && { label: 'Live site', href: d.links.live },

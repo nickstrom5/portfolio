@@ -1,6 +1,5 @@
 # Weekly dependency and GitHub Actions updates, opened as pull requests.
-# No workflow runs on pull requests, so before merging one: check out its
-# branch and run `npm ci && npm run build && npm run qa`.
+# .github/workflows/ci.yml builds and tests each one; merge when it passes.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -12,6 +11,10 @@ updates:
       npm-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      # @astrojs/check does not support TypeScript 7 yet. Remove once it does.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
