@@ -2,7 +2,7 @@
 title: 'Zoom-based client onboarding for a service business'
 shortTitle: 'Zoom client onboarding'
 client: 'Service business'
-summary: 'Hosted four to five client onboarding calls a week over Zoom for a growing service business, from April 2026 through August, then re-hired under a second contract.'
+summary: 'Hosted four to five client onboarding calls a week on Zoom for a growing service business, April to August 2026, then re-hired on a second contract.'
 category: 'operations'
 platforms: ['Remote']
 stack: ['Zoom', 'Client onboarding', 'CRM updates', 'Scheduling', 'Follow-up email']

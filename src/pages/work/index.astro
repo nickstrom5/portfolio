@@ -3,23 +3,24 @@ import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import contracts from '@/data/contracts.json';
-import { site } from '@/data/site';
+import { site, categoryLabel } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
 
-const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => b.data.year - a.data.year);
+// Featured roles first (the longest and most senior), then newest first.
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.year - a.data.year);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
-const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
+const labels: Record<string, string> = { all: 'All', ...categoryLabel };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
-<Base title="Project management and operations case studies" description="Case studies from 300+ freelance contracts: project management, operations, executive assistant work, webinars, Zapier/HubSpot/Zoho automation and AI-built apps.">
+<Base title="Project and operations case studies" description="Case studies from 300+ freelance contracts: project management, operations, executive support, webinars, CRM automation and AI-built apps.">
   <section class="section">
     <div class="container">
       <span class="eyebrow">Work</span>
-      <h1>Client projects</h1>
-      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
+      <h1>Case studies</h1>
+      <p class="lede">Client engagements I can talk about publicly, and my own builds. Where a client is under NDA, I describe the organization instead of naming it. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">
@@ -222,14 +223,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     margin: 1.5rem 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
     gap: 0.5rem 2rem;
   }
+  /* Title, then its meta underneath, so every row lines up. */
   .contracts li {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.15rem;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;

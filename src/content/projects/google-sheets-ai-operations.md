@@ -2,7 +2,7 @@
 title: 'Complex Google Sheets operations with AI'
 shortTitle: 'Google Sheets operations with AI'
 client: 'Community space startup'
-summary: 'A three-day fixed-price project in January 2026: complex Google Sheets operations with AI doing the repetitive parts, delivered for a community-space startup.'
+summary: 'A three-day fixed-price project in January 2026: complex Google Sheets operations, with AI doing the repetitive parts, for a community-space startup.'
 category: 'automation'
 platforms: ['Remote']
 stack: ['Google Sheets', 'AI-assisted data work', 'Formulas', 'Documentation']

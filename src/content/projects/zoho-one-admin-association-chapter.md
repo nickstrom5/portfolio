@@ -2,7 +2,7 @@
 title: 'Zoho One administration for a speakers association chapter'
 shortTitle: 'Zoho One admin for an association'
 client: 'Regional chapter of a professional speakers association'
-summary: 'Ran the Zoho One stack (CRM, Books, Forms, Campaigns, Social, Flow) for a regional speakers association chapter, plus its online academy support and social posting.'
+summary: 'Ran the Zoho One stack (CRM, Books, Forms, Campaigns, Social, Flow) for a regional speakers association chapter, plus academy support and social posts.'
 category: 'operations'
 platforms: ['Remote']
 stack: ['Zoho CRM', 'Zoho Books', 'Zoho Forms', 'Zoho Campaigns', 'Zoho Social', 'Zoho Flow', 'Hubstaff']

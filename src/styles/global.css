@@ -72,6 +72,14 @@
   box-sizing: border-box;
 }
 
+/* Form controls use the page's typeface instead of the browser's (Arial on buttons). */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 html {
   scroll-behavior: smooth;
   /* Keeps focused and anchored content clear of the sticky header. */
@@ -112,6 +120,19 @@ a:hover {
   text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
+/* No one-word last lines in headings; better breaks in body text where supported. */
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p,
+li,
+blockquote,
+figcaption {
+  text-wrap: pretty;
+}
 h1,
 h2,
 h3,
@@ -220,7 +241,24 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
 }
 .grid-3 {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
+}
+/* Two columns on tablets, three on desktop; a lone last card on a two-column row spans it. */
+@media (min-width: 640px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid-3 > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 940px) {
+  .grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid-3 > :last-child:nth-child(odd) {
+    grid-column: auto;
+  }
 }
 .grid-4 {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));

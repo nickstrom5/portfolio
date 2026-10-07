@@ -1,5 +1,4 @@
 // @ts-check
-import { execFileSync } from 'node:child_process';
 import { defineConfig, fontProviders } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { site } from './src/data/site';
@@ -24,14 +23,7 @@ const pageSources = {
   '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };
-/** @param {string[]} paths */
-const lastCommit = (paths) => {
-  try {
-    return execFileSync('git', ['log', '-1', '--format=%cI', '--', ...paths], { encoding: 'utf8' }).trim() || undefined;
-  } catch {
-    return undefined;
-  }
-};
+import { lastCommit } from './src/lib/git-date.mjs';
 
 export default defineConfig({
   site: siteUrl,

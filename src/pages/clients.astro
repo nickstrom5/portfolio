@@ -23,7 +23,7 @@ const sectors = [
   <section class="section">
     <div class="container">
       <span class="eyebrow">Clients</span>
-      <h1>Who I've worked with</h1>
+      <h1>Who I’ve worked with</h1>
       <p class="lede">
         A few of the companies I've spent the most time with. They're a small slice of the 300+ contracts I've completed since 2015, 257 of them on Upwork, across {sectors.slice(0, -1).join(', ').toLowerCase()} and {sectors.at(-1)!.toLowerCase()}.
       </p>
@@ -40,6 +40,7 @@ const sectors = [
 
   <section class="section">
     <div class="container">
+      <span class="eyebrow">Long-term</span>
       <div class="section-head">
         <h2>Featured clients</h2>
       </div>
@@ -65,6 +66,7 @@ const sectors = [
 
   <section class="section">
     <div class="container">
+      <span class="eyebrow">Recent</span>
       <div class="section-head">
         <h2>Recent engagements</h2>
         <a href={url('/work')}>All case studies →</a>
@@ -91,6 +93,7 @@ const sectors = [
 
   <section class="section">
     <div class="container">
+      <span class="eyebrow">Feedback</span>
       <div class="section-head">
         <h2>Client feedback</h2>
         {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">All reviews on Upwork →</a>}
@@ -169,7 +172,7 @@ const sectors = [
     font-size: 0.95rem;
     letter-spacing: 0.02em;
     color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: linear-gradient(135deg, var(--accent-btn), var(--accent-btn-hover));
   }
   .mark.alt {
     background: var(--bg-muted);

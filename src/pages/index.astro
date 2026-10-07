@@ -27,10 +27,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
-      <p class="lede">I'm {site.name}, a freelance {site.role.toLowerCase()} in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork. {site.tagline}</p>
-      <ul class="badges" aria-label="Credentials">
-        {site.badges.map((b) => <li class="tag">{b}</li>)}
-      </ul>
+      <p class="lede">I’m {site.name}, based in Chicago. Since 2015 I’ve run projects and operations for federal research programs, universities, corporations, startups and nonprofits: 300+ contracts, most of them through Upwork. {site.tagline}</p>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/work')}>See my work</a>
@@ -86,7 +83,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Builds</span>
       <div class="section-head">
-        <h2>Things I've built</h2>
+        <h2>Things I’ve built</h2>
         <a href={url("/apps")}>AI/Projects →</a>
       </div>
       <div class="grid grid-3">
@@ -99,7 +96,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Clients</span>
       <div class="section-head">
-        <h2>Who I've worked with</h2>
+        <h2>Who I’ve worked with</h2>
         <a href={url('/clients')}>Featured clients →</a>
       </div>
       <ClientStrip />
@@ -171,20 +168,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   }
   .accent {
     color: var(--accent);
-  }
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    list-style: none;
-    margin: 1.25rem 0 0;
-    padding: 0;
-  }
-  .badges .tag {
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-color: transparent;
-    font-weight: 600;
   }
   .cta {
     display: flex;

@@ -1122,6 +1122,8 @@
 .gx-stats div {
   display: flex;
   flex-direction: column-reverse;
+  /* Numbers line up along the bottom even when a label wraps to two lines. */
+  justify-content: flex-end;
 }
 .gx-stats dd {
   margin: 0;

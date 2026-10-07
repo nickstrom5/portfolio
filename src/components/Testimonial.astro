@@ -27,7 +27,7 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
   <blockquote>“{quote}”</blockquote>
   <figcaption>
     <strong>{contract}</strong>
-    <span class="muted"> · {period} · via {source}</span>
+    <span class="muted">{period} · via {source}</span>
     {endorsements.length > 0 && (
       <ul class="tags">
         {endorsements.map((e) => <li class="tag">{e}</li>)}
