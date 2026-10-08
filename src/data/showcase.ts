@@ -59,7 +59,10 @@ export interface StoryProject {
   split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
   steps: { title: string; ai: string; me: string }[];
   prompts?: Prompt[];
-  promptStats?: { value: string; label: string }[];
+  /** `live: 'commits'` swaps in the site's commit count at build time; `value` is the fallback. */
+  promptStats?: { value: string; label: string; live?: 'commits' }[];
+  /** Small print under the stats: where the numbers come from. */
+  promptStatsNote?: string;
   links: { label: string; href: string; primary?: boolean }[];
   status: string;
   caseStudy?: string;
