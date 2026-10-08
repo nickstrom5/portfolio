@@ -3,8 +3,22 @@ import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
 import Duo from '@/components/showcase/Duo.astro';
+import { execFileSync } from 'node:child_process';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
+
+// Commits to the site itself (not the separate signalrig/ and yetour/ apps), counted
+// at build time. A shallow clone would undercount, so it falls back to the stored value.
+function siteCommits(): string | undefined {
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+    if (git('rev-parse', '--is-shallow-repository') !== 'false') return undefined;
+    return git('rev-list', '--count', '--no-merges', 'HEAD', '--', '.', ':(exclude)signalrig', ':(exclude)yetour') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+const live = { commits: siteCommits() };
 ---
 
 <Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel automation case studies.">
@@ -202,10 +216,11 @@ import { url } from '@/lib/url';
             {p.promptStats && (
               <dl class="prompt-stats">
                 {p.promptStats.map((s) => (
-                  <div><dd>{s.value}</dd><dt>{s.label}</dt></div>
+                  <div><dd>{(s.live && live[s.live]) || s.value}</dd><dt>{s.label}</dt></div>
                 ))}
               </dl>
             )}
+            {p.promptStatsNote && <p class="stats-note muted">{p.promptStatsNote}</p>}
             <ol class="prompts">
               {p.prompts.filter((pr) => pr.pick).map((pr) => (
                 <li data-reveal>
@@ -723,6 +738,10 @@ import { url } from '@/lib/url';
   .prompt-stats dt {
     font-size: 0.8rem;
     color: var(--text-muted);
+  }
+  .stats-note {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
   }
   .more-prompts {
     margin-top: 1.5rem;
