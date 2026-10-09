@@ -6,6 +6,8 @@ export interface Role {
   end: string;
   location: string;
   summary: string;
+  /** Scope lines shown under the summary on the résumé, taken from the case study. */
+  bullets?: string[];
   /** Optional case-study slug under /work. */
   slug?: string;
 }
@@ -26,6 +28,10 @@ export const experience: Role[] = [
     end: '2026',
     location: 'Bethesda, MD · Remote',
     summary: 'Four years and 3,700+ hours supporting the SPARC Portal, an open neuroscience research platform.',
+    bullets: [
+      'Ran the administrative side of a multi-institution research program: scheduling, tracking and follow-ups.',
+      'Ran the program’s public communications, including social media, for releases, events and new resources.',
+    ],
     slug: 'sparc-portal-digital-coordinator',
   },
   {
@@ -53,6 +59,10 @@ export const experience: Role[] = [
     end: '2024',
     location: 'Dallas, TX · Remote',
     summary: 'Tracked post-production on hundreds of video courses, managing timelines with professors and creatives.',
+    bullets: [
+      '1,000+ hours with the team from late 2020; project manager for video production from March 2023.',
+      'Managed production timelines and flagged slippage early enough to fix it.',
+    ],
     slug: 'barbri-video-production',
   },
   {
@@ -62,6 +72,10 @@ export const experience: Role[] = [
     end: '2022',
     location: 'Virginia · Remote',
     summary: 'Coordinated with many colleges and internal groups to keep design projects on track for nearly four years.',
+    bullets: [
+      'Gathered requirements, chased approvals and managed revisions with college clients.',
+      'Kept the tracking that let the team see every active project at a glance.',
+    ],
     slug: 'symplicity-design-projects',
   },
   {

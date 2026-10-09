@@ -11,7 +11,7 @@ import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
 
 const summary =
-  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also directing AI coding tools (Claude Code) to build websites and iPhone apps from a written brief; LaunchNeat, SignalRig and Eats Ranked are live on the web.';
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also building websites and apps by directing Claude Code.';
 const skillGroups = services.map((s) => ({ label: s.title, items: s.bullets }));
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
@@ -25,9 +25,9 @@ const freelance = {
   start: '2015',
   end: 'Present',
   summary:
-    '300+ completed contracts across project management, systems and CRM setup, executive support, events and media, and web and app builds. Longest-running roles below.',
+    '300+ contracts in project management, operations, CRM, executive support, events and web work. Longest roles below.',
 };
-const pageTitle = `${site.name} resume · Freelance project manager, Chicago`;
+const pageTitle = `${site.name} resume · Senior project manager, Chicago`;
 const pageDesc = `Resume of ${site.name}, freelance senior project manager and operations lead in Chicago: 300+ contracts since 2015, plus roles at SPARC, Symplicity and BARBRI.`;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ld = {
@@ -357,6 +357,15 @@ const contacts = [
         font-weight: 500;
         padding-top: 0.12rem;
       }
+      .job .bullets {
+        grid-column: 1 / -1;
+        margin: 0.3rem 0 0;
+        padding-left: 1.1rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.5;
+        max-width: 68ch;
+      }
       .job .sum {
         grid-column: 1 / -1;
         color: var(--muted);
@@ -542,7 +551,7 @@ const contacts = [
           font-size: 7.6pt;
         }
         section {
-          padding-top: 0.62rem;
+          padding-top: 0.5rem;
         }
         h2 {
           font-size: 7.6pt;
@@ -554,7 +563,7 @@ const contacts = [
           max-width: none;
         }
         .job {
-          padding: 0.38rem 0;
+          padding: 0.2rem 0;
           gap: 0.05rem 1rem;
         }
         .job .title {
@@ -567,6 +576,13 @@ const contacts = [
         .job .when {
           font-size: 8.5pt;
         }
+        .job .bullets {
+          font-size: 8.3pt;
+          line-height: 1.3;
+          margin-top: 0.08rem;
+          padding-left: 0.9rem;
+          max-width: none;
+        }
         .job .sum {
           font-size: 8.7pt;
           margin-top: 0.12rem;
@@ -574,7 +590,7 @@ const contacts = [
         }
         .skills {
           grid-template-columns: 1fr 1fr 1fr;
-          gap: 0.4rem 1rem;
+          gap: 0.3rem 1rem;
         }
         .skills h3 {
           font-size: 8.6pt;
@@ -583,7 +599,7 @@ const contacts = [
         .skill-items {
           display: block;
           font-size: 8pt;
-          line-height: 1.38;
+          line-height: 1.32;
         }
         .skill-items li {
           display: inline;
@@ -633,7 +649,8 @@ const contacts = [
           <p class="contact">
             {contacts.map((c, i) => (
               <>
-                {i > 0 && <br />}
+                {i === 1 && <br />}
+                {i > 1 && ' · '}
                 <a href={c.href}>{c.label}</a>
               </>
             ))}
@@ -687,6 +704,11 @@ const contacts = [
                 </div>
                 <div class="when">{r.start} – {r.end}</div>
                 <p class="sum">{r.summary}</p>
+                {r.bullets && (
+                  <ul class="bullets">
+                    {r.bullets.map((b) => <li>{b}</li>)}
+                  </ul>
+                )}
               </div>
             ))}
           </div>
