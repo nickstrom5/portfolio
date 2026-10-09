@@ -76,11 +76,11 @@ Drop photos in `public/personal/` (create the folder) and list them in
 Keep each JPEG under about 400 KB (about 1600px on the long side). The section on
 the About page appears once the list is non-empty.
 
-## Food photos (unlisted `/food/` page)
+## Food photos (`/food/` page)
 
-`/food/` is reachable only by its URL: nothing links to it, it is `noindex` and it
-is left out of the sitemap (QA fails if another page links to it). It is
-unlisted, not private: this repo is public.
+`/food/` is a food portfolio Nick shares by link; the only link on the site is the
+"cook" line on the About page. It is `noindex` and left out of the sitemap, so it
+stays out of search results. It is not private: this repo is public.
 
 Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none`.
 The script strips GPS and other metadata, fixes rotation and saves the photo to

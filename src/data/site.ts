@@ -49,5 +49,9 @@ export const footerNav = [
   { href: '/about', label: 'About' },
 ] as const;
 
-/** Header/nav only. Resume and the GHL showcase stay in the footer, not the top nav. */
-export const nav = footerNav.filter((item) => item.href !== '/resume' && item.href !== '/ghl');
+/**
+ * Header/nav only. Work, Resume and the GHL showcase stay in the footer, not the top nav;
+ * /work/ is still live and indexed, and linked from the home page and the Clients summary.
+ */
+const footerOnly: string[] = ['/work', '/resume', '/ghl'];
+export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));
