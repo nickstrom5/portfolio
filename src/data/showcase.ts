@@ -489,6 +489,7 @@ export const projects: Project[] = [
       { said: 'Food I’ve made: change to “Some food I’ve made”.', did: 'Renamed the food page’s heading and title.' },
       { said: '(screenshot of the home buttons) These should all be circles.', did: 'Made “See my work” and “Upwork profile” outlined pill buttons like “View resume”.' },
       { said: '(screenshot of the home buttons) “Resume”, “My work”, “Upwork”.', did: 'Shortened the three button labels to exactly that.' },
+      { said: '(screenshot of the home app cards) Why aren’t the other case studies linked? Need consistency.', did: 'Linked every card to its story on AI Projects, which now opens that story and scrolls to it, and gave the site, the case study and the status their own lines on every card.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },

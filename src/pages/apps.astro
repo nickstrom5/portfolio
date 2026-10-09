@@ -295,7 +295,7 @@ const live = { commits: siteCommits() };
     });
   }
 
-  function show(id: string, scroll: boolean) {
+  function show(id: string, scroll: boolean, instant = false) {
     tiles.forEach((t) => {
       const on = t.dataset.project === id;
       t.setAttribute('aria-pressed', String(on));
@@ -308,7 +308,7 @@ const live = { commits: siteCommits() };
     });
     if (scroll) {
       const target = document.getElementById(id);
-      target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      target?.scrollIntoView({ behavior: reduce || instant ? 'auto' : 'smooth', block: 'start' });
     }
   }
 
@@ -320,13 +320,15 @@ const live = { commits: siteCommits() };
     });
   });
 
-  function fromHash(scroll: boolean) {
+  function fromHash(scroll: boolean, instant = false) {
     const id = location.hash.replace('#', '');
     const valid = [...tiles].some((t) => t.dataset.project === id);
-    show(valid ? id : tiles[0]?.dataset.project || 'clam', scroll && valid);
+    show(valid ? id : tiles[0]?.dataset.project || 'clam', scroll && valid, instant);
   }
   window.addEventListener('hashchange', () => fromHash(true));
-  fromHash(false);
+  // A link like /apps/#goodwalk (the home page cards) opens that story and jumps to it;
+  // the story is hidden until now, so the browser's own jump can't reach it.
+  fromHash(true, true);
 
   // The summary hides itself once the list opens; move focus to the list so keyboard
   // and screen-reader users keep their place.

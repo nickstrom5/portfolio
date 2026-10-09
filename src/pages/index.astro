@@ -16,10 +16,13 @@ const projects = (await getCollection('projects', ({ data }) => !data.hidden))
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.year - a.data.year)
   .slice(0, 3);
-// The first three AI Projects tiles that have an app card, in the same order as /apps/.
+// The first three AI Projects tiles that have an app card, in the same order as /apps/,
+// each with its story on that page when it has one.
 const featuredApps = showcase
-  .map((p) => apps.find((a) => a.name === p.name))
-  .filter((a): a is (typeof apps)[number] => a !== undefined)
+  .flatMap((p) => {
+    const app = apps.find((a) => a.name === p.name);
+    return app ? [{ app, story: !p.comingSoon && !('page' in p) ? p.id : undefined }] : [];
+  })
   .slice(0, 3);
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
@@ -103,7 +106,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url("/apps")}>AI Projects →</a>
       </div>
       <div class="grid grid-3">
-        {featuredApps.map((a) => <AppCard app={a} />)}
+        {featuredApps.map((f) => <AppCard app={f.app} story={f.story} />)}
       </div>
     </div>
   </section>
