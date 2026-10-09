@@ -20,11 +20,14 @@ interface App {
 }
 interface Props {
   app: App;
+  /** Its story on /apps/; when set, the card links there instead of the /work case study. */
+  story?: string;
 }
-const { app } = Astro.props;
+const { app, story } = Astro.props;
 const showBadge = import.meta.env.DEV && app.placeholder;
 const hasStore = Boolean(app.appStore || app.playStore);
 const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
+const studyHref = story ? url(`/apps/#${story}`) : app.projectSlug ? url(`/work/${app.projectSlug}`) : '';
 ---
 
 <article class="card app">
@@ -45,13 +48,15 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     {app.platforms.map((p) => <li class="tag platform">{p}</li>)}
   </ul>
   <p class="stack muted">{app.stack.slice(0, 3).join(' · ')}</p>
-  <div class="links">
-    {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
-    {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
-    {app.website && <a class="store" href={app.website} target="_blank" rel="noopener">{siteLabel}</a>}
-    {app.projectSlug && <a href={url(`/work/${app.projectSlug}`)}>{app.name} case study →</a>}
-    {!hasStore && app.status && <span class="muted small status">{app.status}</span>}
-    {!hasStore && !app.status && !app.projectSlug && <span class="muted small">Private / enterprise distribution</span>}
+  <div class="foot">
+    <div class="links">
+      {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
+      {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
+      {app.website && <a class="store" href={app.website} target="_blank" rel="noopener">{siteLabel}</a>}
+      {!hasStore && !app.status && !studyHref && <span class="muted small">Private / enterprise distribution</span>}
+    </div>
+    {studyHref && <a class="study" href={studyHref}>{app.name} case study →</a>}
+    {!hasStore && app.status && <p class="muted small status">{app.status}</p>}
   </div>
 </article>
 
@@ -129,6 +134,19 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
   }
   .store:hover {
     border-color: var(--text-faint);
+  }
+  /* Pills, then the case study, then the status, each on its own line on every card. */
+  .foot {
+    display: grid;
+    justify-items: start;
+    gap: 0.6rem;
+  }
+  .foot .links:empty {
+    display: none;
+  }
+  .study {
+    font-size: 0.9rem;
+    font-weight: 600;
   }
   .status {
     font-weight: 500;
