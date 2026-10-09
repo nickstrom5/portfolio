@@ -475,6 +475,9 @@ export const projects: Project[] = [
       { said: 'This should match the top three on the AI Projects cards.', did: 'Added an Eats Ranked card to the home page and made the home cards follow the AI Projects tile order, so the two can’t drift apart again.' },
       { said: 'The blue rounded squares should be the app icons. Make the wording better on the Symplicity card; the other two are good.', did: 'Pulled the real icons from the Eats Ranked, Good Walk and Cartworth repos, stripped their metadata and put them on the home cards, and retitled the Symplicity case study to match the BARBRI one.' },
       { pick: true, said: 'When you hover over the Hire me button, can the text change to “Please?”', did: 'Swapped the label on hover without changing the button’s width, only on devices that can hover, while screen readers still hear “Hire me”.' },
+      { pick: true, said: 'Make sure stuff like this lines up cleanly.', did: 'Wrote a script that measures every card grid on the site, found the same drift in six places (testimonials, project, app and service cards, AI Projects tiles, the contracts list), gave each one shared row tracks, and re-ran it until every row measured 0px apart.' },
+      { said: 'Add Personal chef to the bottom of the options.', did: 'Added it as the last Project type on the contact form.' },
+      { said: '“See my work” should link to the Clients tab. Keep the text the same.', did: 'Pointed it, and the same button on the thank-you page, at Clients.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },

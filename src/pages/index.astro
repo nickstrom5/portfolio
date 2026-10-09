@@ -39,7 +39,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-        <a class="cta-link" href={url('/work')}>See my work →</a>
+        <a class="cta-link" href={url('/clients')}>See my work →</a>
         {upworkLive && <a class="cta-link" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile ↗</a>}
       </div>
       <dl class="stats">
@@ -253,8 +253,18 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       grid-template-columns: repeat(2, 1fr);
     }
   }
+  /* Cards in a row share row tracks (subgrid), so each list and link block starts on
+     the same line across the row. Grid margins don't collapse, so the list's top margin
+     goes (the description's bottom margin already spaces it). */
+  .service {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    align-content: start;
+  }
   .service ul {
-    margin: 0.5rem 0 0;
+    margin: 0;
     padding-left: 1.1rem;
     color: var(--text-muted);
     font-size: 0.95rem;

@@ -27,12 +27,14 @@ const Heading = `h${level}` as 'h2' | 'h3';
 </article>
 
 <style>
+  /* Cards in a grid row share row tracks (subgrid): client, summary and stack line
+     start on the same line across the row even when a title wraps. */
   .project {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
   }
   .meta {
     display: flex;
@@ -60,7 +62,6 @@ const Heading = `h${level}` as 'h2' | 'h3';
     margin: 0;
   }
   .summary {
-    flex: 1;
     margin: 0.25rem 0 0.5rem;
   }
   .cat {

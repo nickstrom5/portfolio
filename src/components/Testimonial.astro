@@ -37,13 +37,14 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
 </figure>
 
 <style>
-  /* In a grid row the rating, quote and caption share row tracks (subgrid), so every
-     caption in the row starts on the same line. Outside a grid it is a plain stack. */
+  /* In a grid row every card shares row tracks (subgrid): rating, quote, contract
+     title, date line and pills each start on the same line across the row, even when
+     one title wraps. Outside a grid it is a plain stack. */
   .quote {
     position: relative;
     margin: 0;
     display: grid;
-    grid-row: span 3;
+    grid-row: span 5;
     grid-template-rows: subgrid;
     row-gap: 0.75rem;
   }
@@ -73,14 +74,21 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
   }
   figcaption {
     font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
+    align-content: start;
   }
   figcaption strong {
     color: var(--text);
   }
+  /* Rows are as tall as the tallest card's; keep each part (and a lone pill) at its natural height. */
+  figcaption > * {
+    align-self: start;
+  }
   .tags {
     margin-top: 0.1rem;
+    align-content: flex-start;
   }
 </style>

@@ -223,6 +223,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .empty {
     margin-top: 1.5rem;
   }
+  /* Pass the grid's rows through each filter wrapper so cards share row tracks
+     (see ProjectCard). :not([hidden]) keeps filtered-out cards hidden. */
+  [data-project-grid] > [data-category]:not([hidden]) {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
+  }
   .contracts {
     list-style: none;
     margin: 1.5rem 0 0;
@@ -231,11 +239,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
     gap: 0.5rem 2rem;
   }
+  /* Title, then type and year underneath; items in a row share row tracks (subgrid),
+     so every type line in the row sits on the same line. */
   .contracts li {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0.2rem;
+    align-content: start;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;
