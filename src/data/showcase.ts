@@ -107,16 +107,23 @@ export type Project = StoryProject | SoonProject | PageProject;
 
 const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
 
+/* Every tile and story hero shares one surface per theme; only the kicker, links and the
+   selected tile's outline carry each project's color. Per-project tinted fills turned
+   brown, olive and maroon in dark mode. border-box keeps the gradient from repeating
+   under the tile's 2px border. */
+const surface = 'linear-gradient(135deg, #e9effb 0%, #fbfbfa 55%, #e3eafa 100%) border-box';
+const surfaceDark = 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%) border-box';
+
 export const projects: Project[] = [
   {
     id: 'eatsranked',
     name: 'Eats Ranked',
     kicker: 'iPhone apps + web · restaurant guides',
     tileBlurb: 'Restaurants, ranked state by state. Seven states live on the web.',
-    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
-    fg: '#b3122b',
-    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
-    fgDark: '#ff7a86',
+    bg: surface,
+    fg: '#ba3441',
+    bgDark: surfaceDark,
+    fgDark: '#ff8b94',
     tone: 'light',
     hero: {
       title: 'Where to eat, from the public record.',
@@ -191,10 +198,10 @@ export const projects: Project[] = [
     name: 'Good Walk',
     kicker: 'iPhone app · dog walk tracker',
     tileBlurb: 'Your dog needs a walk every day. Good Walk makes it a streak.',
-    bg: 'linear-gradient(135deg, #fbeadb 0%, #faf6ee 55%, #f6dfc8 100%)',
-    fg: '#c2410c',
-    bgDark: 'linear-gradient(135deg, #3a1f0e 0%, #12161f 55%, #35200f 100%)',
-    fgDark: '#f3a05f',
+    bg: surface,
+    fg: '#ab4804',
+    bgDark: surfaceDark,
+    fgDark: '#f5a24d',
     tone: 'light',
     hero: {
       title: 'Every dog deserves a good walk.',
@@ -246,10 +253,10 @@ export const projects: Project[] = [
     name: 'Cartworth',
     kicker: 'iPhone app · grocery price compare',
     tileBlurb: 'Every store near you. Every price per unit.',
-    bg: 'linear-gradient(135deg, #e6f4e9 0%, #f7fbf8 55%, #d8ecdf 100%)',
-    fg: '#0f7a3d',
-    bgDark: 'linear-gradient(135deg, #0f2a1b 0%, #12161f 55%, #123322 100%)',
-    fgDark: '#5fd08a',
+    bg: surface,
+    fg: '#01763a',
+    bgDark: surfaceDark,
+    fgDark: '#65cc85',
     tone: 'light',
     hero: {
       title: 'Which store near you is actually cheaper?',
@@ -311,10 +318,10 @@ export const projects: Project[] = [
     name: 'LaunchNeat',
     kicker: 'Small business · websites for local shops',
     tileBlurb: 'A $99 website business, its fifteen demo sites and its own marketing site, built in one evening.',
-    bg: 'linear-gradient(135deg, #e3f1ec 0%, #f8f8f0 55%, #d6ebe3 100%)',
-    fg: '#146e60',
-    bgDark: 'linear-gradient(135deg, #11302a 0%, #12161f 55%, #143a32 100%)',
-    fgDark: '#5cc9ae',
+    bg: surface,
+    fg: '#077367',
+    bgDark: surfaceDark,
+    fgDark: '#29cdb9',
     tone: 'light',
     hero: {
       title: 'A real website for your business. $99 the first year.',
@@ -372,10 +379,10 @@ export const projects: Project[] = [
     name: 'This website',
     kicker: 'work-with-nick.com · built from prompts',
     tileBlurb: 'About 150 short messages and some screenshots. Claude Code wrote everything else.',
-    bg: 'linear-gradient(135deg, #e7eefc 0%, #fbfbf9 55%, #dfe8fb 100%)',
+    bg: surface,
     fg: '#1f5fd0',
-    bgDark: 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%)',
-    fgDark: '#8fb2ff',
+    bgDark: surfaceDark,
+    fgDark: '#84b6ff',
     tone: 'light',
     hero: {
       title: 'The site you’re reading was built the same way.',
@@ -491,6 +498,7 @@ export const projects: Project[] = [
       { said: '(screenshot of the home buttons) “Resume”, “My work”, “Upwork”.', did: 'Shortened the three button labels to exactly that.' },
       { said: '(screenshot of the home app cards) Why aren’t the other case studies linked? Need consistency.', did: 'Linked every card to its story on AI Projects, which now opens that story and scrolls to it, and gave the site, the case study and the status their own lines on every card.' },
       { said: '(phone screenshot of the home page) Open to full-time and freelance roles.', did: 'Changed the green availability line to exactly that.' },
+      { said: '(screenshot of these tiles) I like the style but the colors together look kind of dirty.', did: 'Had four designers try a cleaner palette and three judges pick one. Every tile and story now sits on the same navy, or blue-white in light mode, and only the label, the link and the selected outline carry each project’s color, so the dark orange and yellow fills no longer turn brown and olive.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
@@ -509,8 +517,11 @@ export const projects: Project[] = [
     name: 'Clam',
     kicker: 'iPhone app · focus blocker',
     tileBlurb: 'Fold your phone shut. Your apps stay shut.',
-    bg: 'linear-gradient(135deg, #1b1b22 0%, #121217 60%, #2a2412 100%)',
-    fg: '#fad159',
+    bg: surface,
+    fg: '#8b5500',
+    bgDark: surfaceDark,
+    fgDark: '#f4cd4b',
+    tone: 'light',
     hero: {
       title: 'One tap. Your distracting apps lock for exactly as long as you choose.',
       sub: 'Clam uses Apple’s Screen Time entitlement for real blocking, keeps the countdown on your lock screen or the iPhone Duo outer display, and never sends a byte off the phone.',
@@ -561,8 +572,11 @@ export const projects: Project[] = [
     name: 'SignalRig',
     kicker: 'GTM engineering · demo site',
     tileBlurb: 'Five working go-to-market demos, a prompt lab and the commercial foundation behind them. One working session, live on Vercel.',
-    bg: 'linear-gradient(135deg, #1e1410 0%, #121217 60%, #2c1a0e 100%)',
-    fg: '#ff7a2f',
+    bg: surface,
+    fg: '#b8390c',
+    bgDark: surfaceDark,
+    fgDark: '#fe8f5b',
+    tone: 'light',
     hero: {
       title: 'GTM systems that compound.',
       sub: 'SignalRig is a client-facing showcase for GTM engineering: five working demos of the pipeline that replaces manual SDR and RevOps volume, enrichment, scoring, routing, signal detection and reporting, plus a prompt lab and the commercial foundation behind it. Every demo runs on labelled sample data in the browser. The whole site was built in one working session.',
@@ -619,10 +633,10 @@ export const projects: Project[] = [
     name: 'GHL case studies',
     kicker: 'GoHighLevel · workflows and funnels',
     tileBlurb: `Automatic follow-up for three sample businesses: ${ghlWorkflows} GoHighLevel workflows and their landing pages. Try every one in your browser.`,
-    bg: 'linear-gradient(135deg, #ecebfd 0%, #f9f9fc 55%, #e3e1fb 100%)',
-    fg: '#4f46e5',
-    bgDark: 'linear-gradient(135deg, #1d1b3d 0%, #12161f 55%, #221d44 100%)',
-    fgDark: '#a5b4fc',
+    bg: surface,
+    fg: '#5e56c7',
+    bgDark: surfaceDark,
+    fgDark: '#a8aaff',
     tone: 'light',
     href: '/ghl/',
     cta: 'Open the case studies →',
