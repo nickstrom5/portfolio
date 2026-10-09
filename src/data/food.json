@@ -1,5 +1,7 @@
 {
+  "eyebrow": "Portfolio",
   "title": "Food",
-  "intro": "Things I've cooked and eaten lately.",
+  "intro": "A selection of my food photos.",
+  "description": "Food portfolio by Nick Soderstrom.",
   "photos": {}
 }

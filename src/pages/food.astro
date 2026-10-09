@@ -1,6 +1,7 @@
 ---
 /**
- * /food/: an unlisted photo page. Nothing links here, it is noindex and left out
+ * /food/: Nick's food portfolio, shared by link (for example with job applications).
+ * An unlisted photo page. Nothing links here, it is noindex and left out
  * of the sitemap, so it is reachable only by its URL. Unlisted, not private:
  * the repo is public. Add photos with `npm run food:add` (see src/assets/food/README.md).
  */
@@ -30,14 +31,20 @@ const photos = await Promise.all(
 );
 photos.sort((a, b) => b.date.localeCompare(a.date) || b.file.localeCompare(a.file));
 
+// Link previews (email, LinkedIn, Slack) show the newest photo. JPEG, because some
+// preview scrapers still skip WebP.
+const preview = photos[0]
+  ? (await getImage({ src: photos[0].img, width: Math.min(1200, photos[0].img.width), format: 'jpg' })).src
+  : undefined;
+
 const when = (d: string) =>
   d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
 ---
 
-<Base title={food.title} description="An unlisted page of food photos." noindex>
+<Base title={food.title} description={food.description} image={preview} imageAlt={photos[0]?.alt} noindex>
   <section class="section">
     <div class="container">
-      <span class="eyebrow">Off the clock</span>
+      <span class="eyebrow">{food.eyebrow}</span>
       <h1>{food.title}</h1>
       <p class="lede">{food.intro}</p>
 
