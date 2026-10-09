@@ -28,4 +28,4 @@ Go-to-market engineering is the discipline of building the automated systems tha
 
 ## Why it matters
 
-Anyone can claim to build enrichment and scoring systems. A site where a prospect can drag the response-time slider and watch close probability fall is a different kind of claim. The full story is on the [AI/Projects page](/apps/#signalrig).
+Anyone can claim to build enrichment and scoring systems. A site where a prospect can drag the response-time slider and watch close probability fall is a different kind of claim. The full story is on the [AI Projects page](/apps/#signalrig).
