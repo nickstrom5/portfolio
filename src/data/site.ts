@@ -27,7 +27,6 @@ export const site = {
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
-  badges: ['Top Rated Plus', '100% Job Success', 'Freelance since 2015'],
   availability: 'Open to full-time roles and freelance projects',
   /** Path under /public. */
   photo: '/nick-soderstrom.jpg',
