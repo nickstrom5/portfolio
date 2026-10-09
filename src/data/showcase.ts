@@ -483,6 +483,7 @@ export const projects: Project[] = [
       { said: '(screenshots of Upwork reviews) Don’t include weird ones like the 5-minute tasks.', did: 'Transcribed seven more verbatim reviews, skipped the odd micro-gigs and the jobs with no written feedback, and ended the two long ones where Upwork’s preview does. Twelve cards now fill four rows.' },
       { pick: true, said: '(answers to the hiring manager’s four questions) Open to both full-time and freelance. Name the clients. Move them up. Add scope lines to the résumé.', did: 'Said so on the home page, Contact, About and the résumé, rewrote the opening line around SPARC.science, Symplicity and BARBRI, moved the named clients right under the hero with their hours, and added two scope lines each from the case studies while keeping the PDF to one page.' },
       { said: 'Bebu was staff.', did: 'Named Pizzeria Bebu as the staff job on the Work page and the résumé, so it no longer reads as one of the 300+ freelance contracts.' },
+      { said: '(screenshot of the contact form) Not sure yet on the bottom.', did: 'Moved “Not sure yet” below Personal chef, so it closes the list.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
