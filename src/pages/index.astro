@@ -33,9 +33,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       </div>
       <h1>{site.role}{' '}<span class="accent">for teams that need things to actually move.</span></h1>
       <p class="lede">I'm {site.name}, based in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, including multi-year roles with SPARC.science, Symplicity and BARBRI.</p>
-      <ul class="badges" aria-label="Credentials">
-        {site.badges.map((b) => <li class="tag">{b}</li>)}
-      </ul>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
@@ -184,20 +181,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     h1 {
       text-wrap: balance;
     }
-  }
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    list-style: none;
-    margin: 1.25rem 0 0;
-    padding: 0;
-  }
-  .badges .tag {
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-color: transparent;
-    font-weight: 600;
   }
   .cta {
     display: flex;

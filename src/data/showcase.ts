@@ -484,6 +484,7 @@ export const projects: Project[] = [
       { pick: true, said: '(answers to the hiring manager’s four questions) Open to both full-time and freelance. Name the clients. Move them up. Add scope lines to the résumé.', did: 'Said so on the home page, Contact, About and the résumé, rewrote the opening line around SPARC.science, Symplicity and BARBRI, moved the named clients right under the hero with their hours, and added two scope lines each from the case studies while keeping the PDF to one page.' },
       { said: 'Bebu was staff.', did: 'Named Pizzeria Bebu as the staff job on the Work page and the résumé, so it no longer reads as one of the 300+ freelance contracts.' },
       { said: '(screenshot of the contact form) Not sure yet on the bottom.', did: 'Moved “Not sure yet” below Personal chef, so it closes the list.' },
+      { said: '(screenshot of the Top Rated Plus, 100% Job Success and Freelance since 2015 pills) We can remove these.', did: 'Took them off the home page; the stats row right below already shows the same numbers.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
