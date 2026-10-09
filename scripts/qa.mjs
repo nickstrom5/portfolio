@@ -87,11 +87,14 @@ for (const p of pages) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
   if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
-  // A <meta> CSP only governs what comes after it, so no executable script may precede it.
+  // A <meta> CSP only governs what comes after it. The theme script runs earlier on
+  // purpose (no flash of the wrong theme); any other script before the policy fails.
   const cspAt = html.indexOf('http-equiv="content-security-policy"');
-  const firstJs = html.search(/<script(?![^>]*application\/ld\+json)[^>]*>/);
   if (cspAt < 0) findings.push(`${p}: no Content-Security-Policy meta`);
-  else if (firstJs >= 0 && firstJs < cspAt) findings.push(`${p}: executable <script> before the CSP meta`);
+  else {
+    const early = [...html.slice(0, cspAt).matchAll(/<script(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/g)];
+    if (early.some((m) => !/localStorage\.getItem\('theme'\)/.test(m[1]))) findings.push(`${p}: executable <script> before the CSP meta`);
+  }
 }
 for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);

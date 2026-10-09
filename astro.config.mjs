@@ -65,12 +65,13 @@ export default defineConfig({
   ],
   build: { format: 'directory', inlineStylesheets: 'always' },
   // Content-Security-Policy as a <meta> tag (GitHub Pages cannot send headers).
-  // A <meta> policy only covers what comes after it, and Astro puts it in <head>,
-  // so the two is:inline theme scripts sit at the top of <body> (QA fails if an
-  // executable script ever comes before the policy). Astro hashes bundled scripts
-  // and styles itself; the theme scripts are hashed below. If either is edited,
-  // recompute its hash: the browser then logs a CSP console error, which
-  // `npm run qa` reports.
+  // Astro hashes bundled scripts and styles itself; the two is:inline theme
+  // scripts are hashed below. They sit early in <head>, before the <meta> policy,
+  // on purpose: moved below it (into <body>) a slow connection could paint the
+  // light theme first. They are static first-party code, so being outside a meta
+  // policy costs nothing; QA allows exactly these two and fails on any other
+  // script before the policy. If either is edited, recompute its hash: the
+  // browser then logs a CSP console error, which `npm run qa` reports.
   security: {
     csp: {
       directives: [

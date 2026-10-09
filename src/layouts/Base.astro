@@ -119,9 +119,6 @@ const graph = [
 
     <Font cssVariable="--font-inter" preload />
 
-    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
-  </head>
-  <body>
     <script is:inline>
       // Apply the saved theme before first paint to avoid a flash.
       try {
@@ -131,6 +128,10 @@ const graph = [
         }
       } catch {}
     </script>
+
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })} />
+  </head>
+  <body>
     <a class="skip" href="#main">Skip to content</a>
     <Nav />
     <main id="main">

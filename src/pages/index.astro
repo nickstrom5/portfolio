@@ -45,7 +45,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <dl class="stats">
         {site.stats.map((s) => (
           <div>
-            <dt>{s.label}{'note' in s && s.note && <span class="note"> · {s.note}</span>}</dt>
+            <dt>{s.label}{'note' in s && s.note && <span class="note"><span class="sep" aria-hidden="true"> · </span>{s.note}</span>}</dt>
             <dd>{s.value}</dd>
           </div>
         ))}
@@ -228,6 +228,16 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .stats .note {
     font-size: 0.72rem;
     color: var(--text-faint);
+    white-space: nowrap;
+  }
+  /* Narrow columns: the note gets its own line, whole, without the dot. */
+  @media (max-width: 899px) {
+    .stats .note {
+      display: block;
+    }
+    .stats .note .sep {
+      display: none;
+    }
   }
   .stats dd {
     margin: 0;

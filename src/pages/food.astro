@@ -174,9 +174,11 @@ const preview = photos[0]
     font-size: 0.9rem;
   }
 
+  /* The dialog fits the photo (up to 1100px), so a small photo isn't adrift in a wide panel. */
   .lightbox {
-    width: min(96vw, 1100px);
-    max-width: none;
+    width: fit-content;
+    min-width: min(96vw, 320px);
+    max-width: min(96vw, 1100px);
     max-height: 94vh;
     padding: 0;
     border: 0;
@@ -190,6 +192,8 @@ const preview = photos[0]
   }
   .lightbox figure {
     margin: 0;
+    border-radius: inherit;
+    overflow: hidden;
   }
   /* Natural size, never enlarged: a small photo stays sharp, centered on the dark dialog. */
   .lightbox img {
@@ -200,10 +204,10 @@ const preview = photos[0]
     height: auto;
     max-height: calc(94vh - 3.5rem);
     object-fit: contain;
-    border-radius: var(--radius) var(--radius) 0 0;
   }
   .lightbox figcaption {
     padding: 0.85rem 1rem;
+    text-align: center;
     font-size: 0.95rem;
   }
   .lb-btn {

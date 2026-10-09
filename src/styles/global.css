@@ -311,7 +311,8 @@ p {
   .detail,
   .edu a,
   .devlinks a,
-  .follow .inline {
+  .follow .inline,
+  .client .foot a {
     display: inline-block;
     padding-block: 0.55rem;
   }

@@ -480,6 +480,7 @@ export const projects: Project[] = [
       { said: '“See my work” should link to the Clients tab. Keep the text the same.', did: 'Pointed it, and the same button on the thank-you page, at Clients.' },
       { said: 'The cards on the Work page: let’s make them sound more like job titles.', did: 'Retitled all twenty case studies with the job titles from the Upwork contracts and the résumé, and “Founder” for the products of my own.' },
       { pick: true, said: 'This seems outdated. I have a lot of feedback; why only five cards? Upwork MCP is now connected.', did: 'Rebuilt Recent engagements from the nine newest client case studies so it updates itself, checked every “ongoing” claim against Upwork (three contracts had ended, so those case studies now say when), and asked for screenshots of the reviews, since neither Upwork nor the inbox exposes review text and every quote stays verbatim.' },
+      { said: '(screenshots of Upwork reviews) Don’t include weird ones like the 5-minute tasks.', did: 'Transcribed seven more verbatim reviews, skipped the odd micro-gigs and the jobs with no written feedback, and ended the two long ones where Upwork’s preview does. Twelve cards now fill four rows.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
