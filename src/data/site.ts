@@ -28,7 +28,7 @@ export const site = {
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
   badges: ['Top Rated Plus', '100% Job Success', 'Freelance since 2015'],
-  availability: 'Open for work',
+  availability: 'Open to full-time roles and freelance projects',
   /** Path under /public. */
   photo: '/nick-soderstrom.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */

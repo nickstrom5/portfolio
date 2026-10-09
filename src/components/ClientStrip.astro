@@ -14,6 +14,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url(`/clients#${c.slug}`)}>
           <span class="name">{c.name}</span>
           <span class="role muted">{c.role}</span>
+          <span class="scale">{c.scale}</span>
         </a>
       </li>
     ))}
@@ -68,6 +69,11 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     font-size: 0.78rem;
     min-height: 3em;
     min-height: 2lh;
+  }
+  .scale {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
   }
   .more {
     margin: 1.25rem 0 0;
