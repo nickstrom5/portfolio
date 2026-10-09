@@ -11,11 +11,12 @@ import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
 
 const summary =
-  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production.';
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also directing AI coding tools (Claude Code) to build websites and iPhone apps from a written brief; LaunchNeat, SignalRig and Eats Ranked are live on the web.';
 const skillGroups = services.map((s) => ({ label: s.title, items: s.bullets }));
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
-  ...site.stats.map((s) => ({ value: s.value, label: s.label.replace(' on Upwork', '') })),
+  // Upwork's own metrics keep the Upwork name; an employer outside Upwork wouldn't know them.
+  ...site.stats.map((s) => ({ value: s.value, label: s.label === 'Job success score' ? 'Upwork Job Success' : s.label })),
   { value: 'Since 2015', label: 'Freelance' },
 ];
 const freelance = {
@@ -50,6 +51,7 @@ const ld = {
 const contacts = [
   { href: `mailto:${site.email}`, label: site.email },
   { href: site.url, label: domain },
+  { href: site.links.linkedin, label: site.links.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') },
 ];
 ---
 
@@ -367,23 +369,22 @@ const contacts = [
         letter-spacing: -0.01em;
         line-height: 1.3;
       }
+      /* A dot-separated line, as in print: whole phrases read badly as wrapped pills. */
       .skill-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
+        display: block;
         margin: 0;
         padding: 0;
         list-style: none;
       }
       .skill-items li {
-        font-size: 0.78rem;
-        font-weight: 500;
-        line-height: 1.3;
-        padding: 0.22rem 0.55rem;
-        border-radius: 999px;
-        background: var(--accent-soft);
-        color: var(--ink);
-        border: 1px solid transparent;
+        display: inline;
+        font-size: 0.88rem;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .skill-items li:not(:last-child)::after {
+        content: ' · ';
       }
       .foot {
         display: flex;

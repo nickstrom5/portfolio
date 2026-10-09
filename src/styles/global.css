@@ -9,6 +9,8 @@
   --text-muted: #5b5f66;
   --text-faint: #686d75;
   --border: #e3e3dd;
+  /* Form field edges: 3:1 against the field and the card, in both themes. */
+  --border-strong: #8f9298;
   --accent: #1f5fd0;
   --accent-strong: #174aa6;
   --accent-soft: #e7eefc;
@@ -34,6 +36,7 @@
     --text-muted: #a4abb5;
     --text-faint: #858d99;
     --border: #262c34;
+    --border-strong: #5f6875;
     --accent: #6f9cff;
     --accent-strong: #8fb2ff;
     --accent-soft: #1a2740;
@@ -52,6 +55,7 @@
   --text-muted: #a4abb5;
   --text-faint: #858d99;
   --border: #262c34;
+  --border-strong: #5f6875;
   --accent: #6f9cff;
   --accent-strong: #8fb2ff;
   --accent-soft: #1a2740;

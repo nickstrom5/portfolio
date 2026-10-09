@@ -5,7 +5,7 @@ client: 'SPARC.science'
 summary: 'Four years and 3,700+ hours of coordination, administration and communications for the SPARC Portal, a federally funded open neuroscience platform.'
 category: 'operations'
 platforms: ['Remote']
-stack: ['Office administration', 'Social media communications', 'Project coordination', 'Content operations']
+stack: ['Project coordination', 'Content operations', 'Social media communications', 'Office administration']
 year: 2026
 featured: true
 source: 'upwork'

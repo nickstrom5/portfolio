@@ -194,9 +194,9 @@ not, the way a visitor's own run works.
 Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
 of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To
 attach proof of a live build (a Loom or screenshots of a real sub-account),
-add a `proof` array to that workflow's file. The page is linked from the
-footer only; to put it in the top nav, remove the `/ghl` filter in
-`src/data/site.ts`.
+add a `proof` array to that workflow's file. The page is linked from its
+AI Projects tile and the Work page, not from the nav or footer; to add it,
+put it in `footerNav` in `src/data/site.ts`.
 
 ## SignalRig (GTM engineering showcase)
 

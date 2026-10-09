@@ -412,6 +412,13 @@ const live = { commits: siteCommits() };
     font-weight: 700;
     color: var(--tile-fg-use);
   }
+  /* Room for a two-line kicker on every tile, so names in a row line up. */
+  @media (min-width: 641px) {
+    .t-kicker {
+      min-height: 3.2em;
+      min-height: 2lh;
+    }
+  }
   .t-name {
     font-size: 1.6rem;
     font-weight: 800;

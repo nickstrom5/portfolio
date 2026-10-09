@@ -27,7 +27,7 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
   <blockquote>“{quote}”</blockquote>
   <figcaption>
     <strong>{contract}</strong>
-    <span class="muted"> · {period} · via {source}</span>
+    <span class="muted">{period} · via {source}</span>
     {endorsements.length > 0 && (
       <ul class="tags">
         {endorsements.map((e) => <li class="tag">{e}</li>)}
@@ -37,12 +37,15 @@ const hoursLabel = hours && hours > 1 ? `${hours.toLocaleString()} hours` : '';
 </figure>
 
 <style>
+  /* In a grid row the rating, quote and caption share row tracks (subgrid), so every
+     caption in the row starts on the same line. Outside a grid it is a plain stack. */
   .quote {
     position: relative;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    row-gap: 0.75rem;
   }
   .head {
     display: flex;

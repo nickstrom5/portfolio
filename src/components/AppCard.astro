@@ -37,8 +37,8 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
   <p class="tagline">{app.tagline}</p>
   <ul class="tags">
     {app.platforms.map((p) => <li class="tag platform">{p}</li>)}
-    {app.stack.map((s) => <li class="tag">{s}</li>)}
   </ul>
+  <p class="stack muted">{app.stack.slice(0, 3).join(' · ')}</p>
   <div class="links">
     {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
     {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
@@ -71,7 +71,7 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     font-weight: 800;
     font-size: 1.1rem;
     color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: linear-gradient(135deg, var(--accent-btn), var(--accent-btn-hover));
     box-shadow: var(--shadow);
   }
   h3 {
@@ -90,6 +90,10 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     background: var(--accent-soft);
     color: var(--accent);
     border-color: transparent;
+  }
+  .stack {
+    font-size: 0.85rem;
+    margin: 0;
   }
   .links {
     display: flex;

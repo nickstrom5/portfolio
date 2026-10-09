@@ -6,10 +6,16 @@ import contracts from '@/data/contracts.json';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/lib/categories';
 
-const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => b.data.year - a.data.year);
+// Featured client work first, own products last, newest first within each.
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    Number(a.data.source === 'personal') - Number(b.data.source === 'personal') ||
+    b.data.year - a.data.year,
+);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
-const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
@@ -19,13 +25,13 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Work</span>
       <h1>Client projects</h1>
-      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
+      <p class="lede">Contracts I can talk about publicly, plus a few products of my own. Some clients are unnamed under NDA. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">
           {categories.map((c) => (
             <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
-              {labels[c] ?? c.charAt(0).toUpperCase() + c.slice(1)}
+              {c === 'all' ? 'All' : categoryLabel(c)}
             </button>
           ))}
         </div>

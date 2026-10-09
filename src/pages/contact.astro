@@ -70,8 +70,9 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           </select>
         </label>
         <label>
-          <span>Budget range</span>
+          <span>Budget (optional)</span>
           <select name="budget">
+            <option value="" selected>Not sure yet</option>
             <option>Under $5k</option>
             <option>$5k – $15k</option>
             <option>$15k – $50k</option>
@@ -151,10 +152,14 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
     font-weight: 400;
     padding: 0.65rem 0.8rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     background: var(--bg);
     color: var(--text);
     width: 100%;
+  }
+  input,
+  select {
+    min-height: 2.9rem;
   }
   textarea {
     resize: vertical;

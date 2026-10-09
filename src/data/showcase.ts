@@ -471,6 +471,7 @@ export const projects: Project[] = [
       { said: 'How do I update this image? Just blue.', did: 'Replaced the favicon with the plain blue circle from the nav, in the SVG, the PNG and the iPhone home-screen icon.' },
       { pick: true, said: 'Eats Ranked can have a story like the rest. Make it the first one, then Good Walk, then Cartworth.', did: 'Had three agents pull sourced facts from the nine Eats Ranked repos, wrote the story from real simulator screenshots showing only A and B grades, rendered eatsranked.com for the site shot, and had two more agents try to disprove every claim.' },
       { said: 'The gap looks large. Have an agent or two look at this for design tips, and consult from a hiring perspective.', did: 'Cut the space under the home stats from 180px to about 110px, then had a product designer and a hiring manager review the site, with a third agent checking each suggestion before it shipped.' },
+      { said: 'Project management up top on the skills box. Remove Work and GHL from the footer.', did: 'Moved Project management to the top of the About skills and took both links out of the footer, after checking each page is still linked from elsewhere on the site.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },

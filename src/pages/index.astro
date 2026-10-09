@@ -26,21 +26,21 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <img class="portrait" src={url(site.photo)} alt={site.name} width="56" height="56" loading="eager" />
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
-      <h1>{site.role}<br /><span class="accent">for teams that need things to actually move.</span></h1>
+      <h1>{site.role}{' '}<span class="accent">for teams that need things to actually move.</span></h1>
       <p class="lede">I'm {site.name}, a freelance {site.role.toLowerCase()} in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, mostly through Upwork. {site.tagline}</p>
       <ul class="badges" aria-label="Credentials">
         {site.badges.map((b) => <li class="tag">{b}</li>)}
       </ul>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
-        <a class="btn btn-secondary" href={url('/work')}>See my work</a>
         <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile</a>}
+        <a class="cta-link" href={url('/work')}>See my work →</a>
+        {upworkLive && <a class="cta-link" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile ↗</a>}
       </div>
       <dl class="stats">
         {site.stats.map((s) => (
           <div>
-            <dt>{s.label}{'note' in s && s.note && <span class="note">{s.note}</span>}</dt>
+            <dt>{s.label}{'note' in s && s.note && <span class="note"> · {s.note}</span>}</dt>
             <dd>{s.value}</dd>
           </div>
         ))}
@@ -132,7 +132,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 
 <style>
   .hero {
-    padding-block: clamp(3.5rem, 10vw, 7rem) clamp(2rem, 4vw, 3rem);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(2rem, 4vw, 3rem);
     background:
       radial-gradient(60% 50% at 80% 0%, var(--accent-soft) 0%, transparent 70%),
       var(--bg);
@@ -169,8 +169,16 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   h1 {
     max-width: 18ch;
   }
+  /* The tagline always starts its own line; balance keeps single-word lines off phones. */
   .accent {
     color: var(--accent);
+    display: block;
+    text-wrap: balance;
+  }
+  @media (max-width: 640px) {
+    h1 {
+      text-wrap: balance;
+    }
   }
   .badges {
     display: flex;
@@ -189,8 +197,15 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .cta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.75rem;
-    margin: 1.75rem 0 2.5rem;
+    margin: 1.75rem 0 2.25rem;
+  }
+  /* One primary and one secondary button; the other destinations are quieter links. */
+  .cta-link {
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding-block: 0.7rem;
   }
   .stats {
     display: grid;
@@ -204,8 +219,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     font-size: 0.8rem;
     color: var(--text-muted);
     order: 2;
-    display: flex;
-    flex-direction: column;
   }
   .stats .note {
     font-size: 0.72rem;
