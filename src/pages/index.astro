@@ -35,9 +35,9 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <p class="lede">I'm {site.name}, based in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, including multi-year roles with SPARC.science, Symplicity and BARBRI.</p>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
-        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-        <a class="btn btn-secondary" href={url('/clients')}>See my work →</a>
-        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile ↗</a>}
+        <a class="btn btn-secondary" href={url('/resume')}>Resume</a>
+        <a class="btn btn-secondary" href={url('/clients')}>My work</a>
+        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork</a>}
       </div>
       <dl class="stats">
         {site.stats.map((s) => (

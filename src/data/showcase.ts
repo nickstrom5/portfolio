@@ -488,6 +488,7 @@ export const projects: Project[] = [
       { said: '(screenshot of About) Open to a variety of roles. Change the wording.', did: 'Reworded the line on About, and the matching one on Contact, to a variety of full-time and freelance roles, from project management and operations to executive support, automation and events.' },
       { said: 'Food I’ve made: change to “Some food I’ve made”.', did: 'Renamed the food page’s heading and title.' },
       { said: '(screenshot of the home buttons) These should all be circles.', did: 'Made “See my work” and “Upwork profile” outlined pill buttons like “View resume”.' },
+      { said: '(screenshot of the home buttons) “Resume”, “My work”, “Upwork”.', did: 'Shortened the three button labels to exactly that.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
