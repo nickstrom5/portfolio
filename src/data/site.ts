@@ -27,7 +27,7 @@ export const site = {
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
-  availability: 'Open to full-time roles and freelance projects',
+  availability: 'Open to full-time and freelance roles',
   /** Path under /public. */
   photo: '/nick-soderstrom.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
