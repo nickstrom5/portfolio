@@ -37,7 +37,8 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/thanks'),
+      // /thanks/ and the unlisted /food/ page stay out of the sitemap.
+      filter: (page) => !page.includes('/thanks') && !page.includes('/food/'),
       serialize(item) {
         const path = new URL(item.url).pathname;
         const m = path.match(/^\/work\/([^/]+)\/$/);
