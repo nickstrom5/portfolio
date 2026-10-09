@@ -10,6 +10,8 @@ export interface Role {
   bullets?: string[];
   /** Optional case-study slug under /work. */
   slug?: string;
+  /** A staff job, not a freelance contract; the Work page names it apart from them. */
+  staff?: boolean;
 }
 
 export const experience: Role[] = [
@@ -93,7 +95,8 @@ export const experience: Role[] = [
     start: '2017',
     end: '2018',
     location: 'Chicago, IL',
-    summary: 'Opening-day team of a restaurant that went on to earn a Michelin Bib Gourmand.',
+    summary: 'Staff role on the opening-day team of a restaurant that went on to earn a Michelin Bib Gourmand.',
+    staff: true,
   },
 ];
 
@@ -105,6 +108,9 @@ export const roles: Role[] = experience
     const endB = b.end === 'Present' ? 9999 : Number(b.end);
     return endB - endA || Number(b.start) - Number(a.start);
   });
+
+/** The staff job among the roles, named apart from the freelance contracts. */
+export const staffJob = roles.find((r) => r.staff);
 
 export const education = [
   { school: 'DePaul University', location: 'Chicago, IL', url: 'https://www.depaul.edu/', sameAs: 'https://en.wikipedia.org/wiki/DePaul_University' },

@@ -4,7 +4,7 @@ import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import contracts from '@/data/contracts.json';
 import { site } from '@/data/site';
-import { roles, education } from '@/data/experience';
+import { roles, staffJob, education } from '@/data/experience';
 import { url } from '@/lib/url';
 import { categoryLabel } from '@/lib/categories';
 
@@ -59,7 +59,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url('/clients')}>Featured clients →</a>
       </div>
       <p class="lede">
-        Freelancing since 2015. These are the longest-running roles from 300+ contracts, 257 of them on Upwork; the rest ranged from a few days to several years.
+        Freelancing since 2015, with 300+ contracts lasting from a few days to several years, 257 of them on Upwork. Below are key client roles{staffJob && `, plus a staff job at ${staffJob.company}`}.
       </p>
       <ol class="roles">
         {roles.map((r) => (
