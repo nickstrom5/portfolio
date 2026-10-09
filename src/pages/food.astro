@@ -10,35 +10,37 @@ import { Image, getImage } from 'astro:assets';
 import Base from '@/layouts/Base.astro';
 import food from '@/data/food.json';
 
-type Override = { caption?: string; alt?: string };
-const overrides = food.photos as Record<string, Override>;
+// Per-photo title, one-line note and alt text; photos listed here come first, in this order.
+type Entry = { title?: string; note?: string; alt?: string };
+const entries = food.photos as Record<string, Entry>;
+const order = Object.keys(entries);
 
 const files = import.meta.glob<{ default: ImageMetadata }>('/src/assets/food/*.{jpg,jpeg,png,webp,avif}', { eager: true });
 
 const photos = await Promise.all(
   Object.entries(files).map(async ([path, mod]) => {
     const file = path.split('/').pop()!;
-    // File names look like 2026-10-09-cacio-e-pepe.jpg; the rest of the name is the caption.
+    // File names look like cacio-e-pepe.jpg or 2026-10-09-cacio-e-pepe.jpg; without an
+    // entry in food.json the name becomes the title.
     const m = file.match(/^(\d{4}-\d{2}-\d{2})-(.+)\.[a-z]+$/i);
     const date = m ? m[1] : '';
     const words = (m ? m[2] : file.replace(/\.[a-z]+$/i, '')).replace(/-\d+$/, '').replace(/-/g, ' ');
-    const named = words.charAt(0).toUpperCase() + words.slice(1);
-    const o = overrides[file] ?? {};
-    const caption = o.caption ?? named;
+    const e = entries[file] ?? {};
+    const title = e.title ?? words.charAt(0).toUpperCase() + words.slice(1);
     const full = await getImage({ src: mod.default, width: Math.min(1600, mod.default.width), format: 'webp' });
-    return { file, date, caption, alt: o.alt ?? caption, img: mod.default, full: full.src };
+    return { file, date, title, note: e.note ?? '', alt: e.alt ?? title, img: mod.default, full: full.src };
   }),
 );
-photos.sort((a, b) => b.date.localeCompare(a.date) || b.file.localeCompare(a.file));
+// Listed photos in food.json order, then the rest newest first.
+const rank = (f: string) => (order.includes(f) ? order.indexOf(f) : order.length);
+photos.sort((a, b) => rank(a.file) - rank(b.file) || b.date.localeCompare(a.date) || a.file.localeCompare(b.file));
 
-// Link previews (email, LinkedIn, Slack) show the newest photo. JPEG, because some
+// Link previews (email, LinkedIn, Slack) show the first photo. JPEG, because some
 // preview scrapers still skip WebP.
 const preview = photos[0]
   ? (await getImage({ src: photos[0].img, width: Math.min(1200, photos[0].img.width), format: 'jpg' })).src
   : undefined;
 
-const when = (d: string) =>
-  d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
 ---
 
 <Base title={food.title} description={food.description} image={preview} imageAlt={photos[0]?.alt} noindex>
@@ -54,13 +56,11 @@ const when = (d: string) =>
         <ul class="gallery" data-gallery>
           {photos.map((p, i) => (
             <li>
-              <a href={p.full} data-full data-index={i} data-caption={p.caption}>
+              <a href={p.full} data-full data-index={i} data-caption={p.note ? `${p.title}. ${p.note}` : p.title}>
                 <Image src={p.img} alt={p.alt} widths={[320, 640]} sizes="(max-width: 640px) 50vw, 300px" loading={i < 4 ? 'eager' : 'lazy'} decoding="async" />
               </a>
-              <p class="cap">
-                <span>{p.caption}</span>
-                {p.date && <time datetime={p.date}>{when(p.date)}</time>}
-              </p>
+              <h2 class="cap-title">{p.title}</h2>
+              {p.note && <p class="cap-note muted">{p.note}</p>}
             </li>
           ))}
         </ul>
@@ -153,16 +153,15 @@ const when = (d: string) =>
   .gallery a:hover img {
     transform: scale(1.03);
   }
-  .cap {
-    margin: 0.5rem 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0 0.75rem;
-    font-size: 0.9rem;
+  .cap-title {
+    margin: 0.65rem 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
-  .cap time {
-    color: var(--text-muted);
+  .cap-note {
+    margin: 0.2rem 0 0;
+    font-size: 0.9rem;
   }
 
   .lightbox {

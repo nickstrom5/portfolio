@@ -1,7 +1,28 @@
 {
   "eyebrow": "Portfolio",
   "title": "Food",
-  "intro": "A selection of my food photos.",
+  "intro": "Baking and pasta samples.",
   "description": "Food portfolio by Nick Soderstrom.",
-  "photos": {}
+  "photos": {
+    "sourdough-pumpkin-loaf.jpg": {
+      "title": "Sourdough pumpkin loaf",
+      "note": "Home-baked sourdough, shaped and scored by hand.",
+      "alt": "Round sourdough loaf shaped like a pumpkin, scored with leaf patterns and topped with a cinnamon-stick stem, on a cooling rack"
+    },
+    "homemade-bagels.jpg": {
+      "title": "Homemade bagels",
+      "note": "Baked on a pizza steel.",
+      "alt": "Eight homemade bagels topped with sesame, poppy and everything seasoning, cooling on a wire rack"
+    },
+    "round-braided-challah.jpg": {
+      "title": "Round braided challah",
+      "note": "Braided by hand, glazed and ready for the oven.",
+      "alt": "Unbaked round braided challah, glazed, on a baking mat"
+    },
+    "handmade-filled-pasta.jpg": {
+      "title": "Handmade filled pasta",
+      "note": "Fresh dough rolled thin, filled and cut by hand.",
+      "alt": "A single handmade filled pasta parcel with crimped edges, held between two fingers"
+    }
+  }
 }

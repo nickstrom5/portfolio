@@ -82,11 +82,11 @@ the About page appears once the list is non-empty.
 is left out of the sitemap (QA fails if another page links to it). It is
 unlisted, not private: this repo is public.
 
-Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe"`. The script
-strips GPS and other metadata, fixes rotation and saves the photo to
-`src/assets/food/YYYY-MM-DD-name.jpg`; every photo there appears on the page,
-newest first. Override captions in `src/data/food.json`. QA fails if a photo in
-that folder still carries metadata, so never copy one in by hand.
+Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none`.
+The script strips GPS and other metadata, fixes rotation and saves the photo to
+`src/assets/food/`; every photo there appears on the page. Titles, one-line notes,
+alt text and the order live in `src/data/food.json` (see `src/assets/food/README.md`).
+QA fails if a photo in that folder still carries metadata, so never copy one in by hand.
 
 ## Deploying
 
