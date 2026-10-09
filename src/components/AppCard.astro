@@ -14,6 +14,8 @@ interface App {
   status?: string;
   projectSlug?: string;
   icon: string;
+  /** App icon under /public; without one the card shows the `icon` initials. */
+  iconImage?: string;
   placeholder?: boolean;
 }
 interface Props {
@@ -28,7 +30,11 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
 <article class="card app">
   {showBadge && <span class="placeholder-badge">Sample</span>}
   <div class="app-head">
-    <div class="icon" aria-hidden="true">{app.icon}</div>
+    {app.iconImage ? (
+      <img class="icon icon-img" src={url(app.iconImage)} alt="" width="56" height="56" loading="lazy" decoding="async" />
+    ) : (
+      <div class="icon" aria-hidden="true">{app.icon}</div>
+    )}
     <div>
       <h3>{app.name}</h3>
       <p class="muted small">{app.client} · {app.year}</p>
@@ -73,6 +79,14 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     color: #fff;
     background: linear-gradient(135deg, var(--accent-btn), var(--accent-btn-hover));
     box-shadow: var(--shadow);
+  }
+  /* The real app icon, in the same rounded square. */
+  .icon-img {
+    display: block;
+    object-fit: cover;
+    background: none;
+    /* A hairline ring keeps a dark icon visible on the dark card. */
+    box-shadow: 0 0 0 1px var(--border), var(--shadow);
   }
   h3 {
     margin: 0;

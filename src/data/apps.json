@@ -18,6 +18,7 @@
     "website": "https://eatsranked.com",
     "status": "First apps submitted for App Review",
     "icon": "ER",
+    "iconImage": "/app-icons/eatsranked.png",
     "placeholder": false
   },
   {
@@ -61,6 +62,7 @@
     "status": "In development · App Store launch coming soon",
     "projectSlug": "goodwalk-dog-walk-tracker",
     "icon": "GW",
+    "iconImage": "/app-icons/goodwalk.png",
     "placeholder": false
   },
   {
@@ -85,6 +87,7 @@
     "website": "https://cartworth.app",
     "status": "In development",
     "icon": "CW",
+    "iconImage": "/app-icons/cartworth.png",
     "placeholder": false
   },
   {

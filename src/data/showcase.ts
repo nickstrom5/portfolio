@@ -473,6 +473,8 @@ export const projects: Project[] = [
       { said: 'The gap looks large. Have an agent or two look at this for design tips, and consult from a hiring perspective.', did: 'Cut the space under the home stats from 180px to about 110px, then had a product designer and a hiring manager review the site, with a third agent checking each suggestion before it shipped.' },
       { said: 'Project management up top on the skills box. Remove Work and GHL from the footer.', did: 'Moved Project management to the top of the About skills and took both links out of the footer, after checking each page is still linked from elsewhere on the site.' },
       { said: 'This should match the top three on the AI Projects cards.', did: 'Added an Eats Ranked card to the home page and made the home cards follow the AI Projects tile order, so the two can’t drift apart again.' },
+      { said: 'The blue rounded squares should be the app icons. Make the wording better on the Symplicity card; the other two are good.', did: 'Pulled the real icons from the Eats Ranked, Good Walk and Cartworth repos, stripped their metadata and put them on the home cards, and retitled the Symplicity case study to match the BARBRI one.' },
+      { pick: true, said: 'When you hover over the Hire me button, can the text change to “Please?”', did: 'Swapped the label on hover without changing the button’s width, only on devices that can hover, while screen readers still hear “Hire me”.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
