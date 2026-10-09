@@ -85,11 +85,24 @@ for (const p of pages) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
   if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
-  for (const u of unlisted) if (p !== u && html.includes(`href="${u}"`)) findings.push(`${p}: links to the unlisted page ${u}`);
 }
 for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
 }
+// Unlisted pages: no other built file may reference them (links, JSON-LD, robots.txt, 404 page).
+const textFiles = [];
+(function all(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const f = join(dir, e.name);
+    if (e.isDirectory()) all(f);
+    else if (/\.(html|xml|txt|json|js|webmanifest)$/.test(e.name)) textFiles.push(f);
+  }
+})(dist);
+for (const u of unlisted) {
+  const re = new RegExp(`(?:^|["'\\s(=]|//[^/"'\\s]+)${u.replace(/\//g, '\\/')}(?=["'#?<\\s)]|$)`, 'm');
+  for (const f of textFiles) if (f !== join(dist, u, 'index.html') && re.test(readFileSync(f, 'utf8'))) findings.push(`${f.slice(dist.length - 1)}: references the unlisted page ${u}`);
+}
+
 // Food photos sit in a public repo: none may keep EXIF/XMP/IPTC metadata (phone photos carry GPS).
 const foodDir = 'src/assets/food';
 if (existsSync(foodDir)) {

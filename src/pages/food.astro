@@ -27,7 +27,10 @@ const photos = await Promise.all(
     const words = (m ? m[2] : file.replace(/\.[a-z]+$/i, '')).replace(/-\d+$/, '').replace(/-/g, ' ');
     const e = entries[file] ?? {};
     const title = e.title ?? words.charAt(0).toUpperCase() + words.slice(1);
-    const full = await getImage({ src: mod.default, width: Math.min(1600, mod.default.width), format: 'webp' });
+    // Never read .width/.src etc. on the imported image here: any property read makes Astro
+    // also publish the untouched original (with whatever metadata it has). getImage does not
+    // enlarge, so a fixed width is safe for small photos.
+    const full = await getImage({ src: mod.default, width: 1600, format: 'webp' });
     return { file, date, title, note: e.note ?? '', alt: e.alt ?? title, img: mod.default, full: full.src };
   }),
 );
@@ -38,7 +41,7 @@ photos.sort((a, b) => rank(a.file) - rank(b.file) || b.date.localeCompare(a.date
 // Link previews (email, LinkedIn, Slack) show the first photo. JPEG, because some
 // preview scrapers still skip WebP.
 const preview = photos[0]
-  ? (await getImage({ src: photos[0].img, width: Math.min(1200, photos[0].img.width), format: 'jpg' })).src
+  ? (await getImage({ src: photos[0].img, width: 1200, format: 'jpg' })).src
   : undefined;
 
 ---
@@ -68,10 +71,10 @@ const preview = photos[0]
     </div>
   </section>
 
-  <dialog class="lightbox" aria-label="Photo" data-lightbox>
+  <dialog class="lightbox" aria-labelledby="lb-cap" data-lightbox>
     <figure>
       <img alt="" data-lb-img />
-      <figcaption data-lb-cap></figcaption>
+      <figcaption id="lb-cap" aria-live="polite" data-lb-cap></figcaption>
     </figure>
     <button class="lb-btn lb-close" type="button" aria-label="Close" data-lb-close>×</button>
     <button class="lb-btn lb-prev" type="button" aria-label="Previous photo" data-lb-prev>‹</button>
@@ -91,6 +94,13 @@ const preview = photos[0]
     if (!links.length || !img || !cap) return;
     current = (i + links.length) % links.length;
     const link = links[current];
+    const thumb = link.querySelector('img');
+    img.removeAttribute('src'); // never paint the previous photo under the new caption
+    if (thumb) {
+      // Reserve the photo's box while it loads.
+      img.setAttribute('width', thumb.getAttribute('width') ?? '');
+      img.setAttribute('height', thumb.getAttribute('height') ?? '');
+    }
     img.src = link.href;
     img.alt = link.querySelector('img')?.alt ?? '';
     cap.textContent = link.dataset.caption ?? '';
@@ -184,6 +194,7 @@ const preview = photos[0]
   .lightbox img {
     display: block;
     width: 100%;
+    height: auto;
     max-height: calc(94vh - 3.5rem);
     object-fit: contain;
     border-radius: var(--radius) var(--radius) 0 0;
@@ -205,8 +216,11 @@ const preview = photos[0]
     line-height: 1;
     cursor: pointer;
   }
+  /* Two-tone ring: visible over light and dark photos alike. */
   .lb-btn:focus-visible {
-    outline-color: #fff;
+    outline: 2px solid #fff;
+    outline-offset: 0;
+    box-shadow: 0 0 0 4px #000;
   }
   .lb-close {
     top: 0.6rem;
