@@ -1,5 +1,26 @@
 [
   {
+    "name": "Eats Ranked",
+    "tagline": "Free restaurant guides, one per state, from public records, open map data and cited sources, with local favorites checked one place at a time. Live on the web in seven states.",
+    "platforms": [
+      "iOS",
+      "Web"
+    ],
+    "stack": [
+      "SwiftUI",
+      "Python data pipelines",
+      "Static sites"
+    ],
+    "client": "Own product",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "https://eatsranked.com",
+    "status": "First apps submitted for App Review",
+    "icon": "ER",
+    "placeholder": false
+  },
+  {
     "name": "Clam",
     "tagline": "Fold your phone shut, and your distracting apps stay shut. A one-tap focus blocker built on Apple's Screen Time API.",
     "platforms": [

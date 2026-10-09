@@ -8,6 +8,7 @@ import ClientStrip from '@/components/ClientStrip.astro';
 import { site } from '@/data/site';
 import { services } from '@/data/services';
 import apps from '@/data/apps.json';
+import { projects as showcase } from '@/data/showcase';
 import testimonials from '@/data/testimonials.json';
 import { url } from '@/lib/url';
 
@@ -15,7 +16,11 @@ const projects = (await getCollection('projects', ({ data }) => !data.hidden))
   .filter((p) => p.data.featured)
   .sort((a, b) => b.data.year - a.data.year)
   .slice(0, 3);
-const featuredApps = apps.slice(0, 3);
+// The first three AI Projects tiles that have an app card, in the same order as /apps/.
+const featuredApps = showcase
+  .map((p) => apps.find((a) => a.name === p.name))
+  .filter((a): a is (typeof apps)[number] => a !== undefined)
+  .slice(0, 3);
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
