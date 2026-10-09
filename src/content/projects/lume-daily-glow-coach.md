@@ -11,7 +11,6 @@ featured: false
 source: 'personal'
 links:
   live: 'https://lumenow.app'
-cover: '/showcase/lume-site.jpg'
 hidden: true
 placeholder: false
 published: 2026-09-18

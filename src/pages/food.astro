@@ -191,9 +191,12 @@ const preview = photos[0]
   .lightbox figure {
     margin: 0;
   }
+  /* Natural size, never enlarged: a small photo stays sharp, centered on the dark dialog. */
   .lightbox img {
     display: block;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
     height: auto;
     max-height: calc(94vh - 3.5rem);
     object-fit: contain;

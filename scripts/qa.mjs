@@ -7,8 +7,9 @@
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
  * title length, description length, canonical, robots, Open Graph image,
- * JSON-LD validity and sitemap coverage. Exercises the menu, theme toggle,
- * work filters, Apps tiles, contact form and key assets.
+ * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
+ * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
+ * and key assets.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -86,6 +87,11 @@ for (const p of pages) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
   if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
+  // A <meta> CSP only governs what comes after it, so no executable script may precede it.
+  const cspAt = html.indexOf('http-equiv="content-security-policy"');
+  const firstJs = html.search(/<script(?![^>]*application\/ld\+json)[^>]*>/);
+  if (cspAt < 0) findings.push(`${p}: no Content-Security-Policy meta`);
+  else if (firstJs >= 0 && firstJs < cspAt) findings.push(`${p}: executable <script> before the CSP meta`);
 }
 for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
@@ -104,15 +110,10 @@ for (const u of unlisted) {
   for (const f of textFiles) if (f !== join(dist, u, 'index.html') && re.test(readFileSync(f, 'utf8'))) findings.push(`${f.slice(dist.length - 1)}: references the unlisted page ${u}`);
 }
 
-// Food photos sit in a public repo: none may keep EXIF/XMP/IPTC metadata (phone photos carry GPS).
-const foodDir = 'src/assets/food';
-if (existsSync(foodDir)) {
-  const { default: sharp } = await import('sharp');
-  for (const f of readdirSync(foodDir).filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f))) {
-    const m = await sharp(join(foodDir, f)).metadata();
-    if (m.exif || m.xmp || m.iptc) findings.push(`${foodDir}/${f}: still has photo metadata (location?); add photos with npm run food:add`);
-  }
-}
+// No image in the repo may keep EXIF/XMP/IPTC metadata (phone photos carry GPS); same
+// check as the prebuild step and the pre-commit hook.
+const { findPhotoMetadata } = await import('./check-photo-metadata.mjs');
+findings.push(...(await findPhotoMetadata()));
 
 // Browser checks.
 for (const [vpName, width, height] of viewports) {

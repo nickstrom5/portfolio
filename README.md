@@ -86,7 +86,9 @@ Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none
 The script strips GPS and other metadata, fixes rotation and saves the photo to
 `src/assets/food/`; every photo there appears on the page. Titles, one-line notes,
 alt text and the order live in `src/data/food.json` (see `src/assets/food/README.md`).
-QA fails if a photo in that folder still carries metadata, so never copy one in by hand.
+The build and every commit fail if any image in the repo still carries metadata
+(`npm run photos:check`; the pre-commit hook is in `.githooks/`), so never copy a
+photo in by hand.
 
 ## Deploying
 

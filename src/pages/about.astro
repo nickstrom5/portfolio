@@ -4,6 +4,7 @@ import { site } from '@/data/site';
 import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
+import { execFileSync } from 'node:child_process';
 
 const skills = {
   'AI & development': [
@@ -32,6 +33,11 @@ const connect = [
   site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
+// Last change to the profile, from git (same sources as the sitemap's lastmod for /about/).
+let dateModified: string | undefined;
+try {
+  dateModified = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'src/pages/about.astro', 'src/data/site.ts', 'src/data/personal.json'], { encoding: 'utf8' }).trim() || undefined;
+} catch {}
 ---
 
 <Base
@@ -39,7 +45,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
   description="Nick (Nicholas) Soderstrom, Chicago-based freelance senior project manager and operations lead since 2015: background, skills, Upwork history and contact."
   ogType="profile"
   pageType="ProfilePage"
-  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z' }}
+  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z', ...(dateModified ? { dateModified } : {}) }}
 >
   <section class="section">
     <div class="container about">

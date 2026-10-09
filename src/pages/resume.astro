@@ -66,9 +66,16 @@ const contacts = [
     <meta property="og:description" content={pageDesc} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDesc} />
+    <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta name="author" content={site.name} />
     <meta name="description" content={pageDesc} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
@@ -77,14 +84,6 @@ const contacts = [
     <title>{pageTitle}</title>
     <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <Font cssVariable="--font-inter" preload />
-    <script is:inline>
-      try {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.dataset.theme = saved;
-        }
-      } catch {}
-    </script>
     <style>
       :root {
         --ink: #17181a;
@@ -608,6 +607,14 @@ const contacts = [
     </style>
   </head>
   <body>
+    <script is:inline>
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.dataset.theme = saved;
+        }
+      } catch {}
+    </script>
     <a class="skip web-only" href="#resume">Skip to resume</a>
     <header class="chrome web-only">
       <a class="back" href={url('/')}>Back to site</a>

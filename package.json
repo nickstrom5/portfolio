@@ -5,18 +5,22 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/check-photo-metadata.mjs",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "resume:pdf": "node scripts/make-resume-pdf.mjs",
     "qa": "node scripts/qa.mjs",
     "astro": "astro",
     "ghl:check": "node scripts/ghl-check.mjs",
-    "food:add": "node scripts/add-food.mjs"
+    "food:add": "node scripts/add-food.mjs",
+    "photos:check": "node scripts/check-photo-metadata.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.6",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.3"
   }
 }
