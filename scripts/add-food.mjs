@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Adds photos to the unlisted /food/ page.
+ * Adds photos to the /food/ page.
  *
  *   npm run food:add -- path/to/photo.jpg [more.jpg ...] [--name "Cacio e pepe"] [--date 2026-10-09 | --date none]
  *
