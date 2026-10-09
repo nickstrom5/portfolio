@@ -1,6 +1,6 @@
 # Food photos
 
-Photos for the unlisted food portfolio at `/food/` on this site.
+Photos for the food portfolio at `/food/` on this site.
 Every image in this folder appears there automatically.
 
 Add photos with the script, never by copying them in:

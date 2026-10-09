@@ -54,8 +54,9 @@ function walk(dir, out = []) {
 }
 const pages = walk(dist).sort();
 const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
-// Unlisted pages: reachable only by their URL, so no other page may link to them.
-const unlisted = ['/food/'];
+// Unlisted pages: reachable only by their URL, so no other built file may reference them.
+// Empty now: /food/ is linked from About. Add a path here to enforce it for a page.
+const unlisted = [];
 const findings = [];
 const seenLinks = new Set();
 const viewports = [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1280, 900]];
