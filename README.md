@@ -76,6 +76,18 @@ Drop photos in `public/personal/` (create the folder) and list them in
 Keep each JPEG under about 400 KB (about 1600px on the long side). The section on
 the About page appears once the list is non-empty.
 
+## Food photos (unlisted `/food/` page)
+
+`/food/` is reachable only by its URL: nothing links to it, it is `noindex` and it
+is left out of the sitemap (QA fails if another page links to it). It is
+unlisted, not private: this repo is public.
+
+Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none`.
+The script strips GPS and other metadata, fixes rotation and saves the photo to
+`src/assets/food/`; every photo there appears on the page. Titles, one-line notes,
+alt text and the order live in `src/data/food.json` (see `src/assets/food/README.md`).
+QA fails if a photo in that folder still carries metadata, so never copy one in by hand.
+
 ## Deploying
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes

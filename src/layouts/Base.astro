@@ -92,7 +92,7 @@ const graph = [
     <meta name="description" content={description} />
     <meta name="author" content={site.name} />
     <link rel="canonical" href={canonical} />
-    {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    {noindex ? <meta name="robots" content="noindex, nofollow, noimageindex" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
     <link rel="icon" href={`${base}/favicon-96x96.png`} type="image/png" sizes="96x96" />
     <link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />

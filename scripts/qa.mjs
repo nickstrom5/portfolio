@@ -53,7 +53,9 @@ function walk(dir, out = []) {
   return out;
 }
 const pages = walk(dist).sort();
-const noindexAllowed = new Set(['/thanks/', '/resume/']);
+const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
+// Unlisted pages: reachable only by their URL, so no other page may link to them.
+const unlisted = ['/food/'];
 const findings = [];
 const seenLinks = new Set();
 const viewports = [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1280, 900]];
@@ -86,6 +88,29 @@ for (const p of pages) {
 }
 for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
+}
+// Unlisted pages: no other built file may reference them (links, JSON-LD, robots.txt, 404 page).
+const textFiles = [];
+(function all(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const f = join(dir, e.name);
+    if (e.isDirectory()) all(f);
+    else if (/\.(html|xml|txt|json|js|webmanifest)$/.test(e.name)) textFiles.push(f);
+  }
+})(dist);
+for (const u of unlisted) {
+  const re = new RegExp(`(?:^|["'\\s(=]|//[^/"'\\s]+)${u.replace(/\//g, '\\/')}(?=["'#?<\\s)]|$)`, 'm');
+  for (const f of textFiles) if (f !== join(dist, u, 'index.html') && re.test(readFileSync(f, 'utf8'))) findings.push(`${f.slice(dist.length - 1)}: references the unlisted page ${u}`);
+}
+
+// Food photos sit in a public repo: none may keep EXIF/XMP/IPTC metadata (phone photos carry GPS).
+const foodDir = 'src/assets/food';
+if (existsSync(foodDir)) {
+  const { default: sharp } = await import('sharp');
+  for (const f of readdirSync(foodDir).filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f))) {
+    const m = await sharp(join(foodDir, f)).metadata();
+    if (m.exif || m.xmp || m.iptc) findings.push(`${foodDir}/${f}: still has photo metadata (location?); add photos with npm run food:add`);
+  }
 }
 
 // Browser checks.
