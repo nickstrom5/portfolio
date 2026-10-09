@@ -1,5 +1,7 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
 import clients from '@/data/clients.json';
 import testimonials from '@/data/testimonials.json';
 import Testimonial from '@/components/Testimonial.astro';
@@ -7,7 +9,12 @@ import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
 const featured = clients.filter((c) => c.featured);
-const others = clients.filter((c) => !c.featured);
+// The newest client case studies (not the featured long-term roles above), so this
+// section stays current whenever a case study is added.
+const featuredSlugs = new Set(featured.map((c) => c.slug));
+const recent = (await getCollection('projects', ({ data, id }) => !data.hidden && data.source !== 'personal' && !featuredSlugs.has(id)))
+  .sort((a, b) => b.data.year - a.data.year || +(b.data.updated ?? b.data.published ?? 0) - +(a.data.updated ?? a.data.published ?? 0))
+  .slice(0, 9);
 const upworkLive = !site.links.upwork.includes('REPLACE');
 const sectors = [
   'Federal research institutions',
@@ -49,7 +56,7 @@ const sectors = [
             <div class="mark" aria-hidden="true">{c.initials}</div>
             <div class="body">
               <h3>{c.name}</h3>
-              <p class="meta muted">{c.industry} · {c.period}</p>
+              <p class="meta muted">{c.industry} · <span class="nowrap">{c.period}</span></p>
               <p class="role">{c.role}</p>
               <p class="blurb muted">{c.blurb}</p>
               <div class="foot">
@@ -69,23 +76,9 @@ const sectors = [
         <h2>Recent engagements</h2>
         <a href={url('/work')}>All case studies →</a>
       </div>
-      <ul class="clients">
-        {others.map((c) => (
-          <li class="card client" id={c.slug}>
-            <div class="mark alt" aria-hidden="true">{c.initials}</div>
-            <div class="body">
-              <h3>{c.name}</h3>
-              <p class="meta muted">{c.industry} · {c.period}</p>
-              <p class="role">{c.role}</p>
-              <p class="blurb muted">{c.blurb}</p>
-              <div class="foot">
-                <span class="tag scale">{c.scale}</span>
-                {c.slug && <a href={url(`/work/${c.slug}`)}>{c.name} case study →</a>}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div class="grid grid-3">
+        {recent.map((p) => <ProjectCard project={p} />)}
+      </div>
     </div>
   </section>
 
@@ -169,7 +162,19 @@ const sectors = [
     font-size: 0.95rem;
     letter-spacing: 0.02em;
     color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: linear-gradient(135deg, var(--accent-btn), var(--accent-btn-hover));
+  }
+  @media (max-width: 640px) {
+    .client {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
   }
   .mark.alt {
     background: var(--bg-muted);
@@ -177,10 +182,14 @@ const sectors = [
     border: 1px solid var(--border);
   }
   .body {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
     min-width: 0;
+  }
+  .nowrap {
+    white-space: nowrap;
   }
   h3 {
     margin: 0;
@@ -200,12 +209,12 @@ const sectors = [
     flex: 1;
     margin-top: 0.25rem;
   }
+  /* Hours or years first, then the case study link: the same layout on every card. */
   .foot {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
     margin-top: 0.75rem;
     font-size: 0.9rem;
     font-weight: 600;

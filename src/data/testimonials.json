@@ -5,7 +5,11 @@
     "period": "2026",
     "rating": 5.0,
     "hours": 100,
-    "endorsements": ["Collaborative", "Committed to Quality", "Clear Communicator"],
+    "endorsements": [
+      "Collaborative",
+      "Committed to Quality",
+      "Clear Communicator"
+    ],
     "source": "Upwork",
     "placeholder": false
   },
@@ -16,7 +20,11 @@
     "period": "2024",
     "rating": 5.0,
     "hours": 24,
-    "endorsements": ["Collaborative", "Clear Communicator", "Committed to Quality"],
+    "endorsements": [
+      "Collaborative",
+      "Clear Communicator",
+      "Committed to Quality"
+    ],
     "source": "Upwork",
     "placeholder": false
   },
@@ -26,7 +34,9 @@
     "period": "2020–2024",
     "rating": 4.7,
     "hours": 989,
-    "endorsements": ["Reliable"],
+    "endorsements": [
+      "Reliable"
+    ],
     "source": "Upwork",
     "placeholder": false
   },
@@ -36,7 +46,11 @@
     "period": "2022–2023",
     "rating": 5.0,
     "hours": 692,
-    "endorsements": ["Accountable for Outcomes", "Reliable", "Collaborative"],
+    "endorsements": [
+      "Accountable for Outcomes",
+      "Reliable",
+      "Collaborative"
+    ],
     "source": "Upwork",
     "placeholder": false
   },
@@ -46,7 +60,94 @@
     "period": "2025",
     "rating": 5.0,
     "hours": 1,
-    "endorsements": ["Reliable", "Solution Oriented", "Collaborative"],
+    "endorsements": [
+      "Reliable",
+      "Solution Oriented",
+      "Collaborative"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "Nick did a great job helping to support our two-day virtual conference. He manned the virtual “green room” before sessions and also circulated through sessions (we ran 6 concurrent tracks)…",
+    "contract": "Zoom webinar and green room moderator",
+    "period": "2021",
+    "rating": 5.0,
+    "hours": 23,
+    "endorsements": [
+      "Collaborative"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "We had a great experience with Nick. He was a big help moderating at our virtual event and we'll be hiring him again.",
+    "contract": "Virtual assistant for email marketing automation and website updates",
+    "period": "2021",
+    "rating": 5.0,
+    "hours": 13,
+    "endorsements": [
+      "Reliable",
+      "Collaborative"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "Great work!",
+    "contract": "Virtual assistant for a CPA firm",
+    "period": "2022",
+    "rating": 5.0,
+    "hours": 285,
+    "endorsements": [],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "I had a small Canva project and Nicholas was able to jump in quickly and complete the project in half the time I assumed it would take. Can't wait to…",
+    "contract": "Menu redesign in Canva",
+    "period": "2022",
+    "rating": 5.0,
+    "endorsements": [
+      "Reliable",
+      "Collaborative"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "Nicholas did a great job and we would use him again when the need arises.",
+    "contract": "Real estate photo retouching and QC",
+    "period": "2022",
+    "rating": 5.0,
+    "hours": 1,
+    "endorsements": [
+      "Committed to Quality",
+      "Reliable"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "A good employee who is responsible for his work",
+    "contract": "Virtual assistant",
+    "period": "2022",
+    "rating": 5.0,
+    "endorsements": [
+      "Accountable for Outcomes"
+    ],
+    "source": "Upwork",
+    "placeholder": false
+  },
+  {
+    "quote": "Nick was responsive and attentive.",
+    "contract": "Group operations assistant",
+    "period": "2022–2023",
+    "rating": 5.0,
+    "hours": 14,
+    "endorsements": [
+      "Clear Communicator"
+    ],
     "source": "Upwork",
     "placeholder": false
   }

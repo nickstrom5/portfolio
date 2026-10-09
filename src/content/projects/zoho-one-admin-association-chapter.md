@@ -1,5 +1,5 @@
 ---
-title: 'Zoho One administration for a speakers association chapter'
+title: 'Zoho One Administrator for a speakers association chapter'
 shortTitle: 'Zoho One admin for an association'
 client: 'Regional chapter of a professional speakers association'
 summary: 'Ran the Zoho One stack (CRM, Books, Forms, Campaigns, Social, Flow) for a regional speakers association chapter, plus its online academy support and social posting.'

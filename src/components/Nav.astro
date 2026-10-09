@@ -38,7 +38,10 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
             <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
           </svg>
         </button>
-        <a class="btn btn-primary" href={url('/contact')}>Hire me</a>
+        <a class="btn btn-primary hire" href={url('/contact')}>
+          <span class="hire-text">Hire me</span>{' '}
+          <span class="hire-please" aria-hidden="true">Please?</span>
+        </a>
       </div>
     </nav>
   </div>
@@ -111,6 +114,32 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     height: 32px;
     border-radius: 50%;
     background: var(--accent-btn);
+  }
+  /* On hover the button asks nicely. Both labels share one grid cell, so the width
+     never changes, and screen readers only hear "Hire me". */
+  .hire {
+    display: inline-grid;
+  }
+  .hire > span {
+    grid-area: 1 / 1;
+    text-align: center;
+    transition: opacity 0.15s ease;
+  }
+  .hire-please {
+    opacity: 0;
+  }
+  @media (hover: hover) {
+    .hire:hover .hire-text {
+      opacity: 0;
+    }
+    .hire:hover .hire-please {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hire > span {
+      transition: none;
+    }
   }
   .menu-btn {
     display: none;

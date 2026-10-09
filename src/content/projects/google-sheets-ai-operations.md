@@ -1,5 +1,5 @@
 ---
-title: 'Complex Google Sheets operations with AI'
+title: 'Google Sheets and AI Operations Specialist for a community-space startup'
 shortTitle: 'Google Sheets operations with AI'
 client: 'Community space startup'
 summary: 'A three-day fixed-price project in January 2026: complex Google Sheets operations with AI doing the repetitive parts, delivered for a community-space startup.'

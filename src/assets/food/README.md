@@ -14,4 +14,5 @@ the same `--name` and delete the old file first.
 
 In `src/data/food.json`, give each photo a title, a one-line note and alt text.
 Photos listed there appear first, in that order; any others follow, newest first.
-`npm run qa` fails if a photo here still carries metadata.
+The build, `npm run qa` and every commit fail if any image in the repo still
+carries metadata (`npm run photos:check` runs the same check).

@@ -1,5 +1,5 @@
 ---
-title: 'LaunchNeat: $99 websites for local businesses'
+title: 'Founder, LaunchNeat: $99 websites for local businesses'
 shortTitle: 'LaunchNeat local business websites'
 client: 'Own business'
 summary: 'A small business I started in 2026: templated websites for local shops at $99 the first year and $50 after, with fifteen AI-built demo sites.'

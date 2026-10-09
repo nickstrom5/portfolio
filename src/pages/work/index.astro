@@ -6,10 +6,16 @@ import contracts from '@/data/contracts.json';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/lib/categories';
 
-const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort((a, b) => b.data.year - a.data.year);
+// Featured client work first, own products last, newest first within each.
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    Number(a.data.source === 'personal') - Number(b.data.source === 'personal') ||
+    b.data.year - a.data.year,
+);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
-const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
@@ -19,13 +25,13 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Work</span>
       <h1>Client projects</h1>
-      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
+      <p class="lede">Contracts I can talk about publicly, plus a few products of my own. Some clients are unnamed under NDA. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">
           {categories.map((c) => (
             <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
-              {labels[c] ?? c.charAt(0).toUpperCase() + c.slice(1)}
+              {c === 'all' ? 'All' : categoryLabel(c)}
             </button>
           ))}
         </div>
@@ -217,6 +223,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .empty {
     margin-top: 1.5rem;
   }
+  /* Pass the grid's rows through each filter wrapper so cards share row tracks
+     (see ProjectCard). :not([hidden]) keeps filtered-out cards hidden. */
+  [data-project-grid] > [data-category]:not([hidden]) {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
+  }
   .contracts {
     list-style: none;
     margin: 1.5rem 0 0;
@@ -225,11 +239,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
     gap: 0.5rem 2rem;
   }
+  /* Title, then type and year underneath; items in a row share row tracks (subgrid),
+     so every type line in the row sits on the same line. */
   .contracts li {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0.2rem;
+    align-content: start;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;

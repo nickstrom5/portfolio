@@ -53,7 +53,7 @@ export interface StoryProject {
   tone?: 'light' | 'dark';
   comingSoon?: false;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo'; alt?: string };
-  siteShot: { desktop: string; mobile: string; caption: string; url: string };
+  siteShot: { desktop: string; caption: string; url: string };
   features: Feature[];
   /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
   split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
@@ -109,6 +109,84 @@ const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
 
 export const projects: Project[] = [
   {
+    id: 'eatsranked',
+    name: 'Eats Ranked',
+    kicker: 'iPhone apps + web · restaurant guides',
+    tileBlurb: 'Restaurants, ranked state by state. Seven states live on the web.',
+    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
+    fg: '#b3122b',
+    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
+    fgDark: '#ff7a86',
+    tone: 'light',
+    hero: {
+      title: 'Where to eat, from the public record.',
+      sub: 'Eats Ranked is a set of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets an iPhone and iPad app, a website and a web version, plus lists of local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. Seven states are live on the web, and the first two apps, Chicago and Wisconsin, have been submitted to Apple for review.',
+      screen: 'image',
+      image: '/showcase/eatsranked-chicago-home.jpg',
+      alt: 'Chicago Restaurants: Ranked on iPhone: the home screen with Cleanest Kitchens, Hot Dogs & Beef, Michelin & Beard and Chicago Icons',
+    },
+    siteShot: {
+      desktop: '/showcase/eatsranked-site.jpg',
+      caption: 'eatsranked.com: one static page generated from a single data file of states and prices, with a map of the live states, a card for each and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
+      url: 'https://eatsranked.com',
+    },
+    features: [
+      {
+        eyebrow: 'Chicago Restaurants: Ranked',
+        title: 'A letter grade the City doesn’t give.',
+        body: 'Chicago records inspection results such as Pass, Pass with Conditions or Fail, never a letter grade. The app turns the results since January 2023 into a 0–100 score and an A–F grade for more than 7,000 Chicago restaurants, and every screen that shows a grade says it is the app’s own, not the City’s. Around them: boards like Hot Dogs & Beef and Michelin & Beard, and 17,000+ more restaurants elsewhere in Illinois.',
+        screen: 'image',
+        image: '/showcase/eatsranked-chicago-place.jpg',
+        alt: 'Chicago Restaurants: Ranked place page for Au Cheval: the app’s own A grade (not the City’s), an inspection score of 84/100 and its City inspection record since January 2023',
+      },
+      {
+        eyebrow: 'Wisconsin Eats',
+        title: 'Friday fish fry, checked one place at a time.',
+        body: 'The guides list 402 Friday fish fries (313 of them with the fish they serve), 211 supper clubs and 28 frozen custard stands. Research agents checked each one against a 2025–26 source, such as its own site or menu or a dated news story. Around them sit 16,346 restaurants in 828 towns. The app stores no ratings or reviews: ratings, hours and photos open in Apple Maps’ own place card.',
+        screen: 'image',
+        image: '/showcase/eatsranked-wisconsin-fishfry.jpg',
+        alt: 'Wisconsin Eats on iPhone: the Friday Fish Fry guide, 402 places sorted nearest first',
+        flip: true,
+      },
+      {
+        eyebrow: 'One state at a time',
+        title: 'Five more states live in four days.',
+        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built on the Wisconsin model and fitted to what each state or county publishes: Florida’s statewide inspection results, LA County’s grades, King County’s food safety ratings. In these five apps, official results are shown as recorded, never re-graded.',
+        screen: 'image',
+        image: '/showcase/eatsranked-map.jpg',
+        alt: 'eatsranked.com map of the United States with Washington, California, Colorado, Wisconsin, Illinois, Connecticut and Florida filled in',
+        frame: 'laptop',
+      },
+      {
+        eyebrow: 'Fresh every week',
+        title: 'New City records, checked before they ship.',
+        body: 'A Python pipeline, scheduled for every Monday, refetches Chicago’s records and publishes only if every check passes: Chicago counts within 5% of the data already published, no more than 10% of grades changed, and a spot check of changed grades against the City’s own data. The app downloads the new data without an app update, and the web version reads the same files.',
+        screen: 'image',
+        image: '/showcase/eatsranked-chicago-map.jpg',
+        alt: 'Chicago Restaurants: Ranked map of the North Side with restaurant pins colored by the app’s own A–F grade',
+        flip: true,
+      },
+    ],
+    split: {
+      aiLabel: 'Claude Code',
+      meLabel: 'Nick',
+      aiDid: 'The SwiftUI apps, the Python data pipelines, the state websites and web versions, the test suites, the guide research by teams of research agents, the App Review and legal-risk playbooks, and the eatsranked.com hub.',
+      meDid: 'The idea and the rules for the apps: no Google data, no customer reviews or star ratings. The names, icons and palettes, the domain, the data and licensing calls, a yes before each push (the weekly Chicago data publish runs on a schedule), and every App Store submission.',
+    },
+    steps: [
+      { title: 'Start with one city', ai: 'Turned Chicago’s inspection records into a score and an A–F grade, built the iPhone app and wrote an App Review and legal-risk audit before launch.', me: 'Set the app’s rules: no Google data, no customer reviews or star ratings, no Yelp.' },
+      { title: 'Then a second state', ai: 'Built Wisconsin Eats from the Chicago app’s structure, with research agents checking each fish fry and supper club against a 2025–26 source.', me: 'Decided the name should cover restaurants in general, with fish fry and supper clubs as the tagline, and chose one domain with a site per state instead of buying wisconsineats.com.' },
+      { title: 'A hub and five more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
+      { title: 'Ship and keep it current', ai: 'Set up the weekly Chicago data refresh with its checks, and wrote the App Store listings and review replies.', me: 'Submitted the first two apps, Chicago and Wisconsin, for App Review. Neither is on the App Store yet.' },
+    ],
+    links: [
+      { label: 'Visit eatsranked.com', href: 'https://eatsranked.com', primary: true },
+      { label: 'chicago.eatsranked.com', href: 'https://chicago.eatsranked.com' },
+      { label: 'wisconsin.eatsranked.com', href: 'https://wisconsin.eatsranked.com' },
+    ],
+    status: 'Live on the web in seven states · first apps submitted for App Review',
+  },
+  {
     id: 'goodwalk',
     name: 'Good Walk',
     kicker: 'iPhone app · dog walk tracker',
@@ -125,7 +203,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/goodwalk-site.jpg',
-      mobile: '/showcase/goodwalk-site.jpg',
       caption: 'getgoodwalk.app, live: a landing page with how it works, pricing and an FAQ, three dog-walking guides, a support page, and privacy and terms. Served from GitHub Pages.',
       url: 'https://getgoodwalk.app',
     },
@@ -149,13 +226,13 @@ export const projects: Project[] = [
       aiLabel: 'Claude Code',
       meLabel: 'Nick',
       aiDid: 'App concept write-up, screens, streak and reminder logic, the landing site with its guides, FAQ, privacy and terms pages, and a local preview server to review it all.',
-      meDid: 'The idea, the “no collar, no map, no account” rule, the launch date tied to Walk Your Dog Week, the domain, and every yes or no along the way.',
+      meDid: 'The idea, the “no collar, no map, no account” rule, the launch plan, the domain, and every yes or no along the way.',
     },
     steps: [
       { title: 'Pick the idea', ai: 'Turned one sentence into a concept: a daily walk streak for your dog, nothing else.', me: '“A dog walk tracker. Keep it simple.”' },
       { title: 'Design the loop', ai: 'Worked out the reminder, the one-tap answer and what the streak screen shows.', me: 'Insisted on no collar, no map and no account.' },
       { title: 'Build the site first', ai: 'Wrote the landing page, three guides, FAQ, privacy and terms, then served a preview from the Mac.', me: 'Reviewed it in the browser pane, bought getgoodwalk.app and set the prices.' },
-      { title: 'Ship for the week', ai: 'Prepares the App Store listing and the launch checklist.', me: 'First launch target: Walk Your Dog Week, October 2026.' },
+      { title: 'Prepare the launch', ai: 'Prepares the App Store listing and the launch checklist.', me: 'Sets the App Store launch date.' },
     ],
     links: [
       { label: 'getgoodwalk.app', href: 'https://getgoodwalk.app', primary: true },
@@ -183,7 +260,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/cartworth-site.jpg',
-      mobile: '/showcase/cartworth-site-mobile.jpg',
       caption: 'cartworth.app, with privacy, terms and support pages. Behind it: a SwiftUI iPhone app of 59 Swift files and about 11,000 lines, and a Node web version of about 7,000 lines.',
       url: 'https://cartworth.app',
     },
@@ -231,19 +307,6 @@ export const projects: Project[] = [
     status: 'In development · cartworth.app is live',
   },
   {
-    id: 'eatsranked',
-    name: 'Eats Ranked',
-    kicker: 'Web + iPhone app · restaurant rankings',
-    tileBlurb: 'Restaurants, ranked state by state. Illinois and Wisconsin first.',
-    bg: 'linear-gradient(135deg, #eaf0fa 0%, #f8f9fc 55%, #fbe6e8 100%)',
-    fg: '#b3122b',
-    bgDark: 'linear-gradient(135deg, #131c33 0%, #12161f 55%, #331419 100%)',
-    fgDark: '#ff7a86',
-    tone: 'light',
-    href: 'https://eatsranked.com/',
-    comingSoon: true,
-  },
-  {
     id: 'launchneat',
     name: 'LaunchNeat',
     kicker: 'Small business · websites for local shops',
@@ -262,7 +325,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/launchneat-site.jpg',
-      mobile: '/showcase/launchneat-site-mobile.jpg',
       caption: 'launchneat.com. Five marketing pages and fifteen demo sites, a static Astro build of about 540 KB in total, no backend and no tracking.',
       url: 'https://launchneat.com',
     },
@@ -324,7 +386,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/site-home.jpg',
-      mobile: '/showcase/site-home-mobile.jpg',
       caption: 'The home page. Astro, plain CSS, no frameworks, deployed by a GitHub Actions workflow the model also wrote.',
       url: 'https://work-with-nick.com',
     },
@@ -402,6 +463,24 @@ export const projects: Project[] = [
       { said: 'We can link to the landing pages on the restaurant cards. Make the restaurant card link to the main landing page instead of per state, so just one instead of Chi/WI.', did: 'Linked both tiles to their eatsranked.com pages and stopped coming-soon tiles from hiding the open story, then merged them into one Eats Ranked tile linking to eatsranked.com.' },
       { said: 'QA and make sure security and site, SEO, etc. are top tier.', did: 'Had five agents audit security, SEO, accessibility, accuracy and speed with a second agent checking each finding, then added a content security policy, locked down the deploy workflow, fixed contrast and the phone menu, and cut the headshot from 72 KB to 25 KB.' },
       { said: 'Recounted, and I freelanced after Bebu.', did: 'Took “full-time” out of the since-2015 lines on About, Work and the résumé, recounted every message and screenshot from the chat two independent ways, and made the commit count update on every deploy.' },
+      { said: 'A hidden tab where I can add food photos, only accessible by a direct link. I’ll send it when I apply to some good jobs. We can start with these.', did: 'Built a food page kept out of search and the sitemap, a lightbox gallery, and a script that strips the GPS location and other metadata from every photo before it goes in, then cropped the first four photos out of the screenshot.' },
+      { said: 'Hide the Work tab, but keep it up to date, and we can link to it from the Clients summary.', did: 'Took Work out of the top nav, kept it in the footer and linked it from the Clients page summary.' },
+      { said: 'Short line on the About page: outside of work I love to travel and cook. “Food I’ve made” instead of “Food”.', did: 'Added the line with “cook” linking to the food page, and renamed the page while keeping its address.' },
+      { said: 'The boxes here should be the same size. Clients, AI Projects, About and Hire me. AI Projects, not AI/Projects.', did: 'Made every client box on the home page as tall as the tallest and dropped the slash from the AI Projects label in the nav, the page heading and every link to it.' },
+      { said: '“Nicholas on paper, Nick to everyone else.” Remove that line.', did: 'Took it out of the About intro.' },
+      { said: 'How do I update this image? Just blue.', did: 'Replaced the favicon with the plain blue circle from the nav, in the SVG, the PNG and the iPhone home-screen icon.' },
+      { pick: true, said: 'Eats Ranked can have a story like the rest. Make it the first one, then Good Walk, then Cartworth.', did: 'Had three agents pull sourced facts from the nine Eats Ranked repos, wrote the story from real simulator screenshots showing only A and B grades, rendered eatsranked.com for the site shot, and had two more agents try to disprove every claim.' },
+      { said: 'The gap looks large. Have an agent or two look at this for design tips, and consult from a hiring perspective.', did: 'Cut the space under the home stats from 180px to about 110px, then had a product designer and a hiring manager review the site, with a third agent checking each suggestion before it shipped.' },
+      { said: 'Project management up top on the skills box. Remove Work and GHL from the footer.', did: 'Moved Project management to the top of the About skills and took both links out of the footer, after checking each page is still linked from elsewhere on the site.' },
+      { said: 'This should match the top three on the AI Projects cards.', did: 'Added an Eats Ranked card to the home page and made the home cards follow the AI Projects tile order, so the two can’t drift apart again.' },
+      { said: 'The blue rounded squares should be the app icons. Make the wording better on the Symplicity card; the other two are good.', did: 'Pulled the real icons from the Eats Ranked, Good Walk and Cartworth repos, stripped their metadata and put them on the home cards, and retitled the Symplicity case study to match the BARBRI one.' },
+      { pick: true, said: 'When you hover over the Hire me button, can the text change to “Please?”', did: 'Swapped the label on hover without changing the button’s width, only on devices that can hover, while screen readers still hear “Hire me”.' },
+      { pick: true, said: 'Make sure stuff like this lines up cleanly.', did: 'Wrote a script that measures every card grid on the site, found the same drift in six places (testimonials, project, app and service cards, AI Projects tiles, the contracts list), gave each one shared row tracks, and re-ran it until every row measured 0px apart.' },
+      { said: 'Add Personal chef to the bottom of the options.', did: 'Added it as the last Project type on the contact form.' },
+      { said: '“See my work” should link to the Clients tab. Keep the text the same.', did: 'Pointed it, and the same button on the thank-you page, at Clients.' },
+      { said: 'The cards on the Work page: let’s make them sound more like job titles.', did: 'Retitled all twenty case studies with the job titles from the Upwork contracts and the résumé, and “Founder” for the products of my own.' },
+      { pick: true, said: 'This seems outdated. I have a lot of feedback; why only five cards? Upwork MCP is now connected.', did: 'Rebuilt Recent engagements from the nine newest client case studies so it updates itself, checked every “ongoing” claim against Upwork (three contracts had ended, so those case studies now say when), and asked for screenshots of the reviews, since neither Upwork nor the inbox exposes review text and every quote stays verbatim.' },
+      { said: '(screenshots of Upwork reviews) Don’t include weird ones like the 5-minute tasks.', did: 'Transcribed seven more verbatim reviews, skipped the odd micro-gigs and the jobs with no written feedback, and ended the two long ones where Upwork’s preview does. Twelve cards now fill four rows.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
@@ -429,7 +508,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/clam-site.jpg',
-      mobile: '/showcase/clam-site-mobile.jpg',
       caption: 'getclam.app, the landing page. Written and styled by the models, served from GitHub Pages.',
       url: 'https://getclam.app',
     },
@@ -484,7 +562,6 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/signalrig-site.jpg',
-      mobile: '/showcase/signalrig-site-mobile.jpg',
       caption: 'signalrig.dev. Next.js 16 App Router, TypeScript and Tailwind v4: 58 source files and about 4,500 lines, no backend, no analytics, deployed on Vercel.',
       url: 'https://signalrig.dev',
     },

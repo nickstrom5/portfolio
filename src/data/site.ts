@@ -40,18 +40,18 @@ export const site = {
   contactEndpoint: 'https://formspree.io/f/xvkggbvq',
 } as const;
 
+/**
+ * Footer links. Work and the GHL showcase are in neither the footer nor the top nav:
+ * Work is linked from the Clients summary, the home hero and the case studies, and
+ * GHL from its AI Projects tile and the Work page.
+ */
 export const footerNav = [
-  { href: '/work', label: 'Work' },
   { href: '/clients', label: 'Clients' },
   { href: '/apps', label: 'AI Projects' },
-  { href: '/ghl', label: 'GoHighLevel automations' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;
 
-/**
- * Header/nav only. Work, Resume and the GHL showcase stay in the footer, not the top nav;
- * /work/ is still live and indexed, and linked from the home page and the Clients summary.
- */
-const footerOnly: string[] = ['/work', '/resume', '/ghl'];
+/** Header/nav: the footer links minus Resume, which stays in the footer only. */
+const footerOnly: string[] = ['/resume'];
 export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));

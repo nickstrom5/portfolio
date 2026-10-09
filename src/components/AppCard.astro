@@ -14,6 +14,8 @@ interface App {
   status?: string;
   projectSlug?: string;
   icon: string;
+  /** App icon under /public; without one the card shows the `icon` initials. */
+  iconImage?: string;
   placeholder?: boolean;
 }
 interface Props {
@@ -28,7 +30,11 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
 <article class="card app">
   {showBadge && <span class="placeholder-badge">Sample</span>}
   <div class="app-head">
-    <div class="icon" aria-hidden="true">{app.icon}</div>
+    {app.iconImage ? (
+      <img class="icon icon-img" src={url(app.iconImage)} alt="" width="56" height="56" loading="lazy" decoding="async" />
+    ) : (
+      <div class="icon" aria-hidden="true">{app.icon}</div>
+    )}
     <div>
       <h3>{app.name}</h3>
       <p class="muted small">{app.client} · {app.year}</p>
@@ -37,8 +43,8 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
   <p class="tagline">{app.tagline}</p>
   <ul class="tags">
     {app.platforms.map((p) => <li class="tag platform">{p}</li>)}
-    {app.stack.map((s) => <li class="tag">{s}</li>)}
   </ul>
+  <p class="stack muted">{app.stack.slice(0, 3).join(' · ')}</p>
   <div class="links">
     {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
     {app.playStore && <a class="store" href={app.playStore} target="_blank" rel="noopener">Google Play</a>}
@@ -50,11 +56,16 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
 </article>
 
 <style>
+  /* Cards in a grid row share row tracks (subgrid), so pills, stack and links line up. */
   .app {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.75rem;
+  }
+  .app > * {
+    align-self: start;
   }
   .app-head {
     display: flex;
@@ -71,8 +82,16 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
     font-weight: 800;
     font-size: 1.1rem;
     color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: linear-gradient(135deg, var(--accent-btn), var(--accent-btn-hover));
     box-shadow: var(--shadow);
+  }
+  /* The real app icon, in the same rounded square. */
+  .icon-img {
+    display: block;
+    object-fit: cover;
+    background: none;
+    /* A hairline ring keeps a dark icon visible on the dark card. */
+    box-shadow: 0 0 0 1px var(--border), var(--shadow);
   }
   h3 {
     margin: 0;
@@ -84,12 +103,15 @@ const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(
   }
   .tagline {
     margin: 0;
-    flex: 1;
   }
   .platform {
     background: var(--accent-soft);
     color: var(--accent);
     border-color: transparent;
+  }
+  .stack {
+    font-size: 0.85rem;
+    margin: 0;
   }
   .links {
     display: flex;

@@ -1,5 +1,5 @@
 ---
-title: 'SignalRig: a GTM engineering showcase with five working demos'
+title: 'Creator, SignalRig: a GTM engineering showcase with five working demos'
 shortTitle: 'SignalRig GTM engineering showcase'
 client: 'Own showcase'
 summary: 'A client-facing demo site for GTM engineering: enrichment, scoring, routing, signal detection and reporting as working browser demos, built in one session.'
