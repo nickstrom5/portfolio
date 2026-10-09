@@ -132,7 +132,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 
 <style>
   .hero {
-    padding-block: clamp(3.5rem, 10vw, 7rem) clamp(3rem, 7vw, 5rem);
+    padding-block: clamp(3.5rem, 10vw, 7rem) clamp(2rem, 4vw, 3rem);
     background:
       radial-gradient(60% 50% at 80% 0%, var(--accent-soft) 0%, transparent 70%),
       var(--bg);
@@ -221,6 +221,11 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .stats div {
     display: flex;
     flex-direction: column;
+  }
+  /* The hero has no divider below it, so the first section starts closer than the rest
+     (about 110px below the stats on desktop instead of 180px). */
+  .hero + .section {
+    padding-top: clamp(2.5rem, 5vw, 4rem);
   }
   .services {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
