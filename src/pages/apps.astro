@@ -524,7 +524,9 @@ const live = { commits: siteCommits() };
     color: #121217;
   }
   @media (max-width: 860px) {
-    .hero-inner {
+    /* .wide (laptop heroes) too: its two-class selector would otherwise keep two columns on phones. */
+    .hero-inner,
+    .hero-inner.wide {
       grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
     }
