@@ -53,7 +53,9 @@ function walk(dir, out = []) {
   return out;
 }
 const pages = walk(dist).sort();
-const noindexAllowed = new Set(['/thanks/', '/resume/']);
+const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
+// Unlisted pages: reachable only by their URL, so no other page may link to them.
+const unlisted = ['/food/'];
 const findings = [];
 const seenLinks = new Set();
 const viewports = [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1280, 900]];
@@ -83,9 +85,19 @@ for (const p of pages) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
   if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
+  for (const u of unlisted) if (p !== u && html.includes(`href="${u}"`)) findings.push(`${p}: links to the unlisted page ${u}`);
 }
 for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
+}
+// Food photos sit in a public repo: none may keep EXIF/XMP/IPTC metadata (phone photos carry GPS).
+const foodDir = 'src/assets/food';
+if (existsSync(foodDir)) {
+  const { default: sharp } = await import('sharp');
+  for (const f of readdirSync(foodDir).filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f))) {
+    const m = await sharp(join(foodDir, f)).metadata();
+    if (m.exif || m.xmp || m.iptc) findings.push(`${foodDir}/${f}: still has photo metadata (location?); add photos with npm run food:add`);
+  }
 }
 
 // Browser checks.
