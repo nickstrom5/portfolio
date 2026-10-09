@@ -1,5 +1,5 @@
 /**
- * The AI-built projects on the AI/Projects page. Most render as a
+ * The AI-built projects on the AI Projects page. Most render as a
  * scroll-through story that the tiles at the top switch between; a few
  * tiles are coming soon, and a page tile opens its own page on this site.
  */

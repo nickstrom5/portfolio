@@ -29,4 +29,4 @@ Most local businesses either have no website or a broken one, and the click from
 
 ## Why it matters
 
-It is the same playbook as the apps: a clear brief, real constraints and a model doing the build. The [full story is on the AI/Projects page](/apps/#launchneat).
+It is the same playbook as the apps: a clear brief, real constraints and a model doing the build. The [full story is on the AI Projects page](/apps/#launchneat).
