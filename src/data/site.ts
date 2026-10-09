@@ -43,7 +43,7 @@ export const site = {
 export const footerNav = [
   { href: '/work', label: 'Work' },
   { href: '/clients', label: 'Clients' },
-  { href: '/apps', label: 'AI/Projects' },
+  { href: '/apps', label: 'AI Projects' },
   { href: '/ghl', label: 'GoHighLevel automations' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
