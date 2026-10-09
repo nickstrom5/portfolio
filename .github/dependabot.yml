@@ -12,6 +12,11 @@ updates:
       npm-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      # @astrojs/check (run by `npm run build`) supports TypeScript 5 and 6 only;
+      # remove this once it supports 7.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

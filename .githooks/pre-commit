@@ -1,0 +1,5 @@
+#!/bin/sh
+# Blocks a commit while any image in the repo still carries photo metadata
+# (EXIF/XMP/IPTC, which can include GPS). Turned on by `npm install`/`npm ci`
+# (the "prepare" script sets core.hooksPath to .githooks).
+exec node scripts/check-photo-metadata.mjs

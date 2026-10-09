@@ -1,5 +1,5 @@
 ---
-title: 'Project managing video production for hundreds of BARBRI courses'
+title: 'Project Manager, Video Production at BARBRI'
 shortTitle: 'BARBRI video production management'
 client: 'BARBRI'
 summary: 'Managed and tracked post-production on hundreds of video courses for the bar-exam prep company, owning timelines and coordinating professors and creative staff.'

@@ -1,8 +1,8 @@
 ---
-title: 'Executive assistant and operations for an AI productivity startup'
+title: 'Executive Assistant to the founder of an AI productivity startup'
 shortTitle: 'Executive assistant for an AI startup'
 client: 'AI productivity startup (San Francisco Bay Area)'
-summary: 'Operations and admin for the founder of an AI document-tools startup since October 2024: blog upkeep on Ghost, research and recurring admin.'
+summary: 'Operations and admin for the founder of an AI document-tools startup from October 2024 to September 2026: blog upkeep on Ghost, research and recurring admin.'
 category: 'admin'
 platforms: ['Remote']
 stack: ['Ghost', 'Email', 'Proofreading', 'Research', 'Recurring admin']
@@ -12,18 +12,19 @@ source: 'upwork'
 links: {}
 placeholder: false
 published: 2026-09-18
+updated: 2026-10-09
 ---
 
 ## The engagement
 
-The founder of a Bay Area startup that builds AI-powered document and productivity tools reached out on Upwork in October 2024 looking for someone with "integrity and a self-starter mentality" to take operations and admin work off his plate. The contract has been running since, with the agreed rate increase applied every six months.
+The founder of a Bay Area startup that builds AI-powered document and productivity tools reached out on Upwork in October 2024 looking for someone with "integrity and a self-starter mentality" to take operations and admin work off his plate. The contract ran until September 2026, with the agreed rate increase applied every six months, and closed with client feedback and a bonus.
 
-## What I do
+## What I did
 
 - Started with the blog: proofreading posts, adding images and keeping the Ghost site tidy.
 - Picked up the founder's recurring admin and research asks as they came, mostly over email, his preferred channel.
-- Keep a running list so nothing he hands off has to be handed off twice.
+- Kept a running list so nothing he handed off had to be handed off twice.
 
 ## Why it matters
 
-Founders at small AI companies should be shipping, not proofreading. Two years on the same contract says the arrangement works.
+Founders at small AI companies should be shipping, not proofreading. Nearly two years on the same contract says the arrangement worked.

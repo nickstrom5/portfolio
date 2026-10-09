@@ -7,8 +7,8 @@
  * Each photo is auto-rotated, resized to at most 2400px, re-encoded as JPEG and
  * saved to src/assets/food/<date>-<name>.jpg (or <name>.jpg with --date none) with ALL metadata removed. Phone
  * photos carry GPS location in their EXIF data, and this repo is public, so
- * never copy a photo into src/assets/food/ by hand: `npm run qa` fails if one
- * still has metadata.
+ * never copy a photo into src/assets/food/ by hand: the build and the pre-commit
+ * hook fail if one still has metadata.
  *
  * --name defaults to the file name, --date to today. The page shows the name as the
  * caption; set a title, a one-line note, alt text and the order in src/data/food.json.
@@ -62,6 +62,8 @@ for (const file of files) {
     const meta = await sharp(target).metadata();
     if (meta.exif || meta.xmp || meta.iptc) throw new Error('metadata survived re-encoding');
     console.log(`Added ${target} (${meta.width}x${meta.height}, metadata removed)`);
+    // The lightbox shows photos up to 1600px wide; a small one (a screenshot crop) looks soft.
+    if (Math.max(meta.width, meta.height) < 1200) console.warn(`  ${basename(target)} is only ${meta.width}x${meta.height}; use the original photo if you have it.`);
   } catch (err) {
     failed++;
     const heic = /\.hei[cf]$/i.test(file);

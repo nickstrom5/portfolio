@@ -86,7 +86,9 @@ Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none
 The script strips GPS and other metadata, fixes rotation and saves the photo to
 `src/assets/food/`; every photo there appears on the page. Titles, one-line notes,
 alt text and the order live in `src/data/food.json` (see `src/assets/food/README.md`).
-QA fails if a photo in that folder still carries metadata, so never copy one in by hand.
+The build and every commit fail if any image in the repo still carries metadata
+(`npm run photos:check`; the pre-commit hook is in `.githooks/`), so never copy a
+photo in by hand.
 
 ## Deploying
 
@@ -192,9 +194,9 @@ not, the way a visitor's own run works.
 Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
 of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To
 attach proof of a live build (a Loom or screenshots of a real sub-account),
-add a `proof` array to that workflow's file. The page is linked from the
-footer only; to put it in the top nav, remove the `/ghl` filter in
-`src/data/site.ts`.
+add a `proof` array to that workflow's file. The page is linked from its
+AI Projects tile and the Work page, not from the nav or footer; to add it,
+put it in `footerNav` in `src/data/site.ts`.
 
 ## SignalRig (GTM engineering showcase)
 

@@ -4,8 +4,10 @@ import { site } from '@/data/site';
 import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
+import { execFileSync } from 'node:child_process';
 
 const skills = {
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
   'AI & development': [
     'Claude Code',
     'Grok',
@@ -16,7 +18,6 @@ const skills = {
     'GitHub Actions & Pages',
     'Cloudflare DNS',
   ],
-  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
   'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
   'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho One', 'Zapier', 'Google Sheets + AI'],
   'Operations & finance': ['QuickBooks Online', 'Google Workspace', 'Slack', 'Vendor & billing coordination', 'Hiring & onboarding', 'Client onboarding'],
@@ -32,6 +33,11 @@ const connect = [
   site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
+// Last change to the profile, from git (same sources as the sitemap's lastmod for /about/).
+let dateModified: string | undefined;
+try {
+  dateModified = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'src/pages/about.astro', 'src/data/site.ts', 'src/data/personal.json'], { encoding: 'utf8' }).trim() || undefined;
+} catch {}
 ---
 
 <Base
@@ -39,7 +45,7 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
   description="Nick (Nicholas) Soderstrom, Chicago-based freelance senior project manager and operations lead since 2015: background, skills, Upwork history and contact."
   ogType="profile"
   pageType="ProfilePage"
-  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z' }}
+  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z', ...(dateModified ? { dateModified } : {}) }}
 >
   <section class="section">
     <div class="container about">
@@ -68,8 +74,6 @@ const photos = personal.photos as { src: string; alt: string; caption?: string }
         <div class="cta">
           <a class="btn btn-primary" href={url('/contact')}>Work with me</a>
           <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-          {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork</a>}
-          {linkedinLive && <a class="btn btn-secondary" href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>}
         </div>
       </div>
 

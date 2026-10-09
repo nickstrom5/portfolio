@@ -21,7 +21,7 @@ function siteCommits(): string | undefined {
 const live = { commits: siteCommits() };
 ---
 
-<Base title="AI-built apps and websites" description="Apps and websites Nick Soderstrom built by directing AI: Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel automation case studies.">
+<Base title="AI-built apps and websites" description="Apps and sites Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel case studies.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI Projects</span>
@@ -348,13 +348,16 @@ const live = { commits: siteCommits() };
     gap: 1rem;
     margin-top: 2rem;
   }
+  /* Tiles in a row share row tracks (subgrid): kicker, name, blurb and link line up
+     across the row however many lines each kicker or blurb takes. */
   .tile {
     position: relative;
     text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    min-height: 190px;
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0.35rem;
+    align-content: start;
     padding: 1.25rem 1.25rem 1.1rem;
     border-radius: var(--radius);
     border: 2px solid transparent;
@@ -422,7 +425,6 @@ const live = { commits: siteCommits() };
   .t-blurb {
     opacity: 0.8;
     font-size: 0.95rem;
-    flex: 1;
   }
   .t-cta {
     font-weight: 700;
