@@ -1,5 +1,5 @@
 ---
-title: 'Project managing design work for Symplicity’s college clients'
+title: 'Project Manager, Design Projects at Symplicity'
 shortTitle: 'Symplicity project management'
 client: 'Symplicity'
 summary: 'Nearly four years as project manager for a higher-education software company, coordinating internal teams and many college clients on design projects.'

@@ -478,6 +478,8 @@ export const projects: Project[] = [
       { pick: true, said: 'Make sure stuff like this lines up cleanly.', did: 'Wrote a script that measures every card grid on the site, found the same drift in six places (testimonials, project, app and service cards, AI Projects tiles, the contracts list), gave each one shared row tracks, and re-ran it until every row measured 0px apart.' },
       { said: 'Add Personal chef to the bottom of the options.', did: 'Added it as the last Project type on the contact form.' },
       { said: '“See my work” should link to the Clients tab. Keep the text the same.', did: 'Pointed it, and the same button on the thank-you page, at Clients.' },
+      { said: 'The cards on the Work page: let’s make them sound more like job titles.', did: 'Retitled all twenty case studies with the job titles from the Upwork contracts and the résumé, and “Founder” for the products of my own.' },
+      { pick: true, said: 'This seems outdated. I have a lot of feedback; why only five cards? Upwork MCP is now connected.', did: 'Rebuilt Recent engagements from the nine newest client case studies so it updates itself, checked every “ongoing” claim against Upwork (three contracts had ended, so those case studies now say when), and asked for screenshots of the reviews, since neither Upwork nor the inbox exposes review text and every quote stays verbatim.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },

@@ -1,5 +1,5 @@
 ---
-title: 'Webinar production and executive support for an association president'
+title: 'Webinar Coordinator and Assistant to an association president'
 shortTitle: 'Webinar production & executive support'
 client: 'Professional association (president)'
 summary: 'Zoom webinar coordination for a professional association in spring 2026 that grew into an ongoing assistant-to-the-president role covering scheduling and events.'

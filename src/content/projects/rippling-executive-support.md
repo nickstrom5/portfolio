@@ -1,5 +1,5 @@
 ---
-title: 'Executive support at Rippling'
+title: 'Executive Assistant at Rippling'
 shortTitle: 'Executive support at Rippling'
 client: 'Rippling'
 summary: 'A year of scheduling and project coordination for multiple executives at the HR and IT platform company.'
