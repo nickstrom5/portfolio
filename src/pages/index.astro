@@ -36,8 +36,8 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
-        <a class="cta-link" href={url('/clients')}>See my work →</a>
-        {upworkLive && <a class="cta-link" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile ↗</a>}
+        <a class="btn btn-secondary" href={url('/clients')}>See my work →</a>
+        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">Upwork profile ↗</a>}
       </div>
       <dl class="stats">
         {site.stats.map((s) => (
@@ -188,12 +188,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     align-items: center;
     gap: 0.75rem;
     margin: 1.75rem 0 2.25rem;
-  }
-  /* One primary and one secondary button; the other destinations are quieter links. */
-  .cta-link {
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding-block: 0.7rem;
   }
   .stats {
     display: grid;
