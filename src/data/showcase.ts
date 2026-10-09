@@ -485,6 +485,8 @@ export const projects: Project[] = [
       { said: 'Bebu was staff.', did: 'Named Pizzeria Bebu as the staff job on the Work page and the résumé, so it no longer reads as one of the 300+ freelance contracts.' },
       { said: '(screenshot of the contact form) Not sure yet on the bottom.', did: 'Moved “Not sure yet” below Personal chef, so it closes the list.' },
       { said: '(screenshot of the Top Rated Plus, 100% Job Success and Freelance since 2015 pills) We can remove these.', did: 'Took them off the home page; the stats row right below already shows the same numbers.' },
+      { said: '(screenshot of About) Open to a variety of roles. Change the wording.', did: 'Reworded the line on About, and the matching one on Contact, to a variety of full-time and freelance roles, from project management and operations to executive support, automation and events.' },
+      { said: 'Food I’ve made: change to “Some food I’ve made”.', did: 'Renamed the food page’s heading and title.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
