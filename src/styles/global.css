@@ -301,6 +301,11 @@ p {
 .shot-pic {
   display: contents;
 }
+/* Its <source> children would otherwise become layout items (a flex gap each); the browser
+   picks a source from its attributes alone. */
+.shot-pic > source {
+  display: none;
+}
 
 :focus-visible {
   outline: 2px solid var(--accent);
