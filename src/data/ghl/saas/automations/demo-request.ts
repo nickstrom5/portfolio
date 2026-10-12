@@ -596,7 +596,7 @@ export const demoRequest: Automation = {
       contact: {
         firstName: 'Andre',
         lastName: 'Mills',
-        email: 'andre.millsplumbing@gmail.com',
+        email: 'andre_mills_plumbing@gmail.com',
         phone: '(216) 555-0164',
         timezone: 'America/New_York',
         fields: { company: 'Mills Plumbing', company_size: '1-10', job_role: 'Owner or executive', sms_consent: 'Yes', utm_source: 'facebook', utm_medium: 'paid-social', utm_campaign: 'plumbing-owners' },
@@ -680,7 +680,7 @@ export const demoRequest: Automation = {
       contact: {
         firstName: 'Jordan',
         lastName: 'Pike',
-        email: 'jordan.pike.research@gmail.com',
+        email: 'jordan_pike_research@gmail.com',
         phone: '',
         timezone: 'America/New_York',
         fields: { company: 'Student project', company_size: '1-10', job_role: 'Other', sms_consent: 'No', utm_source: 'google', utm_medium: 'organic', utm_campaign: 'none' },

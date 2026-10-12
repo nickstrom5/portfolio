@@ -179,7 +179,10 @@ export class Simulator {
   }
 
   private clearCanvas() {
-    if (!this.canvas) return;
+    // Only run() marks the canvas, and it stays is-running or is-ran until cleared. Skipping an
+    // unmarked canvas also skips the scrollTop write, a forced layout for each of the 19
+    // simulators while the page loads.
+    if (!this.canvas?.matches('.is-running, .is-ran')) return;
     const body = this.canvas.querySelector<HTMLElement>('.g-canvas-body');
     if (body) body.scrollTop = 0;
     this.canvas.classList.remove('is-running', 'is-ran');
