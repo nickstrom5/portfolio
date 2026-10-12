@@ -51,7 +51,7 @@
       "items": [
         {
           "account": "Kestrel",
-          "domain": "kestrelhq.com",
+          "domain": "kestrelhq.example",
           "detail": "Sales Development Representative (x4) · Enterprise AE (x2)",
           "date": "2026-08-14",
           "meta": "Greenhouse-style board",
@@ -59,7 +59,7 @@
         },
         {
           "account": "Ferro Labs",
-          "domain": "ferrolabs.ai",
+          "domain": "ferrolabs.example",
           "detail": "Head of Sales Development",
           "date": "2026-08-27",
           "meta": "Ashby-style board",
@@ -67,7 +67,7 @@
         },
         {
           "account": "LumenOps",
-          "domain": "lumenops.com",
+          "domain": "lumenops.example",
           "detail": "Account Executive (x2), first sales hires",
           "date": "2026-08-20",
           "meta": "Lever-style board",
@@ -75,7 +75,7 @@
         },
         {
           "account": "Tessellate",
-          "domain": "tessellate.hr",
+          "domain": "tessellate.example",
           "detail": "Senior Backend Engineer (x3)",
           "date": "2026-08-22",
           "meta": "Greenhouse-style board",
@@ -83,7 +83,7 @@
         },
         {
           "account": "Harborstack",
-          "domain": "harborstack.com",
+          "domain": "harborstack.example",
           "detail": "SDR (x3) · AE (x3) · Sales Enablement Manager",
           "date": "2026-08-30",
           "meta": "Greenhouse-style board",
@@ -102,7 +102,7 @@
       "items": [
         {
           "account": "Kestrel",
-          "domain": "kestrelhq.com",
+          "domain": "kestrelhq.example",
           "detail": "Series B, $34M led by a growth fund",
           "date": "2026-02-11",
           "meta": "Press release",
@@ -110,7 +110,7 @@
         },
         {
           "account": "LumenOps",
-          "domain": "lumenops.com",
+          "domain": "lumenops.example",
           "detail": "Series A extension, $9M",
           "date": "2026-05-04",
           "meta": "Investor blog",
@@ -118,7 +118,7 @@
         },
         {
           "account": "Quillsend",
-          "domain": "quillsend.co",
+          "domain": "quillsend.example",
           "detail": "Series B, $28M",
           "date": "2026-08-19",
           "meta": "Press release",
@@ -126,7 +126,7 @@
         },
         {
           "account": "OrbitFleet",
-          "domain": "orbitfleet.io",
+          "domain": "orbitfleet.example",
           "detail": "Series B, $22M",
           "date": "2025-11-18",
           "meta": "Press release",
@@ -145,7 +145,7 @@
       "items": [
         {
           "account": "Kestrel",
-          "domain": "kestrelhq.com",
+          "domain": "kestrelhq.example",
           "detail": "VP Sales joined (previously at a conversation-intelligence vendor)",
           "date": "2026-07-10",
           "meta": "Profile change",
@@ -153,7 +153,7 @@
         },
         {
           "account": "Ferro Labs",
-          "domain": "ferrolabs.ai",
+          "domain": "ferrolabs.example",
           "detail": "Chief Revenue Officer announced",
           "date": "2026-08-05",
           "meta": "Company news",
@@ -161,7 +161,7 @@
         },
         {
           "account": "Northwind Pay",
-          "domain": "northwindpay.com",
+          "domain": "northwindpay.example",
           "detail": "VP Engineering joined",
           "date": "2026-08-12",
           "meta": "Profile change",
@@ -169,7 +169,7 @@
         },
         {
           "account": "Tessellate",
-          "domain": "tessellate.hr",
+          "domain": "tessellate.example",
           "detail": "CMO joined",
           "date": "2026-08-25",
           "meta": "Press",
@@ -188,7 +188,7 @@
       "items": [
         {
           "account": "Quillsend",
-          "domain": "quillsend.co",
+          "domain": "quillsend.example",
           "detail": "12 new LinkedIn ads targeting 'revenue operations'",
           "date": "2026-08-24",
           "meta": "LinkedIn ad library",
@@ -196,7 +196,7 @@
         },
         {
           "account": "Harborstack",
-          "domain": "harborstack.com",
+          "domain": "harborstack.example",
           "detail": "Retargeting creative refreshed (no category terms)",
           "date": "2026-08-11",
           "meta": "Meta ad library",
@@ -204,7 +204,7 @@
         },
         {
           "account": "Ferro Labs",
-          "domain": "ferrolabs.ai",
+          "domain": "ferrolabs.example",
           "detail": "Search ads on 'SDR outsourcing alternative'",
           "date": "2026-08-28",
           "meta": "Google transparency",

@@ -42,7 +42,7 @@
       "segment": "Fintech",
       "territory": "US East",
       "subject": "Automatic reply: quota planning without the spreadsheet",
-      "body": "I am out of the office until 14 September with limited access to email. For urgent matters please contact ops@northwindpay.com.",
+      "body": "I am out of the office until 14 September with limited access to email. For urgent matters please contact ops@northwindpay.example.",
       "classification": "ooo",
       "confidence": 0.99,
       "intent": "auto_reply",

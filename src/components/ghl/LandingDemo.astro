@@ -59,7 +59,7 @@ const titleId = `${caseId}-demo-side-title`;
         </div>
 
         <div class="lp-card">
-          <form class="lp-form" data-lp-form novalidate>
+          <form class="lp-form" data-lp-form method="dialog" novalidate>
             <p class="lp-form-title">{l.formTitle}</p>
             {rows.map((row) => {
               const field = (f: LandingField) =>

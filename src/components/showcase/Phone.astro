@@ -1,5 +1,6 @@
 ---
 import { url } from '@/lib/url';
+import Shot from './Shot.astro';
 /**
  * CSS iPhone frame with hand-built screen mockups. Screens are concept
  * renders of the real app flows, not screenshots of the shipped builds.
@@ -29,7 +30,7 @@ const isShot = screen === 'image' && !!image;
 <div class:list={['phone', size, { tilt }]} role={isShot ? undefined : 'img'} aria-label={isShot ? undefined : alt || `${screen} screen mockup`}>
   <div class="island" aria-hidden="true"></div>
   <div class:list={['screen', screen.split('-')[0]]}>
-    {isShot && <img src={image} alt={alt} loading="lazy" width="390" height="844" />}
+    {isShot && <Shot src={image} alt={alt} width={390} height={844} widths={[300, 600, 660]} sizes="300px" />}
 
     {screen === 'clam-home' && (
       <div class="ui clam-ui">
@@ -121,7 +122,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" loading="lazy" decoding="async" />
+          <Shot class="dog" src="/showcase/goodwalk-dog.jpg" alt="" width={96} height={96} widths={[92, 184, 276]} sizes="92px" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
@@ -150,7 +151,7 @@ const isShot = screen === 'image' && !!image;
         <div class="status"><span>5:32</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="gw-card">
-          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" loading="lazy" decoding="async" />
+          <Shot class="gw-photo" src="/showcase/goodwalk-dog.jpg" alt="" width={240} height={240} widths={[300, 480]} sizes="280px" />
           <div class="gw-card-body">
             <strong>Rex</strong>
             <span>14 days in a row · 41 walks total</span>
