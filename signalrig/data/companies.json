@@ -10,7 +10,7 @@
   },
   "companies": [
     {
-      "domain": "kestrelhq.com",
+      "domain": "kestrelhq.example",
       "name": "Kestrel",
       "source": {
         "provider": "Firmographic index",
@@ -47,13 +47,13 @@
       "contact": {
         "name": "Dana Whitfield",
         "title": "VP Sales",
-        "email": "d.whitfield@kestrelhq.com",
+        "email": "d.whitfield@kestrelhq.example",
         "verified": true,
         "persona": "VP Sales"
       }
     },
     {
-      "domain": "orbitfleet.io",
+      "domain": "orbitfleet.example",
       "name": "OrbitFleet",
       "source": {
         "provider": "Firmographic index",
@@ -89,13 +89,13 @@
       "contact": {
         "name": "Marcus Oyelaran",
         "title": "Head of Revenue Operations",
-        "email": "marcus@orbitfleet.io",
+        "email": "marcus@orbitfleet.example",
         "verified": true,
         "persona": "Head of RevOps"
       }
     },
     {
-      "domain": "marrowbio.com",
+      "domain": "marrowbio.example",
       "name": "Marrow Bio",
       "source": {
         "provider": "Firmographic index",
@@ -129,7 +129,7 @@
       "contact": null
     },
     {
-      "domain": "brickandbolt.co",
+      "domain": "brickandbolt.example",
       "name": "Brick & Bolt Studio",
       "source": {
         "provider": "Firmographic index",
@@ -163,7 +163,7 @@
       "contact": null
     },
     {
-      "domain": "plumbline.dev",
+      "domain": "plumbline.example",
       "name": "Plumbline",
       "source": {
         "provider": "Firmographic index",
@@ -197,7 +197,7 @@
       "contact": null
     },
     {
-      "domain": "harborstack.com",
+      "domain": "harborstack.example",
       "name": "Harborstack",
       "source": {
         "provider": "Firmographic index",
@@ -235,7 +235,7 @@
       "contact": {
         "name": "Priya Raman",
         "title": "Chief Revenue Officer",
-        "email": "praman@harborstack.com",
+        "email": "praman@harborstack.example",
         "verified": true,
         "persona": "CRO"
       }

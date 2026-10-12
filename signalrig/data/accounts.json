@@ -38,7 +38,7 @@
     {
       "id": "kestrel",
       "name": "Kestrel",
-      "domain": "kestrelhq.com",
+      "domain": "kestrelhq.example",
       "segment": "RevOps software",
       "fit": 72,
       "signals": [
@@ -62,7 +62,7 @@
     {
       "id": "harborstack",
       "name": "Harborstack",
-      "domain": "harborstack.com",
+      "domain": "harborstack.example",
       "segment": "Supply chain",
       "fit": 95,
       "signals": [
@@ -81,7 +81,7 @@
     {
       "id": "orbitfleet",
       "name": "OrbitFleet",
-      "domain": "orbitfleet.io",
+      "domain": "orbitfleet.example",
       "segment": "Logistics",
       "fit": 68,
       "signals": [
@@ -100,7 +100,7 @@
     {
       "id": "quillsend",
       "name": "Quillsend",
-      "domain": "quillsend.co",
+      "domain": "quillsend.example",
       "segment": "Martech",
       "fit": 90,
       "signals": [
@@ -114,7 +114,7 @@
     {
       "id": "ferrolabs",
       "name": "Ferro Labs",
-      "domain": "ferrolabs.ai",
+      "domain": "ferrolabs.example",
       "segment": "Fintech",
       "fit": 61,
       "signals": [
@@ -143,7 +143,7 @@
     {
       "id": "northwind",
       "name": "Northwind Pay",
-      "domain": "northwindpay.com",
+      "domain": "northwindpay.example",
       "segment": "Fintech",
       "fit": 88,
       "signals": [
@@ -162,7 +162,7 @@
     {
       "id": "lumenops",
       "name": "LumenOps",
-      "domain": "lumenops.com",
+      "domain": "lumenops.example",
       "segment": "DevTools",
       "fit": 55,
       "signals": [
@@ -181,7 +181,7 @@
     {
       "id": "tessellate",
       "name": "Tessellate",
-      "domain": "tessellate.hr",
+      "domain": "tessellate.example",
       "segment": "HR Tech",
       "fit": 83,
       "signals": []

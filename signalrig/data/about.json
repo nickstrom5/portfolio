@@ -8,7 +8,7 @@
   "path": {
     "title": "If you have three minutes",
     "steps": [
-      { "href": "#demo-enrichment", "label": "Run the enrichment pipeline", "note": "Try kestrelhq.com, then marrowbio.com. Watch the waterfall get skipped." },
+      { "href": "#demo-enrichment", "label": "Run the enrichment pipeline", "note": "Try kestrelhq.example, then marrowbio.example. Watch the waterfall get skipped." },
       { "href": "#demo-scoring", "label": "Flip fit to timing in the scoring model", "note": "Then turn decay off and see a stale account climb." },
       { "href": "#demo-reporting", "label": "Split the report by segment × persona", "note": "Two cells carry sixteen. The aggregate hides it." }
     ]
