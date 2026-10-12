@@ -1,12 +1,17 @@
 # Weekly dependency and GitHub Actions updates, opened as pull requests.
 # No workflow runs on pull requests, so before merging one: check out its
-# branch and run `npm ci && npm run build && npm run qa`.
+# branch and run `npm ci && npm run build && npm run qa`. For a PR under
+# signalrig/ or yetour/, run `npm ci && npm run build` in that folder instead.
+# The cooldown holds back versions published in the last week, the window in
+# which compromised npm releases are usually caught; security updates skip it.
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /
+    directories: ["/", "/signalrig", "/yetour"]
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       npm-minor-patch:
@@ -21,3 +26,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
