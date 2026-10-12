@@ -28,7 +28,7 @@ interface Props {
 
 const {
   title,
-  description = `${site.name}, freelance ${site.role.toLowerCase()} in Chicago. 300+ contracts since 2015, Top Rated Plus on Upwork, 100% Job Success.`,
+  description = `${site.name}, ${site.role.toLowerCase()} in Chicago, open to full-time and freelance roles. 300+ contracts, Top Rated Plus on Upwork.`,
   image = '/og.png',
   imageAlt,
   noindex = false,
@@ -40,7 +40,7 @@ const {
 } = Astro.props;
 
 // A page may pass a full title that already names Nick; otherwise the name is appended.
-const fullTitle = title ? (title.includes(site.name) ? title : `${title} · ${site.name}`) : `${site.name} · Freelance project manager and operations lead`;
+const fullTitle = title ? (title.includes(site.name) ? title : `${title} · ${site.name}`) : `${site.name} · ${site.role}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 // Only the default card is 1200×630; other preview images omit sizes rather than state wrong ones.

@@ -1,4 +1,5 @@
 ---
+import { execFileSync } from 'node:child_process';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '@/layouts/Base.astro';
@@ -31,6 +32,13 @@ const related = [...peers.slice(i + 1), ...peers.slice(0, i)].slice(0, 2);
 
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+// The later of the frontmatter date and the file's last commit (the sitemap's lastmod source),
+// so a retitled case study doesn't keep an old dateModified.
+let lastEdit: string | undefined;
+try {
+  lastEdit = execFileSync('git', ['log', '-1', '--format=%cI', '--', `src/content/projects/${project.id}.md`], { encoding: 'utf8' }).trim().slice(0, 10) || undefined;
+} catch {}
+const dateModified = d.published ? [iso(d.updated ?? d.published), lastEdit ?? ''].sort().at(-1) : undefined;
 const shortDate = (dt: Date) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
@@ -60,7 +68,7 @@ const links = [
       inLanguage: 'en-US',
       isPartOf: { '@id': `${site.url}/#website` },
       keywords: d.stack.join(', '),
-      ...(d.published ? { datePublished: iso(d.published), dateModified: iso(d.updated ?? d.published) } : {}),
+      ...(d.published ? { datePublished: iso(d.published), dateModified } : {}),
       author: { '@type': 'Person', '@id': `${site.url}/#person`, name: site.name, url: `${site.url}/about/` },
       publisher: { '@id': `${site.url}/#person` },
       mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
