@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '@/assets/nick-soderstrom.jpg';
 import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
@@ -31,7 +33,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   <section class="hero">
     <div class="container">
       <div class="who">
-        <img class="portrait" src={url(site.photo)} alt={site.name} width="56" height="56" loading="eager" />
+        <Image class="portrait" src={portrait} alt={site.name} width={56} height={56} densities={[1, 2, 3]} format="webp" loading="eager" />
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}{' '}<span class="accent">for teams that need things to actually move.</span></h1>

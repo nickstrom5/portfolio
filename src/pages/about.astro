@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '@/assets/nick-soderstrom.jpg';
 import Base from '@/layouts/Base.astro';
 import { site } from '@/data/site';
 import personal from '@/data/personal.json';
@@ -50,7 +52,7 @@ try {
   <section class="section">
     <div class="container about">
       <div class="prose">
-        <img class="portrait" src={url(site.photo)} alt={`${site.name}`} width="128" height="128" loading="eager" />
+        <Image class="portrait" src={portrait} alt={site.name} width={128} height={128} densities={[1, 2, 3]} format="webp" loading="eager" />
         <span class="eyebrow">About</span>
         <h1>Hi, I'm {site.name}.</h1>
         <p class="lede">

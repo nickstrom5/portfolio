@@ -1,4 +1,5 @@
 ---
+import Shot from './Shot.astro';
 /**
  * iPhone Duo frame, folded. Holds a real simulator capture of the cover
  * screen (1398 × 2034 px, 466 × 678 pt), so the frame keeps that aspect
@@ -20,7 +21,7 @@ const { image, alt, size = 'md', tilt = false } = Astro.props;
     <span class="spine" aria-hidden="true"><i></i><i></i><i></i></span>
     <div class="body">
       <div class="screen">
-        <img src={image} alt={alt} loading="lazy" decoding="async" width="700" height="1018" />
+        <Shot src={image} alt={alt} width={700} height={1018} widths={[280, 560, 700]} sizes="(max-width: 640px) 240px, 320px" />
         <span class="cam" aria-hidden="true"></span>
       </div>
     </div>

@@ -297,6 +297,11 @@ p {
   border: 0;
 }
 
+/* The <picture> around a showcase screenshot stays out of layout, so frame styles size the <img>. */
+.shot-pic {
+  display: contents;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;

@@ -28,7 +28,8 @@ export const site = {
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
   availability: 'Open to full-time and freelance roles',
-  /** Path under /public. */
+  /** Path under /public, for structured data and link previews. The page portraits use the
+      copy at src/assets/nick-soderstrom.jpg, served resized; replace both together. */
   photo: '/nick-soderstrom.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
   resumePdf: '/Nick-Soderstrom-Resume.pdf',

@@ -3,6 +3,7 @@ import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
 import Duo from '@/components/showcase/Duo.astro';
+import Shot from '@/components/showcase/Shot.astro';
 import { execFileSync } from 'node:child_process';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
@@ -134,7 +135,7 @@ const live = { commits: siteCommits() };
           <div class="browser" data-reveal>
             <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
             <a href={p.siteShot.url} target="_blank" rel="noopener">
-              <img src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} loading="lazy" width="1440" height="900" />
+              <Shot src={p.siteShot.desktop} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} width={1440} height={900} widths={[720, 1100, 1440]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" />
             </a>
           </div>
           <p class="caption muted">{p.siteShot.caption}</p>

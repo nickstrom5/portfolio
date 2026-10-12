@@ -2,6 +2,8 @@
  * The AI-built projects on the AI Projects page. Most render as a
  * scroll-through story that the tiles at the top switch between; a few
  * tiles are coming soon, and a page tile opens its own page on this site.
+ * Screenshot paths ('/showcase/<file>') resolve to src/assets/showcase/
+ * (see the README there).
  */
 import { cases as ghlCases } from './ghl';
 
