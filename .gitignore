@@ -6,3 +6,5 @@ dist/
 !.env.example
 .DS_Store
 npm-debug.log*
+# Temporary git worktrees Claude Code creates for parallel agents
+.claude/worktrees/
