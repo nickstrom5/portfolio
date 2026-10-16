@@ -6,6 +6,7 @@ import ProjectCard from '@/components/ProjectCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
 import { getImage } from 'astro:assets';
 import testimonials from '@/data/testimonials.json';
+import { site } from '@/data/site';
 import { url } from '@/lib/url';
 import { categoryLabel } from '@/lib/categories';
 import { ids } from '@/lib/schema';
@@ -46,7 +47,7 @@ const relatedHeading = d.featured ? 'Other long-term roles' : `More ${category.t
 
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 const iso = (dt: Date) => dt.toISOString().slice(0, 10);
-// The later of the frontmatter date and the last commit to the page's sources (the sitemap's lastmod source),
+// The later of the frontmatter date and the write-up's last commit (the sitemap's lastmod source),
 // so a retitled case study doesn't keep an old dateModified.
 const lastEdit = lastCommit(projectSources(project.id))?.slice(0, 10);
 const dateModified = d.published ? [iso(d.updated ?? d.published), lastEdit ?? ''].sort().at(-1) : undefined;
@@ -94,7 +95,7 @@ const links = [
       isPartOf: { '@id': ids.website },
       keywords: d.stack.join(', '),
       ...(d.published ? { datePublished: iso(d.published), dateModified } : {}),
-      author: { '@id': ids.person },
+      author: { '@type': 'Person', '@id': ids.person, name: site.name, url: `${site.url}/about/` },
       publisher: { '@id': ids.person },
       mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
       // Only clients already named and linked on the page; anonymized clients have no live link.

@@ -17,8 +17,9 @@ export function lastCommit(paths) {
 }
 
 /**
- * Files behind a case study's page: its write-up plus the template, card and
- * feedback it renders. The sitemap and the page's dateModified both use this.
+ * The file behind a case study's content: its write-up. Template and style
+ * changes don't count as an edit to the article. The sitemap and the page's
+ * dateModified both use this.
  * @param {string} id
  */
-export const projectSources = (id) => [`src/content/projects/${id}.md`, 'src/pages/work/[slug].astro', 'src/components/ProjectCard.astro', 'src/data/testimonials.json'];
+export const projectSources = (id) => [`src/content/projects/${id}.md`];

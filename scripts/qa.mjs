@@ -245,7 +245,8 @@ await page.waitForFunction(() => !document.getElementById('saas-pql-alert')?.hid
 await page.tap('#saas-pql-alert [data-instant]');
 if (!(await page.locator('#saas-pql-alert [data-log] .g-li').count())) findings.push('ghl: Skip to result left the log empty');
 // The landing demo hands the captured lead to speed to lead.
-await page.goto(base + '/ghl/#roofing-demo', { waitUntil: 'load' });
+// networkidle: the form is wired up once the case's own script chunk has loaded.
+await page.goto(base + '/ghl/#roofing-demo', { waitUntil: 'networkidle' });
 const lp = page.locator('[data-demo="roofing"] form');
 await lp.locator('[name=first]').fill('Test');
 await lp.locator('[name=phone]').fill('5555550123');

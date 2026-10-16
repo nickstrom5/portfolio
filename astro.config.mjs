@@ -11,9 +11,9 @@ import { lastCommit, projectSources } from './src/lib/git-date.mjs';
 // last commit that changed that page's content. Needs full git history in CI.
 /** @type {Record<string, string[]>} */
 const pageSources = {
-  '/': ['src/pages/index.astro', 'src/data/site.ts', 'src/data/services.ts', 'src/data/apps.json', 'src/data/testimonials.json', 'src/content/projects', 'src/components'],
+  '/': ['src/pages/index.astro', 'src/data/site.ts', 'src/data/services.ts', 'src/data/apps.json', 'src/data/testimonials.json', 'src/content/projects'],
   '/about/': ['src/pages/about.astro', 'src/data/personal.json', 'src/data/site.ts'],
-  '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts', 'src/components/showcase', 'src/assets/showcase'],
+  '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts', 'src/assets/showcase'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/ghl/': ['src/pages/ghl', 'src/components/ghl', 'src/lib/ghl', 'src/styles/ghl.css', 'src/data/ghl'],
