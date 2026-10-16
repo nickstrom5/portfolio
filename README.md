@@ -7,7 +7,7 @@ Cloudflare Pages, Netlify or Vercel.
 ## Run it
 
 ```bash
-npm install
+npm install      # Node 22.12+ (see .nvmrc)
 npm run dev      # http://localhost:4321
 npm run build    # type-checks, then outputs ./dist
 npm run preview  # serves ./dist
@@ -63,10 +63,49 @@ submissions in your inbox without a backend, create a free form at
 endpoint URL into `contactEndpoint`, and rebuild. The `_gotcha` honeypot field
 is already wired for Formspree's spam filter.
 
-### Social preview image
+With an endpoint set, a small script on `/contact/` sends the form in the
+background. Success goes to `/thanks/`. If Formspree is down or the visitor is
+offline, they stay on the page with their message intact and an error box
+with an email link. If Formspree rejects the post itself, the browser falls
+back to a normal post so Formspree can explain why. Without JavaScript it is
+a normal post. The Content-Security-Policy allows that background request
+with `connect-src 'self' https://formspree.io` in `astro.config.mjs`.
 
-Add a 1200×630 PNG at `public/og.png`. Until then link previews on LinkedIn
-and Upwork messages will show no image.
+### Social preview images
+
+Each indexable page has a 1200×630 share card, the picture LinkedIn, Slack and
+email show for a link:
+
+- `public/og.png` is the home page's card and the fallback for every other
+  page. It is made by hand; no script writes it.
+- `public/og/<path>.jpg` is a page's own card, with slashes as hyphens
+  (`public/og/work-barbri-video-production.jpg`, `public/og/ghl-saas.jpg`).
+  `src/lib/share-card.ts` picks it up at build time. `scripts/make-og.mjs`
+  renders them from the built pages in `og.png`'s layout: the page's eyebrow
+  and heading, the name and role, the round photo and the domain.
+- Case studies with a cover screenshot share the top of that screenshot
+  instead, cropped to 1200×630 at build time. Their `cover` must be a file in
+  `src/assets/showcase/` (`/showcase/<file>`). `/food/` shares its own photo.
+
+Cards are rendered from the built pages, so after changing a page heading run:
+
+```bash
+npm run build && npm run og && npm run build
+```
+
+The script skips the home page, `noindex` pages and pages with their own
+picture, and deletes cards no page uses any more. `npm run qa` warns about an
+indexable page still on the fallback card.
+
+### Screenshots of this site
+
+The "This website" story on `/apps/` uses screenshots of the home, Clients
+and About pages (`src/assets/showcase/site-*.jpg`). After a visible change to
+those pages, retake them from the build at 1440×900, twice the pixels:
+
+```bash
+npm run build && npm run shots && npm run build
+```
 
 ## Personal photos (About page)
 
@@ -96,12 +135,34 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
 to GitHub Pages on every push to `main`.
 
 1. In the repo: **Settings → Pages → Source: GitHub Actions**.
-2. Merge this branch to `main`. The first run publishes to
-   `https://<user>.github.io/portfolio/`.
-3. For that temporary URL to work, set two repository variables under
-   **Settings → Secrets and variables → Actions → Variables**:
-   `SITE_URL = https://<user>.github.io` and `BASE_PATH = /portfolio`.
-   Delete both once the custom domain is live.
+2. Merge this branch to `main`. The site is built for
+   `https://work-with-nick.com` (see Custom domain below).
+
+The deploy also runs `npm run ghl:check`, uses the Node version in `.nvmrc`,
+and never cancels a deploy halfway: a newer push waits for the running one.
+It publishes hidden files too, so `/.well-known/security.txt` goes live.
+Afterwards it pings IndexNow (`scripts/indexnow.sh`) with the URLs in the
+sitemap so Bing and others re-crawl; a failed ping never fails the deploy.
+
+`.github/workflows/ci.yml` runs the build, `ghl:check` and the full browser QA
+on every pull request, Dependabot's included. Make its `check` job a required
+status check on `main`.
+
+Each page's `<lastmod>` in the sitemap is the date of the last commit to the
+files that page is built from (`pageSources` in `astro.config.mjs`; case
+studies use `src/lib/git-date.mjs`). A new indexable page needs an entry
+there, or the build fails and names the page.
+
+## Security
+
+GitHub Pages cannot send response headers, so the Content-Security-Policy is
+a `<meta>` tag that Astro generates from `security.csp` in `astro.config.mjs`.
+The inline script that applies the saved theme lives in
+`src/lib/theme-init.mjs`; it runs early in `<head>` on purpose, and its CSP
+hash is computed from that file, so it cannot fall out of step.
+
+`public/.well-known/security.txt` tells researchers where to report a
+problem. Its `Expires` date (now 2027-10-01) must be renewed every year.
 
 ## Custom domain
 
@@ -135,11 +196,17 @@ each of them handles the domain and certificate from their dashboard.
 `npm run build && npm run qa` checks every built page at phone, tablet and
 desktop widths in both themes: JavaScript errors, horizontal overflow,
 heading outline, alt text, form labels, tap targets, tiny text, internal
-links and anchors, plus an SEO audit (title and description length,
-canonical, robots, Open Graph image, JSON-LD validity, sitemap coverage) and
-the interactive flows (menu, theme toggle, work filters, Apps tiles, contact
-form). It exits non-zero with a findings list. Needs Playwright with
-Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
+links and anchors, layout shift on load, plus an SEO audit (title and
+description length, canonical, robots, Open Graph image in the build with a
+1200px width tag, JSON-LD validity, sitemap coverage), page-weight budgets
+(gzipped HTML and scripts), the 404 page, `security.txt` and the interactive
+flows (menu, theme toggle, work filters, Apps tiles, the `/ghl/` old-link
+forward, simulator and landing demo, the contact form and what happens when
+sending fails). It exits non-zero with a findings list. Case studies with
+little to read and pages still on the fallback share card print as warnings,
+not failures. Playwright is a dev dependency: run
+`npx playwright install chromium` once, or point `PLAYWRIGHT_MODULE` at an
+existing install.
 A weekly routine runs this and reports.
 
 For the judgment calls the checks can't make, ask Claude Code to run the
@@ -150,9 +217,11 @@ and ranked fixes with evidence. It is read-only.
 
 ## GoHighLevel case studies (`/ghl/`)
 
-Three switchable case studies of GoHighLevel builds, each a fictional
-business with its own sample sub-account, a working landing page and a set
-of connected workflows:
+Three case studies of GoHighLevel builds, each a fictional business with its
+own sample sub-account, a working landing page and a set of connected
+workflows. Each case has its own page, and each page loads only its own
+case's data: `/ghl/` (the overview and the roofer), `/ghl/saas/` and
+`/ghl/coaching/`. A switcher links the three.
 
 - **Harbor & Pine Roofing** (small local business): speed to lead,
   missed-call text-back, inspection reminders, estimate follow-up, job
@@ -170,14 +239,14 @@ case's landing-page form. Nothing is sent anywhere.
 
 | What | Where |
 | --- | --- |
-| The three cases, in page order | `src/data/ghl/index.ts` |
+| The three cases, in page order (the first is `/ghl/` itself) | `src/data/ghl/index.ts`, with each case's browser loader in `src/lib/ghl/load-case.ts` |
 | A case's sub-account (team, pipeline, custom values, field labels) | `src/data/ghl/<case>/business.ts` (roofing: `src/data/ghl/business.ts`) |
 | A case's landing page (copy, fields, consent, post-submit choices) | `src/data/ghl/<case>/landing.ts` (roofing: `src/data/ghl/landing.ts`) |
 | One file per workflow | `src/data/ghl/<case>/automations/*.ts` (roofing: `src/data/ghl/automations/`) |
 | Data model (triggers, steps, settings, scenarios) | `src/lib/ghl/types.ts` |
 | The simulator (waits, branches, goals, DND, time windows) | `src/lib/ghl/engine.ts` |
 | Case view, canvas, simulator panel, landing demo | `src/components/ghl/` |
-| Page, compliance and troubleshooting copy | `src/pages/ghl.astro` |
+| Page, compliance and troubleshooting copy | `src/components/ghl/GhlPage.astro` (routes in `src/pages/ghl/`) |
 | Styles | `src/styles/ghl.css` |
 
 After editing a workflow, run:
@@ -197,8 +266,10 @@ workflow or scenario that does not exist. The full run also plays each
 landing-page choice at every hour of the week, with the SMS box ticked and
 not, the way a visitor's own run works.
 
-Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
-of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To
+Deep links: `/ghl/saas/#saas-pql-alert` opens a workflow and
+`/ghl/coaching/#coaching-demo` jumps to a landing page. Links in the old
+single-page form (`/ghl/#saas`, `/ghl/#saas-pql-alert`, `/ghl/#coaching-demo`)
+forward to the right page. To
 attach proof of a live build (a Loom or screenshots of a real sub-account),
 add a `proof` array to that workflow's file. The page is linked from its
 AI Projects tile and the Work page, not from the nav or footer; to add it,
