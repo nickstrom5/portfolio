@@ -4,11 +4,14 @@ import type { CollectionEntry } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
+import { getImage } from 'astro:assets';
 import testimonials from '@/data/testimonials.json';
 import { url } from '@/lib/url';
 import { categoryLabel } from '@/lib/categories';
 import { ids } from '@/lib/schema';
 import { lastCommit, projectSources } from '@/lib/git-date.mjs';
+import { shareCard } from '@/lib/share-card';
+import { showcaseAsset } from '@/lib/showcase-images';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.hidden);
@@ -23,6 +26,13 @@ const { Content } = await render(project);
 const d = project.data;
 const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
 const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
+// Link previews want 1200×630: the top of the cover screenshot, cropped to fit. Never read .src or
+// .width on the asset itself, or Astro also publishes the untouched original.
+const coverAsset = d.cover ? showcaseAsset(d.cover) : undefined;
+if (d.cover && !coverAsset) throw new Error(`${project.id}: cover ${d.cover} is not in src/assets/showcase/`);
+const shareImage = coverAsset
+  ? (await getImage({ src: coverAsset, width: 1200, height: 630, fit: 'cover', position: 'top', format: 'jpg' })).src
+  : undefined;
 const category = categoryLabel(d.category);
 
 // Rotate through the category so every case study gets related links, not just the first two alphabetically.
@@ -68,8 +78,9 @@ const links = [
   title={d.shortTitle ?? d.title}
   description={d.summary}
   ogType="article"
-  image={d.cover}
-  imageAlt={d.cover ? coverAlt : undefined}
+  image={shareImage}
+  imageSize={shareImage ? { width: 1200, height: 630 } : undefined}
+  imageAlt={shareImage ? coverAlt : undefined}
   breadcrumbs={[{ name: 'Work', path: '/work/' }, { name: d.shortTitle ?? d.title, path: Astro.url.pathname }]}
   jsonLd={[
     {
@@ -78,7 +89,7 @@ const links = [
       headline: d.title,
       description: d.summary,
       url: pageUrl,
-      image: [new URL(d.cover ?? '/og.png', Astro.site).href],
+      image: [new URL(shareImage ?? shareCard(Astro.url.pathname), Astro.site).href],
       inLanguage: 'en-US',
       isPartOf: { '@id': ids.website },
       keywords: d.stack.join(', '),

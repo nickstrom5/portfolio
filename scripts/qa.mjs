@@ -6,12 +6,14 @@
  * Checks every page at phone, tablet and desktop widths in light and dark:
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
- * title length, description length, canonical, robots, Open Graph image,
+ * title length, description length, canonical, robots, Open Graph image
+ * (in the build, with a 1200px width tag),
  * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
  * Holds page-weight budgets, checks layout shift, and exercises the menu,
  * theme toggle, work filters, Apps tiles, the /ghl/ old-link forward,
  * simulator and landing demo, the contact form and its failure path, the
- * 404 page and key assets. Thin case studies print as warnings.
+ * 404 page and key assets. Thin case studies and indexable pages still on
+ * the default share card print as warnings.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -87,7 +89,15 @@ for (const p of pages) {
   if (noindex && !noindexAllowed.has(p)) findings.push(`${p}: unexpectedly noindex`);
   if (!noindex && !sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: indexable but not in sitemap`);
   if (noindex && sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: noindex but listed in sitemap`);
-  if (!noindex && !/<meta property="og:image"/.test(html)) findings.push(`${p}: missing og:image`);
+  const ogImage = (html.match(/<meta property="og:image" content="([^"]*)"/) || [])[1];
+  if (!noindex && !ogImage) findings.push(`${p}: missing og:image`);
+  if (ogImage) {
+    const imgPath = new URL(ogImage).pathname;
+    if (!existsSync(join(dist, imgPath))) findings.push(`${p}: og:image ${imgPath} is not in the build`);
+    // Noindex pages may share a picture of unstated size (/food/ uses its first photo).
+    if (!noindex && !/<meta property="og:image:width" content="1200"/.test(html)) findings.push(`${p}: og:image has no 1200px width tag`);
+    if (!noindex && imgPath === '/og.png' && p !== '/') warnings.push(`${p}: uses the default share card (run \`npm run build && npm run og && npm run build\`)`);
+  }
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
