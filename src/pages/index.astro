@@ -7,6 +7,7 @@ import ProjectCard from '@/components/ProjectCard.astro';
 import AppCard from '@/components/AppCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
 import ClientStrip from '@/components/ClientStrip.astro';
+import CtaBand from '@/components/CtaBand.astro';
 import { site } from '@/data/site';
 import { services } from '@/data/services';
 import apps from '@/data/apps.json';
@@ -37,7 +38,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <p class="avail"><span class="dot" aria-hidden="true"></span>{site.availability}</p>
       </div>
       <h1>{site.role}{' '}<span class="accent">for teams that need things to actually move.</span></h1>
-      <p class="lede">I'm {site.name}, based in Chicago. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, including multi-year roles with SPARC.science, Symplicity and BARBRI.</p>
+      <p class="lede">I'm <a href={url('/about')}>{site.name}</a>, based in Chicago (Central Time) and working remotely. Ten-plus years running projects for federal research institutions, universities, corporations, startups and nonprofits, including multi-year roles with SPARC.science, Symplicity and BARBRI.</p>
       <div class="cta">
         <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
         <a class="btn btn-secondary" href={url('/resume')}>Resume</a>
@@ -126,15 +127,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     </div>
   </section>
 
-  <section class="section cta-band">
-    <div class="container cta-inner">
-      <div>
-        <h2>Have a project in mind?</h2>
-        <p class="muted">Tell me what needs to run better and I'll reply within one business day with next steps.</p>
-      </div>
-      <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
-    </div>
-  </section>
+  <CtaBand />
 </Base>
 
 <style>
@@ -268,21 +261,5 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     margin: 0.75rem 0 0;
     font-size: 0.9rem;
     font-weight: 600;
-  }
-  .cta-band {
-    background: var(--bg-muted);
-  }
-  .cta-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-  .cta-inner h2 {
-    margin-bottom: 0.25rem;
-  }
-  .cta-inner p {
-    margin: 0;
   }
 </style>

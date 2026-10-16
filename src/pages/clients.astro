@@ -104,8 +104,9 @@ const sectors = [
         </p>
       </div>
       <div class="band-actions">
-        {upworkLive && <a class="btn btn-primary" href={site.links.upwork} target="_blank" rel="noopener">View Upwork profile</a>}
-        <a class={upworkLive ? 'btn btn-secondary' : 'btn btn-primary'} href={url('/work#contracts')}>Recent contract titles</a>
+        <a class="btn btn-primary" href={url('/contact')}>Start a project</a>
+        {upworkLive && <a class="btn btn-secondary" href={site.links.upwork} target="_blank" rel="noopener">View Upwork profile</a>}
+        <a class="btn btn-secondary" href={url('/work#contracts')}>Recent contract titles</a>
       </div>
     </div>
   </section>

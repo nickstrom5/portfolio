@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
+import CtaBand from '@/components/CtaBand.astro';
 import contracts from '@/data/contracts.json';
 import { site } from '@/data/site';
 import { roles, staffJob, education } from '@/data/experience';
@@ -97,6 +98,8 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       </ul>
     </div>
   </section>
+
+  <CtaBand />
 </Base>
 
 <script>

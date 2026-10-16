@@ -4,6 +4,7 @@ import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
 import Duo from '@/components/showcase/Duo.astro';
 import Shot from '@/components/showcase/Shot.astro';
+import CtaBand from '@/components/CtaBand.astro';
 import { execFileSync } from 'node:child_process';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
@@ -264,6 +265,7 @@ const live = { commits: siteCommits() };
       </section>
     </article>
   ))}
+  <CtaBand title="Want something like this?" text="The same process works for a client site, an internal tool or a product. Start with one sentence." />
 </Base>
 
 <script>
