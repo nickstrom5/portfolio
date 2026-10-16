@@ -5,8 +5,11 @@
  *
  * Deep links: #roofing opens a case; #roofing-speed-to-lead opens a case
  * and one of its workflows; #roofing-demo scrolls to a case's landing page.
+ *
+ * A case's data loads when the case is first shown (or its card is hovered),
+ * and only then do its simulators and landing demo start.
  */
-import { cases } from '@/data/ghl';
+import { loadCase } from './load-case';
 import { formatDay, formatTime, nextWindowOpen, useWeekOf } from './engine';
 import type { CaseStudy, Contact } from './types';
 import { Simulator, envFor } from './ui';
@@ -73,10 +76,21 @@ export function initGhlPage() {
   // Dates in the log and in messages follow the visitor's own week.
   useWeekOf(new Date());
   const sims = new Map<string, Simulator>();
-  document.querySelectorAll<HTMLElement>('[data-sim]').forEach((root) => {
-    const study = cases.find((c) => c.business.id === root.dataset.case);
-    if (study) sims.set(`${root.dataset.case}-${root.dataset.sim}`, new Simulator(root, envFor(study)));
-  });
+  const loading = new Map<string, Promise<void>>();
+  /** Loads a case's data once, then starts its simulators and its landing demo. */
+  const ensureCase = (caseId: string) => {
+    if (!loading.has(caseId)) {
+      loading.set(
+        caseId,
+        loadCase(caseId).then((study) => {
+          if (!study) return;
+          document.querySelectorAll<HTMLElement>(`[data-sim][data-case="${caseId}"]`).forEach((root) => sims.set(`${caseId}-${root.dataset.sim}`, new Simulator(root, envFor(study))));
+          document.querySelectorAll<HTMLElement>(`[data-demo="${caseId}"]`).forEach((demo) => initLandingDemo(demo, study, sims, (id) => openAutomation.get(caseId)?.(id)));
+        }),
+      );
+    }
+    return loading.get(caseId)!;
+  };
 
   // Workflow tabs inside each case.
   const openAutomation = new Map<string, (id: string, focus?: boolean) => void>();
@@ -107,12 +121,15 @@ export function initGhlPage() {
   const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
   const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
   const selectCase = (id: string, focus = false, hash = true) => {
+    void ensureCase(id);
     mark(caseTabs, 'caseTab', id, focus);
     casePanels.forEach((p) => (p.hidden = p.dataset.casePanel !== id));
     if (hash) history.replaceState(null, '', `#${id}`);
   };
   const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
   // On phones the case opens below the cards, out of sight: bring its heading up after a tap.
+  // Start loading a case as soon as the pointer reaches its card.
+  caseTabs.forEach((t) => t.addEventListener('pointerenter', () => void ensureCase(t.dataset.caseTab!), { once: true }));
   caseTabs.forEach((t) =>
     t.addEventListener('click', () => {
       const panel = document.getElementById(t.dataset.caseTab!);
@@ -129,8 +146,7 @@ export function initGhlPage() {
     if (!caseId) return false;
     selectCase(caseId, false, false);
     const rest = target.slice(caseId.length + 1);
-    const study = cases.find((c) => c.business.id === caseId);
-    const isAutomation = !!rest && !!study?.automations.some((a) => a.id === rest);
+    const isAutomation = !!rest && !!document.querySelector(`[data-case-panel="${caseId}"] [data-panel="${CSS.escape(rest)}"]`);
     if (isAutomation) openAutomation.get(caseId)?.(rest);
     else history.replaceState(null, '', `#${target}`);
     const el = document.getElementById(target);
@@ -180,11 +196,6 @@ export function initGhlPage() {
     }),
   );
 
-  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((demo) => {
-    const study = cases.find((c) => c.business.id === demo.dataset.demo);
-    if (study) initLandingDemo(demo, study, sims, (id) => openAutomation.get(study.business.id)?.(id));
-  });
-
   // Links last, so a bad hash can never stop the rest of the page from working.
   type Saved = { gxCase: string; y: number };
   const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];
@@ -218,6 +229,8 @@ export function initGhlPage() {
   };
   window.addEventListener('hashchange', fromHash);
   fromHash();
+  // Without a hash naming a case, the case shown by default still needs its data.
+  void ensureCase(shownCase());
 }
 
 function initLandingDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, Simulator>, openAutomation: (id: string) => void) {

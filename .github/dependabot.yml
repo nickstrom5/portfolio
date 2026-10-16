@@ -22,6 +22,16 @@ updates:
       # remove this once it supports 7.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
+      # signalrig: @types/node must match the Node major it runs on in Vercel
+      # production (24.x), or code type-checks against APIs that aren't there.
+      # Raise it by hand when the Vercel project's Node version changes.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # signalrig: eslint-config-next's react, jsx-a11y and import plugins have
+      # no ESLint 10 releases yet (it shims them; peers stay invalid). Lint only,
+      # so stay on 9 until those plugins catch up.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

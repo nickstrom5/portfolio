@@ -501,6 +501,7 @@ export const projects: Project[] = [
       { said: '(phone screenshot of the home page) Open to full-time and freelance roles.', did: 'Changed the green availability line to exactly that.' },
       { said: '(screenshot of these tiles) I like the style but the colors together look kind of dirty.', did: 'Had four designers try a cleaner palette and three judges pick one. Every tile and story now sits on the same navy, or blue-white in light mode, and only the label, the link and the selected outline carry each project’s color, so the dark orange and yellow fills no longer turn brown and olive.' },
       { said: 'SEO and security.', did: 'Ran a five-part audit with every finding checked by a second agent, then fixed what held up: titles and structured data that still said freelance-only, stale case-study dates, screenshots served as AVIF and WebP at the size each frame shows (a phone now loads about a tenth of the image bytes), demo data that used real companies’ domains, a demo form that could put typed details in the URL, and Dependabot gaps. Account and DNS settings went to Nick as a list.' },
+      { said: 'Continue.', did: 'Trimmed the six search descriptions that ran past 160 characters, and made the GoHighLevel page load each case study only when it’s opened: 74 KB of script up front instead of 209 KB, with every workflow, deep link and landing demo working as before.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },
