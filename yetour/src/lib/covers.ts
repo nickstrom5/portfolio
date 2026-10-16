@@ -12,6 +12,15 @@
  */
 import { coverCache } from '@/data/covers';
 
+/**
+ * oEmbed hands back the 300px rendition (`ab67616d00001e02…`). Spotify serves
+ * the same artwork at 640px under `ab67616d0000b273…`, which is what a tile up
+ * to 640px wide needs. Any other URL shape is left as it is.
+ */
+function large(url: string): string {
+  return url.replace('/image/ab67616d00001e02', '/image/ab67616d0000b273');
+}
+
 const resolved = new Map<string, string>(Object.entries(coverCache));
 const inflight = new Map<string, Promise<string | undefined>>();
 
@@ -37,9 +46,10 @@ async function lookup(id: string): Promise<string | undefined> {
 export async function albumCover(spotifyId?: string): Promise<string | undefined> {
   if (!spotifyId) return undefined;
   const hit = resolved.get(spotifyId);
-  if (hit) return hit;
+  if (hit) return large(hit);
   if (!inflight.has(spotifyId)) inflight.set(spotifyId, lookup(spotifyId));
-  return inflight.get(spotifyId);
+  const url = await inflight.get(spotifyId);
+  return url && large(url);
 }
 
 /** The canonical album page, which Spotify's terms require us to link to. */

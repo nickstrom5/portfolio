@@ -32,6 +32,16 @@ The domain is registered in Cloudflare, so Pages is the shortest path. In the da
 Node comes from the committed `.node-version` (22), so there is nothing to set under
 Environment variables. A clean `npm ci && npm run build` takes about ten seconds.
 
+Pages clones the whole repository and builds inside `yetour/`, so the portfolio's
+`tsconfig.json` one folder up is on disk but its dependencies are not installed. Two settings
+keep the build from reaching for it: `astro.config.mjs` states the site URL rather than
+importing `src/data/site.ts`, and pins Vite to `yetour/tsconfig.json`; that file lists
+`**/*.astro` explicitly so `.astro` files match it. Remove any of the three and a fresh clone
+fails with `Tsconfig not found astro/tsconfigs/strict`.
+
+Album cover URLs are committed in `src/data/covers.ts`, so a build that cannot reach Spotify,
+or a direct upload of `dist/`, still shows the real covers.
+
 Then **Custom domains → Set up a custom domain → `yetour.info`**, and add `www.yetour.info`
 as a second custom domain if you want the redirect. Cloudflare writes the DNS records itself
 because the zone is already in the account.
@@ -97,8 +107,8 @@ pager, the sitemap and the JSON-LD all follow from it.
 
 - **Photography only from the rights holder's own host.** Album covers are resolved from
   Spotify's public oEmbed endpoint and served from their CDN, unaltered and linked back to
-  each record, as their terms require. The stage photographs on the globe page are frames
-  YouTube serves from the two full-length Istanbul uploads, each linked to its video.
+  each record, as their terms require. The stage photographs are frames YouTube serves from
+  each filmed date's full-length upload, each linked to its video.
   Nothing is copied into this repository and nothing is re-hosted.
 - **Everything else is drawn.** Posters, stage plots, crowd fields, the Donda memorial plate
   and the house elevation are original vector work generated from the data. They are labelled
