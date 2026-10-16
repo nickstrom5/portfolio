@@ -1,5 +1,5 @@
 ---
-title: 'Executive support at Rippling'
+title: 'Executive Assistant at Rippling'
 shortTitle: 'Executive support at Rippling'
 client: 'Rippling'
 summary: 'A year of scheduling and project coordination for multiple executives at the HR and IT platform company.'
@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://www.rippling.com'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

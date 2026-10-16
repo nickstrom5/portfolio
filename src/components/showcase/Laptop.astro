@@ -1,17 +1,20 @@
 ---
+import Shot from './Shot.astro';
 /** CSS laptop frame around a desktop screenshot. */
 interface Props {
   image: string;
   alt?: string;
+  /** How wide the screen shows, for picking a file. The default fits the story heroes. */
+  sizes?: string;
 }
-const { image, alt = '' } = Astro.props;
+const { image, alt = '', sizes = '(max-width: 792px) calc(100vw - 60px), (max-width: 860px) 732px, 544px' } = Astro.props;
 ---
 
-<div class="laptop" role="img" aria-label={alt}>
+<div class="laptop">
   <div class="lid">
     <div class="cam" aria-hidden="true"></div>
     <div class="display">
-      <img src={image} alt="" loading="lazy" width="1440" height="900" />
+      <Shot src={image} alt={alt} width={1440} height={900} widths={[560, 760, 1100, 1440]} sizes={sizes} />
     </div>
   </div>
   <div class="base" aria-hidden="true"><span class="notch"></span></div>

@@ -4,28 +4,34 @@ import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import contracts from '@/data/contracts.json';
 import { site } from '@/data/site';
-import { roles, education } from '@/data/experience';
+import { roles, staffJob, education } from '@/data/experience';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/lib/categories';
 
-const projects = (await getCollection('projects')).sort((a, b) => b.data.year - a.data.year);
+// Featured client work first, own products last, newest first within each.
+const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    Number(a.data.source === 'personal') - Number(b.data.source === 'personal') ||
+    b.data.year - a.data.year,
+);
 const order = ['consulting', 'operations', 'admin', 'automation', 'video', 'development', 'mobile', 'web', 'backend', 'other'];
-const labels: Record<string, string> = { all: 'All', video: 'Events & video' };
 const categories = ['all', ...order.filter((c) => projects.some((p) => p.data.category === c))];
 const upworkLive = !site.links.upwork.includes('REPLACE');
 ---
 
-<Base title="Work" description="Case studies and featured roles from 300+ freelance contracts: project management, operations, CRM, events and app builds.">
+<Base title="Project management and operations case studies" description="Case studies from 300+ freelance contracts: project management, operations, executive assistant work, webinars, Zapier/HubSpot/Zoho automation and AI-built apps.">
   <section class="section">
     <div class="container">
       <span class="eyebrow">Work</span>
       <h1>Client projects</h1>
-      <p class="lede">A selection of contracts I can talk about publicly. Some engagements may be vague due to NDA requirements.</p>
+      <p class="lede">Contracts I can talk about publicly, plus a few products of my own. Some clients are unnamed under NDA. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">
           {categories.map((c) => (
             <button class:list={['chip', { active: c === 'all' }]} data-filter={c} aria-pressed={c === 'all'}>
-              {labels[c] ?? c.charAt(0).toUpperCase() + c.slice(1)}
+              {c === 'all' ? 'All' : categoryLabel(c)}
             </button>
           ))}
         </div>
@@ -53,7 +59,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url('/clients')}>Featured clients →</a>
       </div>
       <p class="lede">
-        Freelancing full-time since 2015. These are the longest-running roles from 300+ contracts, 257 of them on Upwork; the rest ranged from a week to a year.
+        Freelancing since 2015, with 300+ contracts lasting from a few days to several years, 257 of them on Upwork. Below are key client roles{staffJob && `, plus a staff job at ${staffJob.company}`}.
       </p>
       <ol class="roles">
         {roles.map((r) => (
@@ -63,7 +69,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
               <strong>{r.title}</strong>
               <span class="company">{r.company}</span>
             </span>
-            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>Details →</a> : <span />}
+            {r.slug ? <a class="detail" href={url(`/work/${r.slug}`)}>{r.company.split(' · ')[0]} case study →</a> : <span />}
           </li>
         ))}
       </ol>
@@ -80,7 +86,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <h2>Recent contracts</h2>
         {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork →</a>}
       </div>
-      <p class="lede">A sample of contract titles from the last two years, out of 257 completed on Upwork and 300+ overall. Client names are kept private.</p>
+      <p class="lede">A sample of contract titles since 2024, out of 257 completed on Upwork and 300+ overall. Client names are kept private.</p>
       <ul class="contracts">
         {contracts.map((c) => (
           <li>
@@ -158,12 +164,22 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     margin: 1.25rem 0 0;
     font-size: 0.9rem;
   }
+  .edu a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  }
   @media (max-width: 800px) {
     .roles li {
       grid-template-columns: 1fr auto;
     }
     .years {
       grid-column: 1 / -1;
+    }
+    .detail {
+      white-space: normal;
+      text-align: right;
     }
   }
   .toolbar {
@@ -188,9 +204,6 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     padding: 0.45rem 0.95rem;
     font-size: 0.9rem;
   }
-  #roles {
-    scroll-margin-top: 80px;
-  }
   .chip {
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
@@ -210,18 +223,30 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
   .empty {
     margin-top: 1.5rem;
   }
+  /* Pass the grid's rows through each filter wrapper so cards share row tracks
+     (see ProjectCard). :not([hidden]) keeps filtered-out cards hidden. */
+  [data-project-grid] > [data-category]:not([hidden]) {
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
+  }
   .contracts {
     list-style: none;
     margin: 1.5rem 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
     gap: 0.5rem 2rem;
   }
+  /* Title, then type and year underneath; items in a row share row tracks (subgrid),
+     so every type line in the row sits on the same line. */
   .contracts li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0.2rem;
+    align-content: start;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;

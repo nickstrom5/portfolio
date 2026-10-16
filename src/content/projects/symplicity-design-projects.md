@@ -1,8 +1,8 @@
 ---
-title: 'Keeping design projects on track at Symplicity for nearly four years'
+title: 'Project Manager, Design Projects at Symplicity'
 shortTitle: 'Symplicity project management'
 client: 'Symplicity'
-summary: 'Project manager coordinating with internal groups and many college clients to keep design projects moving for a higher-education software company.'
+summary: 'Nearly four years as project manager for a higher-education software company, coordinating internal teams and many college clients on design projects.'
 category: 'operations'
 platforms: ['Remote']
 stack: ['Project management', 'Client coordination', 'Design project delivery', 'Higher education']
@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://www.symplicity.com'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

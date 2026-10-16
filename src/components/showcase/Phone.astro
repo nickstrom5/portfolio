@@ -1,5 +1,6 @@
 ---
 import { url } from '@/lib/url';
+import Shot from './Shot.astro';
 /**
  * CSS iPhone frame with hand-built screen mockups. Screens are concept
  * renders of the real app flows, not screenshots of the shipped builds.
@@ -22,12 +23,14 @@ interface Props {
   tilt?: boolean;
 }
 const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
+// Screenshots carry their own alt text; hand-built mockups are labelled on the frame.
+const isShot = screen === 'image' && !!image;
 ---
 
-<div class:list={['phone', size, { tilt }]} role="img" aria-label={alt || `${screen} screen mockup`}>
+<div class:list={['phone', size, { tilt }]} role={isShot ? undefined : 'img'} aria-label={isShot ? undefined : alt || `${screen} screen mockup`}>
   <div class="island" aria-hidden="true"></div>
   <div class:list={['screen', screen.split('-')[0]]}>
-    {screen === 'image' && image && <img src={image} alt="" loading="lazy" width="390" height="844" />}
+    {isShot && <Shot src={image} alt={alt} width={390} height={844} widths={[300, 600, 660]} sizes="300px" />}
 
     {screen === 'clam-home' && (
       <div class="ui clam-ui">
@@ -39,7 +42,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
           <p>12-day streak. 30h 30m clammed up total.</p>
         </div>
         <div class="chips"><span>25 min</span><span class="on">50 min</span><span>90 min</span></div>
-        <button class="big" type="button" tabindex="-1">Clam up</button>
+        <span class="big">Clam up</span>
         <p class="hint">Fold or lock your phone. That's it.</p>
       </div>
     )}
@@ -53,7 +56,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
           <p class="big-num">23 min left</p>
           <p>Not a feed in sight. Unfolding to scroll means seeing this screen.</p>
         </div>
-        <button class="big ghost" type="button" tabindex="-1">Back to focus</button>
+        <span class="big ghost">Back to focus</span>
         <p class="hint">Hold 10s to quit early. Resets your streak.</p>
       </div>
     )}
@@ -79,7 +82,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>7:02</span><span>●●●</span></div>
         <p class="eyebrow">Same window · same hour</p>
         <div class="viewfinder"><div class="oval"></div><span>Line up your face</span></div>
-        <button class="big light" type="button" tabindex="-1">Take photo</button>
+        <span class="big light">Take photo</span>
         <p class="hint">The picture stays on this device.</p>
       </div>
     )}
@@ -119,12 +122,12 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>5:31</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="center">
-          <img class="dog" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="96" height="96" />
+          <Shot class="dog" src="/showcase/goodwalk-dog.jpg" alt="" width={96} height={96} widths={[92, 184, 276]} sizes="92px" />
           <div class="h4">Rex walked today.</div>
           <p>14-day streak. 2 walks this week so far.</p>
         </div>
         <div class="chips gw-chips"><span>Mon ✓</span><span>Tue ✓</span><span class="on">Wed ✓</span><span>Thu</span></div>
-        <button class="big gw-big" type="button" tabindex="-1">Log a walk</button>
+        <span class="big gw-big">Log a walk</span>
         <p class="hint gw-hint">One walk a day keeps the streak.</p>
       </div>
     )}
@@ -137,7 +140,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
           <div class="notif-head"><span>🐾 Good Walk</span><span>now</span></div>
           <strong>Has Rex had a walk today?</strong>
           <span>One tap keeps the streak.</span>
-          <button class="walked" type="button" tabindex="-1">Walked ✓</button>
+          <span class="walked">Walked ✓</span>
         </div>
         <p class="hint">A reminder at the time you pick, answered from the lock screen.</p>
       </div>
@@ -148,7 +151,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
         <div class="status"><span>5:32</span><span>●●●</span></div>
         <div class="row top"><span class="brand gw-brand">🐾 Good Walk</span><span class="streak gw-streak">🔥 14</span></div>
         <div class="gw-card">
-          <img class="gw-photo" src={url('/showcase/goodwalk-dog.jpg')} alt="" width="240" height="240" />
+          <Shot class="gw-photo" src="/showcase/goodwalk-dog.jpg" alt="" width={240} height={240} widths={[300, 480]} sizes="280px" />
           <div class="gw-card-body">
             <strong>Rex</strong>
             <span>14 days in a row · 41 walks total</span>
@@ -160,7 +163,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
             {[1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0].map((d, i) => <span class:list={[{ on: d === 1 && i < 14, miss: d === 0 && i < 14 }]} />)}
           </div>
         </div>
-        <button class="big gw-big" type="button" tabindex="-1">Share this week</button>
+        <span class="big gw-big">Share this week</span>
         <p class="hint gw-hint">Tap any day to log a walk you forgot.</p>
       </div>
     )}
@@ -169,7 +172,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
 
 <style>
   .phone {
-    --w: 280px;
+    --w: min(280px, calc(100vw - 72px));
     position: relative;
     width: var(--w);
     aspect-ratio: 9 / 19.3;
@@ -186,7 +189,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     --w: 220px;
   }
   .phone.lg {
-    --w: 320px;
+    --w: min(320px, calc(100vw - 32px));
   }
   .phone.tilt {
     transform: rotate(-4deg);
@@ -209,7 +212,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     overflow: hidden;
     background: #121217;
     color: #fff;
-    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    font-family: -apple-system, var(--font-inter);
     font-size: calc(var(--w) * 0.05);
     line-height: 1.3;
   }
@@ -306,6 +309,8 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     color: #121217;
   }
   .big {
+    display: block;
+    text-align: center;
     width: 100%;
     padding: 0.9em;
     border-radius: 1em;
@@ -349,7 +354,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
   }
   .clock .time {
     font-size: 3.2em;
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: -0.03em;
     line-height: 1;
   }
@@ -589,6 +594,7 @@ const { screen, image, alt = '', size = 'md', tilt = false } = Astro.props;
     opacity: 0.75;
   }
   .walked {
+    text-align: center;
     margin-top: 0.5em;
     align-self: flex-end;
     padding: 0.5em 0.9em;

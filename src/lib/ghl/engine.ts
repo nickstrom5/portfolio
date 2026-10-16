@@ -23,11 +23,53 @@ import type {
   WorkflowSettings,
 } from './types';
 
-/** Monday 2 March 2026, 00:00. Scenario times are minutes after this. */
-const BASE = Date.UTC(2026, 2, 2);
+/**
+ * Scenario times are minutes after Monday 00:00 of a sample week. By default
+ * that is 2 March 2026 (so builds and checks are deterministic); in the
+ * browser the page moves it to the visitor's current week, so dates in the
+ * log and in messages match their calendar.
+ */
+const SAMPLE_BASE = Date.UTC(2026, 2, 2);
+let BASE = SAMPLE_BASE;
+
+export function useWeekOf(date: Date): void {
+  const monday = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - ((date.getDay() + 6) % 7) * 86400000;
+  BASE = monday;
+}
 const DAY = 1440;
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MS_DAY = 86400000;
+
+/**
+ * Test contacts are written against the sample week, so their date fields and
+ * a few log lines hold dates like 03-17-2026, 3/7/2026 or "Mon, Mar 9". When
+ * the page moves the timeline to the visitor's week, those dates move with it.
+ * The move is a whole number of weeks, so weekdays stay right. Only dates
+ * within about five months of the sample week are touched, so dates the
+ * simulator already worked out for the visitor's week are left alone.
+ */
+export function shiftSampleDates(text: string): string {
+  const offset = BASE - SAMPLE_BASE;
+  if (!offset || !text) return text;
+  const near = (ms: number) => Math.abs(ms - SAMPLE_BASE) <= 150 * MS_DAY;
+  const pad = (n: number, like: string) => (like.length === 2 ? String(n).padStart(2, '0') : String(n));
+  return text
+    .replace(/\b(\d{1,2})([-/])(\d{1,2})\2(20\d\d)\b/g, (whole, m: string, sep: string, d: string, y: string) => {
+      const ms = Date.UTC(+y, +m - 1, +d);
+      if (!near(ms)) return whole;
+      const n = new Date(ms + offset);
+      return `${pad(n.getUTCMonth() + 1, m)}${sep}${pad(n.getUTCDate(), d)}${sep}${n.getUTCFullYear()}`;
+    })
+    .replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{1,2})\b/g, (whole, dow: string, mon: string, d: string) => {
+      const ms = Date.UTC(2026, MONTHS.indexOf(mon), +d);
+      // A sample date names its own weekday; anything else is already a real date.
+      if (!near(ms) || DAYS[(new Date(ms).getUTCDay() + 6) % 7] !== dow) return whole;
+      const n = new Date(ms + offset);
+      return `${dow}, ${MONTHS[n.getUTCMonth()]} ${n.getUTCDate()}`;
+    });
+}
 
 export function formatTime(min: number): string {
   const m = ((min % DAY) + DAY) % DAY;
@@ -39,6 +81,22 @@ export function formatTime(min: number): string {
 export function formatDay(min: number): string {
   const d = new Date(BASE + Math.floor(min / DAY) * DAY * 60000);
   return `${DAYS[(d.getUTCDay() + 6) % 7]}, ${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
+
+/** The simulated day as a calendar date (midnight UTC) on the current timeline. */
+export function calendarDate(min: number): Date {
+  return new Date(BASE + Math.floor(min / DAY) * DAY * 60000);
+}
+
+/** The simulated day the way a GHL date field stores it: MM-DD-YYYY. */
+export function dateFieldValue(min: number): string {
+  const d = calendarDate(min);
+  return `${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}-${d.getUTCFullYear()}`;
+}
+
+/** Minutes from the start of the timeline to the start of a calendar day (month 1-12). */
+export function minutesAtDate(year: number, month: number, day: number): number {
+  return (Date.UTC(year, month - 1, day) - BASE) / 60000;
 }
 
 export function formatClock(min: number): string {
@@ -70,9 +128,11 @@ const EVENT_LABEL: Record<EventType, string> = {
   payment: 'Payment received',
   opportunity_won: 'Opportunity marked won',
   opportunity_lost: 'Opportunity marked lost',
+  opportunity_abandoned: 'Opportunity marked abandoned',
   tag_added: 'Tag added',
   review_left: 'Review left',
   survey_submitted: 'Survey submitted',
+  review_clicked: 'Review request link clicked',
   form_submitted: 'Form submitted',
   invoice_paid: 'Invoice paid',
   payment_failed: 'Payment failed',
@@ -149,23 +209,30 @@ function mergeContext(contact: Contact, env: MergeEnv, appt: Appointment | undef
       phone: contact.phone,
       email: contact.email,
       source: contact.source ?? '',
+      address1: contact.address ?? '',
+      full_address: contact.address ?? '',
+      // GHL's standard Company Name field; the sample forms store it as a custom field keyed company.
+      company_name: contact.fields.company ?? '',
       ...snake,
     },
     user,
     location: env.location,
     custom_values: env.customValues,
+    reputation: { review_link: env.customValues.review_link ?? '' },
     trigger_link: env.triggerLinks ?? {},
     appointment: appt
       ? {
-          start_time: formatClock(appt.start),
-          only_start_date: formatDay(appt.start),
+          // The formats GHL's merge-field list gives: "Wed, Nov 5, 2025 3:30 PM", "Nov 5, 2025", "Monday".
+          start_time: `${formatDay(appt.start)}, ${calendarDate(appt.start).getUTCFullYear()} ${formatTime(appt.start)}`,
+          only_start_date: `${formatDay(appt.start).slice(5)}, ${calendarDate(appt.start).getUTCFullYear()}`,
           only_start_time: formatTime(appt.start),
-          day_of_week: DAYS[Math.floor(appt.start / DAY) % 7],
+          day_of_week: DAY_NAMES[Math.floor(appt.start / DAY) % 7],
           reschedule_link: `${env.location.website}/reschedule`,
           cancellation_link: `${env.location.website}/cancel`,
           meeting_location: 'At your property',
           add_to_google_calendar: `${env.location.website}/calendar`,
           title: appt.calendar ?? 'Appointment',
+          user,
         }
       : {},
     custom_code: vars,
@@ -230,8 +297,6 @@ class GoToJump {
 class GoalJump {
   constructor(
     public t: number,
-    public frame: number,
-    public index: number,
     public goal: GoalNode,
   ) {}
 }
@@ -256,7 +321,9 @@ export function mergeContact(base: Contact, over: Partial<Contact> = {}): Contac
  * name and answers on top of that.
  */
 export function startContact(base: Contact, scenario: Scenario, identity?: Partial<Contact>): Contact {
-  return mergeContact(mergeContact(base, scenario.contact), identity);
+  const c = mergeContact(mergeContact(base, scenario.contact), identity);
+  for (const [k, v] of Object.entries(c.fields)) if (typeof v === 'string') c.fields[k] = shiftSampleDates(v);
+  return c;
 }
 
 function hhmm(s: string): number {
@@ -301,36 +368,57 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   let budget = 400;
   /** Stop on Response only reacts to replies once this workflow has messaged the contact. */
   let messaged = false;
+  const apptTriggered = /appointment/i.test(wf.triggers[scenario.trigger ?? 0]?.title ?? '');
 
   const log = (s: Omit<TraceStep, 'contact' | 't'> & { t?: number }) => {
     if (--budget < 0) throw new Error(`${auto.id}/${scenario.id}: more than 400 log entries, probably a Go To loop`);
-    steps.push({ t: s.t ?? t, ...s, contact: clone(contact) });
+    const title = shiftSampleDates(s.title);
+    const detail = s.detail && shiftSampleDates(s.detail);
+    const message = s.message && { ...s.message, subject: s.message.subject && shiftSampleDates(s.message.subject), body: shiftSampleDates(s.message.body) };
+    steps.push({ t: s.t ?? t, ...s, title, detail, message, contact: clone(contact) });
   };
-  const matches = (ev: ScenarioEvent, type: EventType, value?: string | number) => ev.type === type && (value === undefined || value === ev.value);
-  const hasFired = (type: EventType, value?: string | number) => fired.some((e) => matches(e, type, value));
+  const matches = (ev: ScenarioEvent, type: EventType, value?: GoalNode['value']) =>
+    ev.type === type && (value === undefined || (Array.isArray(value) ? value.includes(ev.value as string | number) : value === ev.value));
+  const hasFired = (type: EventType, value?: GoalNode['value']) => fired.some((e) => matches(e, type, value));
+  /** Set by an appointment wait whose time had passed with "Skip all outbound communication". */
+  let skipOutbound = false;
 
-  /** A Goal Event further along the contact's current path that this event satisfies. */
-  function goalAhead(ev: ScenarioEvent): { frame: number; index: number; goal: GoalNode } | undefined {
+  /**
+   * The Goal Event this event satisfies. GHL moves the contact to the goal
+   * "regardless of where they were in the workflow": prefer one further along
+   * the current path, otherwise any unmet goal in the workflow.
+   */
+  function goalFor(ev: ScenarioEvent): GoalNode | undefined {
     for (let f = path.length - 1; f >= 0; f--) {
       const { list, index } = path[f];
       for (let i = index + 1; i < list.length; i++) {
         const s = list[i];
-        if (s.kind === 'goal' && !goalsMet.has(s.id) && matches(ev, s.event, s.value)) return { frame: f, index: i, goal: s };
+        if (s.kind === 'goal' && !goalsMet.has(s.id) && matches(ev, s.event, s.value)) return s;
       }
     }
-    return undefined;
+    let found: GoalNode | undefined;
+    const walk = (list: Step[]) =>
+      list.forEach((s) => {
+        if (found) return;
+        if (s.kind === 'goal' && !goalsMet.has(s.id) && matches(ev, s.event, s.value)) found = s;
+        if (s.kind === 'ifelse') [...s.branches.map((b) => b.nodes), s.otherwise.nodes].forEach(walk);
+        if (s.kind === 'wait' && s.branches) [s.branches.met.nodes, s.branches.timeout.nodes].forEach(walk);
+      });
+    walk(wf.steps);
+    return found;
   }
 
   function applyEvent(ev: ScenarioEvent) {
     fired.push(ev);
+    if (ev.field && ev.value !== undefined) contact.fields[ev.field] = ev.value;
     let detail: string | undefined = ev.label;
     let message: TraceMessage | undefined;
     switch (ev.type) {
       case 'reply':
         lastReply = String(ev.value ?? '');
         vars.replied = true;
-        message = { channel: 'sms', direction: 'in', body: lastReply };
-        if (/^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i.test(lastReply)) {
+        message = { channel: ev.channel ?? 'sms', direction: 'in', body: lastReply };
+        if ((ev.channel ?? 'sms') === 'sms' && /^\s*(stop|stopall|unsubscribe|cancel|end|quit)\s*$/i.test(lastReply)) {
           contact.dnd.sms = true;
           detail = detail ?? 'Opt-out keyword: SMS DND switched on automatically';
         }
@@ -371,6 +459,9 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       case 'opportunity_lost':
         if (contact.opportunity) contact.opportunity.status = 'lost';
         break;
+      case 'opportunity_abandoned':
+        if (contact.opportunity) contact.opportunity.status = 'abandoned';
+        break;
       case 'tag_added':
         if (ev.value && !contact.tags.includes(String(ev.value))) contact.tags.push(String(ev.value));
         detail = detail ?? String(ev.value ?? '');
@@ -397,7 +488,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
    * the time a watched event happened, if it did. Throws for goal jumps,
    * removals by another workflow and Stop on Response.
    */
-  function advanceTo(target: number, watch?: { event: EventType }): number | undefined {
+  function advanceTo(target: number, watch?: { event: EventType; value?: GoalNode['value'] }): number | undefined {
     while (queue.length && queue[0].at <= target) {
       const ev = queue.shift()!;
       t = Math.max(t, ev.at);
@@ -407,13 +498,19 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         log({ kind: 'stop', title: 'Removed from this workflow', detail: exit.by });
         throw new Halt('ended', ev.at);
       }
-      const ahead = goalAhead(ev);
-      if (ahead) throw new GoalJump(ev.at, ahead.frame, ahead.index, ahead.goal);
+      const goal = goalFor(ev);
+      if (goal) throw new GoalJump(ev.at, goal);
       if (settings.stopOnResponse && ev.type === 'reply' && messaged) {
         log({ kind: 'stop', title: 'Stop on Response', detail: 'The contact replied to a message from this workflow, so they leave it and a person picks up the conversation.' });
         throw new Halt('stopped', ev.at);
       }
-      if (watch && ev.type === watch.event) return ev.at;
+      // GHL pulls a contact out of an appointment-triggered workflow when the appointment is cancelled or
+      // marked no-show after the run began. A change at the start minute is the trigger itself.
+      if (apptTriggered && ev.at > start && (ev.type === 'appointment_cancelled' || ev.type === 'appointment_noshow')) {
+        log({ kind: 'stop', title: 'Pulled out of this run', detail: `The appointment is now ${ev.type === 'appointment_cancelled' ? 'Cancelled' : 'No-show'}, so GHL ends this appointment's run. A status trigger can start a new one.` });
+        throw new Halt('ended', ev.at);
+      }
+      if (watch && matches(ev, watch.event, watch.value)) return ev.at;
     }
     t = Math.max(t, target);
     return undefined;
@@ -451,7 +548,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   function applyEffect(e: NonNullable<ActionNode['effect']>) {
     for (const tag of e.addTags ?? []) if (!contact.tags.includes(tag)) contact.tags.push(tag);
     if (e.removeTags) contact.tags = contact.tags.filter((tag) => !e.removeTags!.includes(tag));
-    if (e.fields) Object.assign(contact.fields, e.fields);
+    for (const [k, v] of Object.entries(e.fields ?? {})) contact.fields[k] = typeof v === 'string' ? shiftSampleDates(v) : v;
     if (e.assignTo) contact.assignedTo = e.assignTo;
     if (e.dnd) Object.assign(contact.dnd, e.dnd);
     if (e.opportunity) {
@@ -462,6 +559,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
   function runAction(node: ActionNode) {
     const msg = node.message;
     const toContact = !!msg && (msg.channel === 'sms' || msg.channel === 'email' || msg.channel === 'voicemail');
+    if (toContact && skipOutbound) {
+      skipped.push(node.id);
+      log({ kind: 'skip', nodeId: node.id, title: `${node.title} skipped`, detail: 'Its appointment time had already passed, and the wait is set to skip outbound messages until the next wait.' });
+      return;
+    }
     if (toContact) {
       const channel = msg!.channel === 'voicemail' ? 'calls' : (msg!.channel as 'sms' | 'email');
       if (contact.dnd[channel]) {
@@ -474,6 +576,12 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       if (open > t) {
         log({ kind: 'hold', nodeId: node.id, title: 'Held by the time window', detail: `Outside the workflow's time window, so this waits until ${formatClock(open)}.` });
         advanceTo(open);
+        // They may have opted out while the step was held.
+        if (contact.dnd[channel]) {
+          skipped.push(node.id);
+          log({ kind: 'skip', nodeId: node.id, title: `${node.title} skipped`, detail: `The contact opted out while this was held, so GHL does not send it.` });
+          return;
+        }
       }
     }
     let detail = node.summary;
@@ -482,7 +590,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       if (out.vars) Object.assign(vars, out.vars);
       if (out.effect) applyEffect(out.effect);
       if (out.log) detail = out.log;
-      if (out.eventStart !== undefined) appt = { start: out.eventStart, status: 'booked' };
+      if (out.eventStart !== undefined) {
+        appt = { start: out.eventStart, status: 'booked' };
+        // A new Event Start Date ends "skip all outbound communication", like the next wait does.
+        skipOutbound = false;
+      }
     }
     if (node.effect) applyEffect(node.effect);
     let message: TraceMessage | undefined;
@@ -503,8 +615,10 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
 
   function runWait(node: WaitNode): Step[] | undefined {
     visited.push(node.id);
+    skipOutbound = false;
     const title = node.label ?? (node.mode === 'time' ? `Wait ${formatDuration(node.minutes ?? 0)}` : node.title);
     if (node.mode === 'time') {
+      const at = steps.length;
       log({ kind: 'wait', nodeId: node.id, title, detail: node.summary });
       advanceTo(t + (node.minutes ?? 0));
       if (node.window) {
@@ -513,7 +627,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
           log({ kind: 'hold', nodeId: node.id, title: 'Advance Window', detail: `Only resumes inside its window, so it waits until ${formatClock(open)}.` });
           advanceTo(open);
         } else if (!node.minutes) {
-          steps[steps.length - 1].detail = `${node.summary} Inside the window, so it moves straight on.`;
+          steps[at].detail = `${node.summary} Inside the window, so it moves straight on.`;
         }
       }
       return undefined;
@@ -526,7 +640,16 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
       }
       const target = node.mode === 'before_appointment' ? appt.start - (node.offset ?? 0) : appt.start + (node.offset ?? 0);
       if (target <= t) {
-        log({ kind: 'wait', nodeId: node.id, title, detail: 'That time has already passed, so the workflow moves to the next step.' });
+        if (node.ifPassed === 'exit') {
+          log({ kind: 'stop', nodeId: node.id, title, detail: 'That time has already passed, and the wait is set to Exit Contact from automation.' });
+          throw new Halt('ended', t);
+        }
+        if (node.ifPassed === 'skip_outbound') {
+          skipOutbound = true;
+          log({ kind: 'wait', nodeId: node.id, title, detail: 'That time has already passed, so outbound messages are skipped until the next wait.' });
+          return undefined;
+        }
+        log({ kind: 'wait', nodeId: node.id, title, detail: 'That time has already passed, so the workflow continues to the next action.' });
         return undefined;
       }
       log({ kind: 'wait', nodeId: node.id, title, detail: `${node.summary} Resumes ${formatClock(target)}.` });
@@ -535,7 +658,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
     }
     // Wait for an event, with a timeout.
     log({ kind: 'wait', nodeId: node.id, title, detail: node.summary });
-    const metAt = advanceTo(t + (node.minutes ?? DAY), { event: node.event! });
+    const metAt = advanceTo(t + (node.minutes ?? DAY), { event: node.event!, value: node.value });
     const met = metAt !== undefined;
     vars[`waited_${node.id}`] = met ? 'met' : 'timeout';
     if (!node.branches) return undefined;
@@ -560,7 +683,7 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
         const b = idx >= 0 ? node.branches[idx] : node.otherwise;
         const key = `${node.id}:${idx >= 0 ? idx : 'else'}`;
         visited.push(key);
-        log({ kind: 'branch', nodeId: node.id, branch: key, title: `${node.label ?? node.title}: ${b.label}`, detail: idx >= 0 ? describeCondition(node.branches[idx].when) : 'No condition matched, so the None branch runs.' });
+        log({ kind: 'branch', nodeId: node.id, branch: key, title: `${node.label ?? node.title}: ${b.label}`, detail: idx >= 0 ? describeCondition(node.branches[idx].when) : node.branches.length === 1 ? `No match for “${describeCondition(node.branches[0].when)}”, so it goes the “${node.otherwise.label}” way.` : `None of the other branches applied, so it goes the “${node.otherwise.label}” way.` });
         return b.nodes;
       }
       case 'goal': {
@@ -570,6 +693,13 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
           log({ kind: 'goal', nodeId: node.id, title: `Goal met: ${node.label ?? EVENT_LABEL[node.event]}`, detail: node.summary });
         } else if (node.ifNotMet === 'end') {
           log({ kind: 'end', nodeId: node.id, title: 'Goal not met: End this workflow', detail: node.summary });
+          throw new Halt('ended', t);
+        } else if (node.ifNotMet === 'wait') {
+          const limit = node.waitMinutes ?? 30 * DAY;
+          log({ kind: 'wait', nodeId: node.id, title: 'Goal not met: Wait until the goal is met', detail: node.summary });
+          // advanceTo throws a GoalJump the moment the goal happens.
+          advanceTo(t + limit);
+          log({ kind: 'end', nodeId: node.id, title: 'Still waiting on the goal', detail: `Nothing met the goal within ${formatDuration(limit)}, so the simulation stops here. In GHL the contact would keep waiting.` });
           throw new Halt('ended', t);
         } else {
           log({ kind: 'goal', nodeId: node.id, title: 'Goal not met: Continue anyway', detail: node.summary });
@@ -630,10 +760,11 @@ export function simulate(auto: Automation, scenario: Scenario, baseContact: Cont
           goalsMet.add(jump.goal.id);
           visited.push(jump.goal.id);
           log({ t: jump.t, kind: 'goal', nodeId: jump.goal.id, title: `Goal met: ${jump.goal.label ?? EVENT_LABEL[jump.goal.event]}`, detail: `${jump.goal.summary} The contact skips straight here from wherever they were waiting.` });
-          // Continue after the goal in the list that holds it; deeper frames are abandoned.
-          const holder = path[jump.frame];
-          path.length = jump.frame;
-          next = () => run(holder.list, jump.index + 1);
+          // Continue after the goal, wherever it sits in the workflow.
+          const at = locate(wf.steps, jump.goal.id)!;
+          path.length = 0;
+          path.push(...at.ancestors);
+          next = () => run(at.list, at.index + 1);
         } else if (e instanceof GoToJump) {
           const found = locate(wf.steps, e.target);
           if (!found) throw new Error(`${auto.id}: Go To target ${e.target} not found`);

@@ -2,23 +2,69 @@
 import Base from '@/layouts/Base.astro';
 import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
+import Duo from '@/components/showcase/Duo.astro';
+import Shot from '@/components/showcase/Shot.astro';
+import { execFileSync } from 'node:child_process';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
+
+// Commits to the site itself (not the separate signalrig/ and yetour/ apps), counted
+// at build time. A shallow clone would undercount, so it falls back to the stored value.
+function siteCommits(): string | undefined {
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+    if (git('rev-parse', '--is-shallow-repository') !== 'false') return undefined;
+    return git('rev-list', '--count', '--no-merges', 'HEAD', '--', '.', ':(exclude)signalrig', ':(exclude)yetour') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+const live = { commits: siteCommits() };
 ---
 
-<Base title="AI / Projects" description="Clam, Good Walk, LaunchNeat and this website: projects built by directing AI, shown as scroll-through stories.">
+<Base title="AI-built apps and websites" description="Apps and sites Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel case studies.">
   <section class="intro">
     <div class="container">
-      <span class="eyebrow">AI / Projects</span>
+      <span class="eyebrow">AI Projects</span>
       <h1>Built with AI. Directed by me.</h1>
       <p class="lede">
         Projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
       </p>
 
-      <div class="tiles" role="tablist" aria-label="Projects">
+      <div class="tiles" role="group" aria-label="Projects">
         {projects.map((p, i) => p.comingSoon ? (
-          <div
-            class="tile soon"
+          p.href ? (
+            <a
+              class="tile soon linked"
+              href={p.href}
+              target="_blank"
+              rel="noopener"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon · Visit site ↗</span>
+            </a>
+          ) : (
+            <div
+              class="tile soon"
+              data-project={p.id}
+              data-tone={p.tone ?? 'dark'}
+              style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
+            >
+              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-name">{p.name}</span>
+              <span class="t-blurb">{p.tileBlurb}</span>
+              <span class="t-cta">Coming soon</span>
+            </div>
+          )
+        ) : 'page' in p ? (
+          <a
+            class="tile page"
+            href={url(p.href)}
             data-project={p.id}
             data-tone={p.tone ?? 'dark'}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
@@ -26,15 +72,14 @@ import { url } from '@/lib/url';
             <span class="t-kicker">{p.kicker}</span>
             <span class="t-name">{p.name}</span>
             <span class="t-blurb">{p.tileBlurb}</span>
-            <span class="t-cta">Coming soon</span>
-          </div>
+            <span class="t-cta">{p.cta}</span>
+          </a>
         ) : (
           <button
             class="tile"
-            role="tab"
             id={`tab-${p.id}`}
             aria-controls={p.id}
-            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-pressed={i === 0 ? 'true' : 'false'}
             data-project={p.id}
             data-tone={p.tone ?? 'dark'}
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
@@ -50,12 +95,10 @@ import { url } from '@/lib/url';
     </div>
   </section>
 
-  {projects.filter((p): p is StoryProject => !p.comingSoon).map((p, i) => (
+  {projects.filter((p): p is StoryProject => !p.comingSoon && !('page' in p)).map((p, i) => (
     <article
       class="story"
       id={p.id}
-      role="tabpanel"
-      aria-labelledby={`tab-${p.id}`}
       data-story={p.id}
       data-tone={p.tone ?? 'dark'}
       hidden={i !== 0}
@@ -71,15 +114,17 @@ import { url } from '@/lib/url';
               {p.links.map((l) => (
                 <a class={l.primary ? 'btn btn-primary' : 'btn btn-secondary'} href={l.href.startsWith('/') ? url(l.href) : l.href} target={l.href.startsWith('/') ? undefined : '_blank'} rel={l.href.startsWith('/') ? undefined : 'noopener'}>{l.label}</a>
               ))}
-              {p.caseStudy && <a class="btn btn-secondary" href={url(`/work/${p.caseStudy}`)}>Case study</a>}
+              {p.caseStudy && <a class="btn btn-secondary" href={url(`/work/${p.caseStudy}`)}>{p.name} case study</a>}
             </div>
             <p class="status muted">{p.status}</p>
           </div>
           <div class="hero-art" data-reveal>
             {p.hero.frame === 'laptop' && p.hero.image ? (
-              <Laptop image={url(p.hero.image)} alt={`${p.name} on a laptop`} />
+              <Laptop image={url(p.hero.image)} alt={p.hero.alt ?? `${p.name} on a laptop`} />
+            ) : p.hero.frame === 'duo' && p.hero.image ? (
+              <Duo image={url(p.hero.image)} size="lg" alt={p.hero.alt ?? `${p.name} on the iPhone Duo`} />
             ) : (
-              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={`${p.name} main screen`} />
+              <Phone screen={p.hero.screen} image={p.hero.image ? url(p.hero.image) : undefined} size="lg" alt={p.hero.alt ?? `${p.name} main screen`} />
             )}
           </div>
         </div>
@@ -90,7 +135,7 @@ import { url } from '@/lib/url';
           <div class="browser" data-reveal>
             <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
             <a href={p.siteShot.url} target="_blank" rel="noopener">
-              <img src={url(p.siteShot.desktop)} alt={`${p.name} website`} loading="lazy" width="1440" height="900" />
+              <Shot src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} width={1440} height={900} widths={[720, 1100, 1440, 1600]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" />
             </a>
           </div>
           <p class="caption muted">{p.siteShot.caption}</p>
@@ -107,9 +152,11 @@ import { url } from '@/lib/url';
             </div>
             <div class="feature-art" data-reveal>
               {f.frame === 'laptop' && f.image ? (
-                <Laptop image={url(f.image)} alt={`${p.name}: ${f.title}`} />
+                <Laptop image={url(f.image)} alt={f.alt ?? `${p.name}: ${f.title}`} sizes="(max-width: 760px) calc(100vw - 60px), 492px" />
+              ) : f.frame === 'duo' && f.image ? (
+                <Duo image={url(f.image)} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               ) : (
-                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={`${p.name}: ${f.title}`} />
+                <Phone screen={f.screen} image={f.image ? url(f.image) : undefined} tilt alt={f.alt ?? `${p.name}: ${f.title}`} />
               )}
             </div>
           </div>
@@ -122,10 +169,12 @@ import { url } from '@/lib/url';
             <h2>Who did what</h2>
           </div>
           <div data-reveal>
+            {p.split.ai !== undefined && (
             <div class="bar" role="img" aria-label={`About ${p.split.ai} percent by ${p.split.aiLabel}, ${100 - p.split.ai} percent by ${p.split.meLabel}`}>
               <span class="ai" style={`width: ${p.split.ai}%`}>{p.split.aiLabel} · ~{p.split.ai}%</span>
               <span class="me" style={`width: ${100 - p.split.ai}%`}></span>
             </div>
+            )}
             <div class="legend">
               <div><strong>{p.split.aiLabel} wrote</strong><span class="muted">{p.split.aiDid}</span></div>
               <div><strong>{p.split.meLabel} did</strong><span class="muted">{p.split.meDid}</span></div>
@@ -168,10 +217,11 @@ import { url } from '@/lib/url';
             {p.promptStats && (
               <dl class="prompt-stats">
                 {p.promptStats.map((s) => (
-                  <div><dd>{s.value}</dd><dt>{s.label}</dt></div>
+                  <div><dd>{(s.live && live[s.live]) || s.value}</dd><dt>{s.label}</dt></div>
                 ))}
               </dl>
             )}
+            {p.promptStatsNote && <p class="stats-note muted">{p.promptStatsNote}</p>}
             <ol class="prompts">
               {p.prompts.filter((pr) => pr.pick).map((pr) => (
                 <li data-reveal>
@@ -182,7 +232,7 @@ import { url } from '@/lib/url';
             </ol>
             <details class="more-prompts">
               <summary><span class="btn btn-secondary">Show all {p.prompts.length} prompts</span></summary>
-              <ol class="prompts">
+              <ol class="prompts" tabindex="-1" aria-label={`All ${p.prompts.length} prompts`}>
                 {p.prompts.map((pr) => (
                   <li>
                     <div class="said"><span class="who">Nick</span><p>“{pr.said}”</p></div>
@@ -217,7 +267,8 @@ import { url } from '@/lib/url';
 </Base>
 
 <script>
-  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile');
+  // Only story tiles switch stories; coming-soon and page tiles are static or link out.
+  const tiles = document.querySelectorAll<HTMLButtonElement>('button.tile[aria-controls]');
   const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canObserve = 'IntersectionObserver' in window && !reduce;
@@ -245,10 +296,10 @@ import { url } from '@/lib/url';
     });
   }
 
-  function show(id: string, scroll: boolean) {
+  function show(id: string, scroll: boolean, instant = false) {
     tiles.forEach((t) => {
       const on = t.dataset.project === id;
-      t.setAttribute('aria-selected', String(on));
+      t.setAttribute('aria-pressed', String(on));
       t.classList.toggle('active', on);
     });
     stories.forEach((s) => {
@@ -258,7 +309,7 @@ import { url } from '@/lib/url';
     });
     if (scroll) {
       const target = document.getElementById(id);
-      target?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      target?.scrollIntoView({ behavior: reduce || instant ? 'auto' : 'smooth', block: 'start' });
     }
   }
 
@@ -270,13 +321,24 @@ import { url } from '@/lib/url';
     });
   });
 
-  function fromHash(scroll: boolean) {
+  function fromHash(scroll: boolean, instant = false) {
     const id = location.hash.replace('#', '');
     const valid = [...tiles].some((t) => t.dataset.project === id);
-    show(valid ? id : tiles[0]?.dataset.project || 'clam', scroll && valid);
+    show(valid ? id : tiles[0]?.dataset.project || 'clam', scroll && valid, instant);
   }
   window.addEventListener('hashchange', () => fromHash(true));
-  fromHash(false);
+  // A link like /apps/#goodwalk (the home page cards) opens that story and jumps to it;
+  // the story is hidden until now, so the browser's own jump can't reach it.
+  fromHash(true, true);
+
+  // The summary hides itself once the list opens; move focus to the list so keyboard
+  // and screen-reader users keep their place.
+  document.querySelectorAll<HTMLDetailsElement>('.more-prompts').forEach((d) =>
+    d.addEventListener('toggle', () => {
+      const a = document.activeElement;
+      if (d.open && (a === document.body || d.contains(a))) d.querySelector<HTMLElement>('.prompts')?.focus({ preventScroll: true });
+    }),
+  );
 </script>
 
 <style>
@@ -289,13 +351,16 @@ import { url } from '@/lib/url';
     gap: 1rem;
     margin-top: 2rem;
   }
+  /* Tiles in a row share row tracks (subgrid): kicker, name, blurb and link line up
+     across the row however many lines each kicker or blurb takes. */
   .tile {
     position: relative;
     text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    min-height: 190px;
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0.35rem;
+    align-content: start;
     padding: 1.25rem 1.25rem 1.1rem;
     border-radius: var(--radius);
     border: 2px solid transparent;
@@ -333,8 +398,17 @@ import { url } from '@/lib/url';
   .tile.soon .t-cta {
     opacity: 0.8;
   }
+  .tile.soon.linked,
+  .tile.page {
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .tile.soon.linked:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
   .tile.active,
-  .tile[aria-selected='true'] {
+  .tile[aria-pressed='true'] {
     border-color: var(--tile-fg-use);
   }
   .t-kicker {
@@ -347,13 +421,13 @@ import { url } from '@/lib/url';
   .t-name {
     font-size: 1.6rem;
     font-weight: 800;
+    overflow-wrap: anywhere;
     letter-spacing: -0.02em;
     line-height: 1.1;
   }
   .t-blurb {
     opacity: 0.8;
     font-size: 0.95rem;
-    flex: 1;
   }
   .t-cta {
     font-weight: 700;
@@ -376,7 +450,8 @@ import { url } from '@/lib/url';
   }
 
   .story {
-    scroll-margin-top: 64px;
+    /* html scroll-padding-top is 80px; this lands story heroes flush under the 64px nav. */
+    scroll-margin-top: -16px;
   }
   .hero {
     background: var(--story-bg-use);
@@ -450,8 +525,10 @@ import { url } from '@/lib/url';
     color: #121217;
   }
   @media (max-width: 860px) {
-    .hero-inner {
-      grid-template-columns: 1fr;
+    /* .wide (laptop heroes) too: its two-class selector would otherwise keep two columns on phones. */
+    .hero-inner,
+    .hero-inner.wide {
+      grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
     }
   }
@@ -669,6 +746,10 @@ import { url } from '@/lib/url';
     font-size: 0.8rem;
     color: var(--text-muted);
   }
+  .stats-note {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
+  }
   .more-prompts {
     margin-top: 1.5rem;
   }
@@ -686,6 +767,13 @@ import { url } from '@/lib/url';
   }
   .more-prompts[open] summary {
     display: none;
+  }
+  .more-prompts .prompts:focus {
+    outline: none;
+  }
+  /* The light-theme accent ring is too dark on the always-dark story heroes. */
+  .story:not([data-tone='light']) .hero :focus-visible {
+    outline-color: #fff;
   }
   .more-prompts[open] .prompts {
     margin-top: 0;

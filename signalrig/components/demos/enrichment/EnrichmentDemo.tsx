@@ -38,7 +38,7 @@ function normaliseDomain(input: string): string {
 }
 
 export function EnrichmentDemo() {
-  const [input, setInput] = useState("kestrelhq.com");
+  const [input, setInput] = useState("kestrelhq.example");
   const [domain, setDomain] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [runKey, setRunKey] = useState(0);
@@ -86,7 +86,7 @@ export function EnrichmentDemo() {
               list="enrich-domains"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="company domain, e.g. kestrelhq.com"
+              placeholder="company domain, e.g. kestrelhq.example"
               autoComplete="off"
               spellCheck={false}
               className="h-11 w-full rounded-[var(--radius-ctl)] border border-line-strong bg-surface-2 px-3 font-mono text-base text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none"

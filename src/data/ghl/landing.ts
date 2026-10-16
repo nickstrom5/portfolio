@@ -12,7 +12,7 @@ export const roofingLanding: LandingPage = {
   },
   kicker: 'Chicago suburbs · Free inspection',
   headline: 'Storm damage? Get a free roof inspection this week.',
-  sub: 'A local crew checks your roof, photographs anything that needs attention and leaves a written estimate. No pressure and no cost.',
+  sub: 'One of our estimators checks your roof, photographs anything that needs attention and sends you a written estimate within 24 hours. No pressure and no cost.',
   points: ['Licensed and insured', 'Photos of every issue we find', 'Help with insurance claims'],
   formTitle: 'Book your free inspection',
   submitLabel: 'Get my free inspection',
@@ -25,20 +25,25 @@ export const roofingLanding: LandingPage = {
     { name: 'age', label: 'How old is the roof?', type: 'select', options: ['Under 10 years', '10-20 years', 'Over 20 years', 'Not sure'], initial: 'Not sure', maps: { field: 'roof_age' } },
   ],
   consent: {
-    transactional: 'Text me about my inspection request: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
+    transactional: 'Text me about my inspection, estimate and job: scheduling, reminders and updates from Harbor & Pine Roofing. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to opt out.',
     marketing: 'Also text me occasional offers and seasonal roof reminders. Reply STOP to opt out.',
     fine: 'Consent is optional and not a condition of purchase. Privacy Policy · Terms of Service',
   },
   thanks: {
     title: 'Thanks, {first}. Your request is in.',
-    body: 'Step 2 of 2: pick a time. In the live funnel, the Roof Inspection calendar sits here, already filled in with your details by Sticky Contact.',
+    body: 'Step 2 of 2: pick a time. On the live page the Roof Inspection calendar sits here, with your details already filled in (GoHighLevel’s Sticky Contact). The times below are a preview only. To see what booking does, choose “Book from the link” under Play the customer, then press Watch the workflow run.',
     slots: ['Thu 10:00 AM', 'Thu 2:30 PM', 'Fri 9:00 AM'],
   },
   feeds: 'speed-to-lead',
   trigger: 0,
   textWindow: { start: '08:00', end: '20:00', days: [0, 1, 2, 3, 4, 5, 6] },
   behaviors: [
-    { value: 'replies', label: 'Reply to the text', scenario: 'replies', events: ({ firstText }) => [{ at: firstText + 3, type: 'reply', value: 'Yes please. Tomorrow after 3 works for me.' }] },
+    {
+      value: 'replies',
+      label: 'Reply to the first message',
+      scenario: 'replies',
+      events: ({ firstText, texts }) => [{ at: firstText + 3, type: 'reply', channel: texts ? 'sms' : 'email', value: 'Yes please. Tomorrow after 3 works for me.' }],
+    },
     {
       value: 'books',
       label: 'Book from the link',
@@ -48,10 +53,11 @@ export const roofingLanding: LandingPage = {
     { value: 'quiet', label: 'Ignore everything', scenario: 'quiet', events: () => [] },
   ],
   steps: [
-    'The form creates the contact and saves each answer to a custom field, plus hidden UTM fields read from the page URL.',
-    'Form Submitted fires workflow 01 · Speed to Lead.',
+    'GoHighLevel creates your contact, or updates it if your email or phone is already on file. Name, phone and email go in the standard fields, and the roof answers in custom fields. Hidden fields also record which ad or link brought you (UTM tags), if any.',
+    'That starts workflow 01 · Speed to lead. Its trigger is Form Submitted.',
     'A rep is assigned and alerted, you get an email straight away, and a text if you ticked the first box, but never after 8 PM your time.',
   ],
+  notesSummary: 'In short: one goal and no menu, a six-question form, separate unticked boxes for service texts and for offers, hidden fields that record which ad brought the visitor, and the booking calendar on the thank-you page.',
   notes: [
     { title: 'One goal, one action', body: 'No navigation menu on the step, and every button on the page leads to the same form. The copy is short, plain and specific to the offer.' },
     { title: 'A short, honest form', body: 'Single column, labels above the fields, six questions. The two SMS consent boxes are separate (inspection updates, and offers), unticked and optional, with the Privacy Policy and Terms linked, which is what A2P reviewers look for.' },

@@ -14,12 +14,13 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url(`/clients#${c.slug}`)}>
           <span class="name">{c.name}</span>
           <span class="role muted">{c.role}</span>
+          <span class="scale">{c.scale}</span>
         </a>
       </li>
     ))}
   </ul>
   <p class="more muted">
-    Selected from <strong>300+ contracts</strong> since 2015, including <strong>257 contracts</strong> and <strong>18,000+ hours</strong> on Upwork.
+    Selected from <strong>300+ contracts</strong> since 2015, including <strong>257 contracts</strong> and <strong>18,000+ hours</strong> on Upwork.{' '}
     <a href={url('/clients')}>See featured clients →</a>
     {upworkLive && <span> · <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork</a></span>}
   </p>
@@ -32,9 +33,15 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     padding: 0;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    /* Every box as tall as the tallest, even when a role wraps to two lines. */
+    grid-auto-rows: 1fr;
     gap: 0.75rem;
   }
+  li {
+    display: flex;
+  }
   li a {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -57,12 +64,26 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     letter-spacing: -0.01em;
     font-size: 1.05rem;
   }
+  /* Room for a two-line role in every box, so the names line up across the row. */
   .role {
     font-size: 0.78rem;
+    min-height: 3em;
+    min-height: 2lh;
+  }
+  .scale {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
   }
   .more {
     margin: 1.25rem 0 0;
     font-size: 0.95rem;
+  }
+  .more a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
   }
   .more strong {
     color: var(--text);

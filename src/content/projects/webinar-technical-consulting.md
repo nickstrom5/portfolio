@@ -1,5 +1,5 @@
 ---
-title: 'Webinar and technical consulting for an independent presenter'
+title: 'Webinar and Technical Consultant for an independent presenter'
 shortTitle: 'Webinar & technical consulting'
 client: 'Independent presenter'
 summary: 'Ongoing consulting on the technical side of running online webinars: setup, audio and video, and live technical support for an independent presenter.'
@@ -11,6 +11,7 @@ featured: false
 source: 'upwork'
 links: {}
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

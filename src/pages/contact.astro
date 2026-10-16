@@ -8,14 +8,14 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 const linkedinLive = !site.links.linkedin.includes('REPLACE');
 ---
 
-<Base title="Contact" description={`Hire ${site.name} for your next web or mobile project.`}>
+<Base title="Hire a senior project and operations lead" description={`Contact ${site.name}, a Chicago-based senior project manager and operations lead, about a full-time role or remote project, operations, CRM or webinar work.`}>
   <section class="section">
     <div class="container contact">
       <div>
         <span class="eyebrow">Contact</span>
-        <h1>Let's talk about your project</h1>
+        <h1>Let's work together</h1>
         <p class="lede">
-          Send a few lines about what you're building, your timeline and rough budget. I reply within one business day.
+          Open to a variety of full-time and freelance roles, from project management and operations to executive support, CRM automation and webinars, remote from Chicago for teams in North America, Europe and Australia. Send a few lines about the role or project. I reply within one business day.
         </p>
         <ul class="channels">
           <li>
@@ -57,8 +57,9 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           <input name="email" type="email" autocomplete="email" required />
         </label>
         <label>
-          <span>Project type</span>
+          <span>What it's about</span>
           <select name="type">
+            <option>Full-time role</option>
             <option>Project management</option>
             <option>Operations & systems setup</option>
             <option>CRM & automation</option>
@@ -66,12 +67,14 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
             <option>Events, webinars & video</option>
             <option>Website or app build</option>
             <option>Ongoing / fractional role</option>
+            <option>Personal chef</option>
             <option>Not sure yet</option>
           </select>
         </label>
         <label>
-          <span>Budget range</span>
+          <span>Budget (optional)</span>
           <select name="budget">
+            <option value="" selected>Not sure yet</option>
             <option>Under $5k</option>
             <option>$5k – $15k</option>
             <option>$15k – $50k</option>
@@ -151,10 +154,14 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
     font-weight: 400;
     padding: 0.65rem 0.8rem;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     background: var(--bg);
     color: var(--text);
     width: 100%;
+  }
+  input,
+  select {
+    min-height: 2.9rem;
   }
   textarea {
     resize: vertical;

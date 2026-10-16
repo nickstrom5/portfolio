@@ -1,5 +1,5 @@
 ---
-title: 'SignalRig: a GTM engineering showcase with five working demos'
+title: 'Creator, SignalRig: a GTM engineering showcase with five working demos'
 shortTitle: 'SignalRig GTM engineering showcase'
 client: 'Own showcase'
 summary: 'A client-facing demo site for GTM engineering: enrichment, scoring, routing, signal detection and reporting as working browser demos, built in one session.'
@@ -11,7 +11,9 @@ featured: false
 source: 'personal'
 links:
   live: 'https://signalrig.dev'
+cover: '/showcase/signalrig-site.jpg'
 placeholder: false
+published: 2026-09-20
 ---
 
 ## The idea
@@ -26,4 +28,4 @@ Go-to-market engineering is the discipline of building the automated systems tha
 
 ## Why it matters
 
-Anyone can claim to build enrichment and scoring systems. A site where a prospect can drag the response-time slider and watch close probability fall is a different kind of claim. The full story is on the [AI/Projects page](/apps/#signalrig).
+Anyone can claim to build enrichment and scoring systems. A site where a prospect can drag the response-time slider and watch close probability fall is a different kind of claim. The full story is on the [AI Projects page](/apps/#signalrig).

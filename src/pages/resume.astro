@@ -3,18 +3,21 @@
  * Print-optimized résumé. Linked from the site nav, homepage and About.
  * Also used to generate the PDF in /public via `npm run resume:pdf`.
  */
+import { Font } from 'astro:assets';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
 import { url } from '@/lib/url';
+import { ids, personNode, websiteNode } from '@/lib/schema';
 
 const summary =
-  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production.';
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also building websites and apps by directing Claude Code.';
 const skillGroups = services.map((s) => ({ label: s.title, items: s.bullets }));
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
-  ...site.stats.map((s) => ({ value: s.value, label: s.label.replace(' on Upwork', '') })),
-  { value: 'Since 2015', label: 'Full-time freelance' },
+  // Upwork's own metrics keep the Upwork name; an employer outside Upwork wouldn't know them.
+  ...site.stats.map((s) => ({ value: s.value, label: s.label === 'Job success score' ? 'Upwork Job Success' : s.label })),
+  { value: 'Since 2015', label: 'Freelance' },
 ];
 const freelance = {
   title: 'Operations & Project Manager · Chief of Staff',
@@ -22,11 +25,33 @@ const freelance = {
   start: '2015',
   end: 'Present',
   summary:
-    '300+ completed contracts across project management, systems and CRM setup, executive support, events and media, and web and app builds. Longest-running roles below.',
+    '300+ contracts in project management, operations, CRM, executive support, events and web work. Key client roles below.',
+};
+const pageTitle = `${site.name} resume · Senior project manager, Chicago`;
+const pageDesc = `Resume of ${site.name}, senior project manager and operations lead in Chicago: 300+ contracts since 2015, including SPARC, Symplicity and BARBRI.`;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ld = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    websiteNode(),
+    personNode(),
+    {
+      '@type': 'WebPage',
+      '@id': `${canonical}#webpage`,
+      url: canonical,
+      name: pageTitle,
+      description: pageDesc,
+      isPartOf: { '@id': ids.website },
+      about: { '@id': ids.person },
+      mainEntity: { '@id': ids.person },
+      inLanguage: 'en-US',
+    },
+  ],
 };
 const contacts = [
   { href: `mailto:${site.email}`, label: site.email },
   { href: site.url, label: domain },
+  { href: site.links.linkedin, label: site.links.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') },
 ];
 ---
 
@@ -35,23 +60,32 @@ const contacts = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="profile" />
-    <meta property="og:title" content={`${site.name} · Resume`} />
-    <meta property="og:description" content={`Resume of ${site.name}, ${site.role.toLowerCase()}.`} />
-    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="description" content={`Resume of ${site.name}, ${site.role.toLowerCase()}.`} />
-    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDesc} />
+    <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
+    <meta name="twitter:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta name="author" content={site.name} />
+    <meta name="description" content={pageDesc} />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
-    <title>{site.name} · Resume</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    />
+    <link rel="icon" href={url('/favicon-96x96.png')} type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
+    <title>{pageTitle}</title>
+    <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+    <Font cssVariable="--font-inter" preload />
     <script is:inline>
       try {
         const saved = localStorage.getItem('theme');
@@ -111,7 +145,7 @@ const contacts = [
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: var(--font-inter);
         font-size: 16px;
         line-height: 1.55;
         -webkit-font-smoothing: antialiased;
@@ -296,6 +330,13 @@ const contacts = [
         letter-spacing: -0.015em;
         line-height: 1.3;
       }
+      .job a.title {
+        color: inherit;
+        text-decoration: none;
+      }
+      .job a.title:hover {
+        color: var(--accent);
+      }
       .job .co {
         display: block;
         color: var(--muted);
@@ -315,6 +356,15 @@ const contacts = [
         font-size: 0.9rem;
         font-weight: 500;
         padding-top: 0.12rem;
+      }
+      .job .bullets {
+        grid-column: 1 / -1;
+        margin: 0.3rem 0 0;
+        padding-left: 1.1rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.5;
+        max-width: 68ch;
       }
       .job .sum {
         grid-column: 1 / -1;
@@ -336,23 +386,22 @@ const contacts = [
         letter-spacing: -0.01em;
         line-height: 1.3;
       }
+      /* A dot-separated line, as in print: whole phrases read badly as wrapped pills. */
       .skill-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
+        display: block;
         margin: 0;
         padding: 0;
         list-style: none;
       }
       .skill-items li {
-        font-size: 0.78rem;
-        font-weight: 500;
-        line-height: 1.3;
-        padding: 0.22rem 0.55rem;
-        border-radius: 999px;
-        background: var(--accent-soft);
-        color: var(--ink);
-        border: 1px solid transparent;
+        display: inline;
+        font-size: 0.88rem;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .skill-items li:not(:last-child)::after {
+        content: '\00a0· ';
       }
       .foot {
         display: flex;
@@ -488,7 +537,7 @@ const contacts = [
         }
         .contact {
           font-size: 8.75pt;
-          line-height: 1.55;
+          line-height: 1.4;
         }
         .highlights {
           grid-template-columns: repeat(5, 1fr);
@@ -502,7 +551,7 @@ const contacts = [
           font-size: 7.6pt;
         }
         section {
-          padding-top: 0.62rem;
+          padding-top: 0.5rem;
         }
         h2 {
           font-size: 7.6pt;
@@ -514,7 +563,7 @@ const contacts = [
           max-width: none;
         }
         .job {
-          padding: 0.38rem 0;
+          padding: 0.2rem 0;
           gap: 0.05rem 1rem;
         }
         .job .title {
@@ -527,6 +576,13 @@ const contacts = [
         .job .when {
           font-size: 8.5pt;
         }
+        .job .bullets {
+          font-size: 8.3pt;
+          line-height: 1.3;
+          margin-top: 0.08rem;
+          padding-left: 0.9rem;
+          max-width: none;
+        }
         .job .sum {
           font-size: 8.7pt;
           margin-top: 0.12rem;
@@ -534,7 +590,7 @@ const contacts = [
         }
         .skills {
           grid-template-columns: 1fr 1fr 1fr;
-          gap: 0.4rem 1rem;
+          gap: 0.3rem 1rem;
         }
         .skills h3 {
           font-size: 8.6pt;
@@ -542,6 +598,8 @@ const contacts = [
         }
         .skill-items {
           display: block;
+          font-size: 8pt;
+          line-height: 1.32;
         }
         .skill-items li {
           display: inline;
@@ -553,7 +611,7 @@ const contacts = [
           font-weight: 400;
         }
         .skill-items li:not(:last-child)::after {
-          content: ' · ';
+          content: '\00a0· ';
         }
         .foot {
           margin-top: 0.15rem;
@@ -577,11 +635,11 @@ const contacts = [
   </head>
   <body>
     <a class="skip web-only" href="#resume">Skip to resume</a>
-    <div class="chrome web-only">
+    <header class="chrome web-only">
       <a class="back" href={url('/')}>Back to site</a>
       <a class="btn" href={url(site.resumePdf)} download>Download PDF</a>
-    </div>
-    <div class="wrap">
+    </header>
+    <main class="wrap">
       <article class="sheet" id="resume">
         <header class="masthead">
           <div>
@@ -591,7 +649,8 @@ const contacts = [
           <p class="contact">
             {contacts.map((c, i) => (
               <>
-                {i > 0 && <br />}
+                {i === 1 && <br />}
+                {i > 1 && ' · '}
                 <a href={c.href}>{c.label}</a>
               </>
             ))}
@@ -628,7 +687,11 @@ const contacts = [
             {roles.map((r) => (
               <div class="job">
                 <div>
-                  <span class="title">{r.title}</span>
+                  {r.slug ? (
+                    <a class="title" href={`${site.url}/work/${r.slug}/`}>{r.title}</a>
+                  ) : (
+                    <span class="title">{r.title}</span>
+                  )}
                   <span class="co">
                     {r.company}
                     {r.location && (
@@ -641,6 +704,11 @@ const contacts = [
                 </div>
                 <div class="when">{r.start} – {r.end}</div>
                 <p class="sum">{r.summary}</p>
+                {r.bullets && (
+                  <ul class="bullets">
+                    {r.bullets.map((b) => <li>{b}</li>)}
+                  </ul>
+                )}
               </div>
             ))}
           </div>
@@ -668,6 +736,6 @@ const contacts = [
           <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
         </footer>
       </article>
-    </div>
+    </main>
   </body>
 </html>

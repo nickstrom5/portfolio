@@ -1,5 +1,5 @@
 ---
-title: 'LaunchNeat: $99 websites for local businesses'
+title: 'Founder, LaunchNeat: $99 websites for local businesses'
 shortTitle: 'LaunchNeat local business websites'
 client: 'Own business'
 summary: 'A small business I started in 2026: templated websites for local shops at $99 the first year and $50 after, with fifteen AI-built demo sites.'
@@ -11,7 +11,9 @@ featured: false
 source: 'personal'
 links:
   live: 'https://launchneat.com'
+cover: '/showcase/launchneat-site.jpg'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The idea
@@ -27,4 +29,4 @@ Most local businesses either have no website or a broken one, and the click from
 
 ## Why it matters
 
-It is the same playbook as the apps: a clear brief, real constraints and a model doing the build. The [full story is on the AI/Projects page](/apps/#launchneat).
+It is the same playbook as the apps: a clear brief, real constraints and a model doing the build. The [full story is on the AI Projects page](/apps/#launchneat).

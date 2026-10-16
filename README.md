@@ -68,6 +68,28 @@ is already wired for Formspree's spam filter.
 Add a 1200×630 PNG at `public/og.png`. Until then link previews on LinkedIn
 and Upwork messages will show no image.
 
+## Personal photos (About page)
+
+Drop photos in `public/personal/` (create the folder) and list them in
+`src/data/personal.json`, for example
+`{ "src": "/personal/cats-01.jpg", "alt": "Two cats asleep on a laptop", "caption": "Quality control." }`.
+Keep each JPEG under about 400 KB (about 1600px on the long side). The section on
+the About page appears once the list is non-empty.
+
+## Food photos (`/food/` page)
+
+`/food/` is a food portfolio Nick shares by link; the only link on the site is the
+"cook" line on the About page. It is `noindex` and left out of the sitemap, so it
+stays out of search results. It is not private: this repo is public.
+
+Add photos with `npm run food:add -- photo.jpg --name "Cacio e pepe" --date none`.
+The script strips GPS and other metadata, fixes rotation and saves the photo to
+`src/assets/food/`; every photo there appears on the page. Titles, one-line notes,
+alt text and the order live in `src/data/food.json` (see `src/assets/food/README.md`).
+The build and every commit fail if any image in the repo still carries metadata
+(`npm run photos:check`; the pre-commit hook is in `.githooks/`), so never copy a
+photo in by hand.
+
 ## Deploying
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
@@ -162,15 +184,19 @@ npm run ghl:check -- src/data/ghl/saas/automations/pql-alert.ts   # one file
 It runs every test scenario through the simulator and fails if a run ends
 differently than its `expect` block says, a step or branch is never reached,
 a message has an unresolved `{{merge_field}}`, an SMS is longer than two
-segments or contains characters that force UCS-2 encoding, or a landing
-page points at a workflow or scenario that does not exist.
+segments or contains characters that force UCS-2 encoding, a workflow breaks
+a builder rule (steps after an If/Else, a Go To that is not the last step of
+its branch, more than one Goal Event), or a landing page points at a
+workflow or scenario that does not exist. The full run also plays each
+landing-page choice at every hour of the week, with the SMS box ticked and
+not, the way a visitor's own run works.
 
 Deep links: `/ghl/#saas` opens a case, `/ghl/#saas-pql-alert` opens one
 of its workflows and `/ghl/#coaching-demo` jumps to a landing page. To
 attach proof of a live build (a Loom or screenshots of a real sub-account),
-add a `proof` array to that workflow's file. The page is linked from the
-footer only; to put it in the top nav, remove the `/ghl` filter in
-`src/data/site.ts`.
+add a `proof` array to that workflow's file. The page is linked from its
+AI Projects tile and the Work page, not from the nav or footer; to add it,
+put it in `footerNav` in `src/data/site.ts`.
 
 ## SignalRig (GTM engineering showcase)
 

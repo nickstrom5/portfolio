@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/lib/categories';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -16,24 +17,24 @@ const Heading = `h${level}` as 'h2' | 'h3';
 <article class="card project">
   {showBadge && <span class="placeholder-badge">Sample</span>}
   <div class="meta">
-    <span class="tag">{category}</span>
+    <span class="cat">{categoryLabel(category)}</span>
     <span class="muted">{year}</span>
   </div>
   <Heading class="title"><a href={url(`/work/${project.id}`)}>{title}</a></Heading>
   <p class="muted client">{client}{platforms.length ? ` · ${platforms.join(' / ')}` : ''}</p>
   <p class="summary">{summary}</p>
-  <ul class="tags">
-    {stack.slice(0, 5).map((s) => <li class="tag">{s}</li>)}
-  </ul>
+  <p class="stack muted">{stack.slice(0, 3).join(' · ')}</p>
 </article>
 
 <style>
+  /* Cards in a grid row share row tracks (subgrid): client, summary and stack line
+     start on the same line across the row even when a title wraps. */
   .project {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
+    display: grid;
+    grid-row: span 5;
+    grid-template-rows: subgrid;
+    row-gap: 0.5rem;
   }
   .meta {
     display: flex;
@@ -61,7 +62,17 @@ const Heading = `h${level}` as 'h2' | 'h3';
     margin: 0;
   }
   .summary {
-    flex: 1;
     margin: 0.25rem 0 0.5rem;
+  }
+  .cat {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .stack {
+    font-size: 0.85rem;
+    margin: 0;
   }
 </style>

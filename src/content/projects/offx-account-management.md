@@ -1,5 +1,5 @@
 ---
-title: 'Account management for OFFX, Office Experience Company'
+title: 'Account Manager at OFFX, Office Experience Company'
 shortTitle: 'OFFX account management'
 client: 'OFFX'
 summary: 'Managed client relationships and kept orders on track from placement through delivery for an office experience company.'
@@ -11,6 +11,7 @@ featured: false
 source: 'upwork'
 links: {}
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement

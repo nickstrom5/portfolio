@@ -79,6 +79,11 @@
   --g-code-bg: #0b0e12;
 }
 
+/* Anything toggled with the hidden attribute stays hidden, whatever its display rule. */
+[hidden] {
+  display: none !important;
+}
+
 /* ---------- Workflow canvas ---------- */
 
 .g-canvas {
@@ -145,9 +150,73 @@
   margin: 0;
   font-weight: 600;
 }
+.g-settings-more {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.g-settings-more > summary {
+  cursor: pointer;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.g-settings-more > summary:hover {
+  color: var(--text);
+}
+.g-settings-more .g-count {
+  font-weight: 400;
+}
+.g-settings-notes {
+  margin: 0;
+  padding: 0 1rem 0.65rem 2rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: grid;
+  gap: 0.2rem;
+}
 .g-canvas-body {
   container-type: inline-size;
   padding: 1.25rem 1rem 1.5rem;
+  /* One screen of the diagram at a time; the run scrolls it, the button below opens it all. */
+  max-height: min(80vh, 760px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.g-canvas.is-expanded .g-canvas-body {
+  max-height: none;
+  overflow: visible;
+}
+.g-canvas-body:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.g-canvas-hint {
+  margin: 0;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.g-canvas-more {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.g-canvas-more:hover {
+  text-decoration: underline;
+}
+.g-canvas-more[hidden] {
+  display: none;
 }
 
 .g-triggers {
@@ -478,19 +547,22 @@
   }
 }
 
-/* Run state, set by the simulator. */
+/* Run state, set by the simulator. Steps that have not run lose their fill
+   and get a dashed outline; the text keeps its contrast. */
 .g-canvas.is-running .g-card,
 .g-canvas.is-ran .g-card {
-  opacity: 0.55;
+  background: transparent;
+  box-shadow: none;
+  border-style: dashed;
 }
-.g-canvas.is-running .g-triggers,
-.g-canvas.is-ran .g-triggers {
-  opacity: 0.55;
+.g-canvas .g-step.is-done > .g-card,
+.g-canvas .g-step.is-active > .g-card,
+.g-canvas .g-step.is-skipped > .g-card {
+  background: var(--bg-elev);
 }
-.g-canvas .g-triggers.is-done,
 .g-canvas .g-step.is-done > .g-card,
 .g-canvas .g-step.is-active > .g-card {
-  opacity: 1;
+  border-style: solid;
 }
 .g-step.is-done > .g-card {
   border-color: color-mix(in srgb, var(--g-ok) 55%, var(--border));
@@ -521,14 +593,37 @@
   height: 2px;
   background: var(--g-warn);
 }
+/* A wait the run ended inside: reached, not finished. */
+.g-canvas .g-step.is-cut > .g-card {
+  background: var(--bg-elev);
+  border-style: dashed;
+  border-color: var(--accent);
+}
+.g-step.is-cut > .g-card > .g-state {
+  border-color: var(--accent);
+}
+.g-step.is-cut > .g-card::after {
+  content: 'The run ended during this wait';
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
 .g-step.is-active > .g-card {
   border-color: var(--accent);
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent),
     0 6px 18px -8px rgb(0 0 0 / 0.25);
 }
-.g-branch.is-dim {
-  opacity: 0.4;
+.g-branch.is-dim > .g-branch-head {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--border);
+}
+.g-branch.is-dim > .g-branch-head .g-b-label::after {
+  content: ' · not taken';
+  font-weight: 600;
+  color: var(--text-muted);
 }
 .g-branch.is-taken > .g-branch-head {
   border-color: var(--g-logic);
@@ -571,6 +666,14 @@
   cursor: pointer;
   transition: border-color 0.15s ease;
 }
+/* Running on the visitor's own form answers: a sample's description would contradict them. */
+.g-sim:has(> .g-override:not([hidden])) .g-scen-opt > span > span {
+  display: none;
+}
+.g-scen-who {
+  font-style: normal;
+  color: var(--text);
+}
 .g-scen-opt:hover {
   border-color: var(--text-faint);
 }
@@ -594,6 +697,13 @@
   font-size: 0.84rem;
   color: var(--text-muted);
   line-height: 1.45;
+}
+/* Only the chosen test contact shows its description, so the controls stay near the top. */
+.g-scen-opt:not(:has(input:checked)) span span {
+  display: none;
+}
+.g-scen-opt:not(:has(input:checked)) {
+  padding-block: 0.5rem;
 }
 .g-controls {
   display: flex;
@@ -631,6 +741,38 @@
   font-size: 0.84rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+.g-views {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.g-view {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 36px;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.g-view[aria-selected='true'] {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.g-view-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--g-trigger);
 }
 .g-log {
   list-style: none;
@@ -726,6 +868,10 @@
   color: var(--text);
   border-bottom-left-radius: 5px;
 }
+.g-mail.in {
+  background: var(--g-bubble-in);
+  border-color: transparent;
+}
 .g-mail,
 .g-note {
   margin-top: 0.35rem;
@@ -754,12 +900,25 @@
 .g-outcome {
   margin: 0;
   padding: 0.8rem 1rem;
-  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background: var(--bg-muted);
   font-size: 0.9rem;
 }
-.g-outcome strong {
+.g-outcome-plain {
   display: block;
+  line-height: 1.5;
+}
+.g-outcome-plain strong {
+  font-weight: 700;
+}
+.g-outcome-tech {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.g-outcome-tech strong {
+  font-weight: 600;
 }
 
 .g-record {
@@ -900,6 +1059,10 @@
   color: var(--text);
   border-color: var(--text-faint);
 }
+.g-snippet pre[data-lang='text'] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .g-snippet p {
   margin: 0.4rem 0 0;
   font-size: 0.88rem;
@@ -932,13 +1095,14 @@
 /* ---------- Page layout ---------- */
 
 .gx-hero {
-  padding-block: clamp(3rem, 8vw, 5.5rem) clamp(2.5rem, 6vw, 4rem);
+  padding-block: clamp(2rem, 4vw, 3rem) clamp(2.5rem, 6vw, 4rem);
   background:
     radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
     radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--g-trigger) 10%, transparent), transparent 70%);
 }
 .gx-hero h1 {
-  max-width: 18ch;
+  max-width: 22ch;
+  font-size: clamp(2.1rem, 4.2vw, 3rem);
 }
 .gx-cta {
   display: flex;
@@ -982,6 +1146,139 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Hero: what GHL is on the left, one real lead's messages on the right. */
+.gx-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+.gx-hero-sub {
+  max-width: 65ch;
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+}
+.gx-peek {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow);
+  font-size: 0.88rem;
+}
+.gx-peek-kicker {
+  font-weight: 700;
+  margin: 0;
+}
+.gx-peek-sub,
+.gx-peek-end {
+  color: var(--text-muted);
+  margin: 0.3rem 0 0.75rem;
+}
+.gx-peek-end {
+  margin: 0.75rem 0 0;
+}
+.gx-peek-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.gx-peek-when {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.gx-peek-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+@media (max-width: 960px) {
+  .gx-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* How to use this page */
+.gx-howto {
+  margin-top: 2.5rem;
+}
+.gx-howto-title {
+  font-size: 1.05rem;
+  margin: 0;
+}
+.gx-howto ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.25rem;
+}
+.gx-howto li::marker {
+  font-weight: 800;
+  color: var(--accent);
+}
+.gx-howto li {
+  color: var(--text-muted);
+}
+.gx-howto li strong {
+  color: var(--text);
+}
+.gx-howto-hurry {
+  margin: 1rem 0 0;
+  color: var(--text-muted);
+  max-width: 75ch;
+  font-size: 0.92rem;
+}
+.gx-howto-hurry a,
+.gx-hero-sub a,
+.gx-real a,
+.gx-builder-note a,
+.gx-notes-intro a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .gx-howto ol {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Are these real? / Who built this */
+.gx-real {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  font-size: 0.92rem;
+}
+.gx-real-title {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+.gx-real p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.gx-real .gx-real-links {
+  margin-top: 0.6rem;
+}
+@media (max-width: 760px) {
+  .gx-real {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The word decoder: a collapsed glossary that links on the page open. */
 
 /* Journey map */
 .gx-journey-section {
@@ -1229,6 +1526,13 @@
   font-size: 0.86rem;
   color: var(--text-muted);
 }
+/* Links inside prose are underlined, so colour is not the only cue. */
+.gx-demo-note a,
+.gx-demo-feeds a,
+.gx-where a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 @media (max-width: 900px) {
   .gx-demo {
     grid-template-columns: 1fr;
@@ -1421,13 +1725,12 @@
   margin-bottom: 1rem;
 }
 .lp-slots span {
-  padding: 0.45rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid #cfc8b8;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--lp-primary-dark);
-  background: #fff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px dashed #cfc8b8;
+  font-size: 0.82rem;
+  color: var(--lp-muted);
+  background: transparent;
 }
 .lp-again {
   min-height: 36px;
@@ -1443,6 +1746,29 @@
 }
 .lp-thanks:focus {
   outline: none;
+}
+.lp :focus-visible {
+  outline-color: var(--lp-primary);
+}
+.lp-req {
+  color: var(--lp-muted);
+  font-weight: 400;
+}
+.lp-form [aria-invalid='true'] {
+  border-color: #b3261e;
+  box-shadow: 0 0 0 1px #b3261e;
+}
+.lp-slots-caption {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+}
+.lp-fine a {
+  color: inherit;
+  text-decoration: underline;
 }
 @media (max-width: 640px) {
   .lp-hero {
@@ -1505,6 +1831,7 @@
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--gutter);
     margin-inline: calc(var(--gutter) * -1);
     padding: 0.25rem var(--gutter) 0.75rem;
     scrollbar-width: thin;
@@ -1555,9 +1882,6 @@
   color: var(--text-muted);
 }
 
-.gx-panel {
-  scroll-margin-top: 80px;
-}
 .gx-panel-head h4 {
   font-size: clamp(1.7rem, 3.5vw, 2.3rem);
   margin-bottom: 0.4rem;
@@ -1615,22 +1939,35 @@
   gap: 1.5rem;
   align-items: start;
   margin-top: 2rem;
-  scroll-margin-top: 80px;
 }
 .gx-lab-sim {
   position: sticky;
   top: 80px;
+  /* Never taller than the screen, so the log and result stay in view while the canvas scrolls. */
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+  margin: -2px;
 }
 .gx-lab-sim .g-log {
-  max-height: min(460px, 48vh);
+  max-height: min(420px, 42vh);
 }
 @media (max-width: 960px) {
   .gx-lab {
     grid-template-columns: 1fr;
   }
+  /* The canvas comes first in the DOM but sits below the simulator here; keep the
+     growing log from anchoring the page to it. */
+  .gx-lab-canvas {
+    overflow-anchor: none;
+  }
   .gx-lab-sim {
     position: static;
     order: -1;
+    max-height: none;
+    overflow: visible;
   }
   .gx-lab-sim .g-log {
     max-height: 420px;
@@ -1639,21 +1976,47 @@
 
 /* Build notes */
 .gx-notes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem 2.5rem;
   margin-top: 3rem;
   padding-top: 2.5rem;
   border-top: 1px solid var(--border);
 }
-.gx-snips,
-.gx-features {
-  grid-column: 1 / -1;
+.gx-notes-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.4rem;
 }
-@media (max-width: 860px) {
-  .gx-notes {
-    grid-template-columns: 1fr;
-  }
+.gx-notes-intro {
+  max-width: 75ch;
+  margin: 0 0 0.9rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-builder-note {
+  max-width: 75ch;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-notes-plain {
+  max-width: 75ch;
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+.gx-notes-more > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.35rem 0;
+}
+.gx-notes-more > summary .g-count {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gx-notes-more > .gx-note-grid {
+  margin-top: 0.75rem;
+}
+.gx-features {
+  margin-top: 2rem;
 }
 .gx-build-list {
   margin: 0;
@@ -1705,6 +2068,34 @@
 .gx-table td:nth-child(3) {
   color: var(--text-muted);
 }
+@media (max-width: 560px) {
+  /* Field and type on one line, the note full width under them. */
+  .gx-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .gx-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .gx-table tr:last-child {
+    border-bottom: 0;
+  }
+  .gx-table td {
+    border-bottom: 0;
+  }
+  .gx-table td code {
+    overflow-wrap: anywhere;
+  }
+  .gx-table td:nth-child(3) {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+}
 .gx-kv {
   display: grid;
   gap: 0.4rem;
@@ -1712,7 +2103,7 @@
 }
 .gx-kv div {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: fit-content(45%) minmax(0, 1fr);
   gap: 0.6rem;
   align-items: baseline;
   font-size: 0.88rem;
@@ -1729,6 +2120,11 @@
   background: var(--g-crm-bg);
   color: var(--g-crm);
   white-space: nowrap;
+}
+/* In the data model a long tag list wraps inside its column instead of pushing the row wide. */
+.gx-kv .gx-tag {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .gx-pipe {
   display: flex;
@@ -1941,6 +2337,32 @@
     gap: 0.1rem;
   }
 }
+/* The word decoder in the hero: the conventions box, collapsed. */
+.gx-conventions.gx-decoder {
+  margin-top: 1rem;
+  padding: 0;
+}
+.gx-decoder > summary {
+  cursor: pointer;
+  padding: 0.85rem 1.25rem;
+  font-weight: 700;
+}
+.gx-decoder > summary .g-count {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.gx-decoder > dl {
+  padding: 0 1.25rem 1.25rem;
+}
+.gx-conventions.gx-decoder div {
+  grid-template-columns: 15rem 1fr;
+}
+@media (max-width: 640px) {
+  .gx-conventions.gx-decoder div {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
 .gx-closing {
   background: var(--bg-muted);
 }
@@ -1980,7 +2402,6 @@
 
 .gx-switch {
   padding-block: 0 2.5rem;
-  scroll-margin-top: 72px;
 }
 .gx-switch-grid {
   display: grid;
@@ -2023,17 +2444,7 @@
     var(--shadow);
   background: color-mix(in srgb, var(--case-use) 7%, var(--bg-elev));
 }
-.gx-switch-tab[aria-selected='true']::after {
-  content: 'Showing';
-  position: absolute;
-  top: 0.9rem;
-  right: 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--case-use);
-}
+
 .gx-switch-kicker {
   font-size: 0.75rem;
   font-weight: 700;
@@ -2060,7 +2471,6 @@
 }
 
 .gx-case {
-  scroll-margin-top: 64px;
 }
 .gx-case-head {
   padding-block: clamp(2.5rem, 6vw, 4rem);
@@ -2138,4 +2548,72 @@
 }
 .gx-case .gx-j:hover {
   border-color: var(--case-use);
+}
+:root:has(.gx-hero) {
+  /* Anchor jumps, scrollIntoView and keyboard focus all stop below the sticky nav. */
+  scroll-padding-top: 80px;
+}
+
+/* ---------- Build-note tabs ---------- */
+
+.gx-note-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+.gx-note-tab {
+  min-height: 38px;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gx-note-tab:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+.gx-note-tab[aria-selected='true'] {
+  color: var(--text);
+  border-color: var(--case-use, var(--accent));
+  box-shadow: 0 0 0 1px var(--case-use, var(--accent));
+}
+.gx-note-panel .gx-edge-list,
+.gx-note-panel .gx-qa-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+.gx-note-panel .gx-build-list {
+  max-width: 80ch;
+}
+.gx-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+.gx-jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+.gx-switch-state {
+  position: absolute;
+  top: 0.9rem;
+  right: 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--case-use);
+}
+.gx-switch-tab:not([aria-selected='true']) .gx-switch-state {
+  display: none;
 }

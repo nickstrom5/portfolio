@@ -7,8 +7,9 @@
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
  * title length, description length, canonical, robots, Open Graph image,
- * JSON-LD validity and sitemap coverage. Exercises the menu, theme toggle,
- * work filters, Apps tiles, contact form and key assets.
+ * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
+ * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
+ * and key assets.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -53,7 +54,10 @@ function walk(dir, out = []) {
   return out;
 }
 const pages = walk(dist).sort();
-const noindexAllowed = new Set(['/thanks/', '/resume/']);
+const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
+// Unlisted pages: reachable only by their URL, so no other built file may reference them.
+// Empty now: /food/ is linked from About. Add a path here to enforce it for a page.
+const unlisted = [];
 const findings = [];
 const seenLinks = new Set();
 const viewports = [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1280, 900]];
@@ -82,10 +86,37 @@ for (const p of pages) {
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
+  if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
+  // A <meta> CSP only governs what comes after it. The theme script runs earlier on
+  // purpose (no flash of the wrong theme); any other script before the policy fails.
+  const cspAt = html.indexOf('http-equiv="content-security-policy"');
+  if (cspAt < 0) findings.push(`${p}: no Content-Security-Policy meta`);
+  else {
+    const early = [...html.slice(0, cspAt).matchAll(/<script(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/g)];
+    if (early.some((m) => !/localStorage\.getItem\('theme'\)/.test(m[1]))) findings.push(`${p}: executable <script> before the CSP meta`);
+  }
 }
-for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/nick.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
+for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
 }
+// Unlisted pages: no other built file may reference them (links, JSON-LD, robots.txt, 404 page).
+const textFiles = [];
+(function all(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const f = join(dir, e.name);
+    if (e.isDirectory()) all(f);
+    else if (/\.(html|xml|txt|json|js|webmanifest)$/.test(e.name)) textFiles.push(f);
+  }
+})(dist);
+for (const u of unlisted) {
+  const re = new RegExp(`(?:^|["'\\s(=]|//[^/"'\\s]+)${u.replace(/\//g, '\\/')}(?=["'#?<\\s)]|$)`, 'm');
+  for (const f of textFiles) if (f !== join(dist, u, 'index.html') && re.test(readFileSync(f, 'utf8'))) findings.push(`${f.slice(dist.length - 1)}: references the unlisted page ${u}`);
+}
+
+// No image in the repo may keep EXIF/XMP/IPTC metadata (phone photos carry GPS); same
+// check as the prebuild step and the pre-commit hook.
+const { findPhotoMetadata } = await import('./check-photo-metadata.mjs');
+findings.push(...(await findPhotoMetadata()));
 
 // Browser checks.
 for (const [vpName, width, height] of viewports) {
@@ -115,7 +146,7 @@ for (const [vpName, width, height] of viewports) {
         document.querySelectorAll('input:not([type=hidden]):not(.honeypot), select, textarea').forEach((el) => { const labelled = el.closest('label') || (el.id && document.querySelector(`label[for="${el.id}"]`)) || el.getAttribute('aria-label'); if (!labelled) out.push('unlabelled field: ' + el.name); });
         if (vpName === 'phone' && location.pathname !== '/resume/') {
           const small = [];
-          document.querySelectorAll('a, button').forEach((el) => { const b = el.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return; if (el.closest('.skip')) return; if (b.height < 32 && !el.closest('nav, footer, .tags, .foot, .links, .c-meta, .edu, .more, .what, .roles, figcaption, .caption, .note, p')) small.push(`${el.tagName}:${(el.textContent || '').trim().slice(0, 20)} ${Math.round(b.width)}x${Math.round(b.height)}`); });
+          document.querySelectorAll('a, button').forEach((el) => { const b = el.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return; if (el.closest('.skip')) return; if (el.tagName === 'A' && getComputedStyle(el, '::after').position === 'absolute') return; /* stretched link: the whole card is the target */ if (b.height < 32 && !el.closest('nav, footer, .tags, .foot, .links, .c-meta, .edu, .more, .what, .roles, figcaption, .caption, .note, p')) small.push(`${el.tagName}:${(el.textContent || '').trim().slice(0, 20)} ${Math.round(b.width)}x${Math.round(b.height)}`); });
           if (small.length) out.push('small tap targets: ' + small.slice(0, 6).join(' | '));
           const tiny = [...document.querySelectorAll('body *')].filter((el) => el.children.length === 0 && el.textContent.trim() && parseFloat(getComputedStyle(el).fontSize) < 11 && getComputedStyle(el).visibility !== 'hidden');
           if (tiny.length) out.push('text < 11px: ' + tiny.slice(0, 4).map((el) => el.tagName + '.' + el.className + ' ' + getComputedStyle(el).fontSize).join(' | '));

@@ -1,5 +1,5 @@
 :root {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-inter);
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   --bg: #fbfbf9;
@@ -7,8 +7,10 @@
   --bg-muted: #f1f1ec;
   --text: #17181a;
   --text-muted: #5b5f66;
-  --text-faint: #8a8f97;
+  --text-faint: #686d75;
   --border: #e3e3dd;
+  /* Form field edges: 3:1 against the field and the card, in both themes. */
+  --border-strong: #8f9298;
   --accent: #1f5fd0;
   --accent-strong: #174aa6;
   --accent-soft: #e7eefc;
@@ -32,8 +34,9 @@
     --bg-muted: #1c2127;
     --text: #eef0f2;
     --text-muted: #a4abb5;
-    --text-faint: #6f7783;
+    --text-faint: #858d99;
     --border: #262c34;
+    --border-strong: #5f6875;
     --accent: #6f9cff;
     --accent-strong: #8fb2ff;
     --accent-soft: #1a2740;
@@ -50,8 +53,9 @@
   --bg-muted: #1c2127;
   --text: #eef0f2;
   --text-muted: #a4abb5;
-  --text-faint: #6f7783;
+  --text-faint: #858d99;
   --border: #262c34;
+  --border-strong: #5f6875;
   --accent: #6f9cff;
   --accent-strong: #8fb2ff;
   --accent-soft: #1a2740;
@@ -70,6 +74,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keeps focused and anchored content clear of the sticky header. */
+  scroll-padding-top: 80px;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -96,6 +102,14 @@ a {
 }
 a:hover {
   color: var(--accent-strong);
+}
+/* Links inside running text need more than color to stand out (WCAG 1.4.1). */
+.prose :is(p, li) a,
+.lede a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 h1,
@@ -283,6 +297,16 @@ p {
   border: 0;
 }
 
+/* The <picture> around a showcase screenshot stays out of layout, so frame styles size the <img>. */
+.shot-pic {
+  display: contents;
+}
+/* Its <source> children would otherwise become layout items (a flex gap each); the browser
+   picks a source from its attributes alone. */
+.shot-pic > source {
+  display: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
@@ -297,7 +321,8 @@ p {
   .detail,
   .edu a,
   .devlinks a,
-  .follow .inline {
+  .follow .inline,
+  .client .foot a {
     display: inline-block;
     padding-block: 0.55rem;
   }

@@ -1,7 +1,7 @@
 ---
-title: 'Good Walk: a dog walk tracker with a daily streak'
+title: 'Founder, Good Walk: a dog walk tracker with a daily streak'
 shortTitle: 'Good Walk dog walk tracker'
-client: 'Own product'
+client: 'Own product · getgoodwalk.app'
 summary: 'An iPhone app in development: a daily walk target for your dog, one tap from the reminder, and a streak. No collar, no map, no account.'
 category: 'development'
 platforms: ['iOS']
@@ -9,8 +9,12 @@ stack: ['SwiftUI', 'Notifications', 'Streaks', 'Claude Code']
 year: 2026
 featured: false
 source: 'personal'
-links: {}
+links:
+  live: 'https://getgoodwalk.app'
+cover: '/showcase/goodwalk-site.jpg'
 placeholder: false
+published: 2026-09-20
+updated: 2026-10-09
 ---
 
 ## The idea
@@ -21,8 +25,8 @@ Your dog needs a walk every day. Good Walk turns that into a streak: a daily tar
 
 - Set the concept and the constraints, then directed Claude Code through the screens, the reminder and streak logic, and the launch plan.
 - Had the landing site built first: how it works, pricing, an FAQ, three guides on how long and how often to walk a dog, plus privacy and terms.
-- Registered getgoodwalk.app and set the launch target for Walk Your Dog Week, 1 to 7 October 2026.
+- Registered getgoodwalk.app and wrote the launch plan.
 
 ## Why it matters
 
-It is the third app in the same experiment as Clam and Lume, and the fastest so far: from one sentence to a reviewable site in an evening. The full story is on the [AI/Projects page](/apps/#goodwalk).
+It is part of the same experiment as Clam, and the fastest so far: from one sentence to a reviewable site in an evening. The full story is on the [AI Projects page](/apps/#goodwalk).

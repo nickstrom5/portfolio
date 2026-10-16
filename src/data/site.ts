@@ -15,7 +15,7 @@ export const site = {
   /** Replace with your real profile URLs. */
   links: {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
-    linkedin: 'http://linkedin.com/in/nick-soderstrom',
+    linkedin: 'https://www.linkedin.com/in/nick-soderstrom/',
     github: 'https://github.com/nickstrom5',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
@@ -23,14 +23,14 @@ export const site = {
   /** Headline numbers shown in the hero. Taken from the Upwork profile, September 2026. */
   stats: [
     { value: '300+', label: 'Client contracts', note: '257 on Upwork' },
-    { value: '18,000+', label: 'Hours billed' },
+    { value: '18,000+', label: 'Freelance hours billed' },
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
   ],
-  badges: ['Top Rated Plus', '100% Job Success', 'Freelance since 2015'],
-  availability: 'Open for work',
-  /** Path under /public. */
-  photo: '/nick.jpg',
+  availability: 'Open to full-time and freelance roles',
+  /** Path under /public, for structured data and link previews. The page portraits use the
+      copy at src/assets/nick-soderstrom.jpg, served resized; replace both together. */
+  photo: '/nick-soderstrom.jpg',
   /** Path under /public. Regenerate with `npm run resume:pdf` after editing experience.ts. */
   resumePdf: '/Nick-Soderstrom-Resume.pdf',
   /**
@@ -40,14 +40,18 @@ export const site = {
   contactEndpoint: 'https://formspree.io/f/xvkggbvq',
 } as const;
 
+/**
+ * Footer links. Work and the GHL showcase are in neither the footer nor the top nav:
+ * Work is linked from the Clients summary, the home hero and the case studies, and
+ * GHL from its AI Projects tile and the Work page.
+ */
 export const footerNav = [
-  { href: '/work', label: 'Work' },
   { href: '/clients', label: 'Clients' },
-  { href: '/apps', label: 'AI/Projects' },
-  { href: '/ghl', label: 'GHL automations' },
+  { href: '/apps', label: 'AI Projects' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;
 
-/** Header/nav only. Resume and the GHL showcase stay in the footer, not the top nav. */
-export const nav = footerNav.filter((item) => item.href !== '/resume' && item.href !== '/ghl');
+/** Header/nav: the footer links minus Resume, which stays in the footer only. */
+const footerOnly: string[] = ['/resume'];
+export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));

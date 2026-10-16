@@ -1,5 +1,5 @@
 ---
-title: 'Guiding clients through the customer journey at Blackdove Art'
+title: 'Jr. Marketing Manager at Blackdove Art'
 shortTitle: 'Blackdove Art client journey'
 client: 'Blackdove Art'
 summary: 'Three years as junior marketing manager for a digital art platform, guiding clients from first touch through the sales and onboarding journey.'
@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://www.blackdove.com'
 placeholder: false
+published: 2026-09-18
 ---
 
 ## The engagement
