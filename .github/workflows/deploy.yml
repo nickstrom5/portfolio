@@ -10,13 +10,15 @@ on:
 permissions:
   contents: read
 
+# A newer push waits for the running deploy instead of cancelling it halfway.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       # Actions are pinned to commit SHAs; Dependabot keeps them current.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -26,23 +28,21 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # Until the custom domain is live, Pages serves from
-      # https://<user>.github.io/<repo>/ and needs a base path. Once
-      # public/CNAME exists these two variables can be removed.
       - run: npm run build
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          BASE_PATH: ${{ vars.BASE_PATH }}
+      - run: npm run ghl:check
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
+          # Publishes public/.well-known (security.txt); since v4 this action skips dot folders by default.
+          include-hidden-files: true
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
@@ -59,6 +59,7 @@ jobs:
   indexnow:
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

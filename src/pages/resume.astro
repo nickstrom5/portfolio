@@ -9,6 +9,7 @@ import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
 import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
+import { themeInit } from '@/lib/theme-init.mjs';
 
 const summary =
   'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also building websites and apps by directing Claude Code.';
@@ -78,6 +79,8 @@ const contacts = [
     <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
     <meta name="twitter:image:alt" content={`${site.name}, ${site.role}`} />
     <meta name="author" content={site.name} />
+    <meta name="theme-color" content="#f4f4f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
     <meta name="description" content={pageDesc} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
@@ -86,14 +89,7 @@ const contacts = [
     <title>{pageTitle}</title>
     <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <Font cssVariable="--font-inter" preload />
-    <script is:inline>
-      try {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.dataset.theme = saved;
-        }
-      } catch {}
-    </script>
+    <script is:inline set:html={themeInit} />
     <style>
       :root {
         --ink: #17181a;

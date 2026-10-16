@@ -3,6 +3,9 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "prebuild": "node scripts/check-photo-metadata.mjs",
@@ -12,6 +15,8 @@
     "qa": "node scripts/qa.mjs",
     "astro": "astro",
     "ghl:check": "node scripts/ghl-check.mjs",
+    "og": "node scripts/make-og.mjs",
+    "shots": "node scripts/make-shots.mjs",
     "food:add": "node scripts/add-food.mjs",
     "photos:check": "node scripts/check-photo-metadata.mjs",
     "prepare": "git config core.hooksPath .githooks || true"
@@ -24,6 +29,7 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "playwright": "1.56.1"
   }
 }
