@@ -11,35 +11,12 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
 <Base title="Hire a senior project and operations lead" description={`Contact ${site.name}, a Chicago-based senior project manager and operations lead, about a full-time role or remote project, operations, CRM or webinar work.`}>
   <section class="section">
     <div class="container contact">
-      <div>
+      <div class="intro">
         <span class="eyebrow">Contact</span>
         <h1>Let's work together</h1>
         <p class="lede">
           Open to a variety of full-time and freelance roles, from project management and operations to executive support, CRM automation and webinars, remote from Chicago for teams in North America, Europe and Australia. Send a few lines about the role or project. I reply within one business day.
         </p>
-        <ul class="channels">
-          <li>
-            <span class="label">Email</span>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
-          </li>
-          {upworkLive && (
-            <li>
-              <span class="label">Upwork</span>
-              <a href={site.links.upwork} target="_blank" rel="noopener">Hire me through Upwork</a>
-              <span class="muted small">Best if you want escrow and platform protection.</span>
-            </li>
-          )}
-          {linkedinLive && (
-            <li>
-              <span class="label">LinkedIn</span>
-              <a href={site.links.linkedin} target="_blank" rel="noopener">Connect on LinkedIn</a>
-            </li>
-          )}
-          <li>
-            <span class="label">Location</span>
-            <span>{site.location}</span>
-          </li>
-        </ul>
       </div>
 
       <form
@@ -58,7 +35,8 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
         </label>
         <label>
           <span>What it's about</span>
-          <select name="type">
+          <select name="type" data-about>
+            <option value="" selected>Choose one</option>
             <option>Full-time role</option>
             <option>Project management</option>
             <option>Operations & systems setup</option>
@@ -72,7 +50,7 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           </select>
         </label>
         <label>
-          <span>Budget (optional)</span>
+          <span>Project budget (optional)</span>
           <select name="budget">
             <option value="" selected>Not sure yet</option>
             <option>Under $5k</option>
@@ -84,9 +62,10 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
         </label>
         <label class="wide">
           <span>Tell me about it</span>
-          <textarea name="message" rows="6" required></textarea>
+          <textarea name="message" rows="6" required placeholder="The role or project, the tools you use now, and your timeline."></textarea>
         </label>
         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true" />
+        <input type="hidden" name="from" data-from />
         {hasEndpoint && (
           <>
             <input type="hidden" name="_subject" value="New project inquiry from work-with-nick.com" />
@@ -98,16 +77,67 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           <p class="muted small wide">This opens your email client with the message pre-filled.</p>
         )}
       </form>
+
+      <ul class="channels">
+        <li>
+          <span class="label">Email</span>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </li>
+        {upworkLive && (
+          <li>
+            <span class="label">Upwork</span>
+            <a href={site.links.upwork} target="_blank" rel="noopener">Hire me through Upwork</a>
+            <span class="muted small">Best if you want escrow and platform protection.</span>
+          </li>
+        )}
+        {linkedinLive && (
+          <li>
+            <span class="label">LinkedIn</span>
+            <a href={site.links.linkedin} target="_blank" rel="noopener">Connect on LinkedIn</a>
+          </li>
+        )}
+        <li>
+          <span class="label">Location</span>
+          <span>{site.location}</span>
+        </li>
+      </ul>
     </div>
   </section>
 </Base>
 
+<script>
+  // Links like /contact/?about=CRM%20%26%20automation&from=sales-org-zapier-hubspot-automation
+  // (the case-study buttons) pick the topic and say which page the message came from.
+  const params = new URLSearchParams(location.search);
+  const about = params.get('about');
+  const select = document.querySelector<HTMLSelectElement>('[data-about]');
+  if (about && select && [...select.options].some((o) => o.value === about)) select.value = about;
+  const from = params.get('from');
+  const fromField = document.querySelector<HTMLInputElement>('[data-from]');
+  if (from && fromField && /^[a-z0-9-]{1,80}$/.test(from)) fromField.value = from;
+</script>
+
 <style>
+  /* Intro and channels on the left, the form on the right; on phones the form comes
+     right after the intro and the channels go last. */
   .contact {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(320px, 1.1fr);
-    gap: 3rem;
+    grid-template-areas:
+      'intro form'
+      'channels form';
+    grid-template-rows: auto 1fr;
+    column-gap: 3rem;
     align-items: start;
+  }
+  .intro {
+    grid-area: intro;
+  }
+  .form {
+    grid-area: form;
+  }
+  .channels {
+    grid-area: channels;
   }
   .channels {
     list-style: none;
@@ -182,7 +212,12 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
   @media (max-width: 800px) {
     .contact {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      grid-template-areas: 'intro' 'form' 'channels';
+      grid-template-rows: none;
+      row-gap: 2rem;
+    }
+    .channels {
+      margin-top: 0;
     }
     .form {
       grid-template-columns: 1fr;
