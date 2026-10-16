@@ -60,11 +60,16 @@ const setlistLabel = {
   reference: 'No published setlist',
 } as const;
 
+const documented = shows.filter((s) => s.setlistSource === 'reported').length;
+
 const setlistBlurb = {
   reported: 'Documented in full by setlist.fm and contemporaneous reporting, in running order.',
   partial: 'These songs are confirmed for this date. The rest of the night is not documented, so the tour reference set is printed below it.',
-  reference: 'No song-by-song account of this date has been published. What follows is the tour’s recurring spine, assembled only from songs reported elsewhere in 2026 — a guide, not a record.',
-} as const;
+  reference:
+    show.status === 'upcoming'
+      ? `This date has not been played yet. What follows is the tour’s recurring spine: songs played on at least ten of the ${documented} nights documented in full so far — a guide, not a prediction.`
+      : `No song-by-song account of this date exists. What follows is the tour’s recurring spine: songs played on at least ten of the ${documented} nights documented in full — a guide, not a record.`,
+};
 
 const ics = [
   'BEGIN:VCALENDAR',
