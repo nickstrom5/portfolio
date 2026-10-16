@@ -1,13 +1,18 @@
 ---
-import { execFileSync } from 'node:child_process';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
+import { getImage } from 'astro:assets';
 import testimonials from '@/data/testimonials.json';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+import { categoryLabel } from '@/lib/categories';
+import { ids } from '@/lib/schema';
+import { lastCommit, projectSources } from '@/lib/git-date.mjs';
+import { shareCard } from '@/lib/share-card';
+import { showcaseAsset } from '@/lib/showcase-images';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.hidden);
@@ -22,6 +27,14 @@ const { Content } = await render(project);
 const d = project.data;
 const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
 const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
+// Link previews want 1200×630: the top of the cover screenshot, cropped to fit. Never read .src or
+// .width on the asset itself, or Astro also publishes the untouched original.
+const coverAsset = d.cover ? showcaseAsset(d.cover) : undefined;
+if (d.cover && !coverAsset) throw new Error(`${project.id}: cover ${d.cover} is not in src/assets/showcase/`);
+const shareImage = coverAsset
+  ? (await getImage({ src: coverAsset, width: 1200, height: 630, fit: 'cover', position: 'top', format: 'jpg' })).src
+  : undefined;
+const category = categoryLabel(d.category);
 
 // Rotate through the category so every case study gets related links, not just the first two alphabetically.
 // Featured roles point to the other featured roles instead.
@@ -30,16 +43,13 @@ const peers = (await getCollection('projects', ({ data }) => !data.hidden))
   .sort((a, b) => a.id.localeCompare(b.id));
 const i = peers.findIndex((p) => p.id === project.id);
 const related = [...peers.slice(i + 1), ...peers.slice(0, i)].slice(0, 2);
-const relatedHeading = d.featured ? 'Other long-term roles' : `More ${d.category} work`;
+const relatedHeading = d.featured ? 'Other long-term roles' : `More ${category.toLowerCase()} work`;
 
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 const iso = (dt: Date) => dt.toISOString().slice(0, 10);
-// The later of the frontmatter date and the file's last commit (the sitemap's lastmod source),
+// The later of the frontmatter date and the write-up's last commit (the sitemap's lastmod source),
 // so a retitled case study doesn't keep an old dateModified.
-let lastEdit: string | undefined;
-try {
-  lastEdit = execFileSync('git', ['log', '-1', '--format=%cI', '--', `src/content/projects/${project.id}.md`], { encoding: 'utf8' }).trim().slice(0, 10) || undefined;
-} catch {}
+const lastEdit = lastCommit(projectSources(project.id))?.slice(0, 10);
 const dateModified = d.published ? [iso(d.updated ?? d.published), lastEdit ?? ''].sort().at(-1) : undefined;
 const shortDate = (dt: Date) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
@@ -57,7 +67,8 @@ const ctaHref = url(`/contact?${new URLSearchParams({ ...(topic ? { about: topic
 // "Remote" alone says nothing a case study doesn't already.
 const platforms = d.platforms.filter((p) => p !== 'Remote').length > 0 ? d.platforms : [];
 const links = [
-  d.links.live && { label: d.source === 'personal' ? 'Live site' : 'Client website', href: d.links.live },
+  // A client's site is already linked from the Client row.
+  d.links.live && d.source === 'personal' && { label: 'Live site', href: d.links.live },
   d.links.appStore && { label: 'App Store', href: d.links.appStore },
   d.links.playStore && { label: 'Google Play', href: d.links.playStore },
   d.links.repo && { label: 'Source', href: d.links.repo },
@@ -68,8 +79,9 @@ const links = [
   title={d.shortTitle ?? d.title}
   description={d.summary}
   ogType="article"
-  image={d.cover}
-  imageAlt={d.cover ? coverAlt : undefined}
+  image={shareImage}
+  imageSize={shareImage ? { width: 1200, height: 630 } : undefined}
+  imageAlt={shareImage ? coverAlt : undefined}
   breadcrumbs={[{ name: 'Work', path: '/work/' }, { name: d.shortTitle ?? d.title, path: Astro.url.pathname }]}
   jsonLd={[
     {
@@ -78,13 +90,13 @@ const links = [
       headline: d.title,
       description: d.summary,
       url: pageUrl,
-      image: [new URL(d.cover ?? '/og.png', Astro.site).href],
+      image: [new URL(shareImage ?? shareCard(Astro.url.pathname), Astro.site).href],
       inLanguage: 'en-US',
-      isPartOf: { '@id': `${site.url}/#website` },
+      isPartOf: { '@id': ids.website },
       keywords: d.stack.join(', '),
       ...(d.published ? { datePublished: iso(d.published), dateModified } : {}),
-      author: { '@type': 'Person', '@id': `${site.url}/#person`, name: site.name, url: `${site.url}/about/` },
-      publisher: { '@id': `${site.url}/#person` },
+      author: { '@type': 'Person', '@id': ids.person, name: site.name, url: `${site.url}/about/` },
+      publisher: { '@id': ids.person },
       mainEntityOfPage: { '@id': `${pageUrl}#webpage` },
       // Only clients already named and linked on the page; anonymized clients have no live link.
       ...(d.source !== 'personal' && d.links.live ? { about: { '@type': 'Organization', name: d.client, url: d.links.live } } : {}),
@@ -94,7 +106,7 @@ const links = [
   <article class="section">
     <div class="container">
       <a class="back" href={url('/work')}>← All work</a>
-      <span class="eyebrow">{d.category} · {d.year}</span>
+      <span class="eyebrow">{category} · {d.year}</span>
       <h1>{d.title}</h1>
       <p class="lede">{d.summary}</p>
 
@@ -102,7 +114,7 @@ const links = [
         <div class="prose">
           <Content />
         </div>
-        <aside class="facts card">
+        <section class="facts card" aria-label="Project facts">
           <dl>
             <dt>Client</dt>
             <dd>
@@ -149,7 +161,7 @@ const links = [
           </dl>
           <a class="btn btn-primary full" href={ctaHref}>{cta}</a>
           {d.source !== 'personal' && <a class="btn btn-secondary full" href={url('/resume')}>View resume</a>}
-        </aside>
+        </section>
       </div>
     </div>
   </article>

@@ -2,7 +2,7 @@
 /**
  * One case study: the client, their journey map, the working landing page
  * and every workflow with its simulator and build notes. Ids are prefixed
- * with the case id so three of these can live on one page.
+ * with the case id, so links from other cases' pages can name them.
  */
 import type { CaseStudy } from '@/lib/ghl/types';
 import { countSteps } from '@/lib/ghl/engine';
@@ -13,9 +13,8 @@ import Icon from './Icon.astro';
 interface Props {
   study: CaseStudy;
   index: number;
-  hidden?: boolean;
 }
-const { study, index, hidden = false } = Astro.props;
+const { study, index } = Astro.props;
 const { business: b, landing, automations } = study;
 const fed = automations.find((a) => a.id === landing.feeds);
 const feedsName = fed ? `workflow ${fed.number} · ${fed.name}` : 'the first workflow';
@@ -25,16 +24,14 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
 <section
   class="gx-case"
   id={b.id}
-  role="tabpanel"
-  aria-labelledby={`case-tab-${b.id}`}
-  hidden={hidden}
+  aria-labelledby={`case-title-${b.id}`}
   data-case-panel={b.id}
   style={`--case: ${b.tint.light}; --case-dark: ${b.tint.dark}`}
 >
   <header class="gx-case-head">
     <div class="container">
       <span class="eyebrow gx-case-eyebrow">Case study {index + 1} · {b.industry}</span>
-      <h2>{b.name}</h2>
+      <h2 id={`case-title-${b.id}`}>{b.name}</h2>
       <p class="lede">{b.intro}</p>
       <dl class="gx-case-facts">
         <div><dt>Workflows</dt><dd>{automations.length}</dd></div>

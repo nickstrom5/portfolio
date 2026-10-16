@@ -1,0 +1,36 @@
+name: CI
+
+# Every pull request, Dependabot's included, gets the same checks a deploy
+# needs, plus the full browser QA, before it can reach main.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    # Pinned rather than ubuntu-latest, so Playwright's system dependencies resolve.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Same pins as deploy.yml; Dependabot keeps both current.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Full history so the sitemap's <lastmod> dates come from git.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run ghl:check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run qa

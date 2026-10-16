@@ -1,6 +1,6 @@
 ---
 /**
- * Print-optimized résumé. Linked from the site nav, homepage and About.
+ * Print-optimized résumé. Linked from the footer, homepage and About.
  * Also used to generate the PDF in /public via `npm run resume:pdf`.
  */
 import { Font } from 'astro:assets';
@@ -9,6 +9,8 @@ import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
 import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
+import { themeInit } from '@/lib/theme-init.mjs';
+import { shareCard } from '@/lib/share-card';
 
 const summary =
   'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also building websites and apps by directing Claude Code.';
@@ -30,6 +32,10 @@ const freelance = {
 const pageTitle = `${site.name} resume · Senior project manager, Chicago`;
 const pageDesc = `Resume of ${site.name}, senior project manager and operations lead in Chicago: 300+ contracts since 2015, including SPARC, Symplicity and BARBRI.`;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// The page's own share card (npm run og), or the site-wide default; both are 1200×630.
+const card = shareCard(Astro.url.pathname);
+const ogImage = new URL(card, Astro.site).href;
+const ogAlt = card === '/og.png' ? `${site.name}, ${site.role}` : pageTitle;
 const ld = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -67,17 +73,19 @@ const contacts = [
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDesc} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+    <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta property="og:image:alt" content={ogAlt} />
     <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDesc} />
-    <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
-    <meta name="twitter:image:alt" content={`${site.name}, ${site.role}`} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogAlt} />
     <meta name="author" content={site.name} />
+    <meta name="theme-color" content="#f4f4f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
     <meta name="description" content={pageDesc} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
@@ -86,14 +94,7 @@ const contacts = [
     <title>{pageTitle}</title>
     <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <Font cssVariable="--font-inter" preload />
-    <script is:inline>
-      try {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.dataset.theme = saved;
-        }
-      } catch {}
-    </script>
+    <script is:inline set:html={themeInit} />
     <style>
       :root {
         --ink: #17181a;
@@ -433,6 +434,14 @@ const contacts = [
         max-width: 36ch;
         color: var(--faint);
       }
+      /* A link inside a sentence needs more than colour to stand out (screen only; the PDF stays as is). */
+      @media screen {
+        .foot .note a {
+          text-decoration: underline;
+          text-decoration-thickness: 1px;
+          text-underline-offset: 0.18em;
+        }
+      }
       @media (max-width: 800px) {
         .highlights {
           grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -491,12 +500,17 @@ const contacts = [
         margin: 0.4in 0.6in;
       }
       @media print {
-        :root {
+        /* Matches the dark-theme selectors' weight, so a dark-mode visitor still prints black on white. */
+        :root,
+        :root[data-theme],
+        :root:not([data-theme='light']) {
+          color-scheme: light;
           --ink: #17181a;
           --muted: #4d5158;
           --faint: #5c6168;
           --rule: #d8d8d2;
           --accent: #1a4fad;
+          --accent-strong: #1a4fad;
           --accent-soft: #fff;
           --bg: #fff;
           --sheet: #fff;
@@ -556,6 +570,11 @@ const contacts = [
         h2 {
           font-size: 7.6pt;
           margin-bottom: 0.28rem;
+        }
+        /* Wide tracking splits words for résumé parsers ('EXP ER I EN CE'). */
+        h2,
+        .foot .edu-label {
+          letter-spacing: 0.04em;
         }
         .summary {
           font-size: 9.2pt;
@@ -733,9 +752,14 @@ const contacts = [
             <span class="edu-label">Education</span>
             <span class="edu-value">{education.map((e) => `${e.school}, ${e.location}`).join('; ')}</span>
           </div>
-          <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
+          <p class="note">Full contract history and client feedback on <a href={site.links.upwork}>Upwork</a>. References on request.</p>
         </footer>
       </article>
     </main>
+    <script>
+      // The phone's browser bar follows a saved theme, as Nav's syncTheme does on the other pages.
+      const chosen = document.documentElement.dataset.theme;
+      if (chosen) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', chosen === 'dark' ? '#0f1114' : '#f4f4f0'));
+    </script>
   </body>
 </html>

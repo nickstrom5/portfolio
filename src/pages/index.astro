@@ -60,7 +60,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Clients</span>
       <div class="section-head">
-        <h2>Who I've worked with</h2>
+        <h2>Who I’ve worked with</h2>
         <a href={url('/clients')}>Featured clients →</a>
       </div>
       <ClientStrip />
@@ -105,7 +105,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Builds</span>
       <div class="section-head">
-        <h2>Things I've built</h2>
+        <h2>Things I’ve built</h2>
         <a href={url("/apps")}>AI Projects →</a>
       </div>
       <div class="grid grid-3">
@@ -166,8 +166,10 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     background: var(--success);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 20%, transparent);
   }
+  /* Normal wrapping on wider screens keeps the hero's own line breaks (the global heading balance is for other pages). */
   h1 {
     max-width: 18ch;
+    text-wrap: wrap;
   }
   /* The tagline always starts its own line; balance keeps single-word lines off phones. */
   .accent {

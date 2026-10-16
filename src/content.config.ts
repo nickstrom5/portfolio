@@ -29,8 +29,8 @@ const projects = defineCollection({
         repo: z.url().optional(),
       })
       .default({}),
-    /** Optional path under /public, e.g. /work/acme-cover.png */
-    cover: z.string().optional(),
+    /** Optional screenshot in src/assets/showcase, named '/showcase/<file>', e.g. /showcase/acme-site.jpg */
+    cover: z.string().regex(/^\/showcase\/[^/]+$/, 'cover must be /showcase/<file> (the file lives in src/assets/showcase/)').optional(),
     /** When the engagement ran, in the write-up's own words, e.g. 'Jun 2018 – Mar 2022'. */
     dates: z.string().optional(),
     /** Date this write-up was first published on the site (not the engagement date). */

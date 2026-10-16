@@ -6,7 +6,7 @@ import { site } from '@/data/site';
 import personal from '@/data/personal.json';
 import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
-import { execFileSync } from 'node:child_process';
+import { lastCommit } from '@/lib/git-date.mjs';
 
 const skills = {
   'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
@@ -36,10 +36,7 @@ const connect = [
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
 // Last change to the profile, from git (same sources as the sitemap's lastmod for /about/).
-let dateModified: string | undefined;
-try {
-  dateModified = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'src/pages/about.astro', 'src/data/site.ts', 'src/data/personal.json'], { encoding: 'utf8' }).trim() || undefined;
-} catch {}
+const dateModified = lastCommit(['src/pages/about.astro', 'src/data/site.ts', 'src/data/personal.json']);
 ---
 
 <Base
@@ -54,7 +51,7 @@ try {
       <div class="prose">
         <Image class="portrait" src={portrait} alt={site.name} width={128} height={128} densities={[1, 2, 3]} format="webp" loading="eager" />
         <span class="eyebrow">About</span>
-        <h1>Hi, I'm {site.name}.</h1>
+        <h1>Hi, I’m {site.name}.</h1>
         <p class="lede">
           I'm a senior project manager and operations lead with more than ten years running projects for federal research institutions, major universities, large corporations, startups and nonprofits.
         </p>
@@ -82,7 +79,7 @@ try {
         </div>
       </div>
 
-      <aside>
+      <div class="side">
         <div class="card connect">
           <h2 class="h3">Connect</h2>
           <ul>
@@ -111,7 +108,7 @@ try {
             </div>
           ))}
         </div>
-      </aside>
+      </div>
     </div>
   </section>
 

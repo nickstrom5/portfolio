@@ -6,10 +6,14 @@
  * Checks every page at phone, tablet and desktop widths in light and dark:
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
- * title length, description length, canonical, robots, Open Graph image,
+ * title length, description length, canonical, robots, Open Graph image
+ * (in the build, with a 1200px width tag),
  * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
- * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
- * and key assets.
+ * Holds page-weight budgets, checks layout shift, and exercises the menu,
+ * theme toggle, work filters, Apps tiles, the /ghl/ old-link forward,
+ * simulator and landing demo, the contact form and its failure path, the
+ * 404 page and key assets. Thin case studies and indexable pages still on
+ * the default share card print as warnings.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -18,6 +22,7 @@
 import http from 'node:http';
 import { createReadStream, existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 const dist = new URL('../dist/', import.meta.url).pathname;
 if (!existsSync(join(dist, 'index.html'))) {
@@ -59,6 +64,8 @@ const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
 // Empty now: /food/ is linked from About. Add a path here to enforce it for a page.
 const unlisted = [];
 const findings = [];
+/** Printed, but do not fail the run. */
+const warnings = [];
 const seenLinks = new Set();
 const viewports = [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1280, 900]];
 const browser = await chromium.launch();
@@ -82,13 +89,21 @@ for (const p of pages) {
   if (noindex && !noindexAllowed.has(p)) findings.push(`${p}: unexpectedly noindex`);
   if (!noindex && !sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: indexable but not in sitemap`);
   if (noindex && sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: noindex but listed in sitemap`);
-  if (!noindex && !/<meta property="og:image"/.test(html)) findings.push(`${p}: missing og:image`);
+  const ogImage = (html.match(/<meta property="og:image" content="([^"]*)"/) || [])[1];
+  if (!noindex && !ogImage) findings.push(`${p}: missing og:image`);
+  if (ogImage) {
+    const imgPath = new URL(ogImage).pathname;
+    if (!existsSync(join(dist, imgPath))) findings.push(`${p}: og:image ${imgPath} is not in the build`);
+    // Noindex pages may share a picture of unstated size (/food/ uses its first photo).
+    if (!noindex && !/<meta property="og:image:width" content="1200"/.test(html)) findings.push(`${p}: og:image has no 1200px width tag`);
+    if (!noindex && imgPath === '/og.png' && p !== '/') warnings.push(`${p}: uses the default share card (run \`npm run build && npm run og && npm run build\`)`);
+  }
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
   if (!noindex && !/"@id":"[^"]*\/#person"/.test(html)) findings.push(`${p}: indexable page without Person JSON-LD`);
-  // A <meta> CSP only governs what comes after it. The theme script runs earlier on
-  // purpose (no flash of the wrong theme); any other script before the policy fails.
+  // A <meta> CSP only governs what comes after it. The theme script (src/lib/theme-init.mjs)
+  // runs earlier on purpose (no flash of the wrong theme); any other script before the policy fails.
   const cspAt = html.indexOf('http-equiv="content-security-policy"');
   if (cspAt < 0) findings.push(`${p}: no Content-Security-Policy meta`);
   else {
@@ -96,8 +111,35 @@ for (const p of pages) {
     if (early.some((m) => !/localStorage\.getItem\('theme'\)/.test(m[1]))) findings.push(`${p}: executable <script> before the CSP meta`);
   }
 }
-for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME']) {
+for (const asset of ['/robots.txt', '/sitemap-index.xml', '/og.png', '/favicon.svg', '/favicon.ico', '/favicon-96x96.png', '/apple-touch-icon.png', '/nick-soderstrom.jpg', '/Nick-Soderstrom-Resume.pdf', '/CNAME', '/.well-known/security.txt']) {
   if (!existsSync(join(dist, asset))) findings.push(`asset missing: ${asset}`);
+}
+
+// The 404 page: titled, kept out of search, and not in the sitemap.
+{
+  const html = readFileSync(join(dist, '404.html'), 'utf8');
+  if (!/<title>[^<]+<\/title>/.test(html)) findings.push('404.html: missing <title>');
+  if (!/<meta name="robots" content="[^"]*noindex/.test(html)) findings.push('404.html: not noindex');
+  if (sitemap.includes('404')) findings.push('404 page listed in the sitemap');
+}
+
+// Page-weight budgets, gzipped. /ghl/ pages carry a whole case study, so they get more room.
+const kb = (n) => Math.round(n / 102.4) / 10;
+for (const p of pages) {
+  const size = gzipSync(readFileSync(join(dist, p, 'index.html'))).length;
+  const limit = p.startsWith('/ghl/') ? 120 * 1024 : 60 * 1024;
+  if (size > limit) findings.push(`${p}: HTML is ${kb(size)} KB gzipped (budget ${kb(limit)} KB)`);
+}
+for (const f of readdirSync(join(dist, '_astro')).filter((f) => f.endsWith('.js'))) {
+  const size = gzipSync(readFileSync(join(dist, '_astro', f))).length;
+  if (size > 90 * 1024) findings.push(`/_astro/${f}: ${kb(size)} KB gzipped (budget 90 KB per script)`);
+}
+
+// Case studies with little to read: fine to ship, worth expanding.
+for (const p of pages.filter((p) => /^\/work\/[^/]+\/$/.test(p))) {
+  const prose = (readFileSync(join(dist, p, 'index.html'), 'utf8').match(/<div class="prose"[^>]*>([\s\S]*?)<\/div>\s*<(?:aside|section) class="facts/) || [])[1] || '';
+  const words = prose.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  if (words < 300) warnings.push(`${p}: ${words} words of case study (aim for 300+ with results)`);
 }
 // Unlisted pages: no other built file may reference them (links, JSON-LD, robots.txt, 404 page).
 const textFiles = [];
@@ -122,6 +164,10 @@ findings.push(...(await findPhotoMetadata()));
 for (const [vpName, width, height] of viewports) {
   for (const scheme of ['light', 'dark']) {
     const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, hasTouch: vpName === 'phone' });
+    await ctx.addInitScript(() => {
+      window.__cls = 0;
+      new PerformanceObserver((list) => list.getEntries().forEach((e) => { if (!e.hadRecentInput) window.__cls += e.value; })).observe({ type: 'layout-shift', buffered: true });
+    });
     const page = await ctx.newPage();
     const errs = [];
     page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
@@ -154,6 +200,8 @@ for (const [vpName, width, height] of viewports) {
         return out;
       }, { vpName });
       for (const f of r) findings.push(`${vpName}/${scheme} ${p}: ${f}`);
+      const cls = await page.evaluate(() => window.__cls);
+      if (cls > 0.05) findings.push(`${vpName}/${scheme} ${p}: layout shift ${cls.toFixed(3)} on load (budget 0.05)`);
       for (const e of errs) findings.push(`${vpName}/${scheme} ${p}: ${e}`);
       (await page.evaluate(() => [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')))).forEach((l) => seenLinks.add(l));
     }
@@ -190,6 +238,40 @@ await page.waitForTimeout(400);
 if (!(await page.evaluate(() => !document.getElementById('clam').hidden && document.getElementById('goodwalk').hidden && location.hash === '#clam'))) findings.push('apps tiles: switching to Clam failed');
 await page.goto(base + '/apps/#site', { waitUntil: 'load' });
 if (!(await page.evaluate(() => !document.getElementById('site').hidden))) findings.push('apps deep link #site failed');
+// /ghl/: an old single-page link forwards to its case's page, and a run fills the log.
+await page.goto(base + '/ghl/#saas-pql-alert', { waitUntil: 'load' });
+await page.waitForURL('**/ghl/saas/#saas-pql-alert', { timeout: 5000 }).catch(() => findings.push('ghl: /ghl/#saas-pql-alert did not forward to /ghl/saas/'));
+await page.waitForFunction(() => !document.getElementById('saas-pql-alert')?.hidden, null, { timeout: 5000 }).catch(() => findings.push('ghl: the PQL alert workflow did not open'));
+await page.tap('#saas-pql-alert [data-instant]');
+if (!(await page.locator('#saas-pql-alert [data-log] .g-li').count())) findings.push('ghl: Skip to result left the log empty');
+// The landing demo hands the captured lead to speed to lead.
+// networkidle: the form is wired up once the case's own script chunk has loaded.
+await page.goto(base + '/ghl/#roofing-demo', { waitUntil: 'networkidle' });
+const lp = page.locator('[data-demo="roofing"] form');
+await lp.locator('[name=first]').fill('Test');
+await lp.locator('[name=phone]').fill('5555550123');
+await lp.locator('[name=email]').fill('test@example.com');
+await lp.locator('[name=service]').selectOption({ index: 1 });
+await lp.locator('button[type=submit]').tap();
+await page.tap('[data-demo="roofing"] [data-run-demo]');
+await page.waitForFunction(() => location.hash === '#roofing-speed-to-lead' && document.querySelectorAll('#roofing-speed-to-lead [data-log] .g-li').length > 0, null, { timeout: 8000 }).catch(() => findings.push('ghl: the landing demo did not run speed to lead'));
+
+// Contact: if Formspree fails, the visitor stays on the page with their message.
+await page.route('https://formspree.io/**', (r) => r.fulfill({ status: 503, body: 'down' }));
+await page.goto(base + '/contact/', { waitUntil: 'load' });
+await page.fill('input[name=name]', 'QA');
+await page.fill('input[name=email]', 'qa@example.com');
+await page.fill('textarea[name=message]', 'Testing the failure path.');
+await page.tap('[data-send]');
+await page.waitForSelector('[data-form-error]:not([hidden])', { timeout: 5000 }).catch(() => findings.push('contact: no error shown when sending fails'));
+if (!page.url().endsWith('/contact/')) findings.push('contact: a failed send left the page: ' + page.url());
+if ((await page.inputValue('textarea[name=message]')) !== 'Testing the failure path.') findings.push('contact: a failed send lost the message');
+await page.unroute('https://formspree.io/**');
+
+// The live 404: real status, its own page.
+const missing = await page.goto(base + '/no-such-page/', { waitUntil: 'load' });
+if (missing?.status() !== 404 || !(await page.locator('h1').count())) findings.push('404: missing page did not get the 404 page');
+
 await page.goto(base + '/contact/', { waitUntil: 'load' });
 const form = await page.evaluate(() => ({ action: document.querySelector('form').action, fields: [...document.querySelectorAll('form [name]')].map((e) => e.name) }));
 if (!/formspree|mailto:/.test(form.action)) findings.push('contact form action unexpected: ' + form.action);
@@ -198,7 +280,8 @@ await ctx.close();
 await browser.close();
 server.close();
 
-const summary = `QA: ${pages.length} pages × ${viewports.length * 2} contexts, ${seenLinks.size} internal links, SEO audit on every page.`;
+const summary = `QA: ${pages.length} pages × ${viewports.length * 2} contexts, ${seenLinks.size} internal links, SEO audit, page-weight budgets and layout shift on every page.`;
+if (warnings.length) console.log('WARNINGS (not failures):\n' + warnings.join('\n'));
 if (findings.length) {
   console.log('FINDINGS:\n' + findings.join('\n') + '\n' + summary);
   process.exit(1);

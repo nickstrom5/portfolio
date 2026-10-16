@@ -36,6 +36,14 @@ const Heading = `h${level}` as 'h2' | 'h3';
     grid-template-rows: subgrid;
     row-gap: 0.5rem;
   }
+  /* The whole card is the link, so keyboard focus rings the card, not the title. */
+  .project:has(.title a:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .project .title a:focus-visible {
+    outline: none;
+  }
   .meta {
     display: flex;
     justify-content: space-between;
