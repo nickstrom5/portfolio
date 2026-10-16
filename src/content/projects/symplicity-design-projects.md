@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://www.symplicity.com'
 placeholder: false
+dates: 'Jun 2018 – Mar 2022'
 published: 2026-09-18
 ---
 

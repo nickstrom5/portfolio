@@ -24,11 +24,13 @@ const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
 const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
 
 // Rotate through the category so every case study gets related links, not just the first two alphabetically.
+// Featured roles point to the other featured roles instead.
 const peers = (await getCollection('projects', ({ data }) => !data.hidden))
-  .filter((p) => p.data.category === d.category)
+  .filter((p) => (d.featured ? p.data.featured : p.data.category === d.category))
   .sort((a, b) => a.id.localeCompare(b.id));
 const i = peers.findIndex((p) => p.id === project.id);
 const related = [...peers.slice(i + 1), ...peers.slice(0, i)].slice(0, 2);
+const relatedHeading = d.featured ? 'Other long-term roles' : `More ${d.category} work`;
 
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 const iso = (dt: Date) => dt.toISOString().slice(0, 10);
@@ -42,6 +44,18 @@ const dateModified = d.published ? [iso(d.updated ?? d.published), lastEdit ?? '
 const shortDate = (dt: Date) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 const sourceLabel = { upwork: 'Upwork contract', direct: 'Direct client', personal: 'Personal project' }[d.source];
+// The closing button speaks to the kind of work and opens Contact with that topic picked.
+const build = ['development', 'mobile', 'web', 'backend'].includes(d.category);
+const cta =
+  d.source === 'personal' || build
+    ? 'Build something similar'
+    : ({ admin: 'Get support like this', automation: 'Automate something similar' } as Record<string, string>)[d.category] ?? 'Talk about a project like this';
+const topic = build
+  ? 'Website or app build'
+  : ({ admin: 'Executive & admin support', operations: 'Operations & systems setup', automation: 'CRM & automation', video: 'Events, webinars & video', consulting: 'Project management' } as Record<string, string>)[d.category];
+const ctaHref = url(`/contact?${new URLSearchParams({ ...(topic ? { about: topic } : {}), from: project.id })}`);
+// "Remote" alone says nothing a case study doesn't already.
+const platforms = d.platforms.filter((p) => p !== 'Remote').length > 0 ? d.platforms : [];
 const links = [
   d.links.live && { label: d.source === 'personal' ? 'Live site' : 'Client website', href: d.links.live },
   d.links.appStore && { label: 'App Store', href: d.links.appStore },
@@ -100,16 +114,16 @@ const links = [
             </dd>
             <dt>Engagement</dt>
             <dd>{sourceLabel}</dd>
-            {d.published && (
+            {d.dates && (
               <>
-                <dt>Published</dt>
-                <dd><time datetime={iso(d.published)}>{shortDate(d.published)}</time></dd>
+                <dt>Dates</dt>
+                <dd>{d.dates}</dd>
               </>
             )}
-            {d.platforms.length > 0 && (
+            {platforms.length > 0 && (
               <>
                 <dt>Platforms</dt>
-                <dd>{d.platforms.join(', ')}</dd>
+                <dd>{platforms.join(', ')}</dd>
               </>
             )}
             <dt>Stack</dt>
@@ -126,8 +140,15 @@ const links = [
                 </dd>
               </>
             )}
+            {d.published && (
+              <>
+                <dt>Published</dt>
+                <dd><time datetime={iso(d.published)}>{shortDate(d.published)}</time></dd>
+              </>
+            )}
           </dl>
-          <a class="btn btn-primary full" href={url('/contact')}>Build something similar</a>
+          <a class="btn btn-primary full" href={ctaHref}>{cta}</a>
+          {d.source !== 'personal' && <a class="btn btn-secondary full" href={url('/resume')}>View resume</a>}
         </aside>
       </div>
     </div>
@@ -148,7 +169,7 @@ const links = [
     <section class="section">
       <div class="container">
         <div class="section-head">
-          <h2>More {d.category} work</h2>
+          <h2>{relatedHeading}</h2>
         </div>
         <div class="grid grid-2">
           {related.map((p) => <ProjectCard project={p} />)}
@@ -202,6 +223,9 @@ const links = [
   .full {
     width: 100%;
     justify-content: center;
+  }
+  .full + .full {
+    margin-top: 0.6rem;
   }
   @media (max-width: 860px) {
     .layout {

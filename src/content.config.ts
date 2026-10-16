@@ -31,6 +31,8 @@ const projects = defineCollection({
       .default({}),
     /** Optional path under /public, e.g. /work/acme-cover.png */
     cover: z.string().optional(),
+    /** When the engagement ran, in the write-up's own words, e.g. 'Jun 2018 – Mar 2022'. */
+    dates: z.string().optional(),
     /** Date this write-up was first published on the site (not the engagement date). */
     published: z.coerce.date().optional(),
     /** Date of the last substantive edit to the write-up, if any. */

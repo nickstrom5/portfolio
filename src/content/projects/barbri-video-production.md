@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://www.barbri.com'
 placeholder: false
+dates: 'Late 2020 – 2024 · PM from Mar 2023'
 published: 2026-09-18
 ---
 
