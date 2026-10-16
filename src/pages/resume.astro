@@ -491,12 +491,17 @@ const contacts = [
         margin: 0.4in 0.6in;
       }
       @media print {
-        :root {
+        /* Matches the dark-theme selectors' weight, so a dark-mode visitor still prints black on white. */
+        :root,
+        :root[data-theme],
+        :root:not([data-theme='light']) {
+          color-scheme: light;
           --ink: #17181a;
           --muted: #4d5158;
           --faint: #5c6168;
           --rule: #d8d8d2;
           --accent: #1a4fad;
+          --accent-strong: #1a4fad;
           --accent-soft: #fff;
           --bg: #fff;
           --sheet: #fff;
@@ -556,6 +561,11 @@ const contacts = [
         h2 {
           font-size: 7.6pt;
           margin-bottom: 0.28rem;
+        }
+        /* Wide tracking splits words for résumé parsers ('EXP ER I EN CE'). */
+        h2,
+        .foot .edu-label {
+          letter-spacing: 0.04em;
         }
         .summary {
           font-size: 9.2pt;
@@ -733,7 +743,7 @@ const contacts = [
             <span class="edu-label">Education</span>
             <span class="edu-value">{education.map((e) => `${e.school}, ${e.location}`).join('; ')}</span>
           </div>
-          <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
+          <p class="note">Full contract history and client feedback on <a href={site.links.upwork}>Upwork</a>. References on request.</p>
         </footer>
       </article>
     </main>
