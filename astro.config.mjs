@@ -17,9 +17,9 @@ const pageSources = {
   '/about/': ['src/pages/about.astro', 'src/data/personal.json', 'src/data/site.ts'],
   '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
-  '/contact/': ['src/pages/contact.astro'],
+  '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/ghl/': ['src/pages/ghl.astro', 'src/components/ghl', 'src/data/ghl'],
-  '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts'],
+  '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts', 'src/data/site.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };
 /** @param {string[]} paths */

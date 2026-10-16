@@ -196,6 +196,11 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
   textarea {
     resize: vertical;
   }
+  /* Browser default placeholders fall under 4.5:1; the hint carries information. */
+  textarea::placeholder {
+    color: var(--text-faint);
+    opacity: 1;
+  }
   .honeypot {
     position: absolute;
     left: -9999px;
