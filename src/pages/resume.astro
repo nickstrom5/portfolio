@@ -748,5 +748,10 @@ const contacts = [
         </footer>
       </article>
     </main>
+    <script>
+      // The phone's browser bar follows a saved theme, as Nav's syncTheme does on the other pages.
+      const chosen = document.documentElement.dataset.theme;
+      if (chosen) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', chosen === 'dark' ? '#0f1114' : '#f4f4f0'));
+    </script>
   </body>
 </html>
