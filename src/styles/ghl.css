@@ -2407,6 +2407,12 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gx-switch-grid > li {
+  display: flex;
 }
 @media (max-width: 860px) {
   .gx-switch-grid {
@@ -2427,7 +2433,8 @@
   color: var(--text);
   font: inherit;
   text-align: left;
-  cursor: pointer;
+  text-decoration: none;
+  flex: 1;
   box-shadow: var(--shadow);
   transition:
     transform 0.15s ease,
@@ -2437,7 +2444,7 @@
 .gx-switch-tab:hover {
   transform: translateY(-2px);
 }
-.gx-switch-tab[aria-selected='true'] {
+.gx-switch-tab[aria-current='page'] {
   border-color: var(--case-use);
   box-shadow:
     0 0 0 2px var(--case-use),
@@ -2614,6 +2621,30 @@
   text-transform: uppercase;
   color: var(--case-use);
 }
-.gx-switch-tab:not([aria-selected='true']) .gx-switch-state {
+.gx-switch-tab:not([aria-current='page']) .gx-switch-state {
   display: none;
+}
+
+/* Case pages: links to the overview's shared sections. */
+.gx-more-links {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 0.75rem;
+}
+.gx-more-links a {
+  display: flex;
+  align-items: center;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  font-weight: 600;
+  text-decoration: none;
+}
+.gx-more-links a:hover {
+  border-color: var(--accent);
 }

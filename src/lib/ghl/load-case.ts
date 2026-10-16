@@ -1,6 +1,6 @@
 /**
- * Each case's data as its own chunk, so /ghl/ downloads only the cases a
- * visitor opens instead of all three (about 140 KB gzipped saved up front).
+ * Each case's data as its own chunk, so a /ghl/ page downloads only the case
+ * it shows instead of all three (about 140 KB gzipped saved up front).
  */
 import type { CaseStudy } from './types';
 
