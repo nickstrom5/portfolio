@@ -102,6 +102,7 @@ const live = { commits: siteCommits() };
       id={p.id}
       data-story={p.id}
       data-tone={p.tone ?? 'dark'}
+      aria-labelledby={`${p.id}-title`}
       hidden={i !== 0}
       style={`--story-bg: ${p.bg}; --story-fg: ${p.fg}; --story-bg-dark: ${p.bgDark ?? p.bg}; --story-fg-dark: ${p.fgDark ?? p.fg}`}
     >
@@ -109,7 +110,7 @@ const live = { commits: siteCommits() };
         <div class:list={['container', 'hero-inner', { wide: p.hero.frame === 'laptop' }]}>
           <div class="hero-copy" data-reveal>
             <span class="kicker">{p.kicker}</span>
-            <h2>{p.hero.title}</h2>
+            <h2 id={`${p.id}-title`}>{p.hero.title}</h2>
             <p>{p.hero.sub}</p>
             <div class="actions">
               {p.links.map((l) => (
@@ -311,6 +312,12 @@ const live = { commits: siteCommits() };
     if (scroll) {
       const target = document.getElementById(id);
       target?.scrollIntoView({ behavior: reduce || instant ? 'auto' : 'smooth', block: 'start' });
+      // Keyboard and screen-reader users continue from the story they opened, not the tile above it.
+      const heading = target?.querySelector<HTMLElement>('.hero h2');
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
     }
   }
 
@@ -532,6 +539,10 @@ const live = { commits: siteCommits() };
       grid-template-columns: minmax(0, 1fr);
       gap: 2.5rem;
     }
+  }
+  /* Takes focus when a story opens; it is not a control, so no ring. */
+  .hero h2:focus {
+    outline: none;
   }
 
   .shot .browser {

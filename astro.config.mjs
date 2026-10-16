@@ -1,8 +1,8 @@
 // @ts-check
-import { execFileSync } from 'node:child_process';
 import { defineConfig, fontProviders } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { site } from './src/data/site';
+import { lastCommit, projectSources } from './src/lib/git-date.mjs';
 
 // SITE_URL lets CI (GitHub Pages) override the canonical URL until the custom
 // domain is live. Once the domain is pointed, keep `site.url` as the source of truth.
@@ -24,14 +24,6 @@ const pageSources = {
   '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts', 'src/data/site.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };
-/** @param {string[]} paths */
-const lastCommit = (paths) => {
-  try {
-    return execFileSync('git', ['log', '-1', '--format=%cI', '--', ...paths], { encoding: 'utf8' }).trim() || undefined;
-  } catch {
-    return undefined;
-  }
-};
 
 export default defineConfig({
   site: siteUrl,
@@ -44,7 +36,7 @@ export default defineConfig({
       serialize(item) {
         const path = new URL(item.url).pathname;
         const m = path.match(/^\/work\/([^/]+)\/$/);
-        const src = m ? [`src/content/projects/${m[1]}.md`] : pageSources[path];
+        const src = m ? projectSources(m[1]) : pageSources[path];
         const lastmod = src && lastCommit(src);
         if (lastmod) item.lastmod = lastmod;
         return item;
