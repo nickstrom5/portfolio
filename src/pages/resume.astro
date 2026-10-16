@@ -434,6 +434,14 @@ const contacts = [
         max-width: 36ch;
         color: var(--faint);
       }
+      /* A link inside a sentence needs more than colour to stand out (screen only; the PDF stays as is). */
+      @media screen {
+        .foot .note a {
+          text-decoration: underline;
+          text-decoration-thickness: 1px;
+          text-underline-offset: 0.18em;
+        }
+      }
       @media (max-width: 800px) {
         .highlights {
           grid-template-columns: repeat(3, minmax(0, 1fr));
