@@ -9,6 +9,7 @@ import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
 import CaseStudyView from '@/components/ghl/CaseStudy.astro';
 import { cases as allCases } from '@/data/ghl';
+import { hasLoader } from '@/lib/ghl/load-case';
 import { countSteps, formatDuration, formatTime, simulate } from '@/lib/ghl/engine';
 import type { Step } from '@/lib/ghl/types';
 import { site } from '@/data/site';
@@ -16,6 +17,8 @@ import { url } from '@/lib/url';
 
 // A case appears once it has workflows, so a half-finished case never ships as an empty tab.
 const cases = allCases.filter((c) => c.automations.length > 0);
+// The page script loads each case on demand; a case without a loader would never come alive.
+for (const c of cases) if (!hasLoader(c.business.id)) throw new Error(`No loader for GHL case "${c.business.id}" in src/lib/ghl/load-case.ts`);
 const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
