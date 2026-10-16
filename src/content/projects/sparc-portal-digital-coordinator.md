@@ -12,6 +12,7 @@ source: 'upwork'
 links:
   live: 'https://sparc.science'
 placeholder: false
+dates: 'Mar 2022 – Mar 2026'
 published: 2026-09-18
 ---
 

@@ -1,0 +1,48 @@
+---
+/** The closing "get in touch" band: a heading, one line and a button to Contact. */
+import { url } from '@/lib/url';
+
+interface Props {
+  title?: string;
+  text?: string;
+  label?: string;
+  href?: string;
+}
+const {
+  title = 'Have a project in mind?',
+  text = "Tell me what needs to run better and I'll reply within one business day with next steps.",
+  label = 'Get in touch',
+  href = '/contact',
+} = Astro.props;
+---
+
+<section class="section cta-band">
+  <div class="container cta-inner">
+    <div>
+      <h2>{title}</h2>
+      <p class="muted">{text}</p>
+    </div>
+    <a class="btn btn-primary" href={url(href)}>{label}</a>
+  </div>
+</section>
+
+<style>
+  /* The line keeps it apart from a grey section above it, e.g. a story's "Follow" band. */
+  .cta-band {
+    background: var(--bg-muted);
+    border-top: 1px solid var(--border);
+  }
+  .cta-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .cta-inner h2 {
+    margin-bottom: 0.25rem;
+  }
+  .cta-inner p {
+    margin: 0;
+  }
+</style>

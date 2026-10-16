@@ -10,7 +10,7 @@ export const site = {
     'I take ownership of the moving parts, projects, timelines, tools, people and processes, so you can stay focused on growth.',
   /** Canonical URL. Update once the domain is registered and DNS is live. */
   url: 'https://work-with-nick.com',
-  location: 'Chicago, IL · Remote worldwide',
+  location: 'Chicago, IL (Central Time) · Remote worldwide',
   email: 'hello@work-with-nick.com',
   /** Replace with your real profile URLs. */
   links: {

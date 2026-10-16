@@ -4,6 +4,7 @@ import Phone from '@/components/showcase/Phone.astro';
 import Laptop from '@/components/showcase/Laptop.astro';
 import Duo from '@/components/showcase/Duo.astro';
 import Shot from '@/components/showcase/Shot.astro';
+import CtaBand from '@/components/CtaBand.astro';
 import { execFileSync } from 'node:child_process';
 import { projects, type StoryProject } from '@/data/showcase';
 import { url } from '@/lib/url';
@@ -245,25 +246,25 @@ const live = { commits: siteCommits() };
         </section>
       )}
 
-      <section class="section closing">
-        <div class="container closing-inner">
-          <div>
-            <h2>{p.id === 'site' ? 'Want a site like this?' : `Follow ${p.name}`}</h2>
-            <p class="muted">{p.id === 'site' ? 'The same process works for a client site, an internal tool or a product. Start with one sentence.' : p.status}</p>
-          </div>
-          <div class="actions">
-            {p.id === 'site' ? (
-              <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
-            ) : (
-              p.links.map((l) => (
+      {/* This site's story needs no "Follow" band: the page's contact band below covers it. */}
+      {p.id !== 'site' && (
+        <section class="section closing">
+          <div class="container closing-inner">
+            <div>
+              <h2>{`Follow ${p.name}`}</h2>
+              <p class="muted">{p.status}</p>
+            </div>
+            <div class="actions">
+              {p.links.map((l) => (
                 <a class={l.primary ? 'btn btn-primary' : 'btn btn-secondary'} href={l.href} target="_blank" rel="noopener">{l.label}</a>
-              ))
-            )}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </article>
   ))}
+  <CtaBand title="Want something like this?" text="The same process works for a client site, an internal tool or a product. Start with one sentence." />
 </Base>
 
 <script>

@@ -13,6 +13,8 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
       <span class="brand-name">{site.name}</span>
     </a>
 
+    {/* On phones the menu is collapsed, so Hire me also sits in the bar. */}
+    <a class="btn btn-primary hire-bar" href={url('/contact')}>Hire me</a>
     <button class="menu-btn" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
       <span class="sr-only">Toggle menu</span>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -141,6 +143,9 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
       transition: none;
     }
   }
+  .hire-bar {
+    display: none;
+  }
   .menu-btn {
     display: none;
     background: none;
@@ -221,6 +226,21 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     .menu-btn {
       display: inline-flex;
     }
+    .hire-bar {
+      display: inline-flex;
+      margin-left: auto;
+      margin-right: -0.4rem;
+      padding: 0.45rem 0.95rem;
+      font-size: 0.9rem;
+    }
+    /* The bar already has it; no second Hire me in the open menu. */
+    .menu .hire {
+      display: none;
+    }
+    .brand-name,
+    .hire-bar {
+      white-space: nowrap;
+    }
     .menu {
       display: none;
       position: absolute;
@@ -247,6 +267,15 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     }
     .menu-actions {
       justify-content: space-between;
+    }
+  }
+  /* Narrowest phones: drop the dot so the name and Hire me stay on one line. */
+  @media (max-width: 359px) {
+    .brand-mark {
+      display: none;
+    }
+    .hire-bar {
+      padding: 0.4rem 0.8rem;
     }
   }
 </style>
