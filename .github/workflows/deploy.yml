@@ -52,3 +52,30 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Tells Bing and the other IndexNow engines which pages this deploy changed (sitemap
+  # <lastmod> in the last 6 hours), so they re-crawl in minutes. Google reads the sitemap.
+  # A failure here never fails the deploy.
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            public
+      - name: Submit changed pages
+        run: |
+          sleep 60 # let Pages serve the new sitemap
+          urls=$(curl -fsS "https://$(cat public/CNAME)/sitemap-0.xml" | python3 -c '
+          import re, sys
+          from datetime import datetime, timedelta, timezone
+          cutoff = datetime.now(timezone.utc) - timedelta(hours=6)
+          for loc, mod in re.findall(r"<loc>([^<]+)</loc><lastmod>([^<]+)</lastmod>", sys.stdin.read()):
+              if datetime.fromisoformat(mod.replace("Z", "+00:00")) >= cutoff:
+                  print(loc)
+          ')
+          if [ -n "$urls" ]; then bash scripts/indexnow.sh $urls; else echo "No pages changed in this deploy."; fi

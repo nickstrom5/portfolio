@@ -7,14 +7,13 @@ import siteJson from "@/data/site.json";
  */
 export function StructuredData() {
   const o = siteJson.owner;
+  // A reference to the Person that work-with-nick.com describes in full, so search engines
+  // see one Nick, not two with different titles.
   const person = {
     "@type": "Person",
     "@id": `${o.site}/#person`,
     name: o.name,
-    jobTitle: o.jobTitle,
-    url: o.site,
-    email: o.email,
-    address: { "@type": "PostalAddress", addressLocality: o.location, addressCountry: "US" },
+    url: `${o.site}/`,
     sameAs: Object.values(o.links),
   };
   const data = {
