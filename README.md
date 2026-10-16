@@ -142,6 +142,12 @@ form). It exits non-zero with a findings list. Needs Playwright with
 Chromium, or `PLAYWRIGHT_MODULE` pointing at an existing install.
 A weekly routine runs this and reports.
 
+For the judgment calls the checks can't make, ask Claude Code to run the
+**site-auditor** agent (`.claude/agents/site-auditor.md`). It reads the site
+as a recruiter, a hiring manager and a business owner would, checks search
+visibility (including a web search for Nick's name), and returns a scorecard
+and ranked fixes with evidence. It is read-only.
+
 ## GoHighLevel case studies (`/ghl/`)
 
 Three switchable case studies of GoHighLevel builds, each a fictional
