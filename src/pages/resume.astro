@@ -11,8 +11,12 @@ import { url } from '@/lib/url';
 import { ids, personNode, websiteNode } from '@/lib/schema';
 
 const summary =
-  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also building websites and apps by directing Claude Code.';
-const skillGroups = services.map((s) => ({ label: s.title, items: s.bullets }));
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production. Freelance since 2015.';
+/** Résumé-only skills, kept off the home page service cards. */
+const resumeExtras: Record<string, string[]> = {
+  'Executive assistant support': ['QuickBooks bookkeeping: bills, AP/AR, reports'],
+};
+const skillGroups = services.map((s) => ({ label: s.title, items: [...s.bullets, ...(resumeExtras[s.title] ?? [])] }));
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
   // Upwork's own metrics keep the Upwork name; an employer outside Upwork wouldn't know them.
@@ -524,7 +528,7 @@ const contacts = [
           padding: 0;
         }
         header.masthead {
-          padding-bottom: 0.55rem;
+          padding-bottom: 0.45rem;
           border-bottom-width: 1.5px;
           gap: 1rem;
         }
@@ -542,7 +546,7 @@ const contacts = [
         .highlights {
           grid-template-columns: repeat(5, 1fr);
           gap: 0.45rem;
-          padding: 0.55rem 0 0.6rem;
+          padding: 0.45rem 0 0.5rem;
         }
         .highlights li strong {
           font-size: 11.5pt;
@@ -551,19 +555,19 @@ const contacts = [
           font-size: 7.6pt;
         }
         section {
-          padding-top: 0.5rem;
+          padding-top: 0.42rem;
         }
         h2 {
           font-size: 7.6pt;
-          margin-bottom: 0.28rem;
+          margin-bottom: 0.22rem;
         }
         .summary {
           font-size: 9.2pt;
-          line-height: 1.4;
+          line-height: 1.35;
           max-width: none;
         }
         .job {
-          padding: 0.2rem 0;
+          padding: 0.16rem 0;
           gap: 0.05rem 1rem;
         }
         .job .title {
@@ -579,22 +583,23 @@ const contacts = [
         .job .bullets {
           font-size: 8.3pt;
           line-height: 1.3;
-          margin-top: 0.08rem;
+          margin-top: 0.04rem;
           padding-left: 0.9rem;
           max-width: none;
         }
         .job .sum {
           font-size: 8.7pt;
-          margin-top: 0.12rem;
+          line-height: 1.38;
+          margin-top: 0.08rem;
           max-width: none;
         }
         .skills {
           grid-template-columns: 1fr 1fr 1fr;
-          gap: 0.3rem 1rem;
+          gap: 0.22rem 1rem;
         }
         .skills h3 {
           font-size: 8.6pt;
-          margin-bottom: 0.08rem;
+          margin-bottom: 0.04rem;
         }
         .skill-items {
           display: block;
@@ -614,8 +619,8 @@ const contacts = [
           content: '\00a0· ';
         }
         .foot {
-          margin-top: 0.15rem;
-          padding-top: 0.45rem;
+          margin-top: 0.1rem;
+          padding-top: 0.35rem;
           font-size: 8pt;
         }
         .foot .edu-label {

@@ -6,7 +6,7 @@ export interface Role {
   end: string;
   location: string;
   summary: string;
-  /** Scope lines shown under the summary on the résumé, taken from the case study. */
+  /** Scope lines shown under the summary on the résumé, from the case study where there is one. */
   bullets?: string[];
   /** Optional case-study slug under /work. */
   slug?: string;
@@ -90,12 +90,13 @@ export const experience: Role[] = [
     slug: 'rippling-executive-support',
   },
   {
-    title: 'Restaurant Manager',
+    title: 'Front of House Manager',
     company: 'Pizzeria Bebu',
     start: '2017',
     end: '2018',
     location: 'Chicago, IL',
     summary: 'Staff role on the opening-day team of a restaurant that went on to earn a Michelin Bib Gourmand.',
+    bullets: ['Managed 20+ people across teams, led front-of-house shifts and coached staff. Previously ServSafe certified.'],
     staff: true,
   },
 ];
