@@ -1,6 +1,6 @@
 ---
 title: 'Senior Zapier Developer for a 100-rep sales organization'
-shortTitle: 'Zapier and HubSpot automation for a sales org'
+shortTitle: 'Zapier and HubSpot automation, sales org'
 client: '100-rep sales organization'
 summary: 'Full-time automation seat for a 100-rep sales organization, May to September 2026: Zapier workflows and HubSpot and Keap pipelines that removed manual steps.'
 category: 'automation'

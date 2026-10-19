@@ -1,6 +1,6 @@
 ---
 title: 'Project and Hiring Coordinator for an author'
-shortTitle: 'Project management and hiring for an author'
+shortTitle: 'Author project management and hiring'
 client: 'Author and small business owner'
 summary: 'Two fixed-price milestones in early 2026: a consignment task, posting and interviewing for two hires, and fifteen contacts secured for a book outreach push.'
 category: 'operations'
