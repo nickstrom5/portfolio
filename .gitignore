@@ -8,3 +8,5 @@ dist/
 npm-debug.log*
 # Temporary git worktrees Claude Code creates for parallel agents
 .claude/worktrees/
+.vercel
+.env*
