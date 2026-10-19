@@ -80,8 +80,11 @@ export default defineConfig({
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://formspree.io",
+        // Cloudflare Web Analytics reports page views here (src/components/Analytics.astro).
+        "connect-src 'self' https://cloudflareinsights.com",
       ],
       scriptDirective: {
+        resources: ["'self'", 'https://static.cloudflareinsights.com'],
         hashes: [
           'sha256-htx73Zx4L46jpbHrcdh+/riOTxDnEic9o6+JZKf+PU8=', // Base.astro theme script
           'sha256-7+7AWq7XfGD2rwhSmmyfxI/cWjETO1iSmENMs3kgPng=', // resume.astro theme script

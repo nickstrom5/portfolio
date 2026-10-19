@@ -4,6 +4,7 @@
  * Also used to generate the PDF in /public via `npm run resume:pdf`.
  */
 import { Font } from 'astro:assets';
+import Analytics from '@/components/Analytics.astro';
 import { site } from '@/data/site';
 import { roles, education } from '@/data/experience';
 import { services } from '@/data/services';
@@ -737,5 +738,6 @@ const contacts = [
         </footer>
       </article>
     </main>
+    <Analytics />
   </body>
 </html>
