@@ -1,0 +1,17 @@
+---
+// Cloudflare Web Analytics: cookieless page-view counts. The token comes from
+// the CF_BEACON_TOKEN repository variable (see the deploy workflow), so local
+// dev, `npm run qa` and forks build without it and send nothing. It sits at the
+// end of <body>, after the CSP meta, which allows exactly this script host and
+// the endpoint it reports to (astro.config.mjs).
+const token = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+---
+
+{token && (
+  <script
+    is:inline
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={JSON.stringify({ token })}
+  ></script>
+)}

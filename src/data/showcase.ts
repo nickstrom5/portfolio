@@ -504,6 +504,7 @@ export const projects: Project[] = [
       { said: 'Continue.', did: 'Trimmed the six search descriptions that ran past 160 characters, and made the GoHighLevel page load each case study only when it’s opened: 74 KB of script up front instead of 209 KB, with every workflow, deep link and landing demo working as before.' },
       { said: 'Create an agent to audit the website for SEO, visibility and appeal to hiring teams and owners.', did: 'Wrote a read-only site-auditor agent that reads the site as a recruiter, a hiring manager and a business owner would and checks search visibility, then ran it with every finding double-checked. Its report scored the site 6, 6.5 and 4 out of 10.' },
       { said: 'Go.', did: 'Made the fixes that needed no new facts: Hire me in the phone bar, contact bands at the end of long pages, a contact form that no longer files owners as job seekers and arrives with the topic picked, case-study buttons by type of work with dates and a résumé link, Central Time, and IndexNow after every deploy.' },
+      { said: 'Is the résumé updated? We had some of it fixed and uploaded to my Drive.', did: 'Compared the Drive copy with the site line by line and merged them: Front of House Manager at Bebu with the 20+ people and ServSafe, the QuickBooks line, the new summary, and “Remote (US) or onsite Chicago” on the résumé, About, Contact and home. The site’s stats, scope lines and LinkedIn stayed, and the PDF still fits one page.' },
     ],
     promptStats: [
       { value: '151', label: 'Messages from Nick' },

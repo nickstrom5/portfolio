@@ -85,10 +85,12 @@ export default defineConfig({
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://formspree.io",
-        // The contact form sends in the background and stays on the page if that fails.
-        "connect-src 'self' https://formspree.io",
+        // The contact form sends in the background and stays on the page if that fails;
+        // Cloudflare Web Analytics reports page views to cloudflareinsights.com (src/components/Analytics.astro).
+        "connect-src 'self' https://formspree.io https://cloudflareinsights.com",
       ],
       scriptDirective: {
+        resources: ["'self'", 'https://static.cloudflareinsights.com'],
         hashes: [/** @type {`sha256-${string}`} */ (`sha256-${createHash('sha256').update(themeInit).digest('base64')}`)],
       },
       styleDirective: { resources: [{ resource: "'unsafe-inline'", kind: 'attribute' }] },
