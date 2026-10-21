@@ -20,7 +20,7 @@ export const site = {
     appStoreDeveloper: '',
     playStoreDeveloper: '',
   },
-  /** Headline numbers shown in the hero. Taken from the Upwork profile, September 2026. */
+  /** Headline numbers shown in the hero. Taken from the Upwork profile, October 2026. */
   stats: [
     { value: '300+', label: 'Client contracts', note: '257 on Upwork' },
     { value: '18,000+', label: 'Freelance hours billed' },

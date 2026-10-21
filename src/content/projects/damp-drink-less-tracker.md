@@ -1,7 +1,7 @@
 ---
 title: 'Damp: a drink less tracker for iPhone'
 shortTitle: 'Damp: drink less tracker'
-client: 'Own product · usedamp.app'
+client: 'Solo build · usedamp.app'
 summary: 'An iPhone app for people who want to drink less without quitting: a nightly check-in, one tap from the notification, and a running count of dry nights.'
 category: 'development'
 platforms: ['iOS']

@@ -9,7 +9,7 @@ import { roles, staffJob, education } from '@/data/experience';
 import { url } from '@/lib/url';
 import { categoryLabel } from '@/lib/categories';
 
-// Featured client work first, own products last, newest first within each.
+// Featured client work first, solo builds last, newest first within each.
 const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort(
   (a, b) =>
     Number(b.data.featured) - Number(a.data.featured) ||
