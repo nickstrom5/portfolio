@@ -182,22 +182,40 @@ export const screenBooked: Automation = {
                         kind: 'node',
                         node: {
                           id: 'brief',
-                          name: 'Write the brief',
+                          name: 'Start the brief',
                           type: 'Google Docs',
                           operation: 'Document › Create',
                           icon: 'pen',
                           tone: 'app',
                           credential: 'Harrow & Finch Google (OAuth2)',
-                          summary: 'Creates a document in the Briefs folder named after the candidate and the date. A Google Docs Update node right after it inserts the brief’s text; they are drawn as one card here.',
+                          summary: 'Creates an empty document in the Briefs folder, named after the candidate and the date. Create only makes the file; the next node writes into it.',
                           params: [
+                            { k: 'Folder', v: 'Briefs' },
                             { k: 'Title', v: "Brief · {{ $json.fields.Name }} · {{ $now.toFormat('MMM d') }}" },
-                            { k: 'Then: Document › Update', v: 'Insert text (below)' },
                           ],
-                          code: { language: 'text', source: briefText },
                           run: (_items, ctx) => {
                             const r = rec(ctx);
-                            return { items: [item({ documentId: '1hF3vB9qL2xR8mKa', title: `Brief · ${r.Name}`, url: 'https://docs.google.com/document/d/1hF3vB9qL2xR8mKa' })], log: `Brief for ${r.Name}.` };
+                            return { items: [item({ id: '1hF3vB9qL2xR8mKa', name: `Brief · ${r.Name}` })], log: `Document for ${r.Name}.` };
                           },
+                        },
+                      },
+                      {
+                        kind: 'node',
+                        node: {
+                          id: 'brief-text',
+                          name: 'Write the brief',
+                          type: 'Google Docs',
+                          operation: 'Document › Update',
+                          icon: 'pen',
+                          tone: 'app',
+                          credential: 'Harrow & Finch Google (OAuth2)',
+                          summary: 'Inserts the brief, built from the Airtable record and the candidate’s own Calendly answer, into the document just created.',
+                          params: [
+                            { k: 'Doc ID or URL', v: '{{ $json.id }}' },
+                            { k: 'Actions', v: 'Insert text (below)' },
+                          ],
+                          code: { language: 'text', source: briefText },
+                          run: (items) => ({ items: items.map((it) => item({ documentId: it.json.id, url: `https://docs.google.com/document/d/${it.json.id}` })) }),
                         },
                       },
                       {
@@ -301,7 +319,7 @@ export const screenBooked: Automation = {
       start: at(1, 8, 2),
       input: [calendly({ event: 'invitee.created', name: 'Elena Kowalski', email: 'elena.kowalski@example.com', start: '2026-03-04T15:00:00.000000Z', host: 'marcus@harrowfinch.example', note: 'Happy where I am, but open to it. 30-day notice.' })],
       fixtures: { record: candidate({ Name: 'Elena Kowalski', Email: 'elena.kowalski@example.com', Role: 'Controller (Milwaukee, WI)', Stage: 'Strong match', 'Most recent title': 'Assistant Controller', Years: 10, Skills: ['CPA', 'NetSuite', 'audit', 'team leadership'], Recruiter: 'Marcus Lee' }) },
-      expect: { status: 'success', visits: ['only-screens', 'find', 'known:0', 'which:0', 'stage-booked', 'brief', 'dm'], skips: ['stage-back', 'stranger'] },
+      expect: { status: 'success', visits: ['only-screens', 'find', 'known:0', 'which:0', 'stage-booked', 'brief', 'brief-text', 'dm'], skips: ['stage-back', 'stranger'] },
     },
     {
       id: 'cancelled',
@@ -347,7 +365,7 @@ export const screenBooked: Automation = {
     { title: 'One trigger, two events', body: 'The Calendly Trigger listens for Event Created and Event Canceled together. The lookup is the same for both, so it is built once, and a Switch on the event field splits them afterwards.' },
     { title: 'Filter first', body: 'Every recruiter’s Calendly events arrive, client meetings included. A Filter on the event type name is the first node, so nothing else can act on a meeting that is not a screen.' },
     { title: 'Look up, and say so when it fails', body: 'Airtable Search with a formula on the lowercased email. Always Output Data on, because without it an unknown email means no items, nothing runs, and nobody hears about a candidate who booked a call.' },
-    { title: 'A brief, not a profile', body: 'Google Docs creates the document and a second Docs node inserts the text, from the Airtable record and the candidate’s own Calendly answer. The recruiter gets one link in Slack.' },
+    { title: 'A brief, not a profile', body: 'One Google Docs node creates the document and a second inserts the text, from the Airtable record and the candidate’s own Calendly answer. The recruiter gets one link in Slack.' },
     { title: 'Cancellations are a second chance', body: 'The stage goes back to Strong match and the candidate gets the booking link once more, from the recruiter, with an easy way to say no.' },
   ],
   edgeCases: [

@@ -18,7 +18,7 @@
 import { build } from 'esbuild';
 
 const out = await build({
-  stdin: { contents: "export { cases } from './src/data/n8n/index.ts'; export { simulate, allNodes, splitId } from './src/lib/n8n/engine.ts';", resolveDir: process.cwd(), loader: 'ts' },
+  stdin: { contents: "export { cases } from './src/data/n8n/index.ts'; export { simulate, allNodes, splitId } from './src/lib/n8n/engine.ts'; export { specs } from './src/data/n8n/specs.ts'; export { toN8nJson, exportNodes } from './src/lib/n8n/export.ts';", resolveDir: process.cwd(), loader: 'ts' },
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -26,7 +26,7 @@ const out = await build({
   logLevel: 'silent',
 });
 const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
-const { cases, simulate, allNodes, splitId } = mod;
+const { cases, simulate, allNodes, splitId, specs, toN8nJson, exportNodes } = mod;
 
 const problems = [];
 let runs = 0;
@@ -142,6 +142,24 @@ for (const study of cases) {
     }
     for (const n of nodes) if (!visited.has(n.id)) problems.push(where(`node ${n.id} is never reached by any test event`));
     for (const b of seen.branches) if (!visited.has(b)) problems.push(where(`output ${b} never carries an item in any test event`));
+  }
+
+  // The n8n export: every node has a spec, and the JSON wires every node in.
+  for (const a of automations) {
+    const where = (m) => `${business.id}/${a.id} export: ${m}`;
+    const sp = specs[business.id]?.[a.id];
+    if (!sp) { problems.push(where('no specs')); continue; }
+    for (const n of exportNodes(a)) if (!sp[n.id]) problems.push(where(`no spec for node ${n.id}`));
+    for (const id of Object.keys(sp)) if (!exportNodes(a).some((n) => n.id === id)) problems.push(where(`spec for missing node ${id}`));
+    let json;
+    try { json = toN8nJson(a, sp, business.id); } catch (e) { problems.push(where(`threw ${e.message}`)); continue; }
+    const names = new Set(json.nodes.map((n) => n.name));
+    const reached = new Set();
+    for (const [from, c] of Object.entries(json.connections)) for (const outs of Object.values(c)) for (const o of outs) for (const t of o) {
+      if (!names.has(from) || !names.has(t.node)) problems.push(where(`connection ${from} → ${t.node} names a missing node`));
+      reached.add(t.node);
+    }
+    for (const n of json.nodes) if (n.type !== 'n8n-nodes-base.stickyNote' && n.name !== a.workflow.trigger.name && !reached.has(n.name) && !json.connections[n.name]?.ai_languageModel) problems.push(where(`${n.name} has no incoming connection`));
   }
 
   // The demo form, once per behavior, with the first option of every dropdown.
