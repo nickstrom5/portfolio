@@ -17,6 +17,7 @@ export const site = {
     upwork: 'https://www.upwork.com/freelancers/~01f494a703078d9515',
     linkedin: 'https://www.linkedin.com/in/nick-soderstrom/',
     github: 'https://github.com/nickstrom5',
+    calendly: 'https://calendly.com/nickstrom5',
     appStoreDeveloper: '',
     playStoreDeveloper: '',
   },
