@@ -16,6 +16,7 @@ const summary =
 /** Résumé-only skills, kept off the home page service cards. */
 const resumeExtras: Record<string, string[]> = {
   'Executive assistant support': ['QuickBooks bookkeeping: bills, AP/AR, reports'],
+  'CRM & automation': ['n8n and Keap'],
 };
 const skillGroups = services.map((s) => ({ label: s.title, items: [...s.bullets, ...(resumeExtras[s.title] ?? [])] }));
 const domain = site.url.replace(/^https?:\/\//, '');
