@@ -136,7 +136,14 @@ const live = { commits: siteCommits() };
           <div class="browser" data-reveal>
             <div class="chrome"><span></span><span></span><span></span><em>{p.siteShot.url.replace(/^https?:\/\//, '')}</em></div>
             <a href={p.siteShot.url} target="_blank" rel="noopener">
-              <Shot src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} width={1440} height={900} widths={[720, 1100, 1440, 1600]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" />
+              {p.siteShot.desktopDark ? (
+                <>
+                  <span class="theme-light"><Shot src={url(p.siteShot.desktop)} alt={`${p.name} website`} width={1440} height={900} widths={[720, 1100, 1440, 1600]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" /></span>
+                  <span class="theme-dark"><Shot src={url(p.siteShot.desktopDark)} alt={`${p.name} website in dark mode`} width={1440} height={900} widths={[720, 1100, 1440, 1600]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" /></span>
+                </>
+              ) : (
+                <Shot src={url(p.siteShot.desktop)} alt={p.id === 'site' ? 'work-with-nick.com home page' : `${p.name} website`} width={1440} height={900} widths={[720, 1100, 1440, 1600]} sizes="(max-width: 1120px) calc(100vw - 34px), 1086px" />
+              )}
             </a>
           </div>
           <p class="caption muted">{p.siteShot.caption}</p>
@@ -569,6 +576,28 @@ const live = { commits: siteCommits() };
   .browser img {
     width: 100%;
     height: auto;
+    display: block;
+  }
+  /* A site shot with a dark variant follows this site's theme. The hidden one
+     is lazy and display:none, so the browser never downloads it. */
+  .theme-light {
+    display: block;
+  }
+  .theme-dark {
+    display: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .theme-light {
+      display: none;
+    }
+    :global(:root:not([data-theme='light'])) .theme-dark {
+      display: block;
+    }
+  }
+  :global(:root[data-theme='dark']) .theme-light {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .theme-dark {
     display: block;
   }
   .caption {

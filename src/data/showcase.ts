@@ -55,7 +55,8 @@ export interface StoryProject {
   tone?: 'light' | 'dark';
   comingSoon?: false;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo'; alt?: string };
-  siteShot: { desktop: string; caption: string; url: string };
+  /** `desktopDark`, when set, replaces `desktop` while this site is in dark mode. */
+  siteShot: { desktop: string; desktopDark?: string; caption: string; url: string };
   features: Feature[];
   /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
   split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
@@ -137,6 +138,7 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/eatsranked-site.jpg',
+      desktopDark: '/showcase/eatsranked-site-dark.jpg',
       caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a map of the live states, and each state’s icon links to its site; further down are a card for each app and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
       url: 'https://eatsranked.com',
     },
