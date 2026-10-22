@@ -222,6 +222,7 @@ async function seedCase(c, ctx) {
       ctx.fields.push(existing);
       console.log(`  field ${name}`);
     }
+    existing.enum_options ??= [];
     for (const o of f.options ?? []) {
       if (existing.enum_options.some((x) => x.name === o)) continue;
       existing.enum_options.push(await api('POST', `/custom_fields/${existing.gid}/enum_options`, { name: o }));
@@ -311,17 +312,21 @@ async function seedCase(c, ctx) {
   }
 
   // The portfolio, with every project in it.
-  const portfolio = await tryApi('portfolio', async () => {
+  const portfolio = ctx.portfolios.find((x) => x.name === c.portfolio.name) ?? (await tryApi('portfolio', async () => {
     const pf = await api('POST', '/portfolios', { workspace: workspaceGid, name: c.portfolio.name, color: colors[ctx.n % colors.length] });
     for (const p of c.projects) if (projectGids[p.id]) await api('POST', `/portfolios/${pf.gid}/addItem`, { item: projectGids[p.id] });
     if (s.title.includes(c.portfolio.name)) await api('POST', '/status_updates', { parent: pf.gid, status_type: statusType[s.status], title: s.title, text: fullText });
     console.log(`  portfolio ${c.portfolio.name}`);
     return pf;
-  });
+  }));
 
   // Goals: the company goal, its team goals, progress as a percentage, and linked projects.
   const makeGoal = async (g) => {
-    const goal = await api('POST', '/goals', { workspace: workspaceGid, ...(team && ctx.isOrg ? { team } : {}), name: g.name, notes: `${g.measure}. Owner in the case study: ${people(g.owner)}. Period: ${g.period}.`, ...(assignToMe ? { owner: ctx.me } : {}) });
+    if (ctx.goals.some((x) => x.name === g.name)) {
+      console.log(`  goal ${g.name}: already there, skipped`);
+      return undefined;
+    }
+    const goal = await api('POST', '/goals', { workspace: workspaceGid, ...(team && ctx.isOrg ? { team } : {}), ...(ctx.period ? { time_period: ctx.period } : {}), name: g.name, notes: `${g.measure}. Owner in the case study: ${people(g.owner)}. Period: ${g.period}.`, ...(assignToMe ? { owner: ctx.me } : {}) });
     await api('POST', `/goals/${goal.gid}/setMetric`, { precision: 0, unit: 'percentage', initial_number_value: 0, target_number_value: 1, current_number_value: g.progress / 100, progress_source: 'manual' });
     await api('PUT', `/goals/${goal.gid}`, { status: goalStatus[g.status] });
     const linked = g.measure.match(/^Linked (project|portfolio): (.+)$/);
@@ -335,8 +340,7 @@ async function seedCase(c, ctx) {
     }
     return goal;
   };
-  for (const g of c.goals) await tryApi(`goal ${g.name}`, () => makeGoal(g));
-  if (c.goals.length) console.log(`  goals (${c.goals.reduce((n, g) => n + 1 + (g.children?.length ?? 0), 0)})`);
+  for (const g of c.goals) if (await tryApi(`goal ${g.name}`, () => makeGoal(g))) console.log(`  goals (${1 + (g.children?.length ?? 0)})`);
 }
 
 /* ---------- Run ---------- */
@@ -348,7 +352,7 @@ if (dry) {
     for (const p of c.projects) for (const t of p.tasks) if (t.subtasks) console.log(`  ${t.name}: ${subtaskNames(c, p, t).join(' · ')}`);
   }
   // Walk the real seeding code with the API stubbed, so the plan is exactly what a run would send.
-  const ctx = { me: 'me', isOrg: true, teams: [], fields: [], n: 0 };
+  const ctx = { me: 'me', isOrg: true, teams: [], fields: [], portfolios: [], goals: [], period: 'dry-period', n: 0 };
   for (const c of cases) {
     await seedCase(c, ctx);
     ctx.n += 3;
@@ -380,6 +384,12 @@ const ctx = {
   teams: ws.is_organization ? await list(`/organizations/${workspaceGid}/teams?opt_fields=name`) : [],
   defaultTeam: undefined,
   fields: await list(`/workspaces/${workspaceGid}/custom_fields?opt_fields=name,resource_subtype,enum_options.name`),
+  portfolios: await list(`/portfolios?workspace=${workspaceGid}&owner=me&opt_fields=name`),
+  goals: await list(`/goals?workspace=${workspaceGid}&opt_fields=name`),
+  // Goals need a time period: the shortest one (a quarter, usually) that contains today.
+  period: (await list(`/time_periods?workspace=${workspaceGid}&opt_fields=display_name,period,start_on,end_on`))
+    .filter((t) => t.start_on <= new Date().toISOString().slice(0, 10) && t.end_on >= new Date().toISOString().slice(0, 10))
+    .sort((a, b) => a.end_on.localeCompare(b.end_on))[0]?.gid,
   n: 0,
 };
 for (const c of cases) {
