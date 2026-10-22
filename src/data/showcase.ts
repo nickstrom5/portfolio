@@ -1,12 +1,11 @@
 /**
  * The AI-built projects on the AI Projects page. Most render as a
  * scroll-through story that the tiles at the top switch between; a few
- * tiles are coming soon, and a page tile opens its own page on this site.
+ * tiles are coming soon. The platform case studies (GHL, n8n…) live on
+ * /case-studies, from src/data/caseStudies.ts.
  * Screenshot paths ('/showcase/<file>') resolve to src/assets/showcase/
  * (see the README there).
  */
-import { cases as ghlCases } from './ghl';
-import { cases as n8nCases } from './n8n';
 
 export type Screen =
   | 'clam-home'
@@ -88,36 +87,14 @@ export interface SoonProject {
   comingSoon: true;
 }
 
-/** A tile that opens its own page on this site instead of a story below. */
-export interface PageProject {
-  id: 'ghl' | 'n8n';
-  name: string;
-  kicker: string;
-  tileBlurb: string;
-  bg: string;
-  fg: string;
-  bgDark?: string;
-  fgDark?: string;
-  tone?: 'light' | 'dark';
-  /** Site-relative path, e.g. /ghl/ or /n8n/. */
-  href: string;
-  /** The tile's call to action, in place of "View story →". */
-  cta: string;
-  page: true;
-  comingSoon?: false;
-}
-
-export type Project = StoryProject | SoonProject | PageProject;
-
-const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
-const n8nWorkflows = n8nCases.reduce((n, c) => n + c.automations.length, 0);
+export type Project = StoryProject | SoonProject;
 
 /* Every tile and story hero shares one surface per theme; only the kicker, links and the
    selected tile's outline carry each project's color. Per-project tinted fills turned
    brown, olive and maroon in dark mode. border-box keeps the gradient from repeating
    under the tile's 2px border. */
-const surface = 'linear-gradient(135deg, #e9effb 0%, #fbfbfa 55%, #e3eafa 100%) border-box';
-const surfaceDark = 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%) border-box';
+export const surface = 'linear-gradient(135deg, #e9effb 0%, #fbfbfa 55%, #e3eafa 100%) border-box';
+export const surfaceDark = 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%) border-box';
 
 export const projects: Project[] = [
   {
@@ -637,33 +614,5 @@ export const projects: Project[] = [
     ],
     status: 'Live · signalrig.dev',
     caseStudy: 'signalrig-gtm-engineering-showcase',
-  },
-  {
-    id: 'ghl',
-    name: 'GHL case studies',
-    kicker: 'GoHighLevel · workflows and funnels',
-    tileBlurb: `Automatic follow-up for three sample businesses: ${ghlWorkflows} GoHighLevel workflows and their landing pages. Try every one in your browser.`,
-    bg: surface,
-    fg: '#5e56c7',
-    bgDark: surfaceDark,
-    fgDark: '#a8aaff',
-    tone: 'light',
-    href: '/ghl/',
-    cta: 'Open the case studies →',
-    page: true,
-  },
-  {
-    id: 'n8n',
-    name: 'n8n case studies',
-    kicker: 'n8n · workflows, webhooks and APIs',
-    tileBlurb: `Three sample businesses, ${n8nWorkflows} n8n workflows: forms, Shopify, Stripe, an AI ticket classifier and an error workflow. Run every one in your browser.`,
-    bg: surface,
-    fg: '#b8325a',
-    bgDark: surfaceDark,
-    fgDark: '#ff8fb0',
-    tone: 'light',
-    href: '/n8n/',
-    cta: 'Open the case studies →',
-    page: true,
   },
 ];
