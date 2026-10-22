@@ -265,24 +265,42 @@ export interface Action {
   run: (ctx: Ctx) => ActionResult;
 }
 
-/** A conditional group: its actions run only when the conditions are met. */
+/**
+ * One branch of a conditional group, as Airtable lays them out: If, then
+ * Otherwise if, then an optional Otherwise with no conditions.
+ */
+export interface Branch {
+  /** The branch's label in the editor. */
+  name: string;
+  /** The conditions, as they read in the branch; omitted for Otherwise. */
+  when?: string;
+  test?: (ctx: Ctx) => boolean;
+  steps: Step[];
+}
+
+/**
+ * A conditional group: runs the first branch whose conditions are met, or
+ * the Otherwise branch, or nothing. In Airtable it is the last step of its
+ * list, so steps every branch needs come before it.
+ */
 export interface Group {
   kind: 'if';
   id: string;
-  /** The conditions, as they read in the group. */
-  when: string;
-  test: (ctx: Ctx) => boolean;
-  steps: Action[];
+  branches: Branch[];
 }
 
-/** A repeating group: its actions run once for each item in a list. */
+/**
+ * A repeating group: its steps run once for each item in a list. Like a
+ * conditional group, it is the last step of its list; a conditional group
+ * may sit inside it, another repeating group may not.
+ */
 export interface Repeat {
   kind: 'repeat';
   id: string;
   /** The list, as its token reads. */
   over: string;
   list: (ctx: Ctx) => RecordView[];
-  steps: Action[];
+  steps: Step[];
 }
 
 export type Step = Action | Group | Repeat;

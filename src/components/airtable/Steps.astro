@@ -1,0 +1,94 @@
+---
+/**
+ * A list of automation steps as Airtable's editor draws them: one card per
+ * action, and for a group its card with the steps inside. A conditional
+ * group shows its branches side by side, If first, Otherwise last; a
+ * repeating group shows the steps it runs for each item. A group is always
+ * the last step of its list. Recursive through Astro.self, since a branch or
+ * loop can hold another group.
+ */
+import type { Action, IconName, Step } from '@/lib/airtable/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  steps: Step[];
+  /** This list is inside a group, so it ends with "End of branch" rather than "End". */
+  nested?: boolean;
+}
+const { steps, nested = false } = Astro.props;
+
+const ICON: Record<Action['type'], IconName> = {
+  'Send email': 'mail',
+  'Create record': 'plus',
+  'Update record': 'pen',
+  'Find records': 'search',
+  'Run a script': 'code',
+  'Send a Slack message': 'slack',
+};
+const TONE: Record<Action['type'], string> = {
+  'Send email': 'g-tone-comms',
+  'Send a Slack message': 'g-tone-comms',
+  'Create record': 'g-tone-crm',
+  'Update record': 'g-tone-crm',
+  'Find records': 'g-tone-goal',
+  'Run a script': 'g-tone-dev',
+};
+/** Splits a value into text and {Token › path} pills. */
+const segments = (v: string) => v.split(/(\{[^}]*›[^}]*\})/g).filter(Boolean);
+const label = (i: number, when?: string) => (!when ? 'Otherwise' : i === 0 ? 'If' : 'Otherwise if');
+---
+
+{steps.map((s) => {
+  if (s.kind === 'action')
+    return (
+      <li class:list={['g-step', TONE[s.type]]} data-node={s.id}>
+        <div class="g-card">
+          <span class="g-ico"><Icon name={ICON[s.type]} /></span>
+          <div class="g-txt">
+            <span class="g-kind">Action · {s.type}</span>
+            <span class="g-name">{s.title}</span>
+            <p class="g-sum">{s.summary}</p>
+            <details class="g-code">
+              <summary>{s.script ? 'Settings and script' : 'Settings'}</summary>
+              <dl class="n-params">
+                {s.params.map((p) => (
+                  <div><dt>{p.k}</dt><dd>{segments(p.v).map((seg) => (/^\{.*›.*\}$/.test(seg) ? <code class="g-merge a-token">{seg.slice(1, -1)}</code> : seg))}</dd></div>
+                ))}
+              </dl>
+              {s.script && <pre><code>{s.script.source}</code></pre>}
+            </details>
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+      </li>
+    );
+  const branches = s.kind === 'if' ? s.branches.map((b, i) => ({ head: label(i, b.when), name: b.name, when: b.when, steps: b.steps })) : [{ head: 'For each', name: s.over, when: undefined, steps: s.steps }];
+  const hasElse = s.kind === 'if' && !s.branches[s.branches.length - 1].when;
+  return (
+    <li class:list={['g-step', 'g-has-branches', s.kind === 'if' ? 'g-tone-logic' : 'g-tone-wait']} data-node={s.id}>
+      <div class="g-card g-card-logic">
+        <span class="g-ico"><Icon name={s.kind === 'if' ? 'branch' : 'repeat'} /></span>
+        <div class="g-txt">
+          <span class="g-kind">{s.kind === 'if' ? 'Conditional group' : 'Repeating group'}</span>
+          <span class="g-name">{s.kind === 'if' ? `${s.branches.length} ${s.branches.length === 1 ? 'branch' : 'branches'}` : `For each item in ${s.over}`}</span>
+          <p class="g-sum">{s.kind === 'if' ? `Runs the first branch whose conditions are met${hasElse ? ', or Otherwise' : ', or nothing'}. Nothing comes after it.` : 'Its steps run once per item, with Current item tokens. Nothing comes after it.'}</p>
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+      <div class="g-branches" style={`--n: ${branches.length}`} data-n={branches.length}>
+        {branches.map((b, i) => (
+          <div class="g-branch" data-branch={`${s.id}:${i}`}>
+            <div class="g-branch-head">
+              <span class="g-b-label">{b.head} · {b.name}</span>
+              {b.when && <span class="g-b-cond">{b.when}</span>}
+            </div>
+            <ol class="g-steps">
+              <Astro.self steps={b.steps} nested />
+            </ol>
+          </div>
+        ))}
+      </div>
+    </li>
+  );
+})}
+{(steps.length === 0 || steps[steps.length - 1].kind === 'action') && <li class="g-endcap" aria-label={nested ? 'End of branch' : 'End of automation'}><span>{nested ? 'End of branch' : 'End'}</span></li>}

@@ -40,6 +40,56 @@ const link = (id: string, title: string, from: string, ids: (c: Ctx) => string[]
   run: (c) => ({ update: [{ table: 'Sessions', id: T(c).id, fields: { Speaker: ids(c), Status: 'In review' } }] }),
 });
 
+const thank = (id: string): Action => ({
+  kind: 'action',
+  id,
+  type: 'Send email',
+  title: 'Thank the speaker',
+  summary: 'A plain note from the program team, with a real person to reply to.',
+  params: [
+    { k: 'To', v: '{Trigger › Speaker email}' },
+    { k: 'From name', v: 'Brightwater Program' },
+    { k: 'Reply to', v: 'hannah@brightwatersummits.example' },
+    { k: 'Subject', v: 'We have your pitch: “{Trigger › Title}”' },
+  ],
+  run: (c) => ({
+    messages: [
+      {
+        channel: 'email',
+        to: fx.str(T(c).get('Speaker email')),
+        subject: `We have your pitch: “${T(c).text('Title')}”`,
+        body: `Hi ${first(T(c).text('Speaker name'))},\n\nThanks for pitching “${T(c).text('Title')}” for ${T(c).text('Event')}. Priya and two reviewers read every pitch, and you will hear from us within three weeks either way.\n\nIf anything changes, reply to this email and Hannah will update your pitch.\n\nThe Brightwater program team`,
+      },
+    ],
+  }),
+});
+
+const post = (id: string): Action => ({
+  kind: 'action',
+  id,
+  type: 'Send a Slack message',
+  title: 'Tell the team',
+  summary: 'Posts the pitch to #program with a link to the record.',
+  params: [
+    { k: 'Slack account', v: 'Brightwater (connected by Marcus)' },
+    { k: 'Channel', v: '#program' },
+    { k: 'Message', v: 'New pitch for {Trigger › Event}: “{Trigger › Title}” · {Trigger › Format}, {Trigger › Track} · {Trigger › Speaker name}, {Trigger › Company}' },
+  ],
+  run: (c) => {
+    const t = T(c);
+    const travel = t.get('Needs travel') as Value;
+    return {
+      messages: [
+        {
+          channel: 'slack',
+          to: '#program',
+          body: `New pitch for ${t.text('Event')}: “${t.text('Title')}”\n${t.text('Format')}, ${t.text('Track')} · ${t.text('Speaker name')}${t.text('Company') ? `, ${t.text('Company')}` : ''}${travel ? ' · needs travel' : ''}\nSpeaker’s pitches so far: ${c.record('Speakers', (t.get('Speaker') as string[])[0]).text('Pitches')}`,
+        },
+      ],
+    };
+  },
+});
+
 export const newPitch: Automation = {
   id: 'new-pitch',
   number: '01',
@@ -47,7 +97,7 @@ export const newPitch: Automation = {
   kicker: 'Form → matched, thanked, posted',
   tagline: 'Every pitch is tied to one speaker record, answered in a minute, and in front of the team on Slack.',
   problem: 'Pitches came in through a survey tool and sat in a spreadsheet. People who pitched twice showed up as two strangers, nobody knew a pitch had arrived until someone looked, and speakers waited weeks without hearing a word.',
-  solution: 'The pitch form is an Airtable form on the Sessions table. When it is sent, the automation looks for the speaker by email, links the pitch to the existing record or creates a new one, moves the pitch into review, thanks the speaker, and posts the pitch to the team’s #program channel.',
+  solution: 'The pitch form is an Airtable form on the Sessions table. When it is sent, the automation looks for the speaker by email. A conditional group then takes one of two branches: for a new speaker it creates the speaker record and links the pitch to it; otherwise it links the pitch to the speaker already there. Either way the pitch moves into review, the speaker is thanked, and the pitch is posted to the team’s #program channel.',
   trigger: {
     type: 'When a form is submitted',
     table: 'Sessions',
@@ -76,55 +126,18 @@ export const newPitch: Automation = {
         return { log: recs.length ? `Found ${recs.length}: ${recs.map((r) => r.name).join(', ')}` : 'No records found', output: { records: recs.map((r) => r.id), names: recs.map((r) => r.name) } };
       },
     },
-    { kind: 'if', id: 'g-new', when: 'Find records › Records is empty', test: (c) => found(c).length === 0, steps: [createSpeaker, link('link-new', 'Link the pitch to the new speaker', '{Create record › Airtable record ID}', (c) => [c.out('create-speaker').record as string])] },
-    { kind: 'if', id: 'g-known', when: 'Find records › Records is not empty', test: (c) => found(c).length > 0, steps: [link('link-existing', 'Link the pitch to the existing speaker', '{Find records › Records › Airtable record ID}', found)] },
     {
-      kind: 'action',
-      id: 'ack',
-      type: 'Send email',
-      title: 'Thank the speaker',
-      summary: 'A plain note from the program team, with a real person to reply to.',
-      params: [
-        { k: 'To', v: '{Trigger › Speaker email}' },
-        { k: 'From name', v: 'Brightwater Program' },
-        { k: 'Reply to', v: 'hannah@brightwatersummits.example' },
-        { k: 'Subject', v: 'We have your pitch: “{Trigger › Title}”' },
+      kind: 'if',
+      id: 'g-speaker',
+      branches: [
+        {
+          name: 'New speaker',
+          when: 'Find records › Records is empty',
+          test: (c) => found(c).length === 0,
+          steps: [createSpeaker, link('link-new', 'Link the pitch to the new speaker', '{Create record › Airtable record ID}', (c) => [c.out('create-speaker').record as string]), thank('ack-new'), post('slack-new')],
+        },
+        { name: 'Returning speaker', steps: [link('link-existing', 'Link the pitch to the existing speaker', '{Find records › Records › Airtable record ID}', found), thank('ack-known'), post('slack-known')] },
       ],
-      run: (c) => ({
-        messages: [
-          {
-            channel: 'email',
-            to: fx.str(T(c).get('Speaker email')),
-            subject: `We have your pitch: “${T(c).text('Title')}”`,
-            body: `Hi ${first(T(c).text('Speaker name'))},\n\nThanks for pitching “${T(c).text('Title')}” for ${T(c).text('Event')}. Priya and two reviewers read every pitch, and you will hear from us within three weeks either way.\n\nIf anything changes, reply to this email and Hannah will update your pitch.\n\nThe Brightwater program team`,
-          },
-        ],
-      }),
-    },
-    {
-      kind: 'action',
-      id: 'slack',
-      type: 'Send a Slack message',
-      title: 'Tell the team',
-      summary: 'Posts the pitch to #program with a link to the record.',
-      params: [
-        { k: 'Slack account', v: 'Brightwater (connected by Marcus)' },
-        { k: 'Channel', v: '#program' },
-        { k: 'Message', v: 'New pitch for {Trigger › Event}: “{Trigger › Title}” · {Trigger › Format}, {Trigger › Track} · {Trigger › Speaker name}, {Trigger › Company}' },
-      ],
-      run: (c) => {
-        const t = T(c);
-        const travel = t.get('Needs travel') as Value;
-        return {
-          messages: [
-            {
-              channel: 'slack',
-              to: '#program',
-              body: `New pitch for ${t.text('Event')}: “${t.text('Title')}”\n${t.text('Format')}, ${t.text('Track')} · ${t.text('Speaker name')}${t.text('Company') ? `, ${t.text('Company')}` : ''}${travel ? ' · needs travel' : ''}\nSpeaker’s pitches so far: ${c.record('Speakers', (t.get('Speaker') as string[])[0]).text('Pitches')}`,
-            },
-          ],
-        };
-      },
     },
   ],
   notify: 'Marcus Webb',
@@ -146,7 +159,7 @@ export const newPitch: Automation = {
         Event: ['recEvtSum'],
         'Needs travel': true,
       },
-      expect: { status: 'success', visits: ['create-speaker', 'link-new', 'ack', 'slack', 'g-new', 'g-known:skip'], skips: ['link-existing'], emails: 1 },
+      expect: { status: 'success', visits: ['create-speaker', 'link-new', 'ack-new', 'slack-new', 'g-speaker:0'], skips: ['link-existing', 'ack-known'], emails: 1 },
     },
     {
       id: 'returning',
@@ -163,7 +176,7 @@ export const newPitch: Automation = {
         Abstract: 'Two years of scoring suppliers on emissions, on-time rate and responsiveness: what moved, what did not, and what we stopped measuring.',
         Event: ['recEvtSum'],
       },
-      expect: { status: 'success', visits: ['link-existing', 'ack', 'slack', 'g-known', 'g-new:skip'], skips: ['create-speaker', 'link-new'], emails: 1 },
+      expect: { status: 'success', visits: ['link-existing', 'ack-known', 'slack-known', 'g-speaker:1'], skips: ['create-speaker', 'link-new'], emails: 1 },
     },
     {
       id: 'slack-expired',
@@ -180,8 +193,8 @@ export const newPitch: Automation = {
         Abstract: 'A panel of three buyers on writing repairability into furniture tenders, and what it did to five-year costs.',
         Event: ['recEvtPdx'],
       },
-      failures: { slack: 'The Slack account for this action needs to be reconnected.' },
-      expect: { status: 'failed', visits: ['create-speaker', 'link-new', 'ack'], skips: ['slack'], emails: 1 },
+      failures: { 'slack-new': 'The Slack account for this action needs to be reconnected.' },
+      expect: { status: 'failed', visits: ['create-speaker', 'link-new', 'ack-new'], skips: ['slack-new'], emails: 1 },
     },
   ],
   fields: [
@@ -193,10 +206,11 @@ export const newPitch: Automation = {
   ],
   build: [
     { title: 'A form trigger, not “record created”', body: '“When a record is created” fires the moment someone presses + in the grid, before anything is typed. “When a form is submitted” fires only for the form, with every answer in place.' },
-    { title: 'Find, then two conditional groups', body: 'Both groups test the same Find records list, one for empty and one for not empty, so exactly one runs. The new-speaker group creates the speaker first, then uses its record ID in the update.' },
+    { title: 'Find, then one group with two branches', body: 'The If branch runs when Find records came back empty; Otherwise covers the returning speaker, so exactly one runs. The new-speaker branch creates the speaker first, then uses its record ID in the update.' },
+    { title: 'The group is the last step', body: 'In Airtable nothing can follow a conditional group, so the thank-you email and the Slack post sit inside both branches. They read the same in each; only the step IDs differ.' },
     { title: 'Links by record ID', body: 'Update record sets Speaker from Create record › Airtable record ID or Find records › Records › Airtable record ID. Setting a link field from typed text would match on the primary field’s name and could pick the wrong Ana.' },
     { title: 'The automation sets Status', body: 'The form does not show Status. The automation sets In review, so a pitch with an empty Status is a sign the run failed, and the All pitches view groups it where it stands out.' },
-    { title: 'Slack goes last', body: 'It is the one step that depends on an outside connection. If it fails, the pitch is already linked and the speaker already thanked; only the Slack post is missing.' },
+    { title: 'Slack goes last in each branch', body: 'It is the one step that depends on an outside connection. If it fails, the pitch is already linked and the speaker already thanked; only the Slack post is missing.' },
     { title: 'A person behind the email', body: 'From name is “Brightwater Program” and Reply to is Hannah’s address, so a speaker’s reply reaches someone instead of a no-reply box.' },
   ],
   edgeCases: [
@@ -214,5 +228,5 @@ export const newPitch: Automation = {
     'With Slack disconnected, the run fails at Slack only and Marcus gets the failure email.',
     'A record added in the grid does not start the automation.',
   ],
-  features: ['Form view', 'When a form is submitted', 'Find records', 'Conditional groups', 'Create record', 'Update record', 'Link to another record', 'Count field', 'Send email', 'Send a Slack message'],
+  features: ['Form view', 'When a form is submitted', 'Find records', 'Conditional group with Otherwise', 'Create record', 'Update record', 'Link to another record', 'Count field', 'Send email', 'Send a Slack message'],
 };

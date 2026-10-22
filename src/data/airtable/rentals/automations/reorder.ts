@@ -67,22 +67,27 @@ export const reorder: Automation = {
     {
       kind: 'if',
       id: 'g-zero',
-      when: 'Trigger › On hand = 0',
-      test: (c) => fx.num(T(c).get('On hand')) === 0,
-      steps: [
+      branches: [
         {
-          kind: 'action',
-          id: 'slack-zero',
-          type: 'Send a Slack message',
-          title: 'Tell the warehouse it is gone',
-          summary: 'Only when the shelf is actually empty.',
-          params: [
-            { k: 'Channel', v: '#warehouse' },
-            { k: 'Message', v: 'Out of {Trigger › Item}. {Create record › PO} is with the vendor.' },
+          name: 'Out of stock',
+          when: 'Trigger › On hand = 0',
+          test: (c) => fx.num(T(c).get('On hand')) === 0,
+          steps: [
+            {
+              kind: 'action',
+              id: 'slack-zero',
+              type: 'Send a Slack message',
+              title: 'Tell the warehouse it is gone',
+              summary: 'Only when the shelf is actually empty.',
+              params: [
+                { k: 'Channel', v: '#warehouse' },
+                { k: 'Message', v: 'Out of {Trigger › Item}. {Create record › PO} is with the vendor.' },
+              ],
+              run: (c) => ({ messages: [{ channel: 'slack', to: '#warehouse', body: `Out of ${T(c).text('Item')}. ${po(c).name} for ${T(c).text('Reorder qty')} is with ${T(c).text('Vendor')}; check with Andre before promising any on a job.` }] }),
+            },
           ],
-          run: (c) => ({ messages: [{ channel: 'slack', to: '#warehouse', body: `Out of ${T(c).text('Item')}. ${po(c).name} for ${T(c).text('Reorder qty')} is with ${T(c).text('Vendor')}; check with Andre before promising any on a job.` }] }),
         },
-      ],
+      ]
     },
   ],
   notify: 'Jordan Price',
@@ -94,7 +99,7 @@ export const reorder: Automation = {
       start: 465,
       setup: { by: 'Kim enters Monday’s count in Count supplies', update: [{ table: 'Supplies', id: 'recSupGaff', fields: { 'On hand': 9 } }] },
       record: 'recSupGaff',
-      expect: { status: 'success', visits: ['create-po', 'po-email', 'g-zero:skip'], skips: ['slack-zero'], emails: 1 },
+      expect: { status: 'success', visits: ['create-po', 'po-email', 'g-zero:none'], skips: ['slack-zero'], emails: 1 },
     },
     {
       id: 'batteries',
@@ -103,7 +108,7 @@ export const reorder: Automation = {
       start: 3 * 1440 + 470,
       setup: { by: 'Kim enters Thursday’s count in Count supplies', update: [{ table: 'Supplies', id: 'recSupBatt', fields: { 'On hand': 0 } }] },
       record: 'recSupBatt',
-      expect: { status: 'success', visits: ['create-po', 'po-email', 'g-zero', 'slack-zero'], emails: 1 },
+      expect: { status: 'success', visits: ['create-po', 'po-email', 'g-zero:0', 'slack-zero'], emails: 1 },
     },
     {
       id: 'no-vendor',

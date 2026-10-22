@@ -99,26 +99,31 @@ export const conflictCheck: Automation = {
     {
       kind: 'if',
       id: 'g-conflicts',
-      when: 'Run a script › conflicts is greater than 0',
-      test: (c) => (c.out('check').conflicts as number) > 0,
-      steps: [
+      branches: [
         {
-          kind: 'action',
-          id: 'conflict-email',
-          type: 'Send email',
-          title: 'Tell Andre before the morning',
-          summary: 'One email with every clash in it.',
-          params: [
-            { k: 'To', v: 'andre@kestrelgrip.example' },
-            { k: 'Subject', v: 'Double bookings: {Run a script › conflicts} bookings' },
-            { k: 'Message', v: '{Run a script › summary}' },
+          name: 'Clashes found',
+          when: 'Run a script › conflicts is greater than 0',
+          test: (c) => (c.out('check').conflicts as number) > 0,
+          steps: [
+            {
+              kind: 'action',
+              id: 'conflict-email',
+              type: 'Send email',
+              title: 'Tell Andre before the morning',
+              summary: 'One email with every clash in it.',
+              params: [
+                { k: 'To', v: 'andre@kestrelgrip.example' },
+                { k: 'Subject', v: 'Double bookings: {Run a script › conflicts} bookings' },
+                { k: 'Message', v: '{Run a script › summary}' },
+              ],
+              run: (c) => {
+                const o = c.out('check');
+                return { messages: [{ channel: 'email', to: c.email('Andre Mills'), subject: `Double bookings: ${o.conflicts} bookings`, body: `These bookings share gear on overlapping dates:\n\n${o.summary}\n\nThey are ticked in the Bookings view “Conflicts”. Change either booking and both flags clear on tomorrow night’s run.` }] };
+              },
+            },
           ],
-          run: (c) => {
-            const o = c.out('check');
-            return { messages: [{ channel: 'email', to: c.email('Andre Mills'), subject: `Double bookings: ${o.conflicts} bookings`, body: `These bookings share gear on overlapping dates:\n\n${o.summary}\n\nThey are ticked in the Bookings view “Conflicts”. Change either booking and both flags clear on tomorrow night’s run.` }] };
-          },
         },
-      ],
+      ]
     },
   ],
   notify: 'Jordan Price',
@@ -128,7 +133,7 @@ export const conflictCheck: Automation = {
       label: 'Two jobs want SkyPanel #2 on Friday',
       summary: 'Night Shift has it Wednesday to Saturday; the Tidewater commercial booked it for Friday. Both flagged, last week’s stale flag cleared, one email.',
       start: 1260,
-      expect: { status: 'success', visits: ['check', 'g-conflicts', 'conflict-email'], emails: 1 },
+      expect: { status: 'success', visits: ['check', 'g-conflicts:0', 'conflict-email'], emails: 1 },
     },
     {
       id: 'clear',
@@ -136,7 +141,7 @@ export const conflictCheck: Automation = {
       summary: 'No clashes left: the stale flag is cleared and nobody is emailed.',
       start: 1260,
       setup: { by: 'Andre swaps SkyPanel #3 into the Tidewater booking', update: [{ table: 'Bookings', id: 'recBkg02', fields: { Assets: ['recAst02', 'recAst06'] } }] },
-      expect: { status: 'success', visits: ['check', 'g-conflicts:skip'], skips: ['conflict-email'], emails: 0 },
+      expect: { status: 'success', visits: ['check', 'g-conflicts:none'], skips: ['conflict-email'], emails: 0 },
     },
   ],
   fields: [

@@ -9,10 +9,14 @@
  * computed fields hold no typed values, form views list real, writable
  * fields, and every cell of every sample record computes.
  *
- * Automations: every test event runs through the simulator and must end as
- * its `expect` block says (status, steps reached or not, emails sent); every
- * action must run in some test event, every conditional group must be both
- * met and not met, every repeating group must get items; a "matches
+ * Automations: steps follow Airtable's layout rules (a conditional or
+ * repeating group is the last step of its list, only a group's last branch
+ * may be Otherwise, no repeating group inside another, at most two levels of
+ * groups); every test event runs through the simulator and must end as its
+ * `expect` block says (status, steps reached or not, emails sent); every
+ * action must run in some test event, every branch must be taken, a group
+ * with no Otherwise must also be seen matching nothing, and every repeating
+ * group must get items; a "matches
  * conditions" event must make its record start to match; tokens like
  * {Trigger › Field} must name real fields; and no message may hold an
  * unresolved token or read "undefined". Writes to computed or synced fields
@@ -22,7 +26,7 @@
 import { build } from 'esbuild';
 
 const out = await build({
-  stdin: { contents: "export { cases } from './src/data/airtable/index.ts'; export { simulate, allActions, Store, isComputed } from './src/lib/airtable/engine.ts';", resolveDir: process.cwd(), loader: 'ts' },
+  stdin: { contents: "export { cases } from './src/data/airtable/index.ts'; export { simulate, allActions, allGroups, Store, isComputed } from './src/lib/airtable/engine.ts';", resolveDir: process.cwd(), loader: 'ts' },
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -30,7 +34,7 @@ const out = await build({
   logLevel: 'silent',
 });
 const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
-const { cases, simulate, allActions, Store, isComputed } = mod;
+const { cases, simulate, allActions, allGroups, Store, isComputed } = mod;
 
 const problems = [];
 let runs = 0;
@@ -138,10 +142,32 @@ for (const study of cases) {
 
     const steps = new Set();
     const actions = allActions(a.steps);
-    for (const s of [...a.steps.filter((x) => x.kind !== 'action'), ...actions]) {
+    const groups = allGroups(a.steps);
+    for (const s of [...groups, ...actions]) {
       if (steps.has(s.id)) problems.push(where(`duplicate step id ${s.id}`));
       steps.add(s.id);
     }
+    // Airtable's layout rules for groups.
+    const layout = (list, depth, inLoop) =>
+      list.forEach((s, i) => {
+        if (s.kind === 'action') return;
+        if (i !== list.length - 1) problems.push(where(`${s.id} is followed by another step, but nothing can come after a ${s.kind === 'if' ? 'conditional' : 'repeating'} group`));
+        if (depth > 2) problems.push(where(`${s.id} is nested more than two groups deep`));
+        if (s.kind === 'repeat') {
+          if (inLoop) problems.push(where(`${s.id} is a repeating group inside another`));
+          layout(s.steps, depth + 1, true);
+          return;
+        }
+        if (!s.branches.length) problems.push(where(`${s.id} has no branches`));
+        s.branches.forEach((b, bi) => {
+          const last = bi === s.branches.length - 1;
+          if (!b.when && !last) problems.push(where(`${s.id}: only the last branch may be Otherwise`));
+          if (!!b.when !== !!b.test) problems.push(where(`${s.id}: branch "${b.name}" needs both conditions and a test, or neither for Otherwise`));
+          if (!b.steps.length) problems.push(where(`${s.id}: branch "${b.name}" is empty`));
+          layout(b.steps, depth + 1, inLoop);
+        });
+      });
+    layout(a.steps, 1, false);
     // Tokens that name the trigger record's fields must name real ones.
     for (const x of actions)
       for (const p of x.params)
@@ -172,10 +198,10 @@ for (const study of cases) {
       checkMessages(trace, w);
     }
     for (const x of actions) if (!visited.has(x.id)) problems.push(where(`action ${x.id} never runs in any test event`));
-    for (const s of a.steps) {
+    for (const s of groups) {
       if (s.kind === 'if') {
-        if (!visited.has(s.id)) problems.push(where(`group ${s.id} is never met`));
-        if (!visited.has(`${s.id}:skip`)) problems.push(where(`group ${s.id} is never skipped, so its conditions are never tested`));
+        s.branches.forEach((b, bi) => !visited.has(`${s.id}:${bi}`) && problems.push(where(`${s.id}: branch "${b.name}" is never taken`)));
+        if (s.branches[s.branches.length - 1].when && !visited.has(`${s.id}:none`)) problems.push(where(`${s.id} has no Otherwise branch and is never seen matching nothing`));
       }
       if (s.kind === 'repeat' && !visited.has(s.id)) problems.push(where(`repeating group ${s.id} never gets an item`));
     }
@@ -205,4 +231,4 @@ if (problems.length) {
   console.log('Airtable check FAILED:\n' + problems.map((p) => '  - ' + p).join('\n'));
   process.exit(1);
 }
-console.log(`Airtable check clean: ${cases.length} case${cases.length === 1 ? '' : 's'}, ${automations} automations, ${runs} test runs, every action, group and outcome reached.`);
+console.log(`Airtable check clean: ${cases.length} case${cases.length === 1 ? '' : 's'}, ${automations} automations, ${runs} test runs, every action and branch reached.`);

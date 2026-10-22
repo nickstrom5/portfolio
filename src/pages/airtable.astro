@@ -13,7 +13,7 @@ import Base from '@/layouts/Base.astro';
 import CaseStudyView from '@/components/airtable/CaseStudy.astro';
 import { cases as allCases } from '@/data/airtable';
 import { hasLoader } from '@/lib/airtable/load-case';
-import { allActions, formatDuration, formatTime, simulate } from '@/lib/airtable/engine';
+import { allActions, allGroups, formatDuration, formatTime, simulate } from '@/lib/airtable/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
 
@@ -26,17 +26,19 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 // Every number in the hero is computed from the data, by running the simulator at build time.
 const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));
+// Every action, every branch of a conditional group and every repeating group is an outcome a test can reach.
 let steps = 0;
 const taken = new Set<string>();
 for (const { c, a } of all) {
-  steps += allActions(a.steps).length + a.steps.filter((s) => s.kind !== 'action').length;
-  for (const s of a.scenarios) simulate(c, a, s).visited.forEach((v) => !v.includes(':') && taken.add(`${c.business.id}/${a.id}/${v}`));
+  const outcomes = new Set([...allActions(a.steps).map((x) => x.id), ...allGroups(a.steps).flatMap((g) => (g.kind === 'if' ? g.branches.map((_, i) => `${g.id}:${i}`) : [g.id]))]);
+  steps += outcomes.size;
+  for (const s of a.scenarios) simulate(c, a, s).visited.forEach((v) => outcomes.has(v) && taken.add(`${c.business.id}/${a.id}/${v}`));
 }
 const stats = [
   { value: String(all.length), label: 'Automations you can run' },
   { value: String(cases.reduce((n, c) => n + c.base.tables.length, 0)), label: 'Linked tables behind them' },
   { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test events to run them on' },
-  { value: `${taken.size}/${steps}`, label: 'Actions and groups, each reached by a test' },
+  { value: `${taken.size}/${steps}`, label: 'Actions and branches, each reached by a test' },
 ];
 
 // The hero's preview is one real run of the first case's first automation and first test event.
@@ -84,7 +86,7 @@ const reliability = [
   },
   {
     title: 'Quiet when nothing is wrong',
-    body: 'Digests and alerts sit in conditional groups on a non-empty list or a count above zero. A Monday with every slide in, or a night with no double bookings, ends with a successful run and no email.',
+    body: 'Digests and alerts sit in a conditional group branch that needs a non-empty list or a count above zero. A Monday with every slide in, or a night with no double bookings, ends with a successful run and no email.',
     where: ['events/slides-chase', 'rentals/conflict-check', 'recruiting/guarantee-checkins'],
   },
   {
@@ -144,8 +146,8 @@ const decoder: [string, string][] = [
   ['Trigger', 'What starts an automation: a form submission, a record that starts to match conditions, a record that is updated, a schedule, and others.'],
   ['When a record matches conditions', 'A trigger that fires when a record starts to meet a set of conditions. It does not fire again until the record stops matching and matches again.'],
   ['Action', 'One step of an automation: Find records, Create record, Update record, Send email, Run a script, Send a Slack message, and others.'],
-  ['Conditional group', 'A set of actions that only runs when its conditions are met, like “if Severity is Unsafe”.'],
-  ['Repeating group', 'A set of actions that runs once for each item in a list, such as each record Find records returned.'],
+  ['Conditional group', 'A step with branches: If, Otherwise if, and an optional Otherwise. The first branch whose conditions are met runs its actions. It is always the last step, so actions every branch needs go before it.'],
+  ['Repeating group', 'A set of steps that runs once for each item in a list, such as each record Find records returned. Like a conditional group, it is the last step of its list; it can sit inside a branch.'],
   ['Token', 'A value from an earlier step dropped into an action’s setting, like {Trigger › Speaker email}. Shown here in braces.'],
   ['Run a script', 'An action that runs JavaScript with Airtable’s scripting API, for logic the built-in actions do not cover. It takes input variables and sets outputs.'],
   ['Run history', 'The list of an automation’s runs, each Successful or Failed, with what every step received and returned.'],

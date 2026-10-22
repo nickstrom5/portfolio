@@ -1,6 +1,6 @@
 /** The “Brightwater Program” base: four tables, their views, and the interfaces the team works in. */
 import type { BaseSchema } from '@/lib/airtable/types';
-import { fx } from '@/lib/airtable/engine';
+import { fx, shortDate } from '@/lib/airtable/engine';
 
 const accepted = { text: 'Status is Accepted', test: (g: (f: string) => unknown) => g('Status') === 'Accepted' };
 const within = (d: number | null, days: number) => d !== null && d >= 0 && d <= days;
@@ -38,6 +38,16 @@ export const base: BaseSchema = {
             text: 'IF({Status} != "Accepted", "",\n  IF({Slides}, "Received",\n    IF(IS_BEFORE({Slides due}, TODAY()), "Overdue", "Waiting")))',
             fn: (g, today) => (g('Status') !== 'Accepted' ? null : !fx.empty(g('Slides')) ? 'Received' : (fx.daysBetween(g('Slides due'), today) ?? 0) < 0 ? 'Overdue' : 'Waiting'),
           },
+        },
+        {
+          name: 'Welcome extras',
+          type: 'Formula',
+          formula: {
+            text: 'IF({Needs travel}, "• Travel: Dev will be in touch to book it by " & DATETIME_FORMAT({Book travel by}, \'MMM D\') & ".") &\nIF(AND({Needs travel}, {Format} = "Workshop"), "\\n") &\nIF({Format} = "Workshop", "• Workshop room: tell Marcus what you need on the tables by " & DATETIME_FORMAT({Slides due}, \'MMM D\') & ".")',
+            fn: (g) =>
+              [g('Needs travel') && `• Travel: Dev will be in touch to book it by ${shortDate(g('Book travel by'))}.`, g('Format') === 'Workshop' && `• Workshop room: tell Marcus what you need on the tables by ${shortDate(g('Slides due'))}.`].filter(Boolean).join('\n') || null,
+          },
+          note: 'The lines of the welcome email that depend on the session. An email’s text cannot branch, so a formula writes them.',
         },
         { name: 'Welcome sent', type: 'Checkbox', note: 'Ticked by automation 02 and part of its conditions, so moving Status away and back cannot send the welcome twice.' },
         { name: 'Status changed', type: 'Last modified time', watch: ['Status'], note: 'Only watches Status, so it dates the decision, not the last typo fix.' },

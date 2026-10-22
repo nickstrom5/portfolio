@@ -36,7 +36,7 @@ export const slidesChase: Automation = {
   kicker: 'Every Monday → digest and nudges',
   tagline: 'One email tells the team what is missing; each speaker gets their own reminder. When everything is in, nobody hears a thing.',
   problem: 'Slides were chased in reply-all threads, so speakers who had sent theirs got nagged and the ones who had not slipped through. Dev found out what was missing the night before an event.',
-  solution: 'Every Monday at 8 AM the automation reads the view of accepted sessions with no slides and an event in the next 14 days. If the list has anything in it, a short script groups it by event for one digest to Dev and Hannah. Then a repeating group sends each of those speakers their own reminder with their own due date.',
+  solution: 'Every Monday at 8 AM the automation reads the view of accepted sessions with no slides and an event in the next 14 days. If the list has anything in it, a conditional group runs: a short script groups the list by event for one digest to Dev and Hannah, then a repeating group sends each of those speakers their own reminder with their own due date.',
   trigger: {
     type: 'At a scheduled time',
     summary: 'Runs every Monday at 8:00 AM Pacific time.',
@@ -67,76 +67,81 @@ export const slidesChase: Automation = {
     {
       kind: 'if',
       id: 'g-any',
-      when: 'Find records › Records is not empty',
-      test: (c) => found(c).length > 0,
-      steps: [
+      branches: [
         {
-          kind: 'action',
-          id: 'digest',
-          type: 'Run a script',
-          title: 'Group them by event',
-          summary: 'A few lines of script turn the list into a readable digest.',
-          params: [{ k: 'Input variable ids', v: '{Find records › Records › Airtable record ID}' }],
-          script: { inputs: [{ name: 'ids', value: 'Find records › Records › Airtable record ID (list)' }], source: SCRIPT },
-          run: (c) => {
-            const recs = found(c).map((id) => c.record('Sessions', id));
-            const events = [...new Set(recs.map((r) => r.text('Event')))];
-            const digest = events.map((e) => `${e}\n${recs.filter((r) => r.text('Event') === e).map((r) => `• ${r.text('Title')} (${r.text('Speaker name')}), due ${r.text('Slides due')}`).join('\n')}`).join('\n\n');
-            return { log: `output.set: digest (${recs.length} sessions, ${events.length} event${events.length === 1 ? '' : 's'}), count`, output: { digest, count: recs.length } };
-          },
-        },
-        {
-          kind: 'action',
-          id: 'digest-email',
-          type: 'Send email',
-          title: 'Digest to Dev and Hannah',
-          summary: 'One email with the whole list.',
-          params: [
-            { k: 'To', v: 'dev@brightwatersummits.example, hannah@brightwatersummits.example' },
-            { k: 'Subject', v: 'Slides missing: {Run a script › count} sessions' },
-            { k: 'Message', v: '{Run a script › digest}' },
-          ],
-          run: (c) => {
-            const o = c.out('digest');
-            return {
-              messages: [{ channel: 'email', to: `${c.email('Dev Castillo')}, ${c.email('Hannah Lee')}`, subject: `Slides missing: ${o.count} session${o.count === 1 ? '' : 's'}`, body: `Accepted sessions with no slides and an event in the next 14 days:\n\n${o.digest}\n\nEach speaker gets their own reminder this morning.` }],
-            };
-          },
-        },
-      ],
-    },
-    {
-      kind: 'repeat',
-      id: 'r-speakers',
-      over: 'Find records › Records',
-      list: (c) => found(c).map((id) => c.record('Sessions', id)),
-      steps: [
-        {
-          kind: 'action',
-          id: 'nudge',
-          type: 'Send email',
-          title: 'Remind the speaker',
-          summary: 'One email per session, with that session’s own date.',
-          params: [
-            { k: 'To', v: '{Current item › Speaker email}' },
-            { k: 'From name', v: 'Hannah at Brightwater' },
-            { k: 'Reply to', v: 'hannah@brightwatersummits.example' },
-            { k: 'Subject', v: 'Your slides for {Current item › Event}' },
-          ],
-          run: (c) => {
-            const s = c.item!;
-            const late = s.get('Slides status') === 'Overdue';
-            return {
-              messages: [
-                {
-                  channel: 'email',
-                  to: fx.str(s.get('Speaker email')),
-                  subject: `Your slides for ${s.text('Event')}`,
-                  body: `Hi ${s.text('Speaker name').split(' ')[0]},\n\n${late ? `Your slides for “${s.text('Title')}” were due ${shortDate(s.get('Slides due'))}` : `A reminder that your slides for “${s.text('Title')}” are due ${shortDate(s.get('Slides due'))}`}. The event is on ${shortDate(s.get('Event date'))}. Reply to this email with a file or a link, even a draft.\n\nThanks,\nHannah`,
-                },
+          name: 'Something is missing',
+          when: 'Find records › Records is not empty',
+          test: (c) => found(c).length > 0,
+          steps: [
+            {
+              kind: 'action',
+              id: 'digest',
+              type: 'Run a script',
+              title: 'Group them by event',
+              summary: 'A few lines of script turn the list into a readable digest.',
+              params: [{ k: 'Input variable ids', v: '{Find records › Records › Airtable record ID}' }],
+              script: { inputs: [{ name: 'ids', value: 'Find records › Records › Airtable record ID (list)' }], source: SCRIPT },
+              run: (c) => {
+                const recs = found(c).map((id) => c.record('Sessions', id));
+                const events = [...new Set(recs.map((r) => r.text('Event')))];
+                const digest = events.map((e) => `${e}\n${recs.filter((r) => r.text('Event') === e).map((r) => `• ${r.text('Title')} (${r.text('Speaker name')}), due ${r.text('Slides due')}`).join('\n')}`).join('\n\n');
+                return { log: `output.set: digest (${recs.length} sessions, ${events.length} event${events.length === 1 ? '' : 's'}), count`, output: { digest, count: recs.length } };
+              },
+            },
+            {
+              kind: 'action',
+              id: 'digest-email',
+              type: 'Send email',
+              title: 'Digest to Dev and Hannah',
+              summary: 'One email with the whole list.',
+              params: [
+                { k: 'To', v: 'dev@brightwatersummits.example, hannah@brightwatersummits.example' },
+                { k: 'Subject', v: 'Slides missing: {Run a script › count} sessions' },
+                { k: 'Message', v: '{Run a script › digest}' },
               ],
-            };
+              run: (c) => {
+                const o = c.out('digest');
+                return {
+                  messages: [{ channel: 'email', to: `${c.email('Dev Castillo')}, ${c.email('Hannah Lee')}`, subject: `Slides missing: ${o.count} session${o.count === 1 ? '' : 's'}`, body: `Accepted sessions with no slides and an event in the next 14 days:\n\n${o.digest}\n\nEach speaker gets their own reminder this morning.` }],
+                };
+              },
+            },
+          {
+            kind: 'repeat',
+            id: 'r-speakers',
+            over: 'Find records › Records',
+            list: (c) => found(c).map((id) => c.record('Sessions', id)),
+            steps: [
+              {
+                kind: 'action',
+                id: 'nudge',
+                type: 'Send email',
+                title: 'Remind the speaker',
+                summary: 'One email per session, with that session’s own date.',
+                params: [
+                  { k: 'To', v: '{Current item › Speaker email}' },
+                  { k: 'From name', v: 'Hannah at Brightwater' },
+                  { k: 'Reply to', v: 'hannah@brightwatersummits.example' },
+                  { k: 'Subject', v: 'Your slides for {Current item › Event}' },
+                ],
+                run: (c) => {
+                  const s = c.item!;
+                  const late = s.get('Slides status') === 'Overdue';
+                  return {
+                    messages: [
+                      {
+                        channel: 'email',
+                        to: fx.str(s.get('Speaker email')),
+                        subject: `Your slides for ${s.text('Event')}`,
+                        body: `Hi ${s.text('Speaker name').split(' ')[0]},\n\n${late ? `Your slides for “${s.text('Title')}” were due ${shortDate(s.get('Slides due'))}` : `A reminder that your slides for “${s.text('Title')}” are due ${shortDate(s.get('Slides due'))}`}. The event is on ${shortDate(s.get('Event date'))}. Reply to this email with a file or a link, even a draft.\n\nThanks,\nHannah`,
+                      },
+                    ],
+                  };
+                },
+              },
+            ],
           },
+          ],
         },
       ],
     },
@@ -148,7 +153,7 @@ export const slidesChase: Automation = {
       label: 'Three sessions still without slides',
       summary: 'Ten days before Seattle: one digest, three reminders. Ana already sent hers, so she hears nothing.',
       start: 480,
-      expect: { status: 'success', visits: ['find-missing', 'g-any', 'digest', 'digest-email', 'r-speakers', 'nudge'], emails: 4 },
+      expect: { status: 'success', visits: ['find-missing', 'g-any:0', 'digest', 'digest-email', 'r-speakers', 'nudge'], emails: 4 },
     },
     {
       id: 'all-in',
@@ -163,7 +168,7 @@ export const slidesChase: Automation = {
           { table: 'Sessions', id: 'recSes04', fields: { Slides: ['heat-pump-workshop.pdf'] } },
         ],
       },
-      expect: { status: 'success', visits: ['find-missing', 'g-any:skip', 'r-speakers:empty'], skips: ['digest', 'digest-email', 'nudge'], emails: 0 },
+      expect: { status: 'success', visits: ['find-missing', 'g-any:none'], skips: ['digest', 'digest-email', 'r-speakers', 'nudge'], emails: 0 },
     },
   ],
   fields: [
@@ -174,7 +179,8 @@ export const slidesChase: Automation = {
   ],
   build: [
     { title: 'The rule lives in a view', body: 'Find records reads the view “Missing slides · next 14 days” instead of repeating its filters. Hannah works from the same view, so what she sees and what the automation chases cannot differ.' },
-    { title: 'Quiet when nothing is missing', body: 'The digest sits in a conditional group that needs a non-empty list. On a Monday with every slide in, the run succeeds and sends nothing.' },
+    { title: 'Quiet when nothing is missing', body: 'Everything after Find records sits in one conditional group branch that needs a non-empty list. On a Monday with every slide in, no branch matches, and the run succeeds having sent nothing.' },
+    { title: 'The loop is the last step of the branch', body: 'Airtable lets nothing follow a repeating group or a conditional group, so the order is fixed: digest first, then the loop of reminders, both inside the one branch.' },
     { title: 'A repeating group for the nudges', body: 'The repeating group runs its Send email once per record in the list, with Current item tokens, so each speaker gets their own title and date instead of a group email.' },
     { title: 'Script only for what actions cannot do', body: 'Grouping a list by event is the one thing the built-in actions do not do. The script takes the record IDs as an input variable, reads only the four fields it needs, and hands back two outputs. It stays well inside the 30-second limit for scripts in automations.' },
     { title: 'Mondays at 8 AM Pacific', body: 'The schedule names its timezone, so it does not drift when someone on the team changes theirs. Monday gives speakers a working week before most deadlines.' },
@@ -192,5 +198,5 @@ export const slidesChase: Automation = {
     'An overdue session’s reminder says “were due”.',
     'The digest groups by event and counts correctly.',
   ],
-  features: ['At a scheduled time', 'Find records (based on view)', 'Conditional groups', 'Repeating group', 'Run a script', 'Send email', 'Formula (IS_BEFORE, TODAY)', 'Grid view filters'],
+  features: ['At a scheduled time', 'Find records (based on view)', 'Conditional group', 'Repeating group inside a branch', 'Run a script', 'Send email', 'Formula (IS_BEFORE, TODAY)', 'Grid view filters'],
 };

@@ -1,14 +1,15 @@
 ---
 /**
  * The automation as it reads in Airtable's automation editor: the trigger,
- * then actions top to bottom, with conditional and repeating groups holding
- * their own actions. Styles come from src/styles/ghl.css, n8n.css and
- * airtable.css, since the simulator adds state classes at run time.
+ * then actions top to bottom, ending in a conditional group with its
+ * branches or a repeating group, when there is one. Styles come from
+ * src/styles/ghl.css, n8n.css and airtable.css, since the simulator adds
+ * state classes at run time.
  */
-import type { Action, Automation } from '@/lib/airtable/types';
-import type { IconName } from '@/lib/airtable/types';
+import type { Automation, IconName } from '@/lib/airtable/types';
 import { countSteps } from '@/lib/airtable/engine';
 import Icon from './Icon.astro';
+import Steps from './Steps.astro';
 
 interface Props {
   automation: Automation;
@@ -18,25 +19,7 @@ const { automation: a, caseId } = Astro.props;
 const t = a.trigger;
 const total = countSteps(a);
 
-const ICON: Record<Action['type'], IconName> = {
-  'Send email': 'mail',
-  'Create record': 'plus',
-  'Update record': 'pen',
-  'Find records': 'search',
-  'Run a script': 'code',
-  'Send a Slack message': 'slack',
-};
-const TONE: Record<Action['type'], string> = {
-  'Send email': 'g-tone-comms',
-  'Send a Slack message': 'g-tone-comms',
-  'Create record': 'g-tone-crm',
-  'Update record': 'g-tone-crm',
-  'Find records': 'g-tone-goal',
-  'Run a script': 'g-tone-dev',
-};
 const triggerIcon: IconName = t.type === 'At a scheduled time' ? 'clock' : t.type === 'When a form is submitted' ? 'form' : t.type === 'When a record matches conditions' ? 'match' : 'table';
-/** Splits a value into text and {Token › path} pills. */
-const segments = (v: string) => v.split(/(\{[^}]*›[^}]*\})/g).filter(Boolean);
 ---
 
 <figure class="g-canvas n-canvas a-editor" data-canvas={`${caseId}:${a.id}`} aria-label={`Automation: ${a.name}, ${total} steps`}>
@@ -49,7 +32,7 @@ const segments = (v: string) => v.split(/(\{[^}]*›[^}]*\})/g).filter(Boolean);
     <div><dt>Trigger</dt><dd>{t.type}</dd></div>
     <div><dt>Failure emails to</dt><dd>{a.notify}</dd></div>
   </dl>
-  <p class="g-canvas-hint">The automation as it reads in Airtable’s editor. Each step gets a green tick when the run reaches it; a skipped group fades. Open a step for its settings.</p>
+  <p class="g-canvas-hint">The automation as it reads in Airtable’s editor. Each step gets a green tick when the run reaches it; branches that did not run fade. Open a step for its settings.</p>
   <div class="g-canvas-body" role="region" aria-label={`Steps of ${a.name}`} tabindex="0">
     <ol class="g-steps g-root">
       <li class="g-step n-tone-trigger n-trigger" data-node="trigger">
@@ -69,57 +52,7 @@ const segments = (v: string) => v.split(/(\{[^}]*›[^}]*\})/g).filter(Boolean);
           <span class="g-state" aria-hidden="true"></span>
         </div>
       </li>
-      {a.steps.map((s) => {
-        const actions = s.kind === 'action' ? [] : s.steps;
-        const card = (x: Action) => (
-          <li class:list={['g-step', TONE[x.type]]} data-node={x.id}>
-            <div class="g-card">
-              <span class="g-ico"><Icon name={ICON[x.type]} /></span>
-              <div class="g-txt">
-                <span class="g-kind">Action · {x.type}</span>
-                <span class="g-name">{x.title}</span>
-                <p class="g-sum">{x.summary}</p>
-                <details class="g-code">
-                  <summary>{x.script ? 'Settings and script' : 'Settings'}</summary>
-                  <dl class="n-params">
-                    {x.params.map((p) => (
-                      <div><dt>{p.k}</dt><dd>{segments(p.v).map((seg) => (/^\{.*›.*\}$/.test(seg) ? <code class="g-merge a-token">{seg.slice(1, -1)}</code> : seg))}</dd></div>
-                    ))}
-                  </dl>
-                  {x.script && <pre><code>{x.script.source}</code></pre>}
-                </details>
-              </div>
-              <span class="g-state" aria-hidden="true"></span>
-            </div>
-          </li>
-        );
-        if (s.kind === 'action') return card(s);
-        return (
-          <li class:list={['g-step', 'g-has-branches', s.kind === 'if' ? 'g-tone-logic' : 'g-tone-wait']} data-node={s.id}>
-            <div class="g-card g-card-logic">
-              <span class="g-ico"><Icon name={s.kind === 'if' ? 'branch' : 'repeat'} /></span>
-              <div class="g-txt">
-                <span class="g-kind">{s.kind === 'if' ? 'Conditional group' : 'Repeating group'}</span>
-                <span class="g-name">{s.kind === 'if' ? `If ${s.when}` : `For each item in ${s.over}`}</span>
-                <p class="g-sum">{s.kind === 'if' ? `${actions.length === 1 ? 'Its action runs' : `Its ${actions.length} actions run`} only when the conditions are met.` : `${actions.length === 1 ? 'Its action runs' : `Its ${actions.length} actions run`} once per item, with Current item tokens.`}</p>
-              </div>
-              <span class="g-state" aria-hidden="true"></span>
-            </div>
-            <div class="g-branches" style="--n: 1" data-n="1">
-              <div class="g-branch" data-branch={`${s.id}:0`}>
-                <div class="g-branch-head">
-                  <span class="g-b-label">{s.kind === 'if' ? 'Then' : 'For each'}</span>
-                </div>
-                <ol class="g-steps">
-                  {actions.map(card)}
-                  <li class="g-endcap" aria-label="End of group"><span>End of group</span></li>
-                </ol>
-              </div>
-            </div>
-          </li>
-        );
-      })}
-      <li class="g-endcap" aria-label="End of automation"><span>End</span></li>
+      <Steps steps={a.steps} />
     </ol>
   </div>
   <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole automation (${total} steps)`}>Show the whole automation ({total} steps)</button>
