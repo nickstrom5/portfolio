@@ -23,13 +23,13 @@ function siteCommits(): string | undefined {
 const live = { commits: siteCommits() };
 ---
 
-<Base title="AI-built apps and websites" description="What Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site, plus GoHighLevel and n8n case studies.">
+<Base title="AI-built apps and websites" description="What Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site.">
   <section class="intro">
     <div class="container">
       <span class="eyebrow">AI Projects</span>
       <h1>Built with AI. Directed by me.</h1>
       <p class="lede">
-        Projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it.
+        Projects that answer the same question: how much of a real product, or a real business, can you ship by describing it well and directing the models? Pick one to walk through it. The GoHighLevel and n8n builds are on <a href={url('/case-studies')}>Case studies</a>.
       </p>
 
       <div class="tiles" role="group" aria-label="Projects">
@@ -62,19 +62,6 @@ const live = { commits: siteCommits() };
               <span class="t-cta">Coming soon</span>
             </div>
           )
-        ) : 'page' in p ? (
-          <a
-            class="tile page"
-            href={url(p.href)}
-            data-project={p.id}
-            data-tone={p.tone ?? 'dark'}
-            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
-          >
-            <span class="t-kicker">{p.kicker}</span>
-            <span class="t-name">{p.name}</span>
-            <span class="t-blurb">{p.tileBlurb}</span>
-            <span class="t-cta">{p.cta}</span>
-          </a>
         ) : (
           <button
             class="tile"
@@ -96,7 +83,7 @@ const live = { commits: siteCommits() };
     </div>
   </section>
 
-  {projects.filter((p): p is StoryProject => !p.comingSoon && !('page' in p)).map((p, i) => (
+  {projects.filter((p): p is StoryProject => !p.comingSoon).map((p, i) => (
     <article
       class="story"
       id={p.id}
@@ -275,7 +262,7 @@ const live = { commits: siteCommits() };
 </Base>
 
 <script>
-  // Only story tiles switch stories; coming-soon and page tiles are static or link out.
+  // Only story tiles switch stories; coming-soon tiles are static or link out.
   const tiles = document.querySelectorAll<HTMLButtonElement>('button.tile[aria-controls]');
   const stories = document.querySelectorAll<HTMLElement>('.story');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -406,8 +393,7 @@ const live = { commits: siteCommits() };
   .tile.soon .t-cta {
     opacity: 0.8;
   }
-  .tile.soon.linked,
-  .tile.page {
+  .tile.soon.linked {
     cursor: pointer;
     text-decoration: none;
   }

@@ -16,6 +16,7 @@ const pageSources = {
   '/': ['src/pages/index.astro', 'src/data/services.ts', 'src/data/apps.json', 'src/data/testimonials.json'],
   '/about/': ['src/pages/about.astro', 'src/data/personal.json', 'src/data/site.ts'],
   '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts'],
+  '/case-studies/': ['src/pages/case-studies.astro', 'src/data/caseStudies.ts', 'src/data/ghl', 'src/data/n8n'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/ghl/': ['src/pages/ghl.astro', 'src/components/ghl', 'src/data/ghl'],

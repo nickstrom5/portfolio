@@ -1,0 +1,269 @@
+---
+/**
+ * /case-studies/ — the platform case studies (GoHighLevel, n8n…). Tiles at the
+ * top switch the panel below, like the AI Projects stories; each panel lists
+ * the platform's sample businesses and links into its full interactive page.
+ * Content comes from src/data/caseStudies.ts.
+ */
+import Base from '@/layouts/Base.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import { platforms } from '@/data/caseStudies';
+import { url } from '@/lib/url';
+
+const names = platforms.map((p) => p.name);
+const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+---
+
+<Base title="Case studies" description={`Sample businesses built end to end in ${list}: real workflows, real triggers and every step runnable in your browser. By Nick Soderstrom.`}>
+  <section class="intro">
+    <div class="container">
+      <span class="eyebrow">Case studies</span>
+      <h1>Built in the tools you already use.</h1>
+      <p class="lede">
+        Sample businesses built end to end in {list}, with the workflows a real client would ask for. The companies are made up; the triggers, actions and logic are the real thing. Pick a platform to see its case studies. Client work is on <a href={url('/work')}>Work</a>.
+      </p>
+
+      <div class="tiles" role="group" aria-label="Platforms">
+        {platforms.map((p, i) => (
+          <button
+            class="tile"
+            id={`tab-${p.id}`}
+            aria-controls={p.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            data-platform={p.id}
+            style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark}; --tile-fg-dark: ${p.fgDark}`}
+            type="button"
+          >
+            <span class="t-kicker">{p.kicker}</span>
+            <span class="t-name">{p.name}</span>
+            <span class="t-blurb">{p.tileBlurb}</span>
+            <span class="t-cta">View case studies →</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {platforms.map((p, i) => (
+    <section
+      class="panel section"
+      id={p.id}
+      data-panel={p.id}
+      aria-labelledby={`${p.id}-title`}
+      hidden={i !== 0}
+      style={`--tile-fg: ${p.fg}; --tile-fg-dark: ${p.fgDark}`}
+    >
+      <div class="container">
+        <span class="kicker">{p.kicker}</span>
+        <h2 id={`${p.id}-title`}>{p.title}</h2>
+        <p class="lede">{p.intro}</p>
+        <ul class="cases">
+          {p.cases.map((c) => (
+            <li class="card case" style={`--case: ${c.tint.light}; --case-dark: ${c.tint.dark}`}>
+              <h3>{c.name}</h3>
+              <p class="meta muted">{c.industry} · {c.area}</p>
+              <p class="blurb">{c.blurb}</p>
+              <p class="count">{c.workflows.length} {p.unit}</p>
+              <ul class="flows" aria-label={`${c.name} ${p.unit}`}>
+                {c.workflows.map((w) => <li class="tag">{w}</li>)}
+              </ul>
+              <a class="open" href={url(`${p.href}#${c.id}`)}>Open {c.name} →</a>
+            </li>
+          ))}
+        </ul>
+        <a class="btn btn-primary all" href={url(p.href)}>{p.cta}</a>
+      </div>
+    </section>
+  ))}
+
+  <CtaBand />
+</Base>
+
+<script>
+  const tiles = document.querySelectorAll<HTMLButtonElement>('.tile[data-platform]');
+  const panels = document.querySelectorAll<HTMLElement>('.panel');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function show(id: string, scroll: boolean, instant = false) {
+    tiles.forEach((t) => {
+      const on = t.dataset.platform === id;
+      t.setAttribute('aria-pressed', String(on));
+    });
+    panels.forEach((s) => (s.hidden = s.dataset.panel !== id));
+    if (scroll) document.getElementById(id)?.scrollIntoView({ behavior: reduce || instant ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  tiles.forEach((t) =>
+    t.addEventListener('click', () => {
+      const id = t.dataset.platform!;
+      history.replaceState(null, '', `#${id}`);
+      show(id, true);
+    }),
+  );
+
+  // /case-studies/#n8n opens that platform; the panel is hidden until now, so the
+  // browser's own jump can't reach it.
+  function fromHash(scroll: boolean, instant = false) {
+    const id = location.hash.slice(1);
+    const valid = [...tiles].some((t) => t.dataset.platform === id);
+    show(valid ? id : tiles[0]?.dataset.platform ?? '', scroll && valid, instant);
+  }
+  window.addEventListener('hashchange', () => fromHash(true));
+  fromHash(true, true);
+</script>
+
+<style>
+  .intro {
+    padding-block: clamp(3rem, 8vw, 5.5rem) 1rem;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .tile {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 1.25rem 1.1rem;
+    border-radius: var(--radius);
+    border: 2px solid transparent;
+    background: var(--tile-bg-use);
+    color: #17181a;
+    cursor: pointer;
+    font: inherit;
+    box-shadow: var(--shadow);
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+  .tile[aria-pressed='true'] {
+    border-color: var(--tile-fg-use);
+  }
+  .t-kicker,
+  .kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--tile-fg-use);
+  }
+  .t-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .t-blurb {
+    opacity: 0.8;
+    font-size: 0.95rem;
+    flex: 1;
+  }
+  .t-cta {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--tile-fg-use);
+    margin-top: 0.5rem;
+  }
+
+  .panel {
+    /* html scroll-padding-top clears the sticky nav. */
+    scroll-margin-top: 0;
+  }
+  .panel h2 {
+    margin-top: 0.4rem;
+    font-size: clamp(1.7rem, 3.6vw, 2.5rem);
+    max-width: 24ch;
+  }
+  .panel .lede {
+    max-width: 70ch;
+  }
+  .cases {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 1.25rem;
+  }
+  .case {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    border-top: 4px solid var(--case-use);
+  }
+  .case h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  .meta,
+  .count {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .blurb {
+    margin: 0.25rem 0 0;
+    flex: 1;
+  }
+  .count {
+    margin-top: 0.5rem;
+    font-weight: 700;
+    color: var(--case-use);
+  }
+  .flows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .open {
+    margin-top: 0.4rem;
+    /* A comfortable tap target on phones. */
+    padding-block: 0.6rem;
+    font-weight: 600;
+  }
+  .all {
+    margin-top: 2rem;
+  }
+
+  .tile,
+  .panel {
+    --tile-bg-use: var(--tile-bg);
+    --tile-fg-use: var(--tile-fg);
+  }
+  .case {
+    --case-use: var(--case);
+  }
+  /* Dark theme: the per-platform and per-case dark variants. */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .tile,
+    :global(:root:not([data-theme='light'])) .panel {
+      --tile-bg-use: var(--tile-bg-dark);
+      --tile-fg-use: var(--tile-fg-dark);
+    }
+    :global(:root:not([data-theme='light'])) .tile {
+      color: #eef0f2;
+    }
+    :global(:root:not([data-theme='light'])) .case {
+      --case-use: var(--case-dark);
+    }
+  }
+  :global(:root[data-theme='dark']) .tile,
+  :global(:root[data-theme='dark']) .panel {
+    --tile-bg-use: var(--tile-bg-dark);
+    --tile-fg-use: var(--tile-fg-dark);
+  }
+  :global(:root[data-theme='dark']) .tile {
+    color: #eef0f2;
+  }
+  :global(:root[data-theme='dark']) .case {
+    --case-use: var(--case-dark);
+  }
+</style>

@@ -41,17 +41,19 @@ export const site = {
 } as const;
 
 /**
- * Footer links. Work and the GHL showcase are in neither the footer nor the top nav:
- * Work is linked from the Clients summary, the home hero and the case studies, and
- * GHL from its AI Projects tile and the Work page.
+ * Footer links. The top nav is the same list minus the footer-only ones below.
+ * Clients is linked from the home page and from Work; the GHL and n8n pages
+ * from Case studies.
  */
 export const footerNav = [
-  { href: '/clients', label: 'Clients' },
+  { href: '/work', label: 'Work' },
+  { href: '/case-studies', label: 'Case studies' },
   { href: '/apps', label: 'AI Projects' },
+  { href: '/clients', label: 'Clients' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;
 
-/** Header/nav: the footer links minus Resume, which stays in the footer only. */
-const footerOnly: string[] = ['/resume'];
+/** Header/nav: the footer links minus Clients and Resume, which stay in the footer only. */
+const footerOnly: string[] = ['/clients', '/resume'];
 export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));
