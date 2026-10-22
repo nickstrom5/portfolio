@@ -10,3 +10,6 @@ npm-debug.log*
 # Temporary git worktrees Claude Code creates for parallel agents
 .claude/worktrees/
 .vercel
+
+# npm run asana:seed writes its build sheet here
+asana-seed-output/

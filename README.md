@@ -339,6 +339,24 @@ option or person, more than 20 triggers or actions in an automation, the
 same action twice on a path, more than 50 automations in a project, or more
 than one "No other path is matching" path.
 
+To see the cases in Asana itself (for screenshots of the real thing),
+seed a trial or sandbox workspace. It creates the teams, custom fields,
+projects, sections, tasks, subtasks, dependencies, milestones, approvals,
+status updates, portfolios and goals. Forms and automations can't be
+created through Asana's API, so it also writes
+`asana-seed-output/build-sheet.md` listing every form question and every
+automation step, ready to click together by hand.
+
+```bash
+npm run asana:seed -- --dry-run
+```
+
+Then run it with `ASANA_TOKEN` (a personal access token) set, once to list
+your workspaces and again with `ASANA_WORKSPACE=<gid>`. `--case marketing`
+seeds one case; `ASANA_START=YYYY-MM-DD` moves the dates (day 0 is a
+Monday); `ASANA_ASSIGN=none` leaves tasks unassigned. Re-running skips
+projects that already exist.
+
 Deep links: `/asana/#services` opens a case, `/asana/#services-conflict-check`
 opens one of its automations and `/asana/#nonprofit-form` jumps to a form.
 The page is linked from the Case studies hub (`src/data/caseStudies.ts`),
