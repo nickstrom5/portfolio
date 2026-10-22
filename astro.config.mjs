@@ -17,7 +17,7 @@ const pageSources = {
   '/about/': ['src/pages/about.astro', 'src/data/personal.json', 'src/data/site.ts'],
   '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts'],
   '/case-studies/': ['src/pages/case-studies.astro', 'src/data/caseStudies.ts', 'src/data/ghl', 'src/data/n8n', 'src/data/clickup', 'src/data/asana', 'src/data/airtable'],
-  '/clickup/': ['src/pages/clickup.astro', 'src/components/clickup', 'src/data/clickup'],
+  '/clickup/': ['src/pages/clickup.astro', 'src/components/clickup', 'src/data/clickup', 'src/assets/clickup'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/asana/': ['src/pages/asana.astro', 'src/components/asana', 'src/data/asana'],
