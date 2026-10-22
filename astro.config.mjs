@@ -50,13 +50,15 @@ export default defineConfig({
     }),
   ],
   // Self-hosted Inter (latin variable subset, weights 400-800, SIL OFL) instead of Google Fonts.
-  // display 'optional' avoids the layout shift of a late font swap; the preload makes it land in time.
+  // display 'swap' so Inter always shows. 'optional' kept Arial for the whole page load whenever the
+  // font missed its ~100ms window, which happened on first visits and after GitHub Pages' 10-minute
+  // cache expired. The generated fallback is size-matched Arial, so the swap barely moves anything.
   fonts: [
     {
       provider: fontProviders.local(),
       name: 'Inter',
       cssVariable: '--font-inter',
-      display: 'optional',
+      display: 'swap',
       fallbacks: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       options: {
         variants: [{ src: ['./src/assets/fonts/inter-latin-var.woff2'], weight: '400 800', style: 'normal' }],
