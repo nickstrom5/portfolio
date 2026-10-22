@@ -401,3 +401,52 @@
   max-height: 220px;
   margin-bottom: 0.6rem;
 }
+
+/* ---------- The same workflow in n8n ---------- */
+
+.n-real {
+  margin: 1.5rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.n-real-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.n-real-head h5 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+.n-real-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+.n-real-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.n-real-actions .btn svg {
+  margin-right: 0.35rem;
+}
+.n-real-shot {
+  display: block;
+  margin-top: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  /* The screenshot is n8n's light canvas in either theme, like a photo of it. */
+  background: #f6f6f6;
+}
+.n-real-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

@@ -289,6 +289,39 @@ combined with a Continue setting, a credential the data model does not
 list, or an error workflow without an Error Trigger. It also submits each
 case's test form once per outcome.
 
+### Real n8n files and screenshots
+
+Every workflow is also served as the JSON n8n imports, at
+`/n8n/workflows/<case>-<workflow>.json`. Each panel has **Copy for n8n**
+(paste onto any n8n canvas) and **Download .json**, plus a screenshot of
+the same workflow in n8n's own editor.
+
+| What | Where |
+| --- | --- |
+| n8n's node type, version and parameters per node | `src/data/n8n/<case>/n8n-json.ts` (helpers in `src/data/n8n/spec-helpers.ts`) |
+| Page data + specs → n8n JSON (layout, connections) | `src/lib/n8n/export.ts` |
+| The JSON endpoint | `src/pages/n8n/workflows/[file].json.ts` |
+| Screenshots | `src/assets/n8n/<case>-<workflow>.png` |
+
+`npm run n8n:check` fails if a node has no spec or the export leaves a node
+unconnected. After changing a workflow, re-prove it against a real n8n and
+refresh its screenshot:
+
+```bash
+npx n8n
+```
+
+Then create the owner account in the browser and run, with that account:
+
+```bash
+N8N_URL=http://localhost:5678 N8N_EMAIL=you@example.com N8N_PASSWORD=… npm run n8n:capture
+```
+
+It checks every node against that n8n's own node definitions, imports all
+nine with placeholder credentials (it clears the instance's workflows first,
+so use a throwaway one), and saves a crop of each canvas. The current files
+were captured from n8n 2.43.8.
+
 The cases are made up to show the skill; none is client work. Deep links
 work as on `/ghl/`: `/n8n/#saas`, `/n8n/#saas-usage-sync`, `/n8n/#coffee-demo`.
 

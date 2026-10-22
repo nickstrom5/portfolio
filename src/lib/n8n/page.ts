@@ -196,6 +196,31 @@ export function initN8nPage() {
     }),
   );
 
+  // Copy for n8n: the workflow's JSON onto the clipboard, ready to paste onto an n8n canvas.
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-n8n]').forEach((btn) =>
+    btn.addEventListener('click', async () => {
+      const label = btn.querySelector('span');
+      const text = () => fetch(btn.dataset.copyN8n!).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.text();
+      });
+      try {
+        // Safari only allows a clipboard write started in the click itself, so hand it the pending text.
+        if (typeof ClipboardItem !== 'undefined' && navigator.clipboard.write) {
+          await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text().then((t) => new Blob([t], { type: 'text/plain' })) })]);
+        } else {
+          await navigator.clipboard.writeText(await text());
+        }
+        if (label) label.textContent = 'Copied. Paste it in n8n';
+        announcer().textContent = 'Workflow copied. Paste it onto an n8n canvas.';
+      } catch {
+        if (label) label.textContent = 'Use Download instead';
+        announcer().textContent = 'Copying was blocked. Use Download .json and import the file in n8n.';
+      }
+      window.setTimeout(() => label && (label.textContent = 'Copy for n8n'), 2400);
+    }),
+  );
+
   // Links last, so a bad hash can never stop the rest of the page from working.
   type Saved = { gxCase: string; y: number };
   const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];

@@ -2,8 +2,10 @@
 /** One workflow: the story, the canvas and simulator side by side, then the build notes. */
 import type { Automation } from '@/lib/n8n/types';
 import Canvas from './Canvas.astro';
+import { url } from '@/lib/url';
 import Simulator from './Simulator.astro';
 import Icon from './Icon.astro';
+import { Image } from 'astro:assets';
 
 interface Props {
   automation: Automation;
@@ -13,7 +15,13 @@ interface Props {
 }
 const { automation: a, caseId, names, hidden = false } = Astro.props;
 const dm = a.dataModel;
+/** The n8n version the exports were last imported into and captured from. */
+const N8N_VERSION = '2.43';
 const uid = `${caseId}-${a.id}`;
+// The same workflow imported into a real n8n and captured from its editor (scripts in README, n8n section).
+const shots = import.meta.glob<{ default: ImageMetadata }>('/src/assets/n8n/*.png', { eager: true });
+const shot = shots[`/src/assets/n8n/${uid}.png`]?.default;
+const jsonHref = url(`/n8n/workflows/${uid}.json`);
 // "What if…" leads: the unusual cases in plain words are what most readers want first.
 const notes = [
   { key: 'edges', label: `What if… (${a.edgeCases.length})` },
@@ -50,6 +58,24 @@ const notes = [
       <Simulator automation={a} caseId={caseId} />
     </div>
   </div>
+
+  <figure class="n-real">
+    <div class="n-real-head">
+      <div>
+        <h5>The same workflow in n8n</h5>
+        <p>Exported from this page’s data, imported into n8n {N8N_VERSION} and captured from its editor. Copy it and paste it onto any n8n canvas, or download the file and import it; connect your own credentials before running it.</p>
+      </div>
+      <div class="n-real-actions">
+        <button type="button" class="btn btn-primary" data-copy-n8n={jsonHref}><Icon name="copy" size={16} /><span>Copy for n8n</span></button>
+        <a class="btn btn-secondary" href={jsonHref} download={`${uid}.json`}>Download .json</a>
+      </div>
+    </div>
+    {shot && (
+      <a class="n-real-shot" href={shot.src} target="_blank" rel="noopener" aria-label={`Open the n8n screenshot of ${a.workflow.name} full size`}>
+        <Image src={shot} alt={`${a.workflow.name} on the n8n canvas: every node from the diagram above, connected left to right.`} widths={[800, 1400, 2000]} sizes="(max-width: 1200px) 100vw, 1150px" loading="lazy" />
+      </a>
+    )}
+  </figure>
 
   <div class="gx-notes">
     <h5 class="gx-notes-title">Build notes</h5>

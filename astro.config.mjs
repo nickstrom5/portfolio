@@ -43,7 +43,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       // /thanks/ and the noindex /food/ page stay out of the sitemap.
-      filter: (page) => !page.includes('/thanks') && !page.includes('/food/'),
+      filter: (page) => !page.includes('/thanks') && !page.includes('/food/') && !page.endsWith('.json'),
       serialize(item) {
         const path = new URL(item.url).pathname;
         const m = path.match(/^\/work\/([^/]+)\/$/);

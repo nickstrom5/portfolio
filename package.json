@@ -14,6 +14,7 @@
     "ghl:check": "node scripts/ghl-check.mjs",
     "clickup:check": "node scripts/clickup-check.mjs",
     "n8n:check": "node scripts/n8n-check.mjs",
+    "n8n:capture": "node scripts/n8n-capture.mjs",
     "og": "node scripts/make-og.mjs",
     "asana:check": "node scripts/asana-check.mjs",
     "airtable:check": "node scripts/airtable-check.mjs",
