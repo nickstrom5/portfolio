@@ -1,11 +1,11 @@
 /**
  * The AI-built projects on the AI Projects page. Most render as a
  * scroll-through story that the tiles at the top switch between; a few
- * tiles are coming soon, and a page tile opens its own page on this site.
+ * tiles are coming soon. The platform case studies (GHL, n8n…) live on
+ * /case-studies, from src/data/caseStudies.ts.
  * Screenshot paths ('/showcase/<file>') resolve to src/assets/showcase/
  * (see the README there).
  */
-import { cases as ghlCases } from './ghl';
 
 export type Screen =
   | 'clam-home'
@@ -55,7 +55,8 @@ export interface StoryProject {
   tone?: 'light' | 'dark';
   comingSoon?: false;
   hero: { title: string; sub: string; screen: Screen; image?: string; frame?: 'phone' | 'laptop' | 'duo'; alt?: string };
-  siteShot: { desktop: string; caption: string; url: string };
+  /** `desktopDark`, when set, replaces `desktop` while this site is in dark mode. */
+  siteShot: { desktop: string; desktopDark?: string; caption: string; url: string };
   features: Feature[];
   /** `ai` is the rough share of the work by AI; leave it out when there is no record to base it on. */
   split: { ai?: number; aiLabel: string; meLabel: string; aiDid: string; meDid: string };
@@ -86,42 +87,21 @@ export interface SoonProject {
   comingSoon: true;
 }
 
-/** A tile that opens its own page on this site instead of a story below. */
-export interface PageProject {
-  id: 'ghl';
-  name: string;
-  kicker: string;
-  tileBlurb: string;
-  bg: string;
-  fg: string;
-  bgDark?: string;
-  fgDark?: string;
-  tone?: 'light' | 'dark';
-  /** Site-relative path, e.g. /ghl/. */
-  href: string;
-  /** The tile's call to action, in place of "View story →". */
-  cta: string;
-  page: true;
-  comingSoon?: false;
-}
-
-export type Project = StoryProject | SoonProject | PageProject;
-
-const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
+export type Project = StoryProject | SoonProject;
 
 /* Every tile and story hero shares one surface per theme; only the kicker, links and the
    selected tile's outline carry each project's color. Per-project tinted fills turned
    brown, olive and maroon in dark mode. border-box keeps the gradient from repeating
    under the tile's 2px border. */
-const surface = 'linear-gradient(135deg, #e9effb 0%, #fbfbfa 55%, #e3eafa 100%) border-box';
-const surfaceDark = 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%) border-box';
+export const surface = 'linear-gradient(135deg, #e9effb 0%, #fbfbfa 55%, #e3eafa 100%) border-box';
+export const surfaceDark = 'linear-gradient(135deg, #16203a 0%, #12161f 55%, #1a2440 100%) border-box';
 
 export const projects: Project[] = [
   {
     id: 'eatsranked',
     name: 'Eats Ranked',
     kicker: 'iPhone apps + web · restaurant guides',
-    tileBlurb: 'Restaurants, ranked state by state. Seven states live on the web.',
+    tileBlurb: 'Restaurants, ranked state by state. Twelve states live on the web.',
     bg: surface,
     fg: '#ba3441',
     bgDark: surfaceDark,
@@ -129,7 +109,7 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Where to eat, from the public record.',
-      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. Seven states are live on the web, and the first app, Wisconsin Eats, has been submitted to Apple.',
+      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. Twelve states are live on the web, and the first app, Wisconsin Eats, has been submitted to Apple.',
       screen: 'image',
       image: '/showcase/eatsranked-guides.jpg',
       frame: 'laptop',
@@ -137,6 +117,7 @@ export const projects: Project[] = [
     },
     siteShot: {
       desktop: '/showcase/eatsranked-site.jpg',
+      desktopDark: '/showcase/eatsranked-site-dark.jpg',
       caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a map of the live states, and each state’s icon links to its site; further down are a card for each app and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
       url: 'https://eatsranked.com',
     },
@@ -155,13 +136,13 @@ export const projects: Project[] = [
         body: 'From Wisconsin on, every app has guides to its state’s food traditions: fish fries and supper clubs in Wisconsin, green chile in Colorado, Seattle teriyaki in Washington, New Haven apizza in Connecticut, stone crabs and Cuban sandwiches in Florida, taquerías and dim sum in California. Research agents checked each place against a 2025–26 source, such as its own site or menu or a dated news story, and the guides list only places checked open. Wisconsin’s alone has 402 Friday fish fries and 211 supper clubs. The apps store no customer reviews or star ratings; ratings, hours and photos open in Apple Maps’ own place card.',
         screen: 'image',
         image: '/showcase/eatsranked-washington-teriyaki.jpg',
-        alt: 'Washington Eats on iPhone, one of the seven apps: the Seattle Teriyaki guide, hand-checked teriyaki counters statewide with what each one serves, 179 places sorted nearest first',
+        alt: 'Washington Eats on iPhone, one of the state apps: the Seattle Teriyaki guide, hand-checked teriyaki counters statewide with what each one serves, 179 places sorted nearest first',
         flip: true,
       },
       {
         eyebrow: 'One state at a time',
         title: 'Five more states live in four days.',
-        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next.',
+        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. Maine, Idaho, New York, Hawaii and Texas have followed since, for twelve states on the web.',
         screen: 'image',
         image: '/showcase/eatsranked-connecticut-site.jpg',
         alt: 'The Connecticut Eats website, one of the five: its own navy and tomato-red palette, its apizza icon, links to its Apizza, Lobster rolls, Hot dogs and Diners guides, and counts of 27 apizza places, 58 lobster roll and clam shack stops, 45 diners and dairy bars and 9,358 restaurants statewide',
@@ -170,7 +151,7 @@ export const projects: Project[] = [
       {
         eyebrow: 'Kept current',
         title: 'Chicago’s new records, checked before they ship.',
-        body: 'Of the seven apps, the Chicago app is the one that refreshes its data every week, because the City keeps adding inspection results. A Python pipeline scheduled for every Monday refetches the City’s records and publishes only if every check passes: Chicago counts within 5% of the data already published, no more than 10% of grades changed, and a spot check of changed grades against the City’s own data. The app downloads the new data without an app update, and the web version reads the same files.',
+        body: 'Of all the apps, the Chicago app is the one that refreshes its data every week, because the City keeps adding inspection results. A Python pipeline scheduled for every Monday refetches the City’s records and publishes only if every check passes: Chicago counts within 5% of the data already published, no more than 10% of grades changed, and a spot check of changed grades against the City’s own data. The app downloads the new data without an app update, and the web version reads the same files.',
         screen: 'image',
         image: '/showcase/eatsranked-chicago-map.jpg',
         alt: 'Chicago Restaurants: Ranked map of the North Side with restaurant pins colored by the app’s own A–F grade',
@@ -186,13 +167,13 @@ export const projects: Project[] = [
     steps: [
       { title: 'Start with one city', ai: 'Turned Chicago’s inspection records into a score and an A–F grade, built the iPhone app and wrote an App Review and legal-risk audit before launch.', me: 'Set the app’s rules: no Google data, no customer reviews or star ratings, no Yelp.' },
       { title: 'Then a second state', ai: 'Built Wisconsin Eats from the Chicago app’s structure, with research agents checking each fish fry and supper club against a 2025–26 source.', me: 'Decided the name should cover restaurants in general, with fish fry and supper clubs as the tagline, and chose one domain with a site per state instead of buying wisconsineats.com.' },
-      { title: 'A hub and five more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
+      { title: 'A hub and ten more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, and later Maine, Idaho, New York, Hawaii and Texas, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
       { title: 'Ship and keep it current', ai: 'Set up the weekly Chicago data refresh with its checks, and wrote the App Store listings and review replies.', me: 'Submitted the first app, Wisconsin Eats, for App Review on September 28; Apple asked for more information. None of the apps is on the App Store yet.' },
     ],
     links: [
       { label: 'Visit eatsranked.com', href: 'https://eatsranked.com', primary: true },
     ],
-    status: 'Live on the web in seven states · iPhone and iPad apps coming soon',
+    status: 'Live on the web in twelve states · iPhone and iPad apps coming soon',
   },
   {
     id: 'goodwalk',
@@ -633,19 +614,5 @@ export const projects: Project[] = [
     ],
     status: 'Live · signalrig.dev',
     caseStudy: 'signalrig-gtm-engineering-showcase',
-  },
-  {
-    id: 'ghl',
-    name: 'GHL case studies',
-    kicker: 'GoHighLevel · workflows and funnels',
-    tileBlurb: `Automatic follow-up for three sample businesses: ${ghlWorkflows} GoHighLevel workflows and their landing pages. Try every one in your browser.`,
-    bg: surface,
-    fg: '#5e56c7',
-    bgDark: surfaceDark,
-    fgDark: '#a8aaff',
-    tone: 'light',
-    href: '/ghl/',
-    cta: 'Open the case studies →',
-    page: true,
   },
 ];

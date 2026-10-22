@@ -1,0 +1,143 @@
+---
+/**
+ * Renders a list of n8n steps top to bottom: one card per node, a split
+ * into side-by-side outputs, and at the end of each output either End or the
+ * node it connects on to, since n8n branches can meet again. Recursive
+ * through Astro.self. Styles live in src/styles/ghl.css and n8n.css because
+ * the simulator adds state classes at run time.
+ */
+import type { N8nNode, Step, Tone } from '@/lib/n8n/types';
+import { splitId } from '@/lib/n8n/engine';
+import Icon from './Icon.astro';
+
+interface Props {
+  steps: Step[];
+  /** In a branch: the node this branch connects on to, if it joins. */
+  join?: string;
+  /** This list is a branch, so it always ends with a cap. */
+  branch?: boolean;
+}
+const { steps, join, branch = false } = Astro.props;
+
+/** n8n's own colour families, mapped onto the shared canvas tones. */
+const toneClass: Record<Tone, string> = {
+  trigger: 'n-tone-trigger',
+  core: 'g-tone-dev',
+  logic: 'g-tone-logic',
+  app: 'g-tone-comms',
+  ai: 'g-tone-team',
+  flow: 'g-tone-goal',
+  data: 'g-tone-crm',
+};
+
+const chips = (n: N8nNode) => {
+  const s = n.settings ?? {};
+  return [
+    s.retryOnFail && `Retry ${s.retryOnFail.maxTries}× · ${s.retryOnFail.waitMs / 1000} s apart`,
+    s.onError === 'error-output' && 'On Error: error output',
+    s.onError === 'continue' && 'On Error: Continue',
+    s.alwaysOutputData && 'Always Output Data',
+    s.executeOnce && 'Execute Once',
+  ].filter(Boolean) as string[];
+};
+
+/** Splits a parameter value into text and {{ expression }} tokens so the tokens can be highlighted. */
+const segments = (v: string) => v.split(/(\{\{[^}]*\}\})/g).filter(Boolean);
+
+const nameOf = (s: Step | undefined): string | undefined => (!s ? undefined : s.kind === 'node' ? s.node.name : (s.node?.name ?? nameOf(s.branches[0]?.steps[0])));
+const last = steps[steps.length - 1];
+// A list that ends in a split ends in its outputs, which carry their own caps.
+const cap = !last || last.kind === 'node';
+---
+
+{steps.map((s, i) => {
+  if (s.kind === 'node') {
+    const n = s.node;
+    const c = chips(n);
+    return (
+      <li class:list={['g-step', toneClass[n.tone], { 'n-wait': !!n.wait }]} data-node={n.id}>
+        <div class:list={['g-card', { 'g-card-wait': !!n.wait }]}>
+          <span class="g-ico"><Icon name={n.icon} /></span>
+          <div class="g-txt">
+            <span class="g-kind">{n.type}{n.operation && <span class="n-op"> · {n.operation}</span>}</span>
+            <span class="g-name">{n.name}</span>
+            <p class="g-sum">{n.summary}</p>
+            {(n.credential || c.length > 0) && (
+              <p class="n-chips">
+                {n.credential && <span class="n-chip n-cred"><Icon name="key" size={13} />{n.credential}</span>}
+                {c.map((x) => <span class="n-chip">{x}</span>)}
+              </p>
+            )}
+            {(n.params?.length || n.code) && (
+              <details class="g-code">
+                <summary>{n.code ? (n.code.language === 'javascript' ? 'Parameters and code' : n.code.language === 'sql' ? 'Parameters and query' : 'Parameters and body') : 'Parameters'}</summary>
+                {n.params && (
+                  <dl class="n-params">
+                    {n.params.map((p) => (
+                      <div><dt>{p.k}</dt><dd>{segments(p.v).map((seg) => (/^\{\{/.test(seg) ? <code class="g-merge">{seg}</code> : seg))}</dd></div>
+                    ))}
+                  </dl>
+                )}
+                {n.code && <pre><code>{n.code.source}</code></pre>}
+              </details>
+            )}
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+      </li>
+    );
+  }
+  const n = s.node;
+  const id = splitId(s);
+  const joinsTo = nameOf(steps[i + 1]) ?? join;
+  return (
+    <li class:list={['g-step', 'g-has-branches', n ? toneClass[n.tone] : 'g-tone-wait']} data-node={n?.id}>
+      {n ? (
+        <div class="g-card g-card-logic">
+          <span class="g-ico"><Icon name={n.icon} /></span>
+          <div class="g-txt">
+            <span class="g-kind">{n.type}{n.operation && <span class="n-op"> · {n.operation}</span>}</span>
+            <span class="g-name">{n.name}</span>
+            <p class="g-sum">{n.summary}</p>
+            {(n.credential || chips(n).length > 0) && (
+              <p class="n-chips">
+                {n.credential && <span class="n-chip n-cred"><Icon name="key" size={13} />{n.credential}</span>}
+                {chips(n).map((x) => <span class="n-chip">{x}</span>)}
+              </p>
+            )}
+            {(n.params?.length || n.code) && (
+              <details class="g-code">
+                <summary>{n.code ? 'Parameters and details' : 'Parameters'}</summary>
+                {n.params && (
+                  <dl class="n-params">
+                    {n.params.map((p) => (
+                      <div><dt>{p.k}</dt><dd>{segments(p.v).map((seg) => (/^\{\{/.test(seg) ? <code class="g-merge">{seg}</code> : seg))}</dd></div>
+                    ))}
+                  </dl>
+                )}
+                {n.code && <pre><code>{n.code.source}</code></pre>}
+              </details>
+            )}
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+      ) : (
+        <p class="n-fan">The node above connects to {s.branches.length} nodes, so each gets all its items</p>
+      )}
+      <div class="g-branches" style={`--n: ${s.branches.length}`} data-n={s.branches.length}>
+        {s.branches.map((b, bi) => (
+          <div class="g-branch" data-branch={`${id}:${bi}`}>
+            <div class="g-branch-head">
+              <span class="g-b-label">{n ? b.label : `Branch ${bi + 1} · ${b.label}`}</span>
+              {b.rule && <span class="g-b-cond">{b.rule}</span>}
+            </div>
+            <ol class="g-steps">
+              <Astro.self steps={b.steps} branch join={b.joins ? joinsTo : undefined} />
+            </ol>
+          </div>
+        ))}
+      </div>
+    </li>
+  );
+})}
+{cap && (join ? <li class="g-endcap n-joincap" aria-label={`Connects on to ${join}`}><span>→ {join}</span></li> : <li class="g-endcap" aria-label="End of branch"><span>{branch && steps.length === 0 ? 'Not connected' : 'End'}</span></li>)}

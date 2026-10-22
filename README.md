@@ -1,8 +1,27 @@
-# Nick Soderstrom — portfolio
+# work-with-nick.com
 
-Static portfolio site built with [Astro](https://astro.build). No database, no
-runtime: every page is prerendered HTML, so it hosts for free on GitHub Pages,
-Cloudflare Pages, Netlify or Vercel.
+Source for **[work-with-nick.com](https://work-with-nick.com)**, the portfolio of
+Nick Soderstrom, a senior project manager and operations lead in Chicago.
+
+It's a static [Astro](https://astro.build) site. There's no database and no
+server: every page is prerendered HTML, built and published to GitHub Pages by
+GitHub Actions on every push to `main`.
+
+## What's in this repo
+
+| Path | What it is |
+| --- | --- |
+| `src/`, `public/` | The portfolio site |
+| `src/data/ghl/`, `src/lib/ghl/` | The [GoHighLevel case studies](#gohighlevel-case-studies-ghl): workflows with an in-browser simulator |
+| `src/data/n8n/`, `src/lib/n8n/` | The [n8n case studies](#n8n-case-studies-n8n): the same idea for n8n, with its own simulator |
+| `scripts/` | Build-time checks and tools: QA audit, photo-metadata guard, résumé PDF, GHL and n8n scenario runners |
+| `.githooks/` | Pre-commit hook that blocks photos still carrying metadata |
+| `.claude/agents/` | The read-only `site-auditor` agent ([below](#qa-and-seo-audit)) |
+| `signalrig/` | A separate Next.js app: the [SignalRig GTM showcase](#signalrig-gtm-engineering-showcase), deployed to Vercel |
+| `yetour/` | A separate Astro site: [yetour.info](#yetourinfo), an unofficial archive of a 2026 concert tour |
+
+`signalrig/` and `yetour/` each have their own `package.json` and don't share
+code or dependencies with the portfolio.
 
 ## Run it
 
@@ -28,31 +47,23 @@ Everything visible is data. Nothing is hard-coded in the pages.
 | Skills list              | `src/pages/about.astro` (top of file) |
 | Colors, fonts, spacing   | `src/styles/global.css` (`:root` tokens) |
 
-### Replacing the sample content
+### Adding content
 
-The site ships with **sample clients, apps, projects and testimonials** so the
-layout can be reviewed. Every sample entry carries `"placeholder": true`, and
-in `npm run dev` those cards show a yellow **Sample** badge. The badge never
-renders in a production build, so replace them before launch:
+1. **Case studies**: copy any file in `src/content/projects/` and rename it
+   (the file name becomes the URL). The schema in `src/content.config.ts`
+   validates the frontmatter, and a bad field fails the build with a clear
+   message. `featured: true` puts a case study on the home page.
+2. **Apps**: one object per app in `src/data/apps.json`. The App Store and Play
+   Store buttons appear once `appStore` / `playStore` are set. `projectSlug`
+   links an app to its case study.
+3. **Testimonials**: `src/data/testimonials.json`, with `source` saying where
+   each one came from.
+4. **Clients**: names and industries in `src/data/clients.json`. Logos are
+   optional.
 
-1. **Projects** — copy any file in `src/content/projects/`, rename it (the file
-   name becomes the URL), and fill in the frontmatter. The schema in
-   `src/content.config.ts` validates it; a bad field fails the build with a
-   clear message. Set `featured: true` on the three you want on the home page.
-2. **Apps** — one object per app in `src/data/apps.json`. Paste the App Store
-   and Play Store URLs into `appStore` / `playStore`; the buttons appear
-   automatically. `projectSlug` links an app to its case study.
-3. **Testimonials** — copy feedback from Upwork contracts into
-   `src/data/testimonials.json`. Keep `source: "Upwork"` so the site can say
-   where it came from.
-4. **Clients** — names and industries in `src/data/clients.json`. Logos are
-   deliberately not required; most Upwork clients won't supply one.
-5. **Links and stats** — `src/data/site.ts`. Replace the two `REPLACE_WITH_…`
-   URLs with your Upwork and LinkedIn profile links. Until you do, those
-   buttons are hidden rather than pointing at a broken link.
-
-Once every placeholder is gone you can delete the `placeholder` flags; they
-are optional.
+Any entry can carry `placeholder: true` to mark it as sample content. In
+`npm run dev` it shows a yellow **Sample** badge, which never appears in a
+production build.
 
 ### Contact form
 
@@ -95,13 +106,10 @@ photo in by hand.
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
 to GitHub Pages on every push to `main`.
 
-1. In the repo: **Settings → Pages → Source: GitHub Actions**.
-2. Merge this branch to `main`. The first run publishes to
-   `https://<user>.github.io/portfolio/`.
-3. For that temporary URL to work, set two repository variables under
-   **Settings → Secrets and variables → Actions → Variables**:
-   `SITE_URL = https://<user>.github.io` and `BASE_PATH = /portfolio`.
-   Delete both once the custom domain is live.
+Pages is set to **Source: GitHub Actions**. To preview a fork at
+`https://<user>.github.io/portfolio/` before it has a custom domain, set the
+repository variables `SITE_URL = https://<user>.github.io` and
+`BASE_PATH = /portfolio`.
 
 ## Custom domain
 
@@ -204,9 +212,71 @@ add a `proof` array to that workflow's file. The page is linked from its
 AI Projects tile and the Work page, not from the nav or footer; to add it,
 put it in `footerNav` in `src/data/site.ts`.
 
+## n8n case studies (`/n8n/`)
+
+The same format as `/ghl/`, for n8n: three switchable case studies of
+fictional businesses, each a sample n8n instance with a test form and
+three workflows:
+
+- **Copperleaf Coffee Roasters** (Shopify store and wholesale): wholesale
+  inquiries from an n8n Form, paid orders split into roast tickets, a
+  morning stock check against reorder points.
+- **Ledgerline Bookkeeping** (professional services, self-hosted): client
+  onboarding from a webhook, a document chase that waits days for a click,
+  and the error workflow every other workflow names.
+- **Slotwise** (SaaS, queue mode): AI support triage with a Text Classifier,
+  a nightly Postgres-to-HubSpot sync in batches, failed-payment follow-up
+  from Stripe.
+
+The simulator follows n8n's rules rather than GoHighLevel's: nodes pass
+items, an If or Switch can send items down several outputs in one run, v1
+execution order finishes each branch before the next, a node with no
+input items does not run, branches can meet at a Merge, Retry On Fail and
+error outputs behave as configured, and a failed production execution
+starts the case's error workflow. The canvas is drawn top to bottom
+(n8n's runs left to right) and shares its layout styles with `/ghl/`.
+
+| What | Where |
+| --- | --- |
+| The three cases, in page order | `src/data/n8n/index.ts` |
+| A case's instance (team, hosting, stack, shared values) | `src/data/n8n/<case>/business.ts` |
+| A case's test form (fields, the item it becomes, outcomes to pick) | `src/data/n8n/<case>/demo.ts` |
+| One file per workflow | `src/data/n8n/<case>/automations/*.ts` |
+| Data model (nodes, splits, settings, test events) | `src/lib/n8n/types.ts` |
+| The simulator | `src/lib/n8n/engine.ts` |
+| Case view, canvas, simulator panel, test form | `src/components/n8n/` |
+| Page, reliability and troubleshooting copy | `src/pages/n8n.astro` |
+| Styles (on top of `ghl.css`) | `src/styles/n8n.css` |
+
+After editing a workflow, run:
+
+```bash
+npm run n8n:check
+```
+
+It runs every test event through the simulator and fails if a run ends
+differently than its `expect` block says (status, nodes reached, item
+counts, the error workflow), a node or output is never reached, a message
+has an unresolved `{{ expression }}`, or a workflow breaks a rule the page
+relies on: duplicate node names, an If without true and false outputs,
+branches that rejoin without a Merge, Retry On Fail outside n8n's limits or
+combined with a Continue setting, a credential the data model does not
+list, or an error workflow without an Error Trigger. It also submits each
+case's test form once per outcome.
+
+The cases are made up to show the skill; none is client work. Deep links
+work as on `/ghl/`: `/n8n/#saas`, `/n8n/#saas-usage-sync`, `/n8n/#coffee-demo`.
+
 ## SignalRig (GTM engineering showcase)
 
 `signalrig/` is a separate Next.js app: a client-facing showcase with
 working demos of enrichment, scoring, reply routing, signal detection and
 reporting systems. It has its own `package.json` and deploys to Vercel from
 that directory. See [`signalrig/README.md`](signalrig/README.md).
+
+## yetour.info
+
+`yetour/` is a separate static Astro site: an unofficial, sourced archive of the
+2026 Ye Live Concert Tour (dates, stage, setlists and discography). It has its
+own `package.json`, QA script and Cloudflare Pages deploy. See
+[`yetour/README.md`](yetour/README.md).

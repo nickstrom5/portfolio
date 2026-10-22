@@ -1,0 +1,357 @@
+---
+/**
+ * /n8n/ — n8n automation case studies: three businesses, each a sample n8n
+ * instance with a test form and its workflows. Content lives in
+ * src/data/n8n; the simulator is src/lib/n8n. Run `npm run n8n:check`
+ * after editing a workflow. The page shares its layout styles with /ghl/.
+ */
+import '@/styles/ghl.css';
+import '@/styles/n8n.css';
+import Base from '@/layouts/Base.astro';
+import CaseStudyView from '@/components/n8n/CaseStudy.astro';
+import { cases as allCases } from '@/data/n8n';
+import { hasLoader } from '@/lib/n8n/load-case';
+import { countBranches, countNodes, formatDuration, formatTime, simulate } from '@/lib/n8n/engine';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+// A case appears once it has workflows, so a half-finished case never ships as an empty tab.
+const cases = allCases.filter((c) => c.automations.length > 0);
+// The page script loads each case on demand; a case without a loader would never come alive.
+for (const c of cases) if (!hasLoader(c.business.id)) throw new Error(`No loader for n8n case "${c.business.id}" in src/lib/n8n/load-case.ts`);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Every number in the hero is computed from the data, by running the simulator at build time.
+const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));
+const outputs = all.reduce((n, { a }) => n + countBranches(a.workflow.steps), 0);
+const taken = new Set<string>();
+for (const { c, a } of all) for (const s of a.scenarios) simulate(c, a, s).visited.forEach((v) => v.includes(':') && taken.add(`${c.business.id}/${a.id}/${v}`));
+const stats = [
+  { value: String(all.length), label: 'Workflows you can run' },
+  { value: String(all.reduce((n, { a }) => n + countNodes(a), 0)), label: 'Nodes inside them' },
+  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test events to run them on' },
+  { value: `${taken.size}/${outputs}`, label: 'Outputs, each one reached by a test' },
+];
+
+// The hero's preview is one real run of the first case's first workflow and first test event,
+// so its messages can never drift from the workflow.
+const peekCase = cases[0];
+const peekAuto = peekCase.automations[0];
+const peekScenario = peekAuto.scenarios[0];
+const peekRun = simulate(peekCase, peekAuto, peekScenario);
+const peek = peekRun.steps
+  .filter((s) => s.messages?.length && !s.workflow)
+  .flatMap((s) => s.messages!.map((m) => ({ s, m })))
+  .map(({ s, m }) => {
+    const when = s.t - peekRun.start < 1000 ? 'Right away' : `${formatDuration(s.t - peekRun.start)} later`;
+    if (m.channel === 'email') return { when: `${when} · email to the café`, cls: 'g-mail', subject: m.subject, body: `${m.body.split('\n\n').slice(0, 2).join('\n\n')} …` };
+    return { when: `${when} · Slack ${m.to}`, cls: 'g-note', label: 'To the team', subject: m.subject, body: m.body };
+  });
+
+/** Links to workflows by "case/automation"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, aid] = ref.split('/');
+  const c = cases.find((x) => x.business.id === cid);
+  const a = c?.automations.find((x) => x.id === aid);
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.business.name} ${a.number} · ${a.name}` } : undefined;
+};
+
+const reliability = [
+  {
+    title: 'Failures reach a person',
+    body: 'Every workflow has an answer to “what if this call fails?”. Where a failure is an expected answer, like HubSpot being down, the node continues through its error output and the work goes on around it. Where it is not, the execution stops and an error workflow posts the node, the error and a link to the failed execution, once per outage rather than once per run.',
+    where: ['bookkeeping/error-handler', 'bookkeeping/client-onboarding', 'coffee/wholesale-inquiry', 'saas/usage-sync'],
+  },
+  {
+    title: 'Retries only where they help',
+    body: 'Retry On Fail, two to five tries up to five seconds apart, on calls that are safe to repeat: reads, upserts, rate-limited APIs. Not on a 400, which will fail the same way every time, and not on a node set to continue on error, which hands its failure on as an item instead of throwing it.',
+    where: ['coffee/stock-check', 'bookkeeping/client-onboarding', 'saas/failed-payment'],
+  },
+  {
+    title: 'Every event counted once',
+    body: 'Shopify and Stripe both say a webhook can arrive more than once. Remove Duplicates, keeping its history across executions, sits right after those triggers on the order or event ID, so a second delivery never roasts twice or messages a customer twice.',
+    where: ['coffee/roast-queue', 'saas/failed-payment'],
+  },
+  {
+    title: 'Quiet when nothing is wrong',
+    body: 'A node that receives no items does not run, so a Filter that keeps nothing ends the run without a word. No “all good” messages that people learn to ignore, and Always Output Data only where an empty answer must still carry on.',
+    where: ['coffee/stock-check', 'saas/usage-sync', 'bookkeeping/document-chase'],
+  },
+  {
+    title: 'Secrets live in credentials',
+    body: 'Webhooks check a header secret saved as a credential, API keys are restricted to what the workflow needs, and the database login can only read the replica. Nothing secret is typed into a node, an expression or a Code node.',
+    where: ['bookkeeping/client-onboarding', 'saas/usage-sync', 'saas/failed-payment'],
+  },
+  {
+    title: 'Within the other side’s limits',
+    body: 'HubSpot takes 100 records a call, so 1,842 changes are 19 requests, paced by the HTTP Request node’s Batching option. Shopify’s two calls a second are handled with a retry five seconds later. A sync that respects the API never has to explain itself.',
+    where: ['saas/usage-sync', 'coffee/stock-check'],
+  },
+  {
+    title: 'Waiting without holding on',
+    body: 'A Wait over 65 seconds saves the execution to the database, so a week-long document chase costs nothing while it waits and survives a restart. Long waits run in their own sub-workflow, so the workflow that started them finishes in seconds.',
+    where: ['bookkeeping/document-chase', 'saas/failed-payment'],
+  },
+  {
+    title: 'Personal data and AI',
+    body: 'The classifier sends the model the subject and message only; names, emails and account details are joined back in afterwards. Saved executions hold customers’ messages, so they are pruned after two weeks.',
+    where: ['saas/support-triage'],
+  },
+];
+
+const audit = [
+  { title: 'No error workflow', body: 'The most common gap. Failures are red rows in a list nobody opens. I add one error workflow for the instance and set it on every workflow before changing anything else.' },
+  { title: 'Credentials tied to one person', body: 'OAuth connections made from someone’s own Google or Slack account stop working the day they leave. I move them to service accounts or shared automation users, and name every credential after its company, app and auth type.' },
+  { title: 'Webhooks with no authentication', body: 'A production URL anyone can post to, often found in a site’s front-end code. Header auth with a server-side secret, or the app trigger’s own signature check.' },
+  { title: 'Secrets in plain sight', body: 'API keys pasted into HTTP Request headers or Code nodes, which then show in every execution and every export. Moved into credentials, then rotated, since they have been visible.' },
+  { title: 'Test URLs in production', body: 'A site pointing at /webhook-test/, which only answers while someone has the editor open. It works in the demo and fails at night.' },
+  { title: 'Old execution order', body: 'Workflows from before n8n 1.0 can still run on the legacy order, where a Merge after an If can run both branches. I check the setting and retest those workflows before switching them to v1.' },
+  { title: 'Executions piling up', body: 'Every successful run saved forever, with customer data in it, and a database that keeps growing. I set what is saved per workflow and how long executions are kept.' },
+  { title: 'Code doing a node’s job', body: 'Hundreds of lines in a Code node to call an API or reshape data that Split Out, Aggregate or HTTP Request already handle, which the next person cannot read. Code stays for logic that is genuinely the business’s own.' },
+];
+
+const process = [
+  { title: 'Scope', body: 'What starts it, what done looks like, who hears about what, and what must never happen twice. Written down before a node is placed.' },
+  { title: 'Map the data', body: 'The trigger’s real payload, saved from a test event, and the fields each app needs. Credentials created with the least access that works.' },
+  { title: 'Build on pinned data', body: 'Real test events pinned on the trigger, so every node can be run and rerun without sending anything. One job per workflow, named so it sorts.' },
+  { title: 'Break it on purpose', body: 'Wrong credentials, a slow API, a duplicate event, an empty result: each test event in this page’s simulators is one I would run against a staging copy.' },
+  { title: 'Publish and hand off', body: 'Published at a quiet hour, the site switched to the production URL, the error workflow set. Then a short recorded walkthrough and a one-page how-to: what it does, what to change, what never to touch.' },
+  { title: 'Watch it', body: 'The Executions list filtered to Error in the first week, then monthly, and the error workflow’s alerts read as they come. Fixes are retried from the failed node, so nothing runs twice.' },
+];
+
+const caseWord = words[cases.length] ?? String(cases.length);
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Plain-English meanings for the n8n words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['n8n', 'A workflow automation tool, like Zapier or Make, that can also be self-hosted. It connects apps through drag-and-drop nodes and lets you drop into code where you need to.'],
+  ['Workflow', 'A set of connected nodes that runs on its own when something happens, such as “a form is sent: score it, save it in the CRM, email a reply.”'],
+  ['Node', 'One step in a workflow: a trigger, an app action like “send a Slack message”, or a logic step like If or Merge.'],
+  ['Trigger (the node with the lightning bolt)', 'The node that starts a workflow: a form, a webhook, a schedule, a new Shopify order, or another workflow failing.'],
+  ['Item', 'One record passing through the workflow, like one order or one line of an order. Most nodes run once for every item they receive.'],
+  ['Expression', 'A formula in a node’s settings, written in {{ }}, such as {{ $json.email }}. It fills in values from the item, or from an earlier node with $(\'Node name\').'],
+  ['Credential', 'A saved login for an app, stored encrypted and chosen by name in each node, so passwords and keys never appear in the workflow itself.'],
+  ['Execution', 'One run of a workflow, with every node’s input and output saved. The Executions list shows them as Success, Error or Waiting.'],
+  ['Published', 'A published workflow listens for real events at its production URL. While building, a test URL works only while the editor is listening.'],
+  ['Webhook', 'A web address another system calls to send data, like a website posting a form. n8n’s Webhook node is a trigger with such an address.'],
+  ['If, Switch, Filter', 'If sends each item down a true or false output. Switch picks among several outputs by rules. Filter keeps the items that match and drops the rest.'],
+  ['Merge', 'Brings two or more branches back together, either one after the other or matched up by a field, like an order ID.'],
+  ['Split Out, Aggregate', 'Split Out turns a list inside one item into separate items, like an order into its lines. Aggregate gathers items back into one.'],
+  ['Code node', 'A node that runs a short JavaScript program on the items, for logic no ready-made node covers.'],
+  ['HTTP Request', 'A node that calls any web API directly, for apps or endpoints n8n has no ready-made node for. It can still use a saved credential.'],
+  ['Wait', 'Pauses an execution for a set time, or until a link is opened or a form is sent. Long waits are saved to the database and resumed later.'],
+  ['Error workflow, Error Trigger', 'A workflow that starts when another one fails, usually to alert someone with a link to the failed execution.'],
+  ['Error output, Retry On Fail', 'Node settings for failure: try again a few times, or send the failed item out of a separate Error output so the rest of the workflow carries on.'],
+  ['Sub-workflow', 'A workflow started by another one through the Execute Sub-workflow node, like a function a program calls.'],
+  ['Execution order v1', 'The rule n8n uses when a workflow branches: finish one branch before starting the next, top to bottom on the canvas.'],
+  ['Pinned data', 'Sample input saved on a node, so the workflow can be tested again and again without a real event.'],
+  ['Text Classifier, chat model', 'An AI node that sorts text into categories you describe, using a language model such as OpenAI’s, attached as a sub-node.'],
+  ['Self-hosted, queue mode', 'Running n8n on your own server instead of n8n Cloud. Queue mode adds worker machines that share the executions, for heavier loads.'],
+];
+const title = 'n8n automation case studies';
+const description =
+  cases.length === 3
+    ? `Three n8n automation case studies you can run: a coffee roaster, a bookkeeping firm and a SaaS company, with ${all.length} working workflows and test forms.`
+    : `n8n automation case studies you can run: ${plural(all.length, 'working workflow', 'working workflows')}, test forms and the build notes behind each.`;
+---
+
+<Base title={title} description={description}>
+  <section class="gx-hero">
+    <div class="container">
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">n8n · Workflows, webhooks and APIs</span>
+          <h1>{all.length}&nbsp;n8n {all.length === 1 ? 'workflow' : 'workflows'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one yourself.</h1>
+          <p class="lede">n8n is a workflow automation tool, like Zapier or Make, that can run on a company’s own server. A workflow is a chain of nodes: when a form is sent, an order is paid or a schedule fires, it can look things up, decide, call any app’s API, wait for days, and tell the right person when something breaks.</p>
+          <p class="gx-hero-sub">
+            {cases.length === 3
+              ? `I built ${all.length} of them for three made-up businesses: a coffee roaster on Shopify, a bookkeeping firm and a software company. Each has a test form you can fill in. Everything runs here in your browser, on test events or on your own answers.`
+              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a test form. Everything runs here in your browser, on test events or on your own answers.`}{' '}
+            Need this for your business, or hiring for n8n? <a href={url('/contact')}>Get in touch</a>.
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one wholesale inquiry gets</p>
+          <p class="gx-peek-sub">A café fills in {peekCase.business.name}’s wholesale form at {formatTime(peekRun.start)}. Workflow {peekAuto.number} · {peekAuto.name} does the rest:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.when}</span>
+                <div class={p.cls}>
+                  {p.label && <span class="g-note-to">{p.label}</span>}
+                  {p.subject && <span class="g-mail-subj">{p.subject}</span>}
+                  {p.body}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">The café is scored, in HubSpot and answered in about {formatDuration(peekRun.end - peekRun.start)}, with no one at Copperleaf touching it.</p>
+          <a class="gx-peek-link" href={`#${peekCase.business.id}-${peekAuto.id}`} data-open-auto={`${peekCase.business.id}-${peekAuto.id}`}>Run it yourself →</a>
+        </aside>
+      </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick a business.</strong> New to n8n? Start with the coffee roaster.</li>
+          <li><strong>Send a test event.</strong> Fill in its form with any name, or pick a ready-made one such as “HubSpot is down” or “Shopify delivers the same order twice”.</li>
+          <li><strong>Press Execute.</strong> Watch every node run, with the items it passes on and every message it sends, and the time each would happen. Days of waiting are fast-forwarded.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each workflow opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The diagrams and <strong>Build notes</strong> are the detail an n8n builder would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
+      <dl class="gx-stats">
+        {stats.map((s) => (
+          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real businesses?</h2>
+          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every workflow can be shown end to end with its real data and tried by anyone. The workflows use n8n’s real nodes, settings and behavior, checked against n8n’s documentation, so each one can be rebuilt node for node in a real instance. Where the simulator stands in for something outside n8n, like an AI model’s answer, the page says so. Nothing on this page sends a message or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead who builds automations. My client automation work so far has been in GoHighLevel and Zapier (<a href={`${url('/work')}#contracts`}>see recent contracts</a>), and there is a <a href={url('/ghl')}>GoHighLevel version of this page</a>. These n8n cases are not client work: I built them to show how I design, test and hand off an n8n build. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>n8n words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  </section>
+
+  <div class="gx-switch" id="cases">
+    <div class="container">
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.business.id}`}
+            aria-controls={c.business.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.business.id}`}
+            aria-describedby={`case-blurb-${c.business.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.business.id}
+            style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
+          >
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}><span class="sr-only">{c.business.industry}.</span> {c.business.blurb} <span class="sr-only">{plural(c.automations.length, 'workflow', 'workflows')} and a test form.</span></span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'workflow', 'workflows')} · a test form</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section" id="reliability" aria-labelledby="reliability-title">
+    <div class="container">
+      <span class="eyebrow">Reliability</span>
+      <div class="section-head">
+        <h2 id="reliability-title">Built for the day something fails</h2>
+      </div>
+      <p class="lede">An automation that works in a demo is easy. One that a business can forget about has to survive slow APIs, duplicate events, revoked logins and empty days without losing anything or crying wolf. These habits are in every case study. In plain words: nothing fails silently, nothing happens twice, secrets stay locked away, and the workflows stay quiet unless a person needs to act.</p>
+      <ul class="gx-cards">
+        {reliability.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => (
+                    <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>
+                  ))}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit an n8n instance</h2>
+        <p class="lede">Most fragile n8n setups fail in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => (
+          <li><strong>{x.title}</strong><span>{x.body}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From a brief to a workflow the team trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Workflows</dt><dd><code>01 · Onboarding · New client</code> in a folder per area, so they sort in the order they run</dd></div>
+          <div><dt>Nodes</dt><dd><code>Look up the client</code>, not <code>Google Sheets1</code>: what it does, since $() expressions use the name</dd></div>
+          <div><dt>Credentials</dt><dd><code>Ledgerline Google (OAuth2)</code>: company, app and auth type</dd></div>
+          <div><dt>Tags</dt><dd><code>client-facing</code>, <code>schedule</code>: what the error workflow and a reviewer need to know</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Hiring for n8n, or need it built?</h2>
+        <p class="muted">I design, build, fix and document automations: the workflows, the error handling around them, and the handoff so a team can run them. If you’re hiring for an automation role or need this for your business, I’d like to hear about it.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initN8nPage } from '@/lib/n8n/page';
+  initN8nPage();
+</script>

@@ -1,7 +1,7 @@
 ---
 title: 'Lume: a sixty-second daily glow coach'
 shortTitle: 'Lume: sixty-second glow coach'
-client: 'Own product · lumenow.app'
+client: 'Solo build · lumenow.app'
 summary: 'One photo in the same light each morning, a glow score across four measures, and a sixty-second ritual. Photos are processed on the phone and never uploaded.'
 category: 'development'
 platforms: ['iOS', 'iPhone Duo']

@@ -9,7 +9,7 @@ import { roles, staffJob, education } from '@/data/experience';
 import { url } from '@/lib/url';
 import { categoryLabel } from '@/lib/categories';
 
-// Featured client work first, own products last, newest first within each.
+// Featured client work first, solo builds last, newest first within each.
 const projects = (await getCollection('projects', ({ data }) => !data.hidden)).sort(
   (a, b) =>
     Number(b.data.featured) - Number(a.data.featured) ||
@@ -26,7 +26,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     <div class="container">
       <span class="eyebrow">Work</span>
       <h1>Client projects</h1>
-      <p class="lede">Contracts I can talk about publicly, plus a few products of my own. Some clients are unnamed under NDA. GoHighLevel builds have their own page: <a href={url('/ghl')}>GoHighLevel automation case studies</a>.</p>
+      <p class="lede">Contracts I can talk about publicly, plus a few products of my own. Some clients are unnamed under NDA. Automation builds have their own pages: <a href={url('/ghl')}>GoHighLevel automation case studies</a> and <a href={url('/n8n')}>n8n automation case studies</a>.</p>
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filter by category">

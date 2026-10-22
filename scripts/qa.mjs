@@ -53,7 +53,8 @@ function walk(dir, out = []) {
   }
   return out;
 }
-const pages = walk(dist).sort();
+// Redirect stubs (astro.config.mjs `redirects`) navigate away on load; skip them.
+const pages = walk(dist).filter((p) => !/http-equiv="refresh"/.test(readFileSync(join(dist, p, 'index.html'), 'utf8'))).sort();
 const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
 // Unlisted pages: reachable only by their URL, so no other built file may reference them.
 // Empty now: /food/ is linked from About. Add a path here to enforce it for a page.
@@ -190,6 +191,12 @@ await page.waitForTimeout(400);
 if (!(await page.evaluate(() => !document.getElementById('clam').hidden && document.getElementById('goodwalk').hidden && location.hash === '#clam'))) findings.push('apps tiles: switching to Clam failed');
 await page.goto(base + '/apps/#site', { waitUntil: 'load' });
 if (!(await page.evaluate(() => !document.getElementById('site').hidden))) findings.push('apps deep link #site failed');
+await page.goto(base + '/case-studies/', { waitUntil: 'load' });
+await page.tap('[data-platform="n8n"]');
+await page.waitForTimeout(400);
+if (!(await page.evaluate(() => !document.getElementById('n8n').hidden && document.getElementById('ghl').hidden && location.hash === '#n8n'))) findings.push('case-studies tiles: switching to n8n failed');
+await page.goto(base + '/case-studies/#n8n', { waitUntil: 'load' });
+if (!(await page.evaluate(() => !document.getElementById('n8n').hidden && document.getElementById('ghl').hidden))) findings.push('case-studies deep link #n8n failed');
 await page.goto(base + '/contact/', { waitUntil: 'load' });
 const form = await page.evaluate(() => ({ action: document.querySelector('form').action, fields: [...document.querySelectorAll('form [name]')].map((e) => e.name) }));
 if (!/formspree|mailto:/.test(form.action)) findings.push('contact form action unexpected: ' + form.action);

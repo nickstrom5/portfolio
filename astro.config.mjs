@@ -16,9 +16,11 @@ const pageSources = {
   '/': ['src/pages/index.astro', 'src/data/services.ts', 'src/data/apps.json', 'src/data/testimonials.json'],
   '/about/': ['src/pages/about.astro', 'src/data/personal.json', 'src/data/site.ts'],
   '/apps/': ['src/pages/apps.astro', 'src/data/showcase.ts'],
+  '/case-studies/': ['src/pages/case-studies.astro', 'src/data/caseStudies.ts', 'src/data/ghl', 'src/data/n8n'],
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/ghl/': ['src/pages/ghl.astro', 'src/components/ghl', 'src/data/ghl'],
+  '/n8n/': ['src/pages/n8n.astro', 'src/components/n8n', 'src/data/n8n'],
   '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts', 'src/data/site.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };
@@ -50,13 +52,15 @@ export default defineConfig({
     }),
   ],
   // Self-hosted Inter (latin variable subset, weights 400-800, SIL OFL) instead of Google Fonts.
-  // display 'optional' avoids the layout shift of a late font swap; the preload makes it land in time.
+  // display 'swap' so Inter always shows. 'optional' kept Arial for the whole page load whenever the
+  // font missed its ~100ms window, which happened on first visits and after GitHub Pages' 10-minute
+  // cache expired. The generated fallback is size-matched Arial, so the swap barely moves anything.
   fonts: [
     {
       provider: fontProviders.local(),
       name: 'Inter',
       cssVariable: '--font-inter',
-      display: 'optional',
+      display: 'swap',
       fallbacks: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       options: {
         variants: [{ src: ['./src/assets/fonts/inter-latin-var.woff2'], weight: '400 800', style: 'normal' }],
@@ -64,6 +68,10 @@ export default defineConfig({
     },
   ],
   build: { format: 'directory', inlineStylesheets: 'always' },
+  // Renamed case studies keep their old URL working.
+  redirects: {
+    '/work/sales-org-zapier-hubspot-automation/': '/work/production-company-operations-lead/',
+  },
   // Content-Security-Policy as a <meta> tag (GitHub Pages cannot send headers).
   // Astro hashes bundled scripts and styles itself; the two is:inline theme
   // scripts are hashed below. They sit early in <head>, before the <meta> policy,
@@ -80,8 +88,11 @@ export default defineConfig({
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self' https://formspree.io",
+        // Cloudflare Web Analytics reports page views here (src/components/Analytics.astro).
+        "connect-src 'self' https://cloudflareinsights.com",
       ],
       scriptDirective: {
+        resources: ["'self'", 'https://static.cloudflareinsights.com'],
         hashes: [
           'sha256-htx73Zx4L46jpbHrcdh+/riOTxDnEic9o6+JZKf+PU8=', // Base.astro theme script
           'sha256-7+7AWq7XfGD2rwhSmmyfxI/cWjETO1iSmENMs3kgPng=', // resume.astro theme script

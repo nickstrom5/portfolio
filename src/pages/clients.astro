@@ -16,6 +16,9 @@ const recent = (await getCollection('projects', ({ data, id }) => !data.hidden &
   .sort((a, b) => b.data.year - a.data.year || +(b.data.updated ?? b.data.published ?? 0) - +(a.data.updated ?? a.data.published ?? 0))
   .slice(0, 9);
 const upworkLive = !site.links.upwork.includes('REPLACE');
+// Full rows only: a multiple of 12 fills the grid evenly at 1, 2, 3 or 4 columns.
+// Overflow drops the last entries of testimonials.json, whose order is the display order.
+const feedback = testimonials.slice(0, Math.max(12, Math.floor(testimonials.length / 12) * 12));
 const sectors = [
   'Federal research institutions',
   'Major universities',
@@ -53,7 +56,11 @@ const sectors = [
       <ul class="clients">
         {featured.map((c) => (
           <li class="card client" id={c.slug}>
-            <div class="mark" aria-hidden="true">{c.initials}</div>
+            {'logo' in c && c.logo ? (
+              <img class="mark mark-img" src={url(c.logo)} alt="" width="52" height="52" loading="lazy" decoding="async" />
+            ) : (
+              <div class="mark" aria-hidden="true">{c.initials}</div>
+            )}
             <div class="body">
               <h3>{c.name}</h3>
               <p class="meta muted">{c.industry} · <span class="nowrap">{c.period}</span></p>
@@ -90,7 +97,7 @@ const sectors = [
       </div>
       <p class="lede">Verbatim from Upwork contracts. Upwork shows clients by first name only, so they're identified by the contract here.</p>
       <div class="grid grid-3 feedback">
-        {testimonials.map((t) => <Testimonial {...t} />)}
+        {feedback.map((t) => <Testimonial {...t} />)}
       </div>
     </div>
   </section>
@@ -176,6 +183,14 @@ const sectors = [
       border-radius: 10px;
       font-size: 0.85rem;
     }
+  }
+  /* The client's own logo, in the same rounded square. */
+  .mark-img {
+    display: block;
+    object-fit: cover;
+    background: #fff;
+    /* A hairline ring keeps a white logo tile visible on the light card. */
+    box-shadow: 0 0 0 1px var(--border);
   }
   .mark.alt {
     background: var(--bg-muted);
