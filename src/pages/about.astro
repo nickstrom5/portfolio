@@ -37,8 +37,8 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
 const upworkLive = !site.links.upwork.includes('REPLACE');
 const connect = [
   { label: 'Email', value: site.email, href: `mailto:${site.email}`, mark: '@' },
-  site.links.calendly && { label: 'Book a call', value: '15 or 30 min on Calendly', href: site.links.calendly, mark: 'Cal' },
-  upworkLive && { label: 'Upwork', value: 'Top Rated Plus · 257 contracts', href: site.links.upwork, mark: 'Up' },
+  site.links.calendly && { label: 'Book a call', value: 'Let’s talk', href: site.links.calendly, mark: 'Cal' },
+  upworkLive && { label: 'Upwork', value: 'Top Rated Plus', href: site.links.upwork, mark: 'Up' },
   linkedinLive && { label: 'LinkedIn', value: 'Connect with me', href: site.links.linkedin, mark: 'in' },
   site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
