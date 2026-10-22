@@ -12,7 +12,10 @@ export const services: Service[] = [
     description:
       'Planning, tracking, delegation and reporting across teams of any size, from a single executive to a full department.',
     bullets: ['Scoping, timelines and milestones', 'Weekly reporting and async updates', 'Process design and documentation'],
-    links: [{ href: '/work/symplicity-design-projects', label: 'Project management at Symplicity' }],
+    links: [
+      { href: '/work/symplicity-design-projects', label: 'Project management at Symplicity' },
+      { href: '/work/production-company-operations-lead', label: 'Operations lead case study' },
+    ],
   },
   {
     title: 'Systems & tools',
@@ -26,10 +29,7 @@ export const services: Service[] = [
     description:
       'Lead tracking, funnels and workflow automation that remove the manual steps between a lead arriving and a deal closing.',
     bullets: ['GoHighLevel, HubSpot, Salesforce, Zoho', 'Zapier and Power Automate', 'AI-assisted workflows and reporting'],
-    links: [
-      { href: '/ghl', label: 'GoHighLevel automation case studies' },
-      { href: '/work/sales-org-zapier-hubspot-automation', label: 'Zapier and HubSpot automation case study' },
-    ],
+    links: [{ href: '/ghl', label: 'GoHighLevel automation case studies' }],
   },
   {
     title: 'Executive assistant support',

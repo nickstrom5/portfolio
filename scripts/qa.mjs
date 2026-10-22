@@ -53,7 +53,8 @@ function walk(dir, out = []) {
   }
   return out;
 }
-const pages = walk(dist).sort();
+// Redirect stubs (astro.config.mjs `redirects`) navigate away on load; skip them.
+const pages = walk(dist).filter((p) => !/http-equiv="refresh"/.test(readFileSync(join(dist, p, 'index.html'), 'utf8'))).sort();
 const noindexAllowed = new Set(['/thanks/', '/resume/', '/food/']);
 // Unlisted pages: reachable only by their URL, so no other built file may reference them.
 // Empty now: /food/ is linked from About. Add a path here to enforce it for a page.
