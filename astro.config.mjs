@@ -19,6 +19,7 @@ const pageSources = {
   '/clients/': ['src/pages/clients.astro', 'src/data/clients.json', 'src/data/testimonials.json'],
   '/contact/': ['src/pages/contact.astro', 'src/data/site.ts'],
   '/ghl/': ['src/pages/ghl.astro', 'src/components/ghl', 'src/data/ghl'],
+  '/n8n/': ['src/pages/n8n.astro', 'src/components/n8n', 'src/data/n8n'],
   '/resume/': ['src/pages/resume.astro', 'src/data/experience.ts', 'src/data/services.ts', 'src/data/site.ts'],
   '/work/': ['src/pages/work/index.astro', 'src/content/projects', 'src/data/contracts.json', 'src/data/experience.ts'],
 };
