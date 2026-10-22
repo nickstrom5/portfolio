@@ -129,6 +129,10 @@ async function api(method, path, data) {
       continue;
     }
     const body = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      console.error('Asana rejected the token (401). Check ASANA_TOKEN is your full personal access token, not a placeholder, and hasn’t been revoked.');
+      process.exit(1);
+    }
     if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${body.errors?.map((e) => e.message).join('; ') ?? res.statusText}`);
     return body.data;
   }
