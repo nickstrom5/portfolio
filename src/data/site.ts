@@ -43,18 +43,18 @@ export const site = {
 
 /**
  * Footer links. The top nav is the same list minus the footer-only ones below.
- * Clients is linked from the home page and from Work; the GHL and n8n pages
- * from Case studies.
+ * Work is the Clients page (/clients); the full case-study list at /work is
+ * linked from there, the home page and the case studies, and the platform
+ * pages (GHL, n8n…) from Case studies.
  */
 export const footerNav = [
-  { href: '/work', label: 'Work' },
+  { href: '/clients', label: 'Work' },
   { href: '/case-studies', label: 'Case studies' },
   { href: '/apps', label: 'AI Projects' },
-  { href: '/clients', label: 'Clients' },
   { href: '/resume', label: 'Resume' },
   { href: '/about', label: 'About' },
 ] as const;
 
-/** Header/nav: the footer links minus Clients and Resume, which stay in the footer only. */
-const footerOnly: string[] = ['/clients', '/resume'];
+/** Header/nav: the footer links minus Resume, which stays in the footer only. */
+const footerOnly: string[] = ['/resume'];
 export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));
