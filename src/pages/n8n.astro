@@ -31,7 +31,7 @@ const stats = [
   { value: String(all.length), label: 'Workflows you can run' },
   { value: String(all.reduce((n, { a }) => n + countNodes(a), 0)), label: 'Nodes inside them' },
   { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test events to run them on' },
-  { value: `${taken.size}/${outputs}`, label: 'Outputs, each one reached by a test' },
+  { value: `${taken.size}/${outputs}`, label: 'Branches, every one tested' },
 ];
 
 // The hero's preview is one real run of the first case's first workflow and first test event,
@@ -60,43 +60,33 @@ const find = (ref: string) => {
 const reliability = [
   {
     title: 'Failures reach a person',
-    body: 'Every workflow has an answer to “what if this call fails?”. Where a failure is an expected answer, like HubSpot being down, the node continues through its error output and the work goes on around it. Where it is not, the execution stops and an error workflow posts the node, the error and a link to the failed execution, once per outage rather than once per run.',
-    where: ['bookkeeping/error-handler', 'bookkeeping/client-onboarding', 'coffee/wholesale-inquiry', 'saas/usage-sync'],
+    body: 'Every workflow has an answer to “what if this call fails?”. Where a failure is an expected answer, like HubSpot being down or one client’s missing email, the node continues through its error output and the work goes on around it. Where it is not, the execution stops and an error workflow posts the node, the error and a link to the failed execution, once per outage rather than once per run.',
+    where: ['bookkeeping/error-handler', 'coffee/wholesale-inquiry', 'recruiting/client-pipeline'],
   },
   {
     title: 'Retries only where they help',
     body: 'Retry On Fail, two to five tries up to five seconds apart, on calls that are safe to repeat: reads, upserts, rate-limited APIs. Not on a 400, which will fail the same way every time, and not on a node set to continue on error, which hands its failure on as an item instead of throwing it.',
-    where: ['coffee/stock-check', 'bookkeeping/client-onboarding', 'saas/failed-payment'],
+    where: ['coffee/stock-check', 'bookkeeping/client-onboarding', 'recruiting/client-pipeline'],
   },
   {
     title: 'Every event counted once',
-    body: 'Shopify and Stripe both say a webhook can arrive more than once. Remove Duplicates, keeping its history across executions, sits right after those triggers on the order or event ID, so a second delivery never roasts twice or messages a customer twice.',
-    where: ['coffee/roast-queue', 'saas/failed-payment'],
+    body: 'Shopify says a webhook can arrive more than once. Remove Duplicates, keeping its history across executions, sits right after the trigger on the order ID, so a second delivery never roasts the same order twice.',
+    where: ['coffee/roast-queue'],
   },
   {
     title: 'Quiet when nothing is wrong',
-    body: 'A node that receives no items does not run, so a Filter that keeps nothing ends the run without a word. No “all good” messages that people learn to ignore, and Always Output Data only where an empty answer must still carry on.',
-    where: ['coffee/stock-check', 'saas/usage-sync', 'bookkeeping/document-chase'],
+    body: 'A node that receives no items does not run, so a Filter that keeps nothing ends the run without a word. No “all good” messages that people learn to ignore, and Always Output Data only where an empty answer must still be heard, like a booking from an email nobody knows.',
+    where: ['coffee/stock-check', 'recruiting/screen-booked', 'bookkeeping/document-chase'],
   },
   {
     title: 'Secrets live in credentials',
-    body: 'Webhooks check a header secret saved as a credential, API keys are restricted to what the workflow needs, and the database login can only read the replica. Nothing secret is typed into a node, an expression or a Code node.',
-    where: ['bookkeeping/client-onboarding', 'saas/usage-sync', 'saas/failed-payment'],
+    body: 'Webhooks check a header secret saved as a credential, and tokens are scoped to the one base or folder the workflow needs. Nothing secret is typed into a node, an expression or a Code node.',
+    where: ['bookkeeping/client-onboarding', 'recruiting/application-intake'],
   },
   {
-    title: 'Within the other side’s limits',
-    body: 'HubSpot takes 100 records a call, so 1,842 changes are 19 requests, paced by the HTTP Request node’s Batching option. Shopify’s two calls a second are handled with a retry five seconds later. A sync that respects the API never has to explain itself.',
-    where: ['saas/usage-sync', 'coffee/stock-check'],
-  },
-  {
-    title: 'Waiting without holding on',
-    body: 'A Wait over 65 seconds saves the execution to the database, so a week-long document chase costs nothing while it waits and survives a restart. Long waits run in their own sub-workflow, so the workflow that started them finishes in seconds.',
-    where: ['bookkeeping/document-chase', 'saas/failed-payment'],
-  },
-  {
-    title: 'Personal data and AI',
-    body: 'The classifier sends the model the subject and message only; names, emails and account details are joined back in afterwards. Saved executions hold customers’ messages, so they are pruned after two weeks.',
-    where: ['saas/support-triage'],
+    title: 'AI reads, people decide',
+    body: 'The AI step pulls five job-related facts out of a résumé and nothing personal. The rules that use them come from the job posting, and nobody is turned down until a recruiter has had two days to step in. Waits like that are saved to the database, so they cost nothing while they wait.',
+    where: ['recruiting/application-intake', 'bookkeeping/document-chase'],
   },
 ];
 
@@ -123,7 +113,7 @@ const process = [
 const caseWord = words[cases.length] ?? String(cases.length);
 const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 
-/** Plain-English meanings for the n8n words the page uses; the decoder in the hero. */
+/** Plain-English meanings for the n8n words the page uses; the decoder below the case studies. */
 const decoder: [string, string][] = [
   ['n8n', 'A workflow automation tool, like Zapier or Make, that can also be self-hosted. It connects apps through drag-and-drop nodes and lets you drop into code where you need to.'],
   ['Workflow', 'A set of connected nodes that runs on its own when something happens, such as “a form is sent: score it, save it in the CRM, email a reply.”'],
@@ -146,13 +136,13 @@ const decoder: [string, string][] = [
   ['Sub-workflow', 'A workflow started by another one through the Execute Sub-workflow node, like a function a program calls.'],
   ['Execution order v1', 'The rule n8n uses when a workflow branches: finish one branch before starting the next, top to bottom on the canvas.'],
   ['Pinned data', 'Sample input saved on a node, so the workflow can be tested again and again without a real event.'],
-  ['Text Classifier, chat model', 'An AI node that sorts text into categories you describe, using a language model such as OpenAI’s, attached as a sub-node.'],
-  ['Self-hosted, queue mode', 'Running n8n on your own server instead of n8n Cloud. Queue mode adds worker machines that share the executions, for heavier loads.'],
+  ['Information Extractor, chat model', 'An AI node that pulls the fields you describe out of free text, like years of experience from a résumé, using a language model such as OpenAI’s, attached as a sub-node.'],
+  ['Self-hosted', 'Running n8n on your own server instead of n8n Cloud, for control over where data goes.'],
 ];
 const title = 'n8n automation case studies';
 const description =
   cases.length === 3
-    ? `Three n8n automation case studies you can run: a coffee roaster, a bookkeeping firm and a SaaS company, with ${all.length} working workflows and test forms.`
+    ? `Three n8n automation case studies you can run: a coffee roaster, a bookkeeping firm and a recruiting agency, with ${all.length} working workflows and test forms.`
     : `n8n automation case studies you can run: ${plural(all.length, 'working workflow', 'working workflows')}, test forms and the build notes behind each.`;
 ---
 
@@ -163,10 +153,10 @@ const description =
         <div>
           <span class="eyebrow">n8n · Workflows, webhooks and APIs</span>
           <h1>{all.length}&nbsp;n8n {all.length === 1 ? 'workflow' : 'workflows'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one yourself.</h1>
-          <p class="lede">n8n is a workflow automation tool, like Zapier or Make, that can run on a company’s own server. A workflow is a chain of nodes: when a form is sent, an order is paid or a schedule fires, it can look things up, decide, call any app’s API, wait for days, and tell the right person when something breaks.</p>
+          <p class="lede">n8n is a workflow automation tool, like Zapier or Make. A workflow is a chain of steps that runs on its own: when a form is sent or an order comes in, it looks things up, decides, updates the right apps, and tells a person when something needs them.</p>
           <p class="gx-hero-sub">
             {cases.length === 3
-              ? `I built ${all.length} of them for three made-up businesses: a coffee roaster on Shopify, a bookkeeping firm and a software company. Each has a test form you can fill in. Everything runs here in your browser, on test events or on your own answers.`
+              ? `I built ${all.length} of them for three made-up businesses: a coffee roaster on Shopify, a bookkeeping firm and a recruiting agency. Each has a test form you can fill in. Everything runs here in your browser, on test events or on your own answers.`
               : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a test form. Everything runs here in your browser, on test events or on your own answers.`}{' '}
             Need this for your business, or hiring for n8n? <a href={url('/contact')}>Get in touch</a>.
           </p>
@@ -196,42 +186,11 @@ const description =
         </aside>
       </div>
 
-      <div class="gx-howto">
-        <h2 class="gx-howto-title">How to use this page</h2>
-        <ol>
-          <li><strong>Pick a business.</strong> New to n8n? Start with the coffee roaster.</li>
-          <li><strong>Send a test event.</strong> Fill in its form with any name, or pick a ready-made one such as “HubSpot is down” or “Shopify delivers the same order twice”.</li>
-          <li><strong>Press Execute.</strong> Watch every node run, with the items it passes on and every message it sends, and the time each would happen. Days of waiting are fast-forwarded.</li>
-        </ol>
-        <p class="gx-howto-hurry">Short on time? Each workflow opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The diagrams and <strong>Build notes</strong> are the detail an n8n builder would check. <a href="#decoder">Words you may not know</a></p>
-      </div>
-
       <dl class="gx-stats">
         {stats.map((s) => (
           <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
         ))}
       </dl>
-
-      <div class="gx-real">
-        <div>
-          <h2 class="gx-real-title">Are these real businesses?</h2>
-          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every workflow can be shown end to end with its real data and tried by anyone. The workflows use n8n’s real nodes, settings and behavior, checked against n8n’s documentation, so each one can be rebuilt node for node in a real instance. Where the simulator stands in for something outside n8n, like an AI model’s answer, the page says so. Nothing on this page sends a message or keeps what you type.</p>
-        </div>
-        <div>
-          <h2 class="gx-real-title">Who built this</h2>
-          <p>I’m {site.name}, a project and operations lead who builds automations. My client automation work so far has been in GoHighLevel and Zapier (<a href={`${url('/work')}#contracts`}>see recent contracts</a>), and there is a <a href={url('/ghl')}>GoHighLevel version of this page</a>. These n8n cases are not client work: I built them to show how I design, test and hand off an n8n build. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
-          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
-        </div>
-      </div>
-
-      <details class="gx-conventions gx-decoder" id="decoder">
-        <summary>n8n words in plain English <span class="g-count">({decoder.length})</span></summary>
-        <dl>
-          {decoder.map(([term, meaning]) => (
-            <div><dt>{term}</dt><dd>{meaning}</dd></div>
-          ))}
-        </dl>
-      </details>
     </div>
   </section>
 
@@ -264,6 +223,31 @@ const description =
   </div>
 
   {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section n-about-section" aria-label="About these case studies">
+    <div class="container">
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real businesses?</h2>
+          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every workflow can be shown end to end with its real data and tried by anyone. The workflows use n8n’s real nodes, settings and behavior, checked against n8n’s documentation, so each one can be rebuilt node for node in a real instance. Where the simulator stands in for something outside n8n, like an AI model’s answer, the page says so. Nothing on this page sends a message or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead who builds automations. My client automation work so far has been in GoHighLevel and Zapier (<a href={`${url('/work')}#contracts`}>see recent contracts</a>), and there is a <a href={url('/ghl')}>GoHighLevel version of this page</a>. These n8n cases are not client work: I built them to show how I design, test and hand off an n8n build. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>n8n words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  </section>
 
   <section class="section" id="reliability" aria-labelledby="reliability-title">
     <div class="container">

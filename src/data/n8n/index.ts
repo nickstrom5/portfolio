@@ -7,7 +7,7 @@
 import type { CaseStudy } from '@/lib/n8n/types';
 import { coffeeCase } from './coffee';
 import { bookkeepingCase } from './bookkeeping';
-import { saasCase } from './saas';
+import { recruitingCase } from './recruiting';
 
-/** Small online store, professional services firm, then software company. */
-export const cases: CaseStudy[] = [coffeeCase, bookkeepingCase, saasCase];
+/** Small online store, professional services firm, then a recruiting agency. */
+export const cases: CaseStudy[] = [coffeeCase, bookkeepingCase, recruitingCase];

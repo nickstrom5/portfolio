@@ -248,9 +248,10 @@ three workflows:
 - **Ledgerline Bookkeeping** (professional services, self-hosted): client
   onboarding from a webhook, a document chase that waits days for a click,
   and the error workflow every other workflow names.
-- **Slotwise** (SaaS, queue mode): AI support triage with a Text Classifier,
-  a nightly Postgres-to-HubSpot sync in batches, failed-payment follow-up
-  from Stripe.
+- **Harrow & Finch Recruiting** (recruiting agency, n8n Cloud): application
+  intake with an AI Information Extractor and a two-day human override,
+  screening calls from Calendly briefed in Google Docs, a Monday pipeline
+  report to every client.
 
 The simulator follows n8n's rules rather than GoHighLevel's: nodes pass
 items, an If or Switch can send items down several outputs in one run, v1

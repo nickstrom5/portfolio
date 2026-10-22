@@ -1,6 +1,6 @@
 ---
 /**
- * One case study: the business, its journey map, the working test form and
+ * One case study: the business, the working test form first, then
  * every workflow with its simulator and build notes. Ids are prefixed with
  * the case id so three of these can live on one page.
  */
@@ -8,7 +8,6 @@ import type { CaseStudy } from '@/lib/n8n/types';
 import { countNodes } from '@/lib/n8n/engine';
 import DemoForm from './DemoForm.astro';
 import AutomationPanel from './AutomationPanel.astro';
-import Icon from './Icon.astro';
 
 interface Props {
   study: CaseStudy;
@@ -43,51 +42,33 @@ const names = Object.fromEntries(automations.map((a) => [a.id, a.workflow.name])
         <div><dt>Test events</dt><dd>{automations.reduce((n, a) => n + a.scenarios.length, 0)}</dd></div>
         <div><dt>Where</dt><dd class="gx-small">{b.area}</dd></div>
       </dl>
-      <div class="gx-team">
-        <p class="gx-team-title">The sample team</p>
-        <ul>
-          {b.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
-        </ul>
-      </div>
-      <div class="gx-team n-host">
-        <p class="gx-team-title">Where n8n runs</p>
-        <p>{b.hosting}</p>
-        <p class="n-stack" aria-label="Apps connected">{b.stack.map((s) => <span class="gx-stage">{s}</span>)}</p>
-      </div>
+      <details class="gx-notes-more n-about">
+        <summary>The team, where n8n runs and the apps it connects</summary>
+        <div class="gx-team">
+          <p class="gx-team-title">The sample team</p>
+          <ul>
+            {b.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
+          </ul>
+        </div>
+        <div class="gx-team n-host">
+          <p class="gx-team-title">Where n8n runs</p>
+          <p>{b.hosting}</p>
+          <p class="n-stack" aria-label="Apps connected">{b.stack.map((x) => <span class="gx-stage">{x}</span>)}</p>
+        </div>
+      </details>
       <p class="gx-disclaimer">{b.disclaimer}</p>
       <ul class="gx-jump" aria-label={`Jump to a part of the ${b.name} case study`}>
-        <li><a href={`#${b.id}-journey`} data-open-auto={`${b.id}-journey`}>The system</a></li>
-        <li><a href={`#${b.id}-demo`} data-open-auto={`${b.id}-demo`}>The test form</a></li>
+        <li><a href={`#${b.id}-demo`} data-open-auto={`${b.id}-demo`}>Try the form</a></li>
         <li><a href={`#${b.id}-workflows`} data-open-auto={`${b.id}-workflows`}>The workflows</a></li>
       </ul>
     </div>
   </header>
 
-  <div class="section gx-journey-section" id={`${b.id}-journey`}>
-    <div class="container">
-      <span class="eyebrow">The system</span>
-      <h3 class="gx-h3">Three workflows, one way of working</h3>
-      <p class="lede">Each workflow does one job. The coloured line with the lightning bolt on each card is its trigger: the event that starts it, from a form or a webhook to a schedule or another workflow’s failure. Pick a card to open that workflow below.</p>
-      <ol class="gx-journey" data-count={automations.length}>
-        {automations.map((a) => (
-          <li>
-            <a href={`#${b.id}-${a.id}`} data-open-auto={`${b.id}-${a.id}`} class="gx-j n-j">
-              <span class="gx-j-num">{a.number}</span>
-              <span class="gx-j-name">{a.name}</span>
-              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{a.workflow.trigger.type}</span>
-              <span class="gx-j-out">{b.handoff[a.id] ?? a.kicker}</span>
-            </a>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </div>
-
   <div class="section" id={`${b.id}-demo`}>
     <div class="container">
       <span class="eyebrow">Live demo</span>
-      <h3 class="gx-h3">Send it a test event of your own</h3>
-      <p class="lede">Fill in the form as a customer would and press {demo.submitLabel}. Use any name and a made-up email: nothing is sent or stored. Then press Watch the workflow run, which appears once you submit, to see every node {feedsName} runs, the items it passes along and what each person would receive.</p>
+      <h3 class="gx-h3">Try it: send the workflow your own answers</h3>
+      <p class="lede">Fill it in as a customer would, press {demo.submitLabel}, then watch {feedsName} run on your answers. Nothing is sent or stored.</p>
       <DemoForm caseId={b.id} demo={demo} feedsName={feedsName} triggerType={fed?.workflow.trigger.type ?? 'trigger'} />
       <div class="gx-landing-notes">
         <p class="gx-notes-plain">How the form reaches n8n, and the settings that matter.</p>
@@ -105,7 +86,7 @@ const names = Object.fromEntries(automations.map((a) => [a.id, a.workflow.name])
     <div class="container">
       <span class="eyebrow">The workflows</span>
       <h3 class="gx-h3">Pick a workflow, pick a test event, press Execute</h3>
-      <p class="lede">Each tab below is one workflow. Read The problem and What I built for the short version. Then pick a test event and press Execute workflow: the log lists every node in order, with the time it ran and the items it passed on, and the diagram ticks off each node as it runs.</p>
+      <p class="lede">Each tab is one workflow. The problem and What I built are the short version; pick a test event and press Execute workflow to watch it run.</p>
       <p class="gx-builder-note">For n8n builders: the simulator follows n8n’s rules. Nodes run once per item, an If or Switch can send items down several outputs in one execution, v1 order finishes each branch before the next, a node with no input items does not run, branches meet at a Merge, and a failed production execution starts the error workflow. <a href="#decoder">New to the words? Open the decoder.</a></p>
       <div class="gx-tabs" role="tablist" aria-label={`${b.name} workflows`} data-case-tabs={b.id}>
         {automations.map((a, i) => (

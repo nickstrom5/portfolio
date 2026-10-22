@@ -249,6 +249,16 @@
 
 /* ---------- Case header ---------- */
 
+.n-about {
+  margin-top: 1.25rem;
+}
+.n-about > .gx-team:first-of-type {
+  margin-top: 0.75rem;
+}
+.n-about-section .gx-real {
+  margin-top: 0;
+}
+
 .n-host {
   display: block;
   max-width: 70ch;
