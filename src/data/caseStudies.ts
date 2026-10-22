@@ -8,6 +8,7 @@
  */
 import { cases as ghlCases } from './ghl';
 import { cases as n8nCases } from './n8n';
+import { cases as clickupCases } from './clickup';
 import { surface, surfaceDark } from './showcase';
 
 export interface PlatformCase {
@@ -66,6 +67,9 @@ const toCases = (list: SourceCase[]): PlatformCase[] =>
 
 const ghl = toCases(ghlCases);
 const n8n = toCases(n8nCases);
+// ClickUp cases are Workspaces with processes; the tile lists the processes.
+const clickup = toCases(clickupCases.map((c) => ({ business: c.workspace, automations: c.processes })));
+const clickupAutomations = clickupCases.reduce((n, c) => n + c.processes.reduce((m, p) => m + p.automations.length, 0), 0);
 const count = (cases: PlatformCase[]) => cases.reduce((n, c) => n + c.workflows.length, 0);
 
 export const platforms: Platform[] = [
@@ -100,5 +104,21 @@ export const platforms: Platform[] = [
     bgDark: surfaceDark,
     fgDark: '#ff8fb0',
     cases: n8n,
+  },
+  {
+    id: 'clickup',
+    name: 'ClickUp',
+    kicker: 'ClickUp · Lists, Automations and Forms',
+    tileBlurb: `Three sample teams run in ClickUp: ${count(clickup)} processes and ${clickupAutomations} Automations, from client delivery to sprints.`,
+    title: 'ClickUp: the work that runs itself between people.',
+    intro: `Three sample teams, each a ClickUp Workspace with a working Form and ${count(clickup)} processes between them: client reviews, maintenance requests, unit turnovers, recurring inspections, bug triage, sprints and launches, run by ${clickupAutomations} Automations. On the full page you can run each process on sample tasks in your browser.`,
+    unit: 'processes',
+    href: '/clickup/',
+    cta: 'Open the ClickUp case studies →',
+    bg: surface,
+    fg: '#0f766e',
+    bgDark: surfaceDark,
+    fgDark: '#5fd3c4',
+    cases: clickup,
   },
 ];

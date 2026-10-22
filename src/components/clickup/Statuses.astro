@@ -1,0 +1,18 @@
+---
+/** A List's statuses as chips, in workflow order, with their status group. */
+import type { Status } from '@/lib/clickup/types';
+
+interface Props {
+  statuses: Status[];
+}
+const { statuses } = Astro.props;
+const group = { not_started: 'Not started', active: 'Active', done: 'Done', closed: 'Closed' };
+---
+
+<ol class="cu-statuses">
+  {statuses.map((s) => (
+    <li style={`--st: ${s.color}`} title={`${group[s.group]} group`}>
+      <span class="cu-dot" aria-hidden="true"></span>{s.name}<span class="sr-only"> ({group[s.group]} group)</span>
+    </li>
+  ))}
+</ol>

@@ -1,0 +1,360 @@
+---
+/**
+ * /clickup/ — ClickUp case studies: three teams, each a sample Workspace with
+ * a working Form and the Lists and Automations that run its work. Content
+ * lives in src/data/clickup; the simulator is src/lib/clickup. Run
+ * `npm run clickup:check` after editing a process. Built to match /ghl/, and
+ * reuses its stylesheet.
+ */
+import '@/styles/ghl.css';
+import '@/styles/clickup.css';
+import Base from '@/layouts/Base.astro';
+import CaseStudyView from '@/components/clickup/CaseStudy.astro';
+import { cases as allCases } from '@/data/clickup';
+import { hasLoader } from '@/lib/clickup/load-case';
+import { formatDuration, formatTime, simulate } from '@/lib/clickup/engine';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+// A case appears once it has processes, so a half-finished case never ships as an empty tab.
+const cases = allCases.filter((c) => c.processes.length > 0);
+for (const c of cases) if (!hasLoader(c.workspace.id)) throw new Error(`No loader for ClickUp case "${c.workspace.id}" in src/lib/clickup/load-case.ts`);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Every number in the hero is computed from the data, by running the simulator at build time.
+const all = cases.flatMap((c) => c.processes.map((p) => ({ c, p })));
+const automations = all.flatMap(({ c, p }) => p.automations.map((a) => ({ c, p, a })));
+const fired = new Set<string>();
+const blocked = new Set<string>();
+for (const { c, p } of all)
+  for (const s of p.scenarios) {
+    const t = simulate(p, s, c.workspace);
+    t.fired.forEach((id) => fired.add(`${c.workspace.id}/${p.id}/${id}`));
+    t.blocked.forEach((id) => blocked.add(`${c.workspace.id}/${p.id}/${id}`));
+  }
+const withConditions = automations.filter(({ a }) => a.conditions?.length);
+const bothWays = withConditions.filter(({ c, p, a }) => {
+  const k = `${c.workspace.id}/${p.id}/${a.id}`;
+  return fired.has(k) && blocked.has(k);
+}).length;
+const stats = [
+  { value: String(all.length), label: 'Processes, each in its own List' },
+  { value: String(automations.length), label: 'Automations you can watch fire' },
+  { value: String(all.reduce((n, { p }) => n + p.scenarios.length, 0)), label: 'Sample tasks to run them on' },
+  { value: `${bothWays}/${withConditions.length}`, label: 'Automations with Conditions, each seen firing and held back' },
+];
+
+// The hero's preview is one real run of the first case's first process and first sample task.
+const peekCase = cases[0];
+const peekProc = peekCase.processes[0];
+const peekRun = simulate(peekProc, peekProc.scenarios[0], peekCase.workspace);
+const peek = peekRun.steps
+  .filter((s) => s.kind === 'action' || (s.kind === 'event' && s !== peekRun.steps[0]))
+  .slice(0, 9)
+  .map((s) => {
+    const when = s.t === peekRun.start ? 'Right away' : `${formatDuration(s.t - peekRun.start)} later`;
+    if (s.kind === 'event') return { when: `${when} · a person`, cls: 'g-note cu-peek-person', body: s.title };
+    if (s.message) return { when: `${when} · ${s.message.kind === 'chat' ? `Chat, ${s.message.from}` : 'comment'}`, cls: 'g-note', body: s.message.body };
+    // Built once, so no calendar dates: "1 day after trigger date", not the sample week's Tuesday.
+    const detail = (s.detail ?? '').replace(/: (Mon|Tue|Wed|Thu|Fri|Sat|Sun), \w+ \d+(, \d{4})?/, '');
+    return { when: `${when} · Automation`, cls: 'g-note cu-peek-action', body: `${s.title}: ${detail}` };
+  });
+
+/** Links to processes by "case/process"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, pid] = ref.split('/');
+  const c = cases.find((x) => x.workspace.id === cid);
+  const p = c?.processes.find((x) => x.id === pid);
+  return c && p ? { href: `#${cid}-${pid}`, open: `${cid}-${pid}`, label: `${c.workspace.name} ${p.number} · ${p.name}` } : undefined;
+};
+
+const rules = [
+  {
+    title: 'No Automation leans on another',
+    body: 'An Action that changes a status or adds a tag can look like a person doing it. Rather than depend on how chained Automations behave, no Action in these Lists matches another Automation’s Trigger. The check script fails the build if one ever does.',
+    where: ['agency/intake', 'ops/turnover'],
+  },
+  {
+    title: 'Dates fire at 4 AM, in one person’s time zone',
+    body: 'Due date arrives, Start date arrives and Date is Before/After fire at 4 AM on the day, in the time zone of the person who created the Automation. Every Automation here was created by the Workspace’s ClickUp owner, in the team’s own time zone, so “the morning it is due” means the team’s morning.',
+    where: ['agency/intake', 'ops/vendors', 'product/launch'],
+  },
+  {
+    title: 'Templates that cannot loop',
+    body: 'Applying a task template that creates subtasks, from a “Task or subtask created” Trigger, can start a loop: each new subtask is a created task too. Every such Trigger here applies to tasks only, never subtasks.',
+    where: ['ops/turnover'],
+  },
+  {
+    title: 'Guests see their own work, nothing else',
+    body: 'Clients, residents and vendors are guests or Form respondents, never members. A client sees only their project’s Folder, and private Custom Fields (budgets, internal notes) stay hidden from them.',
+    where: ['agency/review'],
+  },
+  {
+    title: 'Dropdowns for anything a rule reads',
+    body: 'Automations compare values exactly. Every field a Condition checks is a Dropdown or a People field, never free text, so “Plumbing” and “plumbing ” can never split a rule in two.',
+    where: ['agency/intake', 'ops/maintenance', 'product/triage'],
+  },
+  {
+    title: 'Every… sized for the List',
+    body: 'An Every… Trigger applies to all open tasks in its List, and each Action counts toward the plan’s monthly Automation usage. Each scheduled rule has Conditions narrow enough that it acts on a handful of tasks, not the whole List.',
+    where: ['ops/maintenance', 'product/sprint'],
+  },
+  {
+    title: 'One owner, written down',
+    body: 'Each Workspace has a “How we use ClickUp” Doc listing every Automation, what it does and who owns it, kept next to the work. Automations are named for what they do, so the Manage tab reads like that Doc.',
+    where: [],
+  },
+];
+
+const audit = [
+  { title: 'Status sprawl', body: 'Twelve statuses in one List and different names for “done” in each. I cut each List to the statuses someone actually acts on, then use status groups so Dashboards can count across Lists.' },
+  { title: 'Automations nobody owns', body: 'Rules made years ago by someone who left, still firing. The Manage tab and each Automation’s activity show what runs; anything unexplained is paused for a week before it is deleted.' },
+  { title: 'The same field, five times', body: 'A “Client” field created separately in five Lists can’t be filtered across them. One field, created once at the Space or Workspace level and added where needed.' },
+  { title: 'Everything in one List', body: 'Or the opposite, a List per person. Lists should match how work moves: one per process, with Folders per client or project when work repeats.' },
+  { title: 'Guests who can see too much', body: 'A client invited to the Workspace instead of a Folder can browse other clients’ work. I check every guest’s access and move private notes into private fields.' },
+  { title: 'Notification overload', body: 'Followers on every task and Automations that comment on everything, so people mute ClickUp. Each comment an Automation posts here mentions one person who has to act.' },
+  { title: 'Templates out of date', body: 'A task template with last year’s checklist. Templates get an owner and a review date like any Doc.' },
+  { title: 'Dashboards nobody opens', body: 'Twenty widgets, none of them a decision. A Dashboard earns its place by answering one question in a meeting people already have.' },
+];
+
+const process = [
+  { title: 'Map the work', body: 'Who asks for what, who does it, where it waits and what “done” means. Written in a Doc before anything is built.' },
+  { title: 'Hierarchy and statuses', body: 'Spaces by department, Folders by client or project, Lists by process. Statuses named for the next action, grouped so reporting works.' },
+  { title: 'Fields and views', body: 'Custom Fields for what rules and reports read; a view per job to be done: the Board for the stand-up, a List for the person catching up, Gantt for dates.' },
+  { title: 'Automations in a test List', body: 'Built in a copy of the List with sample tasks, one Automation per job, each named for what it does.' },
+  { title: 'Test with sample tasks', body: 'One sample task per path, the same idea as the simulator on this page: every Automation seen firing, and every Condition seen holding one back.' },
+  { title: 'Hand off and watch', body: 'A short screen recording and the “How we use ClickUp” Doc, then a look at Automation activity in the first week and monthly after that.' },
+];
+
+const caseWord = words[cases.length] ?? String(cases.length);
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Plain-English meanings for the ClickUp words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['ClickUp', 'A work-management app: tasks, projects, docs, forms, goals and dashboards in one place. Teams use it to plan work, track who is doing what and see what is late.'],
+  ['Workspace', 'A company’s whole ClickUp account: its people, projects and settings.'],
+  ['Space, Folder, List', 'How work is nested. A Space is a big area such as Client Delivery. A Folder groups related Lists, such as one client’s project. A List holds the tasks of one process, such as Project Requests.'],
+  ['Task, subtask', 'One piece of work, with an owner and a due date. A subtask is a smaller piece inside it.'],
+  ['Status', 'Where a task is in its process: New request, In progress, Done. Each List has its own statuses, in four groups: not started, active, done and closed.'],
+  ['Custom Field', 'An extra box on every task in a List for the team’s own information, such as Budget or Unit number. A Dropdown field offers fixed choices; a People field holds a person.'],
+  ['Automation', 'A rule ClickUp runs by itself: when something happens (the Trigger), and if the task matches (the Conditions), do these things (the Actions).'],
+  ['Trigger, Condition, Action', 'The three parts of an Automation. Trigger: “Status changes to Client review.” Condition: “Priority is Urgent.” Action: “Assign the reviewer.”'],
+  ['Assignee, follower', 'The assignee is the person who has to do the task. Followers get notified of changes without owning it.'],
+  ['Priority', 'ClickUp’s four flags: Urgent, High, Normal, Low.'],
+  ['Tag', 'A short label on a task, such as small-budget, that filters and Automations can use.'],
+  ['Form', 'A web form that creates a task from each response, with the answers in Custom Fields.'],
+  ['Template', 'A saved task, List or Folder to copy, with its subtasks and checklists already in it.'],
+  ['Checklist', 'A to-do list inside one task, for small steps that don’t need their own owner.'],
+  ['Dependency (waiting on, blocking)', 'A link that says one task can’t start until another is done. When the last blocker is done, the task is unblocked.'],
+  ['Recurring task', 'A task that creates itself again on a schedule, such as every month, or when the previous one is closed.'],
+  ['Views: List, Board, Gantt, Calendar, Workload', 'Different ways to look at the same tasks: rows, cards in columns by status, a timeline with dependencies, a calendar, and each person’s load.'],
+  ['Sprint', 'A fixed stretch of work, usually two weeks, from the Sprints ClickApp. Each Sprint is a List in a Sprint Folder.'],
+  ['ClickApp', 'A feature a Workspace owner switches on or off, such as Sprints, Time Tracking or Tasks in Multiple Lists.'],
+  ['Dashboard, Goal', 'A Dashboard is a page of charts and lists built from tasks. A Goal is a target with measurable parts, such as “95% of requests answered in a day”.'],
+  ['Doc', 'A ClickUp document, such as a handbook or an SOP, kept next to the work it describes.'],
+  ['Guest', 'Someone outside the team, such as a client, given access to only what they need.'],
+  ['Chat channel', 'ClickUp’s built-in team chat. Automations can post a message to a channel.'],
+];
+const title = 'ClickUp Automation case studies';
+const description =
+  cases.length === 3
+    ? `Three ClickUp case studies you can test: an agency, an operations team and a product team, with ${automations.length} Automations, working Forms and the build notes.`
+    : `ClickUp case studies you can test: ${plural(automations.length, 'Automation', 'Automations')}, working Forms and the build notes behind each.`;
+---
+
+<Base title={title} description={description}>
+  <section class="gx-hero">
+    <div class="container">
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">ClickUp · Lists, Automations and Forms</span>
+          <h1>{automations.length}&nbsp;ClickUp Automations for {caseWord.toLowerCase()} {cases.length === 1 ? 'team' : 'teams'}. Watch every one run.</h1>
+          <p class="lede">ClickUp is a work-management app: tasks, projects, forms, docs and dashboards in one place. A well-built Workspace does more than store tasks. When a request arrives, a deadline passes or a step is finished, it assigns the next person, sets the date, posts the note and flags what is late, so nobody has to chase it.</p>
+          <p class="gx-hero-sub">
+            {cases.length === 3
+              ? `I set up ${all.length} processes for three made-up teams: a design agency, a property management office and a software product team. Each one has a working Form and a simulator that runs sample tasks through the real Automations, here in your browser.`
+              : `I set up ${all.length} processes for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'team' : 'teams'}, each with a working Form and a simulator that runs sample tasks through the real Automations, here in your browser.`}{' '}
+            Need this for your team, or hiring someone who knows ClickUp? <a href={url('/contact')}>Get in touch</a>.
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].workspace.id}-demo`} data-open-auto={`${cases[0].workspace.id}-demo`}>Try it: fill in a Form</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'team' : 'teams'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one new request gets</p>
+          <p class="gx-peek-sub">{peekProc.scenarios[0].task.name} sends {peekCase.workspace.name}’s Form at {formatTime(peekRun.start)}. The {peekProc.location.list} List does the rest:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.when}</span>
+                <div class={p.cls}>{p.body}</div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">Nobody had to remember any of it. The simulator shows every step, to the end.</p>
+          <a class="gx-peek-link" href={`#${peekCase.workspace.id}-${peekProc.id}`} data-open-auto={`${peekCase.workspace.id}-${peekProc.id}`}>Run it yourself →</a>
+        </aside>
+      </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick a team.</strong> New to ClickUp? Start with the agency.</li>
+          <li><strong>Pick a sample task,</strong> such as “Big brand job, late Friday”, or fill in the team’s Form with your own answers.</li>
+          <li><strong>Press Run it.</strong> Watch each Automation fire, or stay quiet because its Conditions aren’t met, with the time it would happen. Days are fast-forwarded.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each process opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The Automation cards and <strong>Build notes</strong> are the detail a ClickUp admin would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
+      <dl class="gx-stats">
+        {stats.map((s) => (
+          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real teams?</h2>
+          <p>No. {listOf(cases.map((c) => c.workspace.name))}, and everyone who works there, are made up, so every List and Automation can be shown end to end and tried by anyone. The setups use ClickUp’s real Triggers, Conditions, Actions and features, checked against ClickUp’s help center, so each one can be rebuilt as written in a real Workspace. Nothing on this page sends anything or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead. ClickUp is one of the project tools I work in, alongside Asana, Monday, Jira and Notion, and I build CRM and workflow automations too (<a href={url('/case-studies')}>see the other case studies</a>). This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>ClickUp words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  </section>
+
+  <div class="gx-switch" id="cases">
+    <div class="container">
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.workspace.id}`}
+            aria-controls={c.workspace.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.workspace.id}`}
+            aria-describedby={`case-blurb-${c.workspace.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.workspace.id}
+            style={`--case: ${c.workspace.tint.light}; --case-dark: ${c.workspace.tint.dark}`}
+          >
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.workspace.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.workspace.id}`}>{c.workspace.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.workspace.id}`}><span class="sr-only">{c.workspace.industry}.</span> {c.workspace.blurb} <span class="sr-only">{plural(c.processes.length, 'process', 'processes')} and a working Form.</span></span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.processes.length, 'process', 'processes')} · {plural(c.processes.reduce((n, p) => n + p.automations.length, 0), 'Automation', 'Automations')} · a working Form</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section" id="rules" aria-labelledby="rules-title">
+    <div class="container">
+      <span class="eyebrow">Guardrails</span>
+      <div class="section-head">
+        <h2 id="rules-title">Rules every setup here follows</h2>
+      </div>
+      <p class="lede">An Automation that fires on the wrong task, or a client who can see another client’s budget, costs more than the clicks it saves. In plain words: rules that never trip each other, dates that fire in the team’s morning, templates that can’t loop, guests who see only their own work, and a written owner for every rule.</p>
+      <ul class="gx-cards">
+        {rules.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => (
+                    <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>
+                  ))}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit a Workspace</h2>
+        <p class="lede">Most messy ClickUp Workspaces go wrong in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => (
+          <li><strong>{x.title}</strong><span>{x.body}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From how the team works to a Workspace it trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Lists</dt><dd><code>Project Requests</code>, <code>Work Orders</code>: the process, in plain words, never a person’s name</dd></div>
+          <div><dt>Statuses</dt><dd><code>Client review</code>, <code>Waiting on vendor</code>: who has the ball, so the Board reads as a to-do list</dd></div>
+          <div><dt>Automations</dt><dd><code>Still waiting after a day</code>: named for what they do, so the Manage tab explains itself</dd></div>
+          <div><dt>Tags</dt><dd><code>small-budget</code>, <code>vendor-late</code>: lowercase, for states a filter or rule needs</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Hiring for ClickUp, or need it set up?</h2>
+        <p class="muted">I set up, clean up and document ClickUp Workspaces: the hierarchy, statuses, fields, Forms, Automations, Dashboards and the handbook that keeps them working. If you’re hiring a project or operations lead who knows ClickUp, or need this for your team, I’d like to hear about it.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initClickUpPage } from '@/lib/clickup/page';
+  initClickUpPage();
+</script>

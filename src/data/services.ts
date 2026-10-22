@@ -22,7 +22,10 @@ export const services: Service[] = [
     description:
       'I have worked in almost every major platform. Whatever your stack is, I already know it or will master it fast.',
     bullets: ['Asana, ClickUp, Monday, Jira, Trello', 'Notion, Airtable, Confluence', 'Microsoft 365: Planner, Teams, SharePoint'],
-    links: [{ href: '/work/zoho-one-admin-association-chapter', label: 'Zoho One administration case study' }],
+    links: [
+      { href: '/work/zoho-one-admin-association-chapter', label: 'Zoho One administration case study' },
+      { href: '/clickup', label: 'ClickUp case studies' },
+    ],
   },
   {
     title: 'CRM & automation',
