@@ -118,25 +118,30 @@ export const newApplication: Automation = {
     {
       kind: 'if',
       id: 'g-returning',
-      when: 'Run a script › returning is yes',
-      test: (c) => c.out('match').returning === 'yes',
-      steps: [
+      branches: [
         {
-          kind: 'action',
-          id: 'slack-returning',
-          type: 'Send a Slack message',
-          title: 'Flag a returning candidate',
-          summary: 'Someone already known to the desk deserves a look today.',
-          params: [
-            { k: 'Channel', v: '#desk' },
-            { k: 'Message', v: 'Returning candidate: {Trigger › Applicant name} applied for {Trigger › Role} ({Run a script › before} earlier applications).' },
+          name: 'Returning candidate',
+          when: 'Run a script › returning is yes',
+          test: (c) => c.out('match').returning === 'yes',
+          steps: [
+            {
+              kind: 'action',
+              id: 'slack-returning',
+              type: 'Send a Slack message',
+              title: 'Flag a returning candidate',
+              summary: 'Someone already known to the desk deserves a look today.',
+              params: [
+                { k: 'Channel', v: '#desk' },
+                { k: 'Message', v: 'Returning candidate: {Trigger › Applicant name} applied for {Trigger › Role} ({Run a script › before} earlier applications).' },
+              ],
+              run: (c) => {
+                const before = c.out('match').before as number;
+                return { messages: [{ channel: 'slack', to: '#desk', body: `Returning candidate: ${fx.str(T(c).get('Applicant name')).trim()} applied for ${role(c).name} (${before} earlier application${before === 1 ? '' : 's'}). ${role(c).text('Recruiter')}, their history is on the candidate record.` }] };
+              },
+            },
           ],
-          run: (c) => {
-            const before = c.out('match').before as number;
-            return { messages: [{ channel: 'slack', to: '#desk', body: `Returning candidate: ${fx.str(T(c).get('Applicant name')).trim()} applied for ${role(c).name} (${before} earlier application${before === 1 ? '' : 's'}). ${role(c).text('Recruiter')}, their history is on the candidate record.` }] };
-          },
         },
-      ],
+      ]
     },
   ],
   notify: 'Leo Marsh',
@@ -147,7 +152,7 @@ export const newApplication: Automation = {
       summary: 'Morgan applies for the Controller role: a candidate is created and linked.',
       start: 1440 + 1190,
       form: { 'Applicant name': 'Morgan Lee', 'Applicant email': 'morgan.lee@mailbox.example', LinkedIn: 'https://linkedin.example/in/morganlee', Resume: ['morgan-lee-resume.pdf'], 'Cover note': 'Eight years in food manufacturing finance, last three as assistant controller.', Role: ['recRolCtrl'] },
-      expect: { status: 'success', visits: ['match', 'ack', 'g-returning:skip'], skips: ['slack-returning'], emails: 1 },
+      expect: { status: 'success', visits: ['match', 'ack', 'g-returning:none'], skips: ['slack-returning'], emails: 1 },
     },
     {
       id: 'returning',
@@ -155,7 +160,7 @@ export const newApplication: Automation = {
       summary: 'Jamie applied last year as jamie.ortiz@; this time the email has capitals and a space. Same candidate.',
       start: 2 * 1440 + 610,
       form: { 'Applicant name': 'Jamie Ortiz', 'Applicant email': ' Jamie.Ortiz@Fastmail.example', Resume: ['jamie-ortiz-2026.pdf'], Role: ['recRolFpa'] },
-      expect: { status: 'success', visits: ['match', 'ack', 'g-returning', 'slack-returning'], emails: 1 },
+      expect: { status: 'success', visits: ['match', 'ack', 'g-returning:0', 'slack-returning'], emails: 1 },
     },
   ],
   fields: [

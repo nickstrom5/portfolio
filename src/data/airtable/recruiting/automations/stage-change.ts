@@ -29,7 +29,7 @@ export const stageChange: Automation = {
   kicker: 'Card moved → the right email',
   tagline: 'Recruiters move cards; the automation writes the emails. A placement turns into a fee and an invoice request the same minute.',
   problem: 'Every stage meant an email typed from scratch: a call invitation, a candidate summary for the client, a polite no. Some went out late, some never. Placements were invoiced when Leo noticed them, and fees were worked out by hand from the client agreement.',
-  solution: 'One automation watches the Stage field. Conditional groups decide what each move needs: Screen sends the candidate the recruiter’s booking link; Client interview sends the client contact a short summary; Placed creates the placement record, whose fee is computed from the offer and the client’s rate, and emails Leo to invoice it; Rejected sends the standard decline only when the recruiter ticked Send decline.',
+  solution: 'One automation watches the Stage field, and its one conditional group has a branch for each move that needs something: Screen sends the candidate the recruiter’s booking link; Client interview sends the client contact a short summary; Placed creates the placement record, whose fee is computed from the offer and the client’s rate, and emails Leo to invoice it; Rejected sends the standard decline only when the recruiter ticked Send decline.',
   trigger: {
     type: 'When a record is updated',
     table: 'Applications',
@@ -43,77 +43,79 @@ export const stageChange: Automation = {
   steps: [
     {
       kind: 'if',
-      id: 'g-screen',
-      when: 'Trigger › Stage is Screen',
-      test: (c) => T(c).get('Stage') === 'Screen',
-      steps: [
-        email('screen-email', 'Invite the candidate to a call', 'With the recruiter’s own booking link.', '{Trigger › Candidate email}', 'A quick call about {Trigger › Role}?', (c) => {
-          const r = role(c).text('Recruiter');
-          return {
-            to: fx.str(T(c).get('Candidate email')),
-            subject: `A quick call about ${role(c).name}?`,
-            body: `Hi ${first(c)},\n\nThanks for your application for ${role(c).name}. I’d like to set up a 20-minute call to hear more about what you’re looking for. Pick any time that suits you here: larkspurtalent.example/book/${r.split(' ')[0].toLowerCase()}\n\n${r}\nLarkspur Talent`,
-          };
-        }),
-      ],
-    },
-    {
-      kind: 'if',
-      id: 'g-interview',
-      when: 'Trigger › Stage is Client interview',
-      test: (c) => T(c).get('Stage') === 'Client interview',
-      steps: [
-        email('client-email', 'Introduce the candidate to the client', 'A short summary; the resume follows from the recruiter.', '{Trigger › Client contact email}', 'Candidate for {Trigger › Role}: {Trigger › Candidate}', (c) => {
-          const cl = c.record('Clients', (role(c).get('Client') as string[])[0]);
-          return {
-            to: fx.str(T(c).get('Client contact email')),
-            subject: `Candidate for ${role(c).name}: ${cand(c).name}`,
-            body: `Hi ${cl.text('Contact name').split(' ')[0]},\n\nI’d like you to meet ${cand(c).name} for the ${role(c).text('Role').split(' · ')[0]} role.${T(c).text('LinkedIn') ? ` Profile: ${T(c).text('LinkedIn')}` : ''}\n\n${role(c).text('Recruiter')} will send the resume and our screening notes separately today, with times that work for ${first(c)} next week.\n\nLarkspur Talent`,
-          };
-        }),
-      ],
-    },
-    {
-      kind: 'if',
-      id: 'g-placed',
-      when: 'Trigger › Stage is Placed',
-      test: (c) => T(c).get('Stage') === 'Placed',
-      steps: [
+      id: 'g-stage',
+      branches: [
         {
-          kind: 'action',
-          id: 'create-placement',
-          type: 'Create record',
-          title: 'Create the placement',
-          summary: 'Its salary, fee rate and fee are computed from the links.',
-          params: [
-            { k: 'Table', v: 'Placements' },
-            { k: 'Application', v: '{Trigger › Airtable record ID}' },
-            { k: 'Start date', v: '{Trigger › Start date}' },
-            { k: 'Invoice status', v: 'To invoice' },
+          name: 'Screen',
+          when: 'Trigger › Stage is Screen',
+          test: (c) => T(c).get('Stage') === 'Screen',
+          steps: [
+            email('screen-email', 'Invite the candidate to a call', 'With the recruiter’s own booking link.', '{Trigger › Candidate email}', 'A quick call about {Trigger › Role}?', (c) => {
+              const r = role(c).text('Recruiter');
+              return {
+                to: fx.str(T(c).get('Candidate email')),
+                subject: `A quick call about ${role(c).name}?`,
+                body: `Hi ${first(c)},\n\nThanks for your application for ${role(c).name}. I’d like to set up a 20-minute call to hear more about what you’re looking for. Pick any time that suits you here: larkspurtalent.example/book/${r.split(' ')[0].toLowerCase()}\n\n${r}\nLarkspur Talent`,
+              };
+            }),
           ],
-          run: (c) => ({ create: [{ table: 'Placements', fields: { Application: [T(c).id], 'Start date': T(c).get('Start date'), 'Invoice status': 'To invoice' } }] }),
         },
-        email('billing-email', 'Ask Leo to invoice', 'Quotes the fee from the new placement record.', 'leo@larkspurtalent.example', 'Invoice: {Create record › Placement}', (c) => {
-          const p = c.record('Placements', c.out('create-placement').record as string);
-          return {
-            to: c.email('Leo Marsh'),
-            subject: `Invoice: ${p.name}`,
-            body: `${p.name} is placed.\n\nSalary: ${p.text('Salary')}\nFee rate: ${p.text('Fee %')}\nFee: ${p.text('Fee')}\nStart date: ${shortDate(p.get('Start date'))}\nGuarantee ends: ${shortDate(p.get('Guarantee ends'))}\n\nIt is in the To invoice list on the Billing dashboard.`,
-          };
-        }),
-      ],
-    },
-    {
-      kind: 'if',
-      id: 'g-decline',
-      when: 'Trigger › Stage is Rejected · and Trigger › Send decline is checked',
-      test: (c) => T(c).get('Stage') === 'Rejected' && !!T(c).get('Send decline'),
-      steps: [
-        email('decline-email', 'Send the standard decline', 'Kind, short, and sent only when asked for.', '{Trigger › Candidate email}', 'Your application for {Trigger › Role}', (c) => ({
-          to: fx.str(T(c).get('Candidate email')),
-          subject: `Your application for ${role(c).name}`,
-          body: `Hi ${first(c)},\n\nThank you for your time on ${role(c).name}. The client has decided to go ahead with other candidates. We keep your details on file and will be in touch when a role fits your background.\n\n${role(c).text('Recruiter')}\nLarkspur Talent`,
-        })),
+        {
+          name: 'Client interview',
+          when: 'Trigger › Stage is Client interview',
+          test: (c) => T(c).get('Stage') === 'Client interview',
+          steps: [
+            email('client-email', 'Introduce the candidate to the client', 'A short summary; the resume follows from the recruiter.', '{Trigger › Client contact email}', 'Candidate for {Trigger › Role}: {Trigger › Candidate}', (c) => {
+              const cl = c.record('Clients', (role(c).get('Client') as string[])[0]);
+              return {
+                to: fx.str(T(c).get('Client contact email')),
+                subject: `Candidate for ${role(c).name}: ${cand(c).name}`,
+                body: `Hi ${cl.text('Contact name').split(' ')[0]},\n\nI’d like you to meet ${cand(c).name} for the ${role(c).text('Role').split(' · ')[0]} role.${T(c).text('LinkedIn') ? ` Profile: ${T(c).text('LinkedIn')}` : ''}\n\n${role(c).text('Recruiter')} will send the resume and our screening notes separately today, with times that work for ${first(c)} next week.\n\nLarkspur Talent`,
+              };
+            }),
+          ],
+        },
+        {
+          name: 'Placed',
+          when: 'Trigger › Stage is Placed',
+          test: (c) => T(c).get('Stage') === 'Placed',
+          steps: [
+            {
+              kind: 'action',
+              id: 'create-placement',
+              type: 'Create record',
+              title: 'Create the placement',
+              summary: 'Its salary, fee rate and fee are computed from the links.',
+              params: [
+                { k: 'Table', v: 'Placements' },
+                { k: 'Application', v: '{Trigger › Airtable record ID}' },
+                { k: 'Start date', v: '{Trigger › Start date}' },
+                { k: 'Invoice status', v: 'To invoice' },
+              ],
+              run: (c) => ({ create: [{ table: 'Placements', fields: { Application: [T(c).id], 'Start date': T(c).get('Start date'), 'Invoice status': 'To invoice' } }] }),
+            },
+            email('billing-email', 'Ask Leo to invoice', 'Quotes the fee from the new placement record.', 'leo@larkspurtalent.example', 'Invoice: {Create record › Placement}', (c) => {
+              const p = c.record('Placements', c.out('create-placement').record as string);
+              return {
+                to: c.email('Leo Marsh'),
+                subject: `Invoice: ${p.name}`,
+                body: `${p.name} is placed.\n\nSalary: ${p.text('Salary')}\nFee rate: ${p.text('Fee %')}\nFee: ${p.text('Fee')}\nStart date: ${shortDate(p.get('Start date'))}\nGuarantee ends: ${shortDate(p.get('Guarantee ends'))}\n\nIt is in the To invoice list on the Billing dashboard.`,
+              };
+            }),
+          ],
+        },
+        {
+          name: 'Rejected, decline wanted',
+          when: 'Trigger › Stage is Rejected · and Trigger › Send decline is checked',
+          test: (c) => T(c).get('Stage') === 'Rejected' && !!T(c).get('Send decline'),
+          steps: [
+            email('decline-email', 'Send the standard decline', 'Kind, short, and sent only when asked for.', '{Trigger › Candidate email}', 'Your application for {Trigger › Role}', (c) => ({
+              to: fx.str(T(c).get('Candidate email')),
+              subject: `Your application for ${role(c).name}`,
+              body: `Hi ${first(c)},\n\nThank you for your time on ${role(c).name}. The client has decided to go ahead with other candidates. We keep your details on file and will be in touch when a role fits your background.\n\n${role(c).text('Recruiter')}\nLarkspur Talent`,
+            })),
+          ],
+        },
       ],
     },
   ],
@@ -126,7 +128,7 @@ export const stageChange: Automation = {
       start: 555,
       setup: { by: 'Nadia drags Malik’s card to Screen on the Pipeline page', update: [{ table: 'Applications', id: 'recAppMalik', fields: { Stage: 'Screen' } }] },
       record: 'recAppMalik',
-      expect: { status: 'success', visits: ['screen-email', 'g-screen', 'g-interview:skip', 'g-placed:skip', 'g-decline:skip'], emails: 1 },
+      expect: { status: 'success', visits: ['screen-email', 'g-stage:0'], emails: 1 },
     },
     {
       id: 'interview',
@@ -135,7 +137,7 @@ export const stageChange: Automation = {
       start: 1440 + 840,
       setup: { by: 'Nadia moves Helen to Client interview', update: [{ table: 'Applications', id: 'recAppHelen', fields: { Stage: 'Client interview' } }] },
       record: 'recAppHelen',
-      expect: { status: 'success', visits: ['client-email', 'g-interview', 'g-screen:skip'], emails: 1 },
+      expect: { status: 'success', visits: ['client-email', 'g-stage:1'], emails: 1 },
     },
     {
       id: 'placed',
@@ -144,7 +146,7 @@ export const stageChange: Automation = {
       start: 2 * 1440 + 1000,
       setup: { by: 'Owen moves Theo to Placed', update: [{ table: 'Applications', id: 'recAppTheo', fields: { Stage: 'Placed' } }] },
       record: 'recAppTheo',
-      expect: { status: 'success', visits: ['create-placement', 'billing-email', 'g-placed'], emails: 1 },
+      expect: { status: 'success', visits: ['create-placement', 'billing-email', 'g-stage:2'], emails: 1 },
     },
     {
       id: 'declined',
@@ -153,7 +155,7 @@ export const stageChange: Automation = {
       start: 3 * 1440 + 690,
       setup: { by: 'Nadia ticks Send decline and moves Ruth to Rejected', update: [{ table: 'Applications', id: 'recAppRuth', fields: { 'Send decline': true, Stage: 'Rejected' } }] },
       record: 'recAppRuth',
-      expect: { status: 'success', visits: ['decline-email', 'g-decline'], emails: 1 },
+      expect: { status: 'success', visits: ['decline-email', 'g-stage:3'], emails: 1 },
     },
     {
       id: 'quiet-reject',
@@ -162,7 +164,7 @@ export const stageChange: Automation = {
       start: 3 * 1440 + 900,
       setup: { by: 'Owen moves Dan to Rejected', update: [{ table: 'Applications', id: 'recAppDan', fields: { Stage: 'Rejected' } }] },
       record: 'recAppDan',
-      expect: { status: 'success', visits: ['g-decline:skip', 'g-screen:skip'], skips: ['decline-email'], emails: 0 },
+      expect: { status: 'success', visits: ['g-stage:none'], skips: ['decline-email'], emails: 0 },
     },
   ],
   fields: [
@@ -174,7 +176,7 @@ export const stageChange: Automation = {
   ],
   build: [
     { title: 'Updated, watching one field', body: '“When a record is updated” with Stage as its only watched field fires on every stage move and ignores note edits. Matches conditions would need one automation per stage; this keeps the whole pipeline in one place.' },
-    { title: 'Four groups, one per stage that needs something', body: 'Applied, Offer and moves backwards need no email, so they have no group and pass through quietly. Exactly one group can be met per run, because Stage has one value.' },
+    { title: 'One group, a branch per stage that needs something', body: 'Screen, Client interview, Placed, and Rejected with Send decline ticked. Applied, Offer and moves backwards match no branch, and with no Otherwise the run ends quietly. Stage has one value, so at most one branch can match anyway.' },
     { title: 'The fee is never typed', body: 'Placements › Fee is Salary × Fee %, where both are rollups through the application, and Fee % comes from the client’s agreement through two lookups. The email to Leo quotes the computed fee, and Clients › Fees placed rises the same moment.' },
     { title: 'Declines are opt-in', body: 'A rejected card sends nothing unless Send decline is ticked. Recruiters often call strong candidates instead, and an automatic email after a kind phone call reads badly.' },
     { title: 'No resume links in emails', body: 'Airtable’s attachment links expire after a few hours, so the client email does not link the resume. The recruiter sends it, with screening notes, the same day.' },
@@ -192,5 +194,5 @@ export const stageChange: Automation = {
     'Rejected sends the decline only with Send decline ticked.',
     'Editing a note on an application starts nothing.',
   ],
-  features: ['When a record is updated (watched fields)', 'Conditional groups', 'Create record', 'Send email', 'Lookup through links', 'Rollup of a lookup', 'Formula', 'Last modified time', 'Kanban interface page'],
+  features: ['When a record is updated (watched fields)', 'Conditional group branches', 'Create record', 'Send email', 'Lookup through links', 'Rollup of a lookup', 'Formula', 'Last modified time', 'Kanban interface page'],
 };

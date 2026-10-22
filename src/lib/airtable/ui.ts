@@ -323,12 +323,14 @@ export class Simulator {
     const updated = new Set(trace.steps.filter((s) => s.kind === 'action').flatMap((s) => s.changes ?? []).filter((c) => !c.created && c.fields.some((f) => !f.computed)).map((c) => `${c.table}/${c.record}`)).size;
     const skipped = runSteps.filter((s) => s.kind === 'skip' && s.title.startsWith('Conditional')).length;
     const emptyList = runSteps.some((s) => s.kind === 'skip' && s.title.startsWith('Repeating'));
+    const branches = runSteps.filter((s) => s.kind === 'group').map((s) => `“${s.title.replace('Conditional group: ', '')}”`);
     const sent = [emails && n(emails, 'email', 'emails'), slack && n(slack, 'Slack message', 'Slack messages')].filter(Boolean) as string[];
     const wrote = [created && `created ${n(created, 'record', 'records')}`, updated && `updated ${n(updated, 'record', 'records')}`].filter(Boolean) as string[];
     return [
       sent.length ? `It sent ${sent.join(' and ')}.` : 'It sent nothing anyone reads.',
       wrote.length ? `It ${wrote.join(' and ')}, and every lookup, rollup and formula that reads them updated too.` : '',
-      skipped ? `${n(skipped, 'group was', 'groups were')} skipped because ${skipped === 1 ? 'its conditions were' : 'their conditions were'} not met.` : '',
+      branches.length ? `The conditional group took the ${branches.join(' and ')} branch.` : '',
+      skipped ? 'No branch of the conditional group matched, so it did nothing.' : '',
       emptyList ? 'The repeating group had no items, so it did nothing.' : '',
       trace.status === 'failed' ? `It failed at ${trace.error?.step}, kept what the earlier steps did, and Airtable emailed the owner.` : 'The run succeeded.',
     ]

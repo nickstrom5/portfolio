@@ -7,14 +7,16 @@
  * automation creates shows up at once in every rollup that reads it; computed
  * and synced fields cannot be written to; a "matches conditions" trigger fires
  * only when a record starts to match; actions run top to bottom, a conditional
- * group runs its actions only when its conditions are met, a repeating group
- * runs them once per item; and a failed action stops the run, keeps what the
- * earlier actions did, and emails the automation's owner. Time is simulated.
+ * group runs the first of its branches whose conditions are met (or its
+ * Otherwise branch), a repeating group runs its steps once per item, and
+ * either kind of group is the last step of its list; and a failed action
+ * stops the run, keeps what the earlier actions did, and emails the
+ * automation's owner. Time is simulated.
  *
  * Dates and the sample week are shared with /n8n/'s engine.
  */
 import { dayKey, isoAt, shiftDates } from '@/lib/n8n/engine';
-import type { Action, ActionResult, Automation, CaseStudy, Ctx, Field, FormulaGet, Json, Message, Rec, RecordView, Scenario, Setup, Step, Table, Value } from './types';
+import type { Action, ActionResult, Automation, CaseStudy, Ctx, Field, FormulaGet, Group, Json, Message, Rec, RecordView, Repeat, Scenario, Setup, Step, Table, Value } from './types';
 
 export { formatClock, formatDay, formatDuration, formatTime, useWeekOf } from '@/lib/n8n/engine';
 
@@ -259,12 +261,21 @@ export class Store {
   }
 }
 
-/** Every action in a list of steps, groups included, in order. */
+/** The steps directly inside a group: every branch's, or the loop's. */
+export const innerSteps = (s: Group | Repeat): Step[] => (s.kind === 'if' ? s.branches.flatMap((b) => b.steps) : s.steps);
+
+/** Every action in a list of steps, at any depth, in order. */
 export function allActions(steps: Step[]): Action[] {
-  return steps.flatMap((s) => (s.kind === 'action' ? [s] : s.steps));
+  return steps.flatMap((s) => (s.kind === 'action' ? [s] : allActions(innerSteps(s))));
 }
 
-export const countSteps = (a: Automation) => a.steps.reduce((n, s) => n + (s.kind === 'action' ? 1 : 1 + s.steps.length), 1);
+/** Every conditional and repeating group in a list of steps, at any depth. */
+export function allGroups(steps: Step[]): (Group | Repeat)[] {
+  return steps.flatMap((s) => (s.kind === 'action' ? [] : [s, ...allGroups(innerSteps(s))]));
+}
+
+/** Steps in the editor: the trigger, every action and every group. */
+export const countSteps = (a: Automation) => 1 + allActions(a.steps).length + allGroups(a.steps).length;
 
 /* ---------- Runs ---------- */
 
@@ -283,7 +294,7 @@ export interface TraceStep {
   title: string;
   detail?: string;
   stepId?: string;
-  /** "groupId:0" when a group's actions run. */
+  /** "groupId:2" when a conditional group's third branch runs; "repeatId:0" for each loop item. */
   branch?: string;
   messages?: Message[];
   output?: Json;
@@ -296,7 +307,7 @@ export interface Trace {
   error?: { step: string; message: string };
   start: number;
   end: number;
-  /** Action ids that ran; group ids when met, "id:skip" when not; repeat ids with items, "id:empty" without. */
+  /** Action ids that ran; "groupId:N" for the branch a group ran, "groupId:none" when none matched; repeat ids with items, "id:empty" without. */
   visited: string[];
   /** Every change the run made, merged per record. */
   changes: Change[];
@@ -458,36 +469,42 @@ export function simulate(study: Pick<CaseStudy, 'base' | 'business'>, auto: Auto
     return true;
   };
 
-  outer: for (const s of auto.steps) {
-    if (s.kind === 'action') {
-      if (!runAction(s)) break;
-      continue;
-    }
-    if (s.kind === 'if') {
+  /** Runs a list of steps; false once an action fails, which ends the run. */
+  const runSteps = (list: Step[], item?: RecordView): boolean => {
+    for (const s of list) {
+      if (s.kind === 'action') {
+        if (!runAction(s, item)) return false;
+        continue;
+      }
       t += 50;
-      if (!s.test(ctx())) {
-        visited.push(`${s.id}:skip`);
-        steps.push({ kind: 'skip', t, title: 'Conditional group: conditions not met', detail: `${s.when}. ${s.steps.length === 1 ? 'Its action is' : `Its ${s.steps.length} actions are`} skipped.`, stepId: s.id });
+      if (s.kind === 'if') {
+        const i = s.branches.findIndex((b) => !b.test || b.test(ctx(item)));
+        if (i < 0) {
+          visited.push(`${s.id}:none`);
+          steps.push({ kind: 'skip', t, title: 'Conditional group: no branch matched', detail: `${s.branches.map((b) => b.when).join('; ')}: none is true, so nothing in the group runs.`, stepId: s.id });
+          continue;
+        }
+        const b = s.branches[i];
+        visited.push(`${s.id}:${i}`);
+        steps.push({ kind: 'group', t, title: `Conditional group: ${b.name}`, detail: b.when ? `${i ? 'Otherwise if' : 'If'} ${b.when}` : 'Otherwise: no branch above matched', stepId: s.id, branch: `${s.id}:${i}` });
+        if (!runSteps(b.steps, item)) return false;
+        continue;
+      }
+      const items = s.list(ctx(item));
+      if (!items.length) {
+        visited.push(`${s.id}:empty`);
+        steps.push({ kind: 'skip', t, title: 'Repeating group: the list is empty', detail: `${s.over} has no items, so its steps do not run.`, stepId: s.id });
         continue;
       }
       visited.push(s.id);
-      steps.push({ kind: 'group', t, title: 'Conditional group: conditions met', detail: s.when, stepId: s.id, branch: `${s.id}:0` });
-      for (const a of s.steps) if (!runAction(a)) break outer;
-      continue;
+      for (const [i, it] of items.entries()) {
+        steps.push({ kind: 'repeat', t, title: `Repeating group · item ${i + 1} of ${items.length}`, detail: it.name, stepId: s.id, branch: `${s.id}:0` });
+        if (!runSteps(s.steps, it)) return false;
+      }
     }
-    const list = s.list(ctx());
-    t += 50;
-    if (!list.length) {
-      visited.push(`${s.id}:empty`);
-      steps.push({ kind: 'skip', t, title: 'Repeating group: the list is empty', detail: `${s.over} has no items, so its actions do not run.`, stepId: s.id });
-      continue;
-    }
-    visited.push(s.id);
-    for (const [i, item] of list.entries()) {
-      steps.push({ kind: 'repeat', t, title: `Repeating group · item ${i + 1} of ${list.length}`, detail: item.name, stepId: s.id, branch: `${s.id}:0` });
-      for (const a of s.steps) if (!runAction(a, item)) break outer;
-    }
-  }
+    return true;
+  };
+  runSteps(auto.steps);
 
   if (failed) {
     t += 3000;
