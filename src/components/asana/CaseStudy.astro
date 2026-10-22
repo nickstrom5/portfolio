@@ -10,6 +10,8 @@ import { countActions, describeTrigger } from '@/lib/asana/engine';
 import FormDemo from './FormDemo.astro';
 import ProjectViews from './ProjectViews.astro';
 import Reporting from './Reporting.astro';
+import Gallery from './Gallery.astro';
+import { screenshots } from '@/data/asana/screenshots';
 import AutomationPanel from './AutomationPanel.astro';
 import Icon from '@/components/ghl/Icon.astro';
 
@@ -22,6 +24,7 @@ const { study, index, hidden = false } = Astro.props;
 const { org: o, automations } = study;
 const people = Object.fromEntries(o.team.map((p) => [p.key, { name: p.name }]));
 const actions = automations.reduce((n, a) => n + countActions(a), 0);
+const shots = screenshots[o.id] ?? [];
 ---
 
 <section
@@ -56,6 +59,7 @@ const actions = automations.reduce((n, a) => n + countActions(a), 0);
         <li><a href={`#${o.id}-form`} data-open-auto={`${o.id}-form`}>The intake form</a></li>
         <li><a href={`#${o.id}-projects`} data-open-auto={`${o.id}-projects`}>The projects</a></li>
         <li><a href={`#${o.id}-reporting`} data-open-auto={`${o.id}-reporting`}>Reporting</a></li>
+        {shots.length > 0 && <li><a href={`#${o.id}-in-asana`} data-open-auto={`${o.id}-in-asana`}>In Asana itself</a></li>}
         <li><a href={`#${o.id}-automations`} data-open-auto={`${o.id}-automations`}>The automations</a></li>
       </ul>
     </div>
@@ -122,6 +126,17 @@ const actions = automations.reduce((n, a) => n + countActions(a), 0);
       <Reporting study={study} />
     </div>
   </div>
+
+  {shots.length > 0 && (
+    <div class="section" id={`${o.id}-in-asana`}>
+      <div class="container">
+        <span class="eyebrow">In Asana itself</span>
+        <h3 class="gx-h3">The same setup, built in a real workspace</h3>
+        <p class="lede">These are screenshots of {o.name}’s projects, portfolio and goals in an actual Asana Advanced workspace, created from the same data this page draws with an API script. Every task is assigned to me there, so the avatars all read NS; the fictional owners are named in each task’s description. Select a screenshot to see it full size.</p>
+        <Gallery caseId={o.id} shots={shots} />
+      </div>
+    </div>
+  )}
 
   <div class="section gx-workflows" id={`${o.id}-automations`}>
     <div class="container">

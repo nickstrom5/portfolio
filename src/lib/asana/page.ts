@@ -140,6 +140,29 @@ export function initAsanaPage() {
     }).observe(body);
   });
 
+  // Screenshot galleries: a thumbnail opens its full-size copy in the gallery's dialog.
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((gallery) => {
+    const dialog = gallery.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+    const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-lightbox-caption]')!;
+    let opener: HTMLElement | null = null;
+    gallery.querySelectorAll<HTMLButtonElement>('[data-shot]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        opener = btn;
+        img.src = btn.dataset.shot!;
+        img.alt = btn.dataset.shotAlt ?? '';
+        caption.textContent = btn.dataset.shotCaption ?? '';
+        dialog.showModal();
+      }),
+    );
+    dialog.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dialog.close());
+    // A click on the backdrop (the dialog itself, outside its content) closes it too.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => opener?.focus());
+  });
+
   document.querySelectorAll<HTMLAnchorElement>('a[href="#decoder"]').forEach((a) =>
     a.addEventListener('click', () => {
       const d = document.getElementById('decoder');

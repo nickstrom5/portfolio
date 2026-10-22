@@ -17,6 +17,7 @@
     "n8n:capture": "node scripts/n8n-capture.mjs",
     "og": "node scripts/make-og.mjs",
     "asana:check": "node scripts/asana-check.mjs",
+    "asana:seed": "node scripts/asana-seed.mjs",
     "airtable:check": "node scripts/airtable-check.mjs",
     "food:add": "node scripts/add-food.mjs",
     "photos:check": "node scripts/check-photo-metadata.mjs",

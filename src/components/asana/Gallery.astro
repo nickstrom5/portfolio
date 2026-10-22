@@ -1,0 +1,39 @@
+---
+/**
+ * Screenshots of one case built in a real Asana workspace. Thumbnails are
+ * responsive pictures; pressing one opens it full size in a <dialog> (wired
+ * by src/lib/asana/page.ts), which Esc or the close button dismisses.
+ */
+import { Picture, getImage } from 'astro:assets';
+import type { Screenshot } from '@/data/asana/screenshots';
+
+interface Props {
+  caseId: string;
+  shots: Screenshot[];
+}
+const { caseId, shots } = Astro.props;
+// The full-size copy the dialog shows: one WebP at the screenshot's own width.
+const full = await Promise.all(shots.map((s) => getImage({ src: s.image, format: 'webp', width: s.image.width })));
+---
+
+<div class="a-gallery" data-gallery={caseId}>
+  <ul class="a-shots">
+    {shots.map((s, i) => (
+      <li>
+        <figure class="a-shot">
+          <button type="button" class="a-shot-open" data-shot={full[i].src} data-shot-alt={s.alt} data-shot-caption={s.caption} aria-label={`Enlarge: ${s.caption}`}>
+            <Picture src={s.image} alt={s.alt} widths={[400, 640, 960]} sizes="(max-width: 600px) calc(100vw - 32px), (max-width: 960px) 45vw, 360px" formats={['avif', 'webp']} loading="lazy" decoding="async" />
+          </button>
+          <figcaption>{s.caption}</figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+  <dialog class="a-lightbox" data-lightbox aria-label="Screenshot">
+    <div class="a-lightbox-bar">
+      <p class="a-lightbox-caption" data-lightbox-caption></p>
+      <button type="button" class="a-lightbox-close" data-lightbox-close>Close</button>
+    </div>
+    <img data-lightbox-img alt="" width="1512" height="806" />
+  </dialog>
+</div>
