@@ -16,6 +16,9 @@ const recent = (await getCollection('projects', ({ data, id }) => !data.hidden &
   .sort((a, b) => b.data.year - a.data.year || +(b.data.updated ?? b.data.published ?? 0) - +(a.data.updated ?? a.data.published ?? 0))
   .slice(0, 9);
 const upworkLive = !site.links.upwork.includes('REPLACE');
+// Full rows only: a multiple of 12 fills the grid evenly at 1, 2, 3 or 4 columns.
+// Overflow drops the last entries of testimonials.json, whose order is the display order.
+const feedback = testimonials.slice(0, Math.max(12, Math.floor(testimonials.length / 12) * 12));
 const sectors = [
   'Federal research institutions',
   'Major universities',
@@ -94,7 +97,7 @@ const sectors = [
       </div>
       <p class="lede">Verbatim from Upwork contracts. Upwork shows clients by first name only, so they're identified by the contract here.</p>
       <div class="grid grid-3 feedback">
-        {testimonials.map((t) => <Testimonial {...t} />)}
+        {feedback.map((t) => <Testimonial {...t} />)}
       </div>
     </div>
   </section>
