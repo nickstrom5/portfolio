@@ -6,6 +6,7 @@
  * (see the README there).
  */
 import { cases as ghlCases } from './ghl';
+import { cases as n8nCases } from './n8n';
 
 export type Screen =
   | 'clam-home'
@@ -89,7 +90,7 @@ export interface SoonProject {
 
 /** A tile that opens its own page on this site instead of a story below. */
 export interface PageProject {
-  id: 'ghl';
+  id: 'ghl' | 'n8n';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -98,7 +99,7 @@ export interface PageProject {
   bgDark?: string;
   fgDark?: string;
   tone?: 'light' | 'dark';
-  /** Site-relative path, e.g. /ghl/. */
+  /** Site-relative path, e.g. /ghl/ or /n8n/. */
   href: string;
   /** The tile's call to action, in place of "View story →". */
   cta: string;
@@ -109,6 +110,7 @@ export interface PageProject {
 export type Project = StoryProject | SoonProject | PageProject;
 
 const ghlWorkflows = ghlCases.reduce((n, c) => n + c.automations.length, 0);
+const n8nWorkflows = n8nCases.reduce((n, c) => n + c.automations.length, 0);
 
 /* Every tile and story hero shares one surface per theme; only the kicker, links and the
    selected tile's outline carry each project's color. Per-project tinted fills turned
@@ -647,6 +649,20 @@ export const projects: Project[] = [
     fgDark: '#a8aaff',
     tone: 'light',
     href: '/ghl/',
+    cta: 'Open the case studies →',
+    page: true,
+  },
+  {
+    id: 'n8n',
+    name: 'n8n case studies',
+    kicker: 'n8n · workflows, webhooks and APIs',
+    tileBlurb: `Three sample businesses, ${n8nWorkflows} n8n workflows: forms, Shopify, Stripe, an AI ticket classifier and an error workflow. Run every one in your browser.`,
+    bg: surface,
+    fg: '#b8325a',
+    bgDark: surfaceDark,
+    fgDark: '#ff8fb0',
+    tone: 'light',
+    href: '/n8n/',
     cta: 'Open the case studies →',
     page: true,
   },

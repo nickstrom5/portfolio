@@ -29,7 +29,10 @@ export const services: Service[] = [
     description:
       'Lead tracking, funnels and workflow automation that remove the manual steps between a lead arriving and a deal closing.',
     bullets: ['GoHighLevel, HubSpot, Salesforce, Zoho', 'Zapier and Power Automate', 'AI-assisted workflows and reporting'],
-    links: [{ href: '/ghl', label: 'GoHighLevel automation case studies' }],
+    links: [
+      { href: '/ghl', label: 'GoHighLevel automation case studies' },
+      { href: '/n8n', label: 'n8n automation case studies' },
+    ],
   },
   {
     title: 'Executive assistant support',

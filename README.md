@@ -13,7 +13,8 @@ GitHub Actions on every push to `main`.
 | --- | --- |
 | `src/`, `public/` | The portfolio site |
 | `src/data/ghl/`, `src/lib/ghl/` | The [GoHighLevel case studies](#gohighlevel-case-studies-ghl): workflows with an in-browser simulator |
-| `scripts/` | Build-time checks and tools: QA audit, photo-metadata guard, résumé PDF, GHL scenario runner |
+| `src/data/n8n/`, `src/lib/n8n/` | The [n8n case studies](#n8n-case-studies-n8n): the same idea for n8n, with its own simulator |
+| `scripts/` | Build-time checks and tools: QA audit, photo-metadata guard, résumé PDF, GHL and n8n scenario runners |
 | `.githooks/` | Pre-commit hook that blocks photos still carrying metadata |
 | `.claude/agents/` | The read-only `site-auditor` agent ([below](#qa-and-seo-audit)) |
 | `signalrig/` | A separate Next.js app: the [SignalRig GTM showcase](#signalrig-gtm-engineering-showcase), deployed to Vercel |
@@ -210,6 +211,61 @@ attach proof of a live build (a Loom or screenshots of a real sub-account),
 add a `proof` array to that workflow's file. The page is linked from its
 AI Projects tile and the Work page, not from the nav or footer; to add it,
 put it in `footerNav` in `src/data/site.ts`.
+
+## n8n case studies (`/n8n/`)
+
+The same format as `/ghl/`, for n8n: three switchable case studies of
+fictional businesses, each a sample n8n instance with a test form and
+three workflows:
+
+- **Copperleaf Coffee Roasters** (Shopify store and wholesale): wholesale
+  inquiries from an n8n Form, paid orders split into roast tickets, a
+  morning stock check against reorder points.
+- **Ledgerline Bookkeeping** (professional services, self-hosted): client
+  onboarding from a webhook, a document chase that waits days for a click,
+  and the error workflow every other workflow names.
+- **Slotwise** (SaaS, queue mode): AI support triage with a Text Classifier,
+  a nightly Postgres-to-HubSpot sync in batches, failed-payment follow-up
+  from Stripe.
+
+The simulator follows n8n's rules rather than GoHighLevel's: nodes pass
+items, an If or Switch can send items down several outputs in one run, v1
+execution order finishes each branch before the next, a node with no
+input items does not run, branches can meet at a Merge, Retry On Fail and
+error outputs behave as configured, and a failed production execution
+starts the case's error workflow. The canvas is drawn top to bottom
+(n8n's runs left to right) and shares its layout styles with `/ghl/`.
+
+| What | Where |
+| --- | --- |
+| The three cases, in page order | `src/data/n8n/index.ts` |
+| A case's instance (team, hosting, stack, shared values) | `src/data/n8n/<case>/business.ts` |
+| A case's test form (fields, the item it becomes, outcomes to pick) | `src/data/n8n/<case>/demo.ts` |
+| One file per workflow | `src/data/n8n/<case>/automations/*.ts` |
+| Data model (nodes, splits, settings, test events) | `src/lib/n8n/types.ts` |
+| The simulator | `src/lib/n8n/engine.ts` |
+| Case view, canvas, simulator panel, test form | `src/components/n8n/` |
+| Page, reliability and troubleshooting copy | `src/pages/n8n.astro` |
+| Styles (on top of `ghl.css`) | `src/styles/n8n.css` |
+
+After editing a workflow, run:
+
+```bash
+npm run n8n:check
+```
+
+It runs every test event through the simulator and fails if a run ends
+differently than its `expect` block says (status, nodes reached, item
+counts, the error workflow), a node or output is never reached, a message
+has an unresolved `{{ expression }}`, or a workflow breaks a rule the page
+relies on: duplicate node names, an If without true and false outputs,
+branches that rejoin without a Merge, Retry On Fail outside n8n's limits or
+combined with a Continue setting, a credential the data model does not
+list, or an error workflow without an Error Trigger. It also submits each
+case's test form once per outcome.
+
+The cases are made up to show the skill; none is client work. Deep links
+work as on `/ghl/`: `/n8n/#saas`, `/n8n/#saas-usage-sync`, `/n8n/#coffee-demo`.
 
 ## SignalRig (GTM engineering showcase)
 

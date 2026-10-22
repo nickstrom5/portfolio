@@ -1,0 +1,76 @@
+---
+/** The workflow as it reads in n8n: name, settings, the trigger, then every node. */
+import type { Automation } from '@/lib/n8n/types';
+import { countNodes } from '@/lib/n8n/engine';
+import Nodes from './Nodes.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  automation: Automation;
+  caseId: string;
+  /** Workflow names in this case, by id, for the error workflow setting. */
+  names: Record<string, string>;
+}
+const { automation: a, caseId, names } = Astro.props;
+const wf = a.workflow;
+const s = wf.settings;
+const t = wf.trigger;
+const total = countNodes(a);
+const settings = [
+  { k: 'Execution order', v: 'v1 (recommended)' },
+  { k: 'Error workflow', v: s.errorWorkflow ? (names[s.errorWorkflow] ?? s.errorWorkflow) : wf.trigger.type === 'Error Trigger' ? 'None (this is one)' : 'None' },
+  { k: 'Timezone', v: s.timezone },
+  { k: 'Save successful runs', v: s.saveSuccess ? 'Yes' : 'No' },
+  s.timeout && { k: 'Timeout', v: `${s.timeout / 60} min` },
+].filter(Boolean) as { k: string; v: string }[];
+const notes = [...(s.callerPolicy ? [`This workflow can be called by: ${s.callerPolicy}.`] : []), ...(s.notes ?? [])];
+---
+
+<figure class="g-canvas n-canvas" data-canvas={`${caseId}:${a.id}`} aria-label={`Workflow: ${wf.name}, ${total} nodes`}>
+  <div class="g-canvas-bar">
+    <span class="g-folder">{wf.folder} /</span>
+    <span class="g-wfname">{wf.name}</span>
+    {wf.tags.map((tag) => <span class="n-tag">{tag}</span>)}
+    <span class="g-pub">{t.type === 'Error Trigger' ? 'Error workflow' : 'Published'}</span>
+  </div>
+  <dl class="g-settings" aria-label="Workflow settings">
+    {settings.map((x) => (
+      <div><dt>{x.k}</dt><dd>{x.v}</dd></div>
+    ))}
+  </dl>
+  {notes.length > 0 && (
+    <details class="g-settings-more">
+      <summary>Why these settings <span class="g-count">({notes.length})</span></summary>
+      <ul class="g-settings-notes">
+        {notes.map((n) => <li>{n}</li>)}
+      </ul>
+    </details>
+  )}
+  <p class="g-canvas-hint">The workflow’s nodes, drawn top to bottom so it fits any screen; on n8n’s canvas the same nodes run left to right. Scroll inside it; each node gets a green tick and its item count when the run reaches it.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Nodes of ${wf.name}`} tabindex="0">
+    <ol class="g-steps g-root">
+      <li class="g-step n-tone-trigger n-trigger" data-node={t.id}>
+        <div class="g-card">
+          <span class="g-ico"><Icon name={t.icon} /></span>
+          <div class="g-txt">
+            <span class="g-kind"><Icon name="bolt" size={12} /> Trigger · {t.type}{t.operation && <span class="n-op"> · {t.operation}</span>}</span>
+            <span class="g-name">{t.name}</span>
+            <p class="g-sum">{t.summary}</p>
+            {t.credential && <p class="n-chips"><span class="n-chip n-cred"><Icon name="key" size={13} />{t.credential}</span></p>}
+            {t.params && (
+              <details class="g-code">
+                <summary>Parameters</summary>
+                <dl class="n-params">
+                  {t.params.map((p) => <div><dt>{p.k}</dt><dd>{p.v}</dd></div>)}
+                </dl>
+              </details>
+            )}
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+      </li>
+      <Nodes steps={wf.steps} />
+    </ol>
+  </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole workflow (${total} nodes)`}>Show the whole workflow ({total} nodes)</button>
+</figure>
