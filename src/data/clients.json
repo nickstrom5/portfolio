@@ -8,6 +8,7 @@
     "scale": "3,700+ hours",
     "blurb": "Coordination, administration and communications for the SPARC Portal, an open neuroscience and systems physiology platform. My longest engagement.",
     "slug": "sparc-portal-digital-coordinator",
+    "logo": "/client-logos/sparc-portal-digital-coordinator.webp",
     "featured": true
   },
   {
@@ -19,6 +20,7 @@
     "scale": "4 years",
     "blurb": "Kept design projects on track across internal teams and many college clients.",
     "slug": "symplicity-design-projects",
+    "logo": "/client-logos/symplicity-design-projects.webp",
     "featured": true
   },
   {
@@ -30,6 +32,7 @@
     "scale": "1,000+ hours",
     "blurb": "Owned the post-production pipeline and timelines for a large library of video courses taught by law professors.",
     "slug": "barbri-video-production",
+    "logo": "/client-logos/barbri-video-production.webp",
     "featured": true
   },
   {
@@ -41,6 +44,7 @@
     "scale": "1 year",
     "blurb": "Scheduling and project coordination for several leaders at a fast-growing company.",
     "slug": "rippling-executive-support",
+    "logo": "/client-logos/rippling-executive-support.webp",
     "featured": true
   },
   {
@@ -52,6 +56,7 @@
     "scale": "3 years",
     "blurb": "Guided clients from first contact through the sales and onboarding journey.",
     "slug": "blackdove-client-journey",
+    "logo": "/client-logos/blackdove-client-journey.webp",
     "featured": true
   },
   {
@@ -63,6 +68,7 @@
     "scale": "8 months",
     "blurb": "Managed client relationships and kept orders on track from placement through delivery.",
     "slug": "offx-account-management",
+    "logo": "/client-logos/offx-account-management.webp",
     "featured": true
   }
 ]

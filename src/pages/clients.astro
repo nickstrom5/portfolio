@@ -53,7 +53,11 @@ const sectors = [
       <ul class="clients">
         {featured.map((c) => (
           <li class="card client" id={c.slug}>
-            <div class="mark" aria-hidden="true">{c.initials}</div>
+            {'logo' in c && c.logo ? (
+              <img class="mark mark-img" src={url(c.logo)} alt="" width="52" height="52" loading="lazy" decoding="async" />
+            ) : (
+              <div class="mark" aria-hidden="true">{c.initials}</div>
+            )}
             <div class="body">
               <h3>{c.name}</h3>
               <p class="meta muted">{c.industry} · <span class="nowrap">{c.period}</span></p>
@@ -176,6 +180,14 @@ const sectors = [
       border-radius: 10px;
       font-size: 0.85rem;
     }
+  }
+  /* The client's own logo, in the same rounded square. */
+  .mark-img {
+    display: block;
+    object-fit: cover;
+    background: #fff;
+    /* A hairline ring keeps a white logo tile visible on the light card. */
+    box-shadow: 0 0 0 1px var(--border);
   }
   .mark.alt {
     background: var(--bg-muted);
