@@ -1,0 +1,74 @@
+---
+/**
+ * The case's intake form, working: the visitor fills it in, a task is made
+ * the way Asana would make it (name, section, mapped fields), and every
+ * automation in that project runs on it. Wired by src/lib/asana/page.ts.
+ */
+import type { CaseStudy } from '@/lib/asana/types';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+}
+const { study } = Astro.props;
+const f = study.form;
+const id = study.org.id;
+const autos = study.automations.filter((a) => a.automation.project === f.project && a.automation.triggers.some((t) => t.type === 'added'));
+---
+
+<div class="gx-demo a-demo" data-form-demo={id}>
+  <div class="a-form-wrap">
+    <form class="a-form" data-form novalidate aria-labelledby={`form-title-${id}`}>
+      <div class="a-form-band" aria-hidden="true"></div>
+      <div class="a-form-body">
+        <h4 class="a-form-title" id={`form-title-${id}`}>{f.title}</h4>
+        <p class="a-form-desc">{f.description}</p>
+        <div class="a-form-grid">
+          {f.questions.map((q) => (
+            <div class:list={['a-q', { 'a-q-half': q.half }]} data-q={q.name} data-show-if={q.showIf ? JSON.stringify(q.showIf) : undefined} hidden={q.showIf ? !q.showIf.is.includes(f.questions.find((o) => o.name === q.showIf!.question)?.initial ?? f.questions.find((o) => o.name === q.showIf!.question)?.options?.[0] ?? '') : undefined}>
+              <label for={`q-${id}-${q.name}`}>{q.label}{q.required && <span class="a-req" aria-hidden="true"> *</span>}</label>
+              {q.type === 'select' ? (
+                <select id={`q-${id}-${q.name}`} name={q.name} required={q.required}>
+                  {q.options!.map((o) => <option value={o} selected={o === (q.initial ?? q.options![0])}>{o}</option>)}
+                </select>
+              ) : q.type === 'textarea' ? (
+                <textarea id={`q-${id}-${q.name}`} name={q.name} rows="3"></textarea>
+              ) : (
+                <input id={`q-${id}-${q.name}`} name={q.name} type={q.type} required={q.required} autocomplete={q.maps === 'email' ? 'email' : q.maps === 'requester' ? 'name' : 'off'} />
+              )}
+              {q.help && <p class="a-q-help">{q.help}</p>}
+            </div>
+          ))}
+        </div>
+        <p class="a-form-error" data-form-error role="alert" hidden></p>
+        <button type="submit" class="a-form-submit">Submit</button>
+        <p class="a-form-fine">Demo only: nothing is sent or stored. The task and the automation run below happen in your browser.</p>
+      </div>
+    </form>
+    <div class="a-form-thanks" data-form-thanks tabindex="-1" hidden>
+      <div class="a-form-band" aria-hidden="true"></div>
+      <div class="a-form-body">
+        <p class="a-form-title"><Icon name="check" size={20} /> Submitted</p>
+        <p data-thanks-text></p>
+        <button type="button" class="a-form-again" data-form-again>Submit another response</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="gx-demo-side">
+    <h4>What happens when you submit</h4>
+    <ol class="gx-demo-steps">
+      <li><strong>A task is created</strong> in {f.project} › {f.section}, named from your first answer.</li>
+      <li><strong>Your answers land in custom fields</strong>, so automations can read them.</li>
+      <li><strong>{autos.length} {autos.length === 1 ? 'automation runs' : 'automations run'}</strong> on Task added to this project: {autos.map((a) => `${a.number} · ${a.name}`).join(' and ')}.</li>
+    </ol>
+    <div class="a-result" data-form-result hidden>
+      <p class="gx-captured-title">The task Asana made</p>
+      <div class="g-record" data-form-record></div>
+      <p class="gx-captured-title">Run history</p>
+      <ol class="g-log a-result-log" data-form-log tabindex="0" aria-label="Run history for your submission"></ol>
+      <p class="a-result-link" data-form-open></p>
+    </div>
+    <p class="sr-only" role="status" data-form-announce></p>
+  </div>
+</div>

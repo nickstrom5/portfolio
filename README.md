@@ -14,7 +14,8 @@ GitHub Actions on every push to `main`.
 | `src/`, `public/` | The portfolio site |
 | `src/data/ghl/`, `src/lib/ghl/` | The [GoHighLevel case studies](#gohighlevel-case-studies-ghl): workflows with an in-browser simulator |
 | `src/data/n8n/`, `src/lib/n8n/` | The [n8n case studies](#n8n-case-studies-n8n): the same idea for n8n, with its own simulator |
-| `scripts/` | Build-time checks and tools: QA audit, photo-metadata guard, résumé PDF, GHL and n8n scenario runners |
+| `src/data/asana/`, `src/lib/asana/` | The [Asana case studies](#asana-case-studies-asana): projects, forms and automations with an in-browser simulator |
+| `scripts/` | Build-time checks and tools: QA audit, photo-metadata guard, résumé PDF, GHL, n8n and Asana scenario runners |
 | `.githooks/` | Pre-commit hook that blocks photos still carrying metadata |
 | `.claude/agents/` | The read-only `site-auditor` agent ([below](#qa-and-seo-audit)) |
 | `signalrig/` | A separate Next.js app: the [SignalRig GTM showcase](#signalrig-gtm-engineering-showcase), deployed to Vercel |
@@ -289,6 +290,58 @@ case's test form once per outcome.
 
 The cases are made up to show the skill; none is client work. Deep links
 work as on `/ghl/`: `/n8n/#saas`, `/n8n/#saas-usage-sync`, `/n8n/#coffee-demo`.
+
+## Asana case studies (`/asana/`)
+
+Three switchable case studies of Asana setups, each a fictional organization
+with its own sample workspace: a working intake form, its projects drawn in
+List, Board, Timeline, Calendar and Workflow views, the portfolio, goals,
+Workload and status update leadership reads, and a set of automations
+(Asana's current name for rules):
+
+- **Brightline Outdoor** (in-house marketing team): request triage by type,
+  rush flags, brand review hand-off, launch sign-off approvals.
+- **Northfield Advisory** (accounting and advisory firm): inquiry routing,
+  a conflict-check gate, onboarding kickoff on signature, client to-do
+  reminders, overdue escalation.
+- **Cascadia Watershed Alliance** (nonprofit research program): partner data
+  requests with a sensitive-location gate, field data QA, blocked-work
+  escalation, funder report prep, executive sign-off.
+
+Each automation renders as an Asana-builder-style card (triggers, actions,
+Check if paths) and runs in an in-browser simulator on sample tasks, or on
+the task the visitor's form submission creates. Every automation in the
+same project runs too, so chains and side effects show. Nothing is sent
+anywhere. The page reuses the layout and simulator styles of `/ghl/`
+(`src/styles/ghl.css`); Asana-only parts are in `src/styles/asana.css`.
+
+| What | Where |
+| --- | --- |
+| The three cases, in page order | `src/data/asana/index.ts` |
+| A case's organization, fields, projects, form, portfolio, goals, workload | `src/data/asana/<case>/org.ts` |
+| One file per automation | `src/data/asana/<case>/automations/*.ts` |
+| Data model | `src/lib/asana/types.ts` |
+| The simulator (triggers, paths, chaining, date triggers) | `src/lib/asana/engine.ts` |
+| Case view, project views, reporting, form demo, builder card | `src/components/asana/` |
+| Page, design choices and troubleshooting copy | `src/pages/asana.astro` |
+
+After editing a case, run:
+
+```bash
+npm run asana:check
+```
+
+It runs every sample task through the simulator and fails if a run ends
+differently than its `expect` block says, a Check if path is never taken,
+or the data uses something Asana wouldn't allow: an unknown section, field,
+option or person, more than 20 triggers or actions in an automation, the
+same action twice on a path, more than 50 automations in a project, or more
+than one "No other path is matching" path.
+
+Deep links: `/asana/#services` opens a case, `/asana/#services-conflict-check`
+opens one of its automations and `/asana/#nonprofit-form` jumps to a form.
+The page is linked from the Case studies hub (`src/data/caseStudies.ts`),
+the Systems & tools service card and the Work page.
 
 ## SignalRig (GTM engineering showcase)
 

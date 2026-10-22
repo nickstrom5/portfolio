@@ -1,0 +1,330 @@
+---
+/**
+ * /asana/ — Asana case studies: three organizations, each a sample workspace
+ * with a working intake form, its projects in every view, the portfolio and
+ * goals leadership reads, and the automations that move the work. Content
+ * lives in src/data/asana; the simulator is src/lib/asana. Run
+ * `npm run asana:check` after editing a case. Layout and most styles are
+ * shared with /ghl/ (src/styles/ghl.css); Asana-only parts are in asana.css.
+ */
+import '@/styles/ghl.css';
+import '@/styles/asana.css';
+import Base from '@/layouts/Base.astro';
+import CaseStudyView from '@/components/asana/CaseStudy.astro';
+import { cases } from '@/data/asana';
+import { countActions, describeAction, formatTime, simulate } from '@/lib/asana/engine';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+// Every number in the hero is computed from the data, by running the simulator at build time.
+const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));
+const taken = new Set<string>();
+let pathCount = 0;
+for (const { c, a } of all) {
+  pathCount += a.automation.paths?.length ?? 0;
+  const people = Object.fromEntries(c.org.team.map((p) => [p.key, { name: p.name }]));
+  for (const s of a.scenarios) simulate(c.automations, s, a.automation.project, people).paths.forEach((p) => taken.add(`${c.org.id}/${p}`));
+}
+const stats = [
+  { value: String(all.length), label: 'Automations you can run' },
+  { value: String(all.reduce((n, { a }) => n + countActions(a), 0)), label: 'Actions inside them' },
+  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Sample tasks to test with' },
+  { value: `${taken.size}/${pathCount}`, label: 'Check if paths, each one taken by a test' },
+];
+
+// The hero's preview is one real run: the first case's first automation on its first sample.
+const peekCase = cases[0];
+const peekAuto = peekCase.automations[0];
+const peekPeople = Object.fromEntries(peekCase.org.team.map((p) => [p.key, { name: p.name }]));
+const peekScenario = peekAuto.scenarios[0];
+const peekRun = simulate(peekCase.automations, peekScenario, peekAuto.automation.project, peekPeople);
+const peekPath = peekAuto.automation.paths?.find((p) => peekRun.paths.includes(`${peekAuto.id}:${p.id}`));
+const peek = (peekPath?.actions ?? peekAuto.automation.actions).map((x) => describeAction(x, peekPeople));
+const requester = peekScenario.task.requester ? peekPeople[peekScenario.task.requester]?.name.split(' ')[0] : 'Someone';
+
+/** Links to automations by "case/automation"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, aid] = ref.split('/');
+  const c = cases.find((x) => x.org.id === cid);
+  const a = c?.automations.find((x) => x.id === aid);
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.org.name} ${a.number} · ${a.name}` } : undefined;
+};
+
+const principles = [
+  {
+    title: 'One front door per team',
+    body: 'Work comes in through a form or not at all. Required questions are only the ones an automation routes on, so the form stays short and the routing never guesses.',
+    where: ['marketing/request-triage', 'services/inquiry-routing', 'nonprofit/data-requests'],
+  },
+  {
+    title: 'Fields hold facts; sections hold stages',
+    body: 'A section says where the work is. A custom field says what it is: its type, its priority, whose move it is. Automations read fields and move sections, never the other way round.',
+    where: ['services/conflict-check', 'nonprofit/blocked'],
+  },
+  {
+    title: 'Gates the work can’t skip by accident',
+    body: 'A conflict check or a QA step is a section with an automation on it, so the easy path is the right one. Where a drag can still skip it, a saved List view catches it every week.',
+    where: ['services/conflict-check', 'nonprofit/field-qa'],
+  },
+  {
+    title: 'Decisions as approvals, not comments',
+    body: 'Sign-off is an approval task with three buttons, and the decision is the trigger. “Looks good, maybe tweak the end” stops being a decision anyone has to interpret.',
+    where: ['marketing/sign-off', 'nonprofit/report-approval'],
+  },
+  {
+    title: 'Dates that chase, not nag',
+    body: 'Due date is approaching and Task is overdue fire once, for open tasks only. The reminder goes to the person who can act, and the escalation says whose move it is.',
+    where: ['services/client-reminders', 'services/overdue-escalation', 'nonprofit/report-prep'],
+  },
+  {
+    title: 'An else path, or a reason for none',
+    body: 'Every Check if either ends in No other path is matching, so nothing falls through unrouted, or leaves it out on purpose and says why in the settings notes.',
+    where: ['marketing/rush-flag', 'services/client-reminders'],
+  },
+  {
+    title: 'Templates carry the automations',
+    body: 'A launch, an onboarding or a field season is made from a project template that already has its sections, relative dates, dependencies and automations, so the tenth one is as good as the first.',
+    where: ['marketing/sign-off', 'services/engaged'],
+  },
+  {
+    title: 'Leadership reads the portfolio, not the projects',
+    body: 'Each project owner posts a short weekly status update; the portfolio rolls them up and goals show whether the work adds up. Nobody has to ask “where are we with…”.',
+    where: [],
+  },
+];
+
+const audit = [
+  { title: 'Automations nobody owns', body: 'When the creator leaves, automations that post to Slack or email stop being editable. Asana flags orphaned ones; I claim and re-authorize them first.' },
+  { title: 'Routing that reads free text', body: 'Paths that depend on a task name or description break the first time someone phrases it differently. Move the fact into a single-select field and route on that.' },
+  { title: 'Duplicate fields', body: '“Priority”, “priority” and “Pri” across twelve projects. Merge into one library field so portfolios and dashboards can report across projects.' },
+  { title: 'Sections used as statuses and labels at once', body: 'A task can only be in one section per project. If a section is doing two jobs, one of them belongs in a field.' },
+  { title: 'Chains that loop', body: 'Two automations that move a task back and forth. Turn off “Can be triggered by other automations” on one of them unless the chain is the point.' },
+  { title: 'Approvals that aren’t', body: 'A task called “Approval” that anyone completes with a tick. Mark it as an approval, assign the approver, and make the project comment-only for everyone else if it matters who decides.' },
+  { title: 'Templates that drifted', body: 'Projects made from a template two years ago, edited by hand since. Fix the template first; live projects keep their version.' },
+  { title: 'Goals with no source', body: 'A goal at 40% that nobody can explain. Link it to a project, a portfolio or a number someone owns, or retire it.' },
+];
+
+const process = [
+  { title: 'Map the work', body: 'How requests arrive, who decides what, where it waits, and what leadership needs to see. Written down before anything is built.' },
+  { title: 'Fields and sections', body: 'Library custom fields with fixed options, sections as stages, and names the next admin can guess.' },
+  { title: 'Forms, then automations', body: 'One form per front door, mapped to fields. Then one automation per job, each with its paths written so no two match the same task.' },
+  { title: 'Test with sample tasks', body: 'A sample task for every path, checked against the automation’s run history, then a real request from a teammate.' },
+  { title: 'Templates and reporting', body: 'Save the project as a template, add it to the portfolio, link it to a goal, and set up the weekly status update.' },
+  { title: 'Hand off and watch', body: 'A short screen-recorded walkthrough (Loom) and a one-page how-to (SOP). Run history checked in the first week, then monthly.' },
+];
+
+/** Plain-English meanings for the Asana words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['Asana', 'A work management app: teams keep their tasks, projects, plans and reports in it, and see who is doing what by when.'],
+  ['Task, subtask', 'A task is one piece of work with an owner (the assignee) and usually a due date. Subtasks are the smaller steps inside it.'],
+  ['Project, section', 'A project holds the tasks for one stream of work. Sections divide it into stages, like New requests, In review and Delivered; on a board they are the columns.'],
+  ['Custom field', 'An extra column on every task in a project, like Priority or Request type. Library fields are shared across projects so reports can compare them.'],
+  ['Views: List, Board, Timeline, Calendar, Workflow', 'Different ways of looking at the same tasks: a list, columns of cards, bars across dates, a month grid, or a map of where work comes in and what happens in each section.'],
+  ['Form', 'A web form attached to a project. Each submission becomes a task, and answers can fill in custom fields. People outside the company can use it.'],
+  ['Automation (rule)', 'An automatic “when this happens, do that” inside a project, like “when a task moves to In review, assign it to the brand manager”. Asana used to call these rules.'],
+  ['Trigger, action', 'The trigger is the event that starts an automation. Actions are what it does: assign, move, set a field, add subtasks, comment, post to Slack.'],
+  ['Check if, paths', 'A fork inside an automation: “if Request type is Video, do this; if it is Email, do that”. Each fork is a path; No other path is matching is the catch-all.'],
+  ['Approval', 'A kind of task with three buttons instead of a tick: Approve, Request changes, Reject. The decision can trigger automations.'],
+  ['Dependency, milestone', 'A dependency says one task waits on another. A milestone is a diamond on the timeline marking a moment that matters, like Launch day.'],
+  ['Template', 'A saved project to copy from, with its sections, tasks, relative dates and automations. Every new launch or onboarding starts from it.'],
+  ['Portfolio', 'A list of projects with each one’s status, progress and owner, for the people who manage many projects at once.'],
+  ['Goal', 'A target like “grow online revenue 25%”. Projects and portfolios can be linked to it so its progress updates from the work.'],
+  ['Workload', 'A chart of how much each person has on, week by week, against what they can handle. Shows who is overbooked before they burn out.'],
+  ['Status update', 'A short post on a project or portfolio: On track, At risk or Off track, with what changed and what is blocked.'],
+  ['Run history', 'Asana’s record of when an automation ran and what it did. The simulator here shows the same kind of record.'],
+];
+
+const caseWord = words[cases.length] ?? String(cases.length);
+const title = 'Asana case studies: automations and forms';
+const description = `Three Asana case studies you can test: a marketing team, an accounting firm and a nonprofit, with ${all.length} working automations, intake forms and portfolios.`;
+---
+
+<Base title={title} description={description}>
+  <section class="gx-hero">
+    <div class="container">
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">Asana · Projects, forms and automations</span>
+          <h1>{all.length}&nbsp;Asana automations for {caseWord.toLowerCase()} {cases.length === 1 ? 'organization' : 'organizations'}. Try every one yourself.</h1>
+          <p class="lede">Asana is where many teams keep their work: every task with an owner and a due date, grouped into projects, rolled up into portfolios and goals for leadership. An automation (Asana used to call them rules) does the routine moving: when a request comes in, it can assign the right person, set the deadline, add the checklist and tell the lead, before anyone opens it.</p>
+          <p class="gx-hero-sub">
+            I set up three made-up organizations the way I would a real one: {listOf(cases.map((c) => `a ${c.org.industry.toLowerCase()}`))}. Each has a working intake form, its projects in every view, the portfolio and goals leadership reads, and the automations that move the work. Everything runs here in your browser, on sample tasks or on a request you submit.{' '}
+            Need this for your team, or hiring a project manager who knows Asana? <a href={url('/contact')}>Get in touch</a>.
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].org.id}-form`} data-open-auto={`${cases[0].org.id}-form`}>Try it: submit a request</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'organization' : 'organizations'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one new request gets</p>
+          <p class="gx-peek-sub">{requester} submits “{peekScenario.task.name}” to {peekCase.org.name}’s creative team at {formatTime(peekRun.start)}. Automation {peekAuto.number} · {peekAuto.name} reads the request type and, in the same minute:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.kind}</span>
+                <div class="g-note">{p.summary}</div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">Before anyone opens the board, the request has an owner, a deadline and its checklist.</p>
+          <a class="gx-peek-link" href={`#${peekCase.org.id}-${peekAuto.id}`} data-open-auto={`${peekCase.org.id}-${peekAuto.id}`}>Run it yourself →</a>
+        </aside>
+      </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick an organization.</strong> New to Asana? Start with the marketing team.</li>
+          <li><strong>Submit a request.</strong> Fill in its intake form with any name and see the task Asana would make, and every automation that runs on it.</li>
+          <li><strong>Run an automation.</strong> Pick a sample task such as “Becomes rush later” or “The client is late”, press Run, and watch each action happen, with its time.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each automation opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The builder cards and <strong>Build notes</strong> are the detail an Asana admin would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
+      <dl class="gx-stats">
+        {stats.map((s) => <div><dt>{s.label}</dt><dd>{s.value}</dd></div>)}
+      </dl>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real organizations?</h2>
+          <p>No. {listOf(cases.map((c) => c.org.name))}, and everyone who works there, are made up, so every form, project and automation can be shown end to end and tried by anyone. The setup itself uses Asana’s real triggers, actions, conditions, views and features, checked against Asana’s help center, so each one can be rebuilt step for step in a real workspace. Nothing on this page sends anything or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a freelance senior project manager and operations lead: Top Rated Plus on Upwork, with {site.stats[0].note.replace(' on Upwork', '')} contracts and {site.stats[1].value} hours there. Asana is the first tool in my project management stack, alongside ClickUp, Monday and Jira. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>Asana words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => <div><dt>{term}</dt><dd>{meaning}</dd></div>)}
+        </dl>
+      </details>
+    </div>
+  </section>
+
+  <div class="gx-switch" id="cases">
+    <div class="container">
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.org.id}`}
+            aria-controls={c.org.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.org.id}`}
+            aria-describedby={`case-blurb-${c.org.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.org.id}
+            style={`--case: ${c.org.tint.light}; --case-dark: ${c.org.tint.dark}`}
+          >
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.org.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.org.id}`}>{c.org.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.org.id}`}><span class="sr-only">{c.org.industry}.</span> {c.org.blurb} <span class="sr-only">{plural(c.automations.length, 'automation', 'automations')}, an intake form and a portfolio.</span></span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'automation', 'automations')} · {plural(c.projects.length, 'project', 'projects')} · a working form</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section" id="principles" aria-labelledby="principles-title">
+    <div class="container">
+      <span class="eyebrow">Design choices</span>
+      <div class="section-head">
+        <h2 id="principles-title">The same few rules in every workspace</h2>
+      </div>
+      <p class="lede">Three different organizations, one way of building. In plain words: work comes in one way, facts live in fields, important steps can’t be skipped by accident, decisions are recorded as decisions, and reminders go to the person who can act.</p>
+      <ul class="gx-cards">
+        {principles.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>)}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit a workspace</h2>
+        <p class="lede">Most messy Asana setups go wrong in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => <li><strong>{x.title}</strong><span>{x.body}</span></li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From a messy inbox to a workspace the team trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Automations</dt><dd><code>01 · Route new requests by type</code>: numbered, a verb, what it does</dd></div>
+          <div><dt>Sections</dt><dd><code>In review</code>, <code>Needs info</code>: stages a person would say out loud</dd></div>
+          <div><dt>Custom fields</dt><dd><code>Request type</code>, <code>Waiting on</code>: library fields with fixed options, shared across projects</dd></div>
+          <div><dt>Templates</dt><dd><code>Seasonal launch</code>, <code>Client onboarding</code>: named for the work, not the client</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Hiring a project manager who knows Asana, or need it set up?</h2>
+        <p class="muted">I plan, run and set up projects in Asana: intake forms, automations, templates, portfolios, goals and the weekly reporting around them. If you’re hiring for a project or operations role or want your workspace cleaned up, I’d like to hear about it.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initAsanaPage } from '@/lib/asana/page';
+  initAsanaPage();
+</script>
