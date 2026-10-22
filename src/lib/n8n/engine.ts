@@ -384,7 +384,7 @@ function errorItem(run: Run, err: NodeFailure): Item {
         url: `${base}/workflow/${run.auto.id}/executions/${run.executionId}`,
         error: { message: err.message, stack: `NodeApiError: ${err.message}\n    at ExecuteContext.execute (${err.node.type})` },
         lastNodeExecuted: err.node.name,
-        // App triggers like Shopify and Stripe register webhooks; only polling and schedules run as 'trigger'.
+        // App triggers like Shopify and Calendly register webhooks; only polling and schedules run as 'trigger'.
         mode: run.auto.workflow.trigger.type === 'Schedule Trigger' ? 'trigger' : 'webhook',
       },
       workflow: { id: run.auto.id, name: run.auto.workflow.name },

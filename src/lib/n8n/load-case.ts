@@ -7,7 +7,7 @@ import type { CaseStudy } from './types';
 const loaders: Record<string, () => Promise<CaseStudy>> = {
   coffee: () => import('@/data/n8n/coffee').then((m) => m.coffeeCase),
   bookkeeping: () => import('@/data/n8n/bookkeeping').then((m) => m.bookkeepingCase),
-  saas: () => import('@/data/n8n/saas').then((m) => m.saasCase),
+  recruiting: () => import('@/data/n8n/recruiting').then((m) => m.recruitingCase),
 };
 
 export const hasLoader = (id: string) => id in loaders;
