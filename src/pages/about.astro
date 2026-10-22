@@ -9,7 +9,7 @@ import { ids } from '@/lib/schema';
 import { execFileSync } from 'node:child_process';
 
 const skills = {
-  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Loom async updates'],
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Microsoft Project', 'Loom async updates'],
   'AI & development': [
     'Claude Code',
     'Grok',
@@ -17,14 +17,16 @@ const skills = {
     'SwiftUI & iOS',
     'Screen Time & StoreKit APIs',
     'Astro & static sites',
+    'Next.js & TypeScript',
     'GitHub Actions & Pages',
+    'Vercel',
     'Cloudflare DNS',
   ],
   'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
-  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho One', 'Zapier', 'Google Sheets + AI'],
-  'Operations & finance': ['QuickBooks Online', 'Google Workspace', 'Slack', 'Vendor & billing coordination', 'Hiring & onboarding', 'Client onboarding'],
-  'Events & media': ['Zoom Webinars', 'OBS', 'Premiere Pro', 'After Effects', 'Final Cut', 'Photoshop', 'Illustrator', 'InDesign'],
-  'Web & apps': ['WordPress', 'Wix', 'Shopify', 'React', 'App Store Connect'],
+  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Keap', 'Zoho One', 'Zapier', 'n8n', 'Google Sheets + AI'],
+  'Operations & finance': ['QuickBooks Online', 'Google Workspace', 'Slack', 'Hubstaff', 'Vendor & billing coordination', 'Hiring & onboarding', 'Client onboarding'],
+  'Events & media': ['Zoom Webinars', 'OBS', 'Premiere Pro', 'After Effects', 'Final Cut', 'Photoshop', 'Illustrator', 'InDesign', 'Canva'],
+  'Web & apps': ['WordPress', 'Wix', 'Shopify', 'Ghost', 'React', 'App Store Connect'],
 };
 const linkedinLive = !site.links.linkedin.includes('REPLACE');
 const upworkLive = !site.links.upwork.includes('REPLACE');
