@@ -1,0 +1,271 @@
+/*
+ * Styles for /airtable/, on top of src/styles/ghl.css and n8n.css, which the
+ * page also imports for the shared case-study layout, editor and simulator.
+ * Only what Airtable adds lives here: the trigger colour, the base view
+ * (tables, fields, views, sample records, interfaces) and the record changes
+ * in the run log. Every class is prefixed a-.
+ */
+:root {
+  --n-trigger: #1f63c6;
+  --n-trigger-bg: #e8f0fd;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --n-trigger: #8ab8ff;
+    --n-trigger-bg: #15233a;
+  }
+}
+:root[data-theme='dark'] {
+  --n-trigger: #8ab8ff;
+  --n-trigger-bg: #15233a;
+}
+
+/* ---------- The base ---------- */
+.a-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1rem 0 1.25rem;
+}
+.a-links .gx-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.a-tables {
+  display: grid;
+  gap: 0.75rem;
+}
+.a-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  padding: 0 1rem;
+  min-width: 0;
+}
+.a-table > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  min-height: 52px;
+  padding: 0.6rem 0;
+  cursor: pointer;
+  color: var(--case, var(--accent));
+}
+.a-table-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.a-table-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.a-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--n-trigger-bg);
+  color: var(--n-trigger);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.a-table-desc {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+.a-fields td {
+  vertical-align: top;
+}
+.a-fields td:nth-child(3) {
+  min-width: 16rem;
+}
+.a-fields td > span,
+.a-fields td > code {
+  display: block;
+}
+.a-primary {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 4px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+.a-type {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border-radius: 4px;
+  background: var(--bg-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.a-formula {
+  margin: 0.15rem 0;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+}
+.a-note {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.a-sub {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+}
+.a-views {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+}
+.a-views li,
+.a-interface li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.a-view-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--case, var(--accent));
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.a-view-setup {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.a-grid {
+  margin: 0 0 1rem;
+}
+.a-grid > summary,
+.a-changes > summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.a-grid-wrap td,
+.a-grid-wrap th {
+  white-space: nowrap;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.82rem;
+}
+.a-interfaces {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+.a-interface h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+.a-interface ul {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.a-interface .a-type {
+  align-self: flex-start;
+}
+.a-syncs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.a-syncs li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.a-syncs svg {
+  flex: none;
+  margin-top: 0.2rem;
+  color: var(--case, var(--accent));
+}
+
+/* ---------- Editor and run log ---------- */
+.a-token {
+  white-space: normal;
+}
+.a-change-list {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.a-change-list li {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: var(--bg-muted);
+}
+.a-change-rec {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.a-change-rec.is-new {
+  color: var(--success);
+}
+.a-change-list dl {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.a-change-list dl div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 35%) 1fr;
+  gap: 0.5rem;
+}
+.a-change-list dt {
+  color: var(--text-muted);
+}
+.a-change-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.a-change-list del {
+  color: var(--text-muted);
+}
+.a-change-list ins {
+  text-decoration: none;
+  font-weight: 600;
+}
+.a-computed {
+  font-size: 0.72rem;
+  font-style: italic;
+}
+.g-record .a-changes {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Form help ---------- */
+.nf-help {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}

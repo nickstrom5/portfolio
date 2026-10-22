@@ -16,6 +16,7 @@
     "n8n:check": "node scripts/n8n-check.mjs",
     "og": "node scripts/make-og.mjs",
     "asana:check": "node scripts/asana-check.mjs",
+    "airtable:check": "node scripts/airtable-check.mjs",
     "food:add": "node scripts/add-food.mjs",
     "photos:check": "node scripts/check-photo-metadata.mjs",
     "prepare": "git config core.hooksPath .githooks || true"

@@ -1,0 +1,80 @@
+---
+/**
+ * The base's form view, rebuilt as a working demo. Submitting turns the
+ * visitor's answers into a new record and the submission that starts the
+ * automation the form feeds. Nothing is sent anywhere;
+ * src/lib/airtable/page.ts does the wiring.
+ */
+import type { DemoForm } from '@/lib/airtable/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  caseId: string;
+  demo: DemoForm;
+  /** "automation 01 · New pitch" style name of what the form feeds. */
+  feedsName: string;
+  /** What kind of trigger receives it, for the side panel. */
+  triggerType: string;
+}
+const { caseId, demo: d, feedsName, triggerType } = Astro.props;
+const titleId = `${caseId}-demo-side-title`;
+---
+
+<div class="gx-demo" data-demo={caseId}>
+  <div class="gx-browser">
+    <div class="gx-chrome" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <em>{d.url}</em>
+    </div>
+    <div class="nf">
+      <form class="nf-card" data-lp-form method="dialog" novalidate>
+        <p class="nf-title">{d.title}</p>
+        <p class="nf-desc">{d.description}</p>
+        {d.fields.map((f) => (
+          <label class="nf-field">
+            <span>{f.label}{f.required && <span class="nf-req" aria-hidden="true"> *</span>}</span>
+            {f.type === 'dropdown' ? (
+              <select name={f.name} required={f.required} aria-describedby={`${f.help ? `${caseId}-help-${f.name} ` : ''}${caseId}-nf-error`}>
+                {f.options!.map((o) => <option>{o}</option>)}
+              </select>
+            ) : f.type === 'textarea' ? (
+              <textarea name={f.name} rows="3" required={f.required} placeholder={f.placeholder} aria-describedby={`${f.help ? `${caseId}-help-${f.name} ` : ''}${caseId}-nf-error`}></textarea>
+            ) : (
+              <input name={f.name} type={f.type} inputmode={f.type === 'number' ? 'numeric' : undefined} min={f.type === 'number' ? 0 : undefined} autocomplete={f.autocomplete} required={f.required} placeholder={f.placeholder} aria-describedby={`${f.help ? `${caseId}-help-${f.name} ` : ''}${caseId}-nf-error`} />
+            )}
+            {f.help && <span class="nf-help" id={`${caseId}-help-${f.name}`}>{f.help}</span>}
+          </label>
+        ))}
+        <p class="nf-error" id={`${caseId}-nf-error`} data-lp-error role="alert" hidden></p>
+        <button class="nf-submit" type="submit">{d.submitLabel}</button>
+        <p class="nf-fine"><span aria-hidden="true">*</span> Required</p>
+      </form>
+      <div class="nf-card nf-thanks" data-lp-thanks hidden tabindex="-1">
+        <span class="nf-done" aria-hidden="true"><Icon name="check" size={22} /></span>
+        <p class="nf-title">Sent</p>
+        <p class="nf-desc">{d.ending}</p>
+        <button type="button" class="nf-again" data-lp-again>Start over</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="gx-demo-side" aria-labelledby={titleId}>
+    <h4 id={titleId}>What happens when you send it</h4>
+    <p class="gx-demo-feeds">The form starts <a href={`#${caseId}-${d.feeds}`} data-open-auto={`${caseId}-${d.feeds}`}>{feedsName}</a> through its “{triggerType}” trigger. {d.note}</p>
+
+    <fieldset class="gx-next">
+      <legend>Play the rest of the world: what happens on this run?</legend>
+      {d.behaviors.map((b, i) => (
+        <label><input type="radio" name={`${caseId}-next`} value={b.value} checked={i === 0} /> {b.label}</label>
+      ))}
+    </fieldset>
+
+    <div class="gx-captured" data-captured hidden>
+      <p class="gx-captured-title">The new record, as the form creates it</p>
+      <pre class="n-json" data-captured-json></pre>
+      <p class="gx-captured-note" data-captured-when></p>
+      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the automation run</button>
+    </div>
+    <p class="gx-demo-note">Nothing is sent or stored. The form and the automation run in your browser.</p>
+  </aside>
+</div>
