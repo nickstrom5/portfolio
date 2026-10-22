@@ -1,0 +1,81 @@
+---
+/**
+ * One process as it is set up in ClickUp: where the List lives, its statuses,
+ * then each Automation as it reads in the Automations manager (When, If,
+ * Then). Styles come from src/styles/ghl.css (g-) and clickup.css (cu-); the
+ * simulator ticks each Automation as it fires.
+ */
+import type { Process } from '@/lib/clickup/types';
+import { describeAction, describeCondition, describeTrigger, type Names } from '@/lib/clickup/engine';
+import Icon from '@/components/ghl/Icon.astro';
+import Statuses from './Statuses.astro';
+
+interface Props {
+  process: Process;
+  caseId: string;
+  names: Names;
+}
+const { process: p, caseId, names } = Astro.props;
+const path = [p.location.space, p.location.folder].filter(Boolean).join(' / ');
+const actions = p.automations.reduce((n, a) => n + a.actions.length, 0);
+/** Splits text into plain runs and {{variables}}, shown as chips the way ClickUp shows dynamic fields. */
+const chip = (key: string) => ({ 'task.name': 'Task name', 'task.due': 'Due date', 'task.status': 'Status', 'task.assignees': 'Assignees', 'task.creator': 'Task creator' })[key] ?? key.replace(/^field\./, '');
+const segments = (text: string) => text.split(/(\{\{\s*[^}]+?\s*\}\})/g).filter(Boolean).map((seg) => { const m = seg.match(/^\{\{\s*(.+?)\s*\}\}$/); return m ? { v: chip(m[1]) } : { t: seg }; });
+---
+
+<figure class="g-canvas cu-canvas" data-canvas={`${caseId}:${p.id}`} aria-label={`${p.location.list} List: ${p.automations.length} Automations, ${actions} Actions`}>
+  <div class="g-canvas-bar">
+    <span class="g-folder">{path} /</span>
+    <span class="g-wfname">{p.location.list}</span>
+    <span class="g-pub">{p.automations.length} Automations on</span>
+  </div>
+  <div class="cu-setup">
+    <p class="cu-setup-label">Statuses</p>
+    <Statuses statuses={p.statuses} />
+  </div>
+  <p class="g-canvas-hint">The List’s Automations as they read in ClickUp’s Automations manager. Each one gets a green tick when it fires in the run, and a dash when its Conditions stop it.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Automations on ${p.location.list}`} tabindex="0">
+    <ol class="cu-autos">
+      {p.automations.map((a) => {
+        const t = describeTrigger(a.trigger);
+        return (
+          <li class="g-step cu-auto" data-node={a.id}>
+            <div class="g-card">
+              <span class="g-ico"><Icon name="bolt" /></span>
+              <div class="g-txt">
+                <span class="g-kind">Automation</span>
+                <span class="g-name">{a.name}</span>
+                <dl class="cu-rule">
+                  <div class="cu-when">
+                    <dt>When</dt>
+                    <dd><strong>{t.title}</strong>{t.detail && <span> · {t.detail}</span>}{a.appliesTo && a.appliesTo !== 'tasks' && <span> · applies to {a.appliesTo === 'both' ? 'tasks and subtasks' : 'subtasks'}</span>}</dd>
+                  </div>
+                  {a.conditions && a.conditions.length > 0 && (
+                    <div class="cu-if">
+                      <dt>If</dt>
+                      <dd><ul>{a.conditions.map((c) => <li>{describeCondition(c, names)}</li>)}</ul></dd>
+                    </div>
+                  )}
+                  <div class="cu-then">
+                    <dt>Then</dt>
+                    <dd>
+                      <ol>
+                        {a.actions.map((x) => {
+                          const d = describeAction(x, names);
+                          return <li><strong>{d.title}</strong> <span class={x.type === 'add_comment' || x.type === 'send_channel_message' ? 'cu-said' : undefined}>{segments(d.detail).map((sg) => ('v' in sg ? <code class="g-merge">{sg.v}</code> : sg.t))}</span></li>;
+                        })}
+                      </ol>
+                    </dd>
+                  </div>
+                </dl>
+                {a.note && <p class="g-sum">{a.note}</p>}
+              </div>
+              <span class="g-state" aria-hidden="true"></span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show all ${p.automations.length} Automations`}>Show all {p.automations.length} Automations</button>
+</figure>

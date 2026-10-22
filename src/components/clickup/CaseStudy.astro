@@ -1,0 +1,183 @@
+---
+/**
+ * One case study: the Workspace, its sidebar map, the working Form and every
+ * process with its simulator and build notes. Ids are prefixed with the case
+ * id so three of these can live on one page.
+ */
+import type { CaseStudy } from '@/lib/clickup/types';
+import { namesOf } from '@/lib/clickup/engine';
+import FormDemo from './FormDemo.astro';
+import ProcessPanel from './ProcessPanel.astro';
+import Statuses from './Statuses.astro';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+  index: number;
+  hidden?: boolean;
+}
+const { study, index, hidden = false } = Astro.props;
+const { workspace: w, form, processes } = study;
+const names = namesOf(w);
+const fed = processes.find((p) => p.id === form.feeds);
+const feedsName = fed ? `${fed.number} · ${fed.name}` : 'the first process';
+const where = fed ? `${fed.location.space} › ${fed.location.list}` : 'a List';
+const automations = processes.reduce((n, p) => n + p.automations.length, 0);
+/** Which process lives in a List, by its name. */
+const inList = (name: string) => processes.filter((p) => p.location.list === name);
+---
+
+<section
+  class="gx-case"
+  id={w.id}
+  role="tabpanel"
+  aria-labelledby={`case-tab-${w.id}`}
+  hidden={hidden}
+  data-case-panel={w.id}
+  style={`--case: ${w.tint.light}; --case-dark: ${w.tint.dark}`}
+>
+  <header class="gx-case-head">
+    <div class="container">
+      <span class="eyebrow gx-case-eyebrow">Case study {index + 1} · {w.industry}</span>
+      <h2>{w.name}</h2>
+      <p class="lede">{w.intro}</p>
+      <dl class="gx-case-facts">
+        <div><dt>Processes</dt><dd>{processes.length}</dd></div>
+        <div><dt>Automations</dt><dd>{automations}</dd></div>
+        <div><dt>Sample tasks</dt><dd>{processes.reduce((n, p) => n + p.scenarios.length, 0)}</dd></div>
+        <div><dt>Where</dt><dd class="gx-small">{w.area}</dd></div>
+      </dl>
+      <div class="gx-team">
+        <p class="gx-team-title">The sample team</p>
+        <ul>
+          {w.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}{m.guest && ' · Guest'}</span></li>)}
+        </ul>
+      </div>
+      <p class="gx-disclaimer">{w.disclaimer}</p>
+      <ul class="gx-jump" aria-label={`Jump to a part of the ${w.name} case study`}>
+        <li><a href={`#${w.id}-journey`} data-open-auto={`${w.id}-journey`}>The Workspace</a></li>
+        <li><a href={`#${w.id}-demo`} data-open-auto={`${w.id}-demo`}>The Form</a></li>
+        <li><a href={`#${w.id}-workflows`} data-open-auto={`${w.id}-workflows`}>The processes</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="section gx-journey-section" id={`${w.id}-journey`}>
+    <div class="container">
+      <span class="eyebrow">The Workspace</span>
+      <h3 class="gx-h3">How the Workspace is laid out</h3>
+      <p class="lede">ClickUp nests work in Spaces, Folders and Lists. This is {w.name}’s sidebar. Each process below lives in one List, with its own statuses, Custom Fields and Automations. Pick a card to open that process.</p>
+      <ol class="gx-journey" data-count={processes.length}>
+        {processes.map((p) => (
+          <li>
+            <a href={`#${w.id}-${p.id}`} data-open-auto={`${w.id}-${p.id}`} class="gx-j">
+              <span class="gx-j-num">{p.number}</span>
+              <span class="gx-j-name">{p.name}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{p.automations.length} Automations · {p.location.list}</span>
+              <span class="gx-j-out">{w.handoff[p.id] ?? p.kicker}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+
+      <div class="cu-map">
+        <div class="cu-tree" role="group" aria-label={`${w.name} Workspace sidebar`}>
+          <p class="cu-tree-ws">{w.name} Workspace</p>
+          <ul>
+            {w.hierarchy.map((s) => (
+              <li class="cu-space">
+                <span class="cu-space-name">{s.space}</span>
+                <span class="cu-tree-note">{s.note}</span>
+                <ul>
+                  {s.folders.map((f) => (
+                    <li class="cu-folder">
+                      <span class="cu-folder-name">{f.name}</span>
+                      <ul>
+                        {f.lists.map((l) => (
+                          <li class="cu-list">{l}{inList(l).filter((p) => p.location.folder === f.name).map((p) => <a class="cu-tree-proc" href={`#${w.id}-${p.id}`} data-open-auto={`${w.id}-${p.id}`}>{p.number}</a>)}</li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                  {s.lists.map((l) => (
+                    <li class="cu-list">{l}{inList(l).filter((p) => !p.location.folder && p.location.space === s.space).map((p) => <a class="cu-tree-proc" href={`#${w.id}-${p.id}`} data-open-auto={`${w.id}-${p.id}`}>{p.number}</a>)}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="cu-side">
+          <div class="cu-box">
+            <p class="cu-box-kicker">Dashboard</p>
+            <p class="cu-box-title">{w.dashboard.name}</p>
+            <p class="cu-box-note">{w.dashboard.note}</p>
+            <ul class="cu-widgets">
+              {w.dashboard.widgets.map((x) => <li><span class="cu-widget-type">{x.type}</span><strong>{x.title}</strong><span>{x.note}</span></li>)}
+            </ul>
+          </div>
+          <div class="cu-box">
+            <p class="cu-box-kicker">Goals</p>
+            {w.goals.map((g) => (
+              <div class="cu-goal">
+                <p class="cu-box-title">{g.name}</p>
+                <p class="cu-box-note">{g.note}</p>
+                <ul>
+                  {g.targets.map((t) => <li><span class="cu-widget-type">{t.type} target</span>{t.name} <strong>{t.target}</strong></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div class="cu-box">
+            <p class="cu-box-kicker">Docs</p>
+            <ul class="cu-docs">
+              {w.docs.map((d) => <li><strong>{d.name}</strong><span>{d.note}</span></li>)}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <details class="cu-allstatuses">
+        <summary>Every List’s statuses <span class="g-count">({processes.length} Lists)</span></summary>
+        <dl>
+          {processes.map((p) => <div><dt>{p.location.list}</dt><dd><Statuses statuses={p.statuses} /></dd></div>)}
+        </dl>
+      </details>
+    </div>
+  </div>
+
+  <div class="section" id={`${w.id}-demo`}>
+    <div class="container">
+      <span class="eyebrow">Live demo</span>
+      <h3 class="gx-h3">The Form, working</h3>
+      <p class="lede">Fill in {w.name}’s ClickUp Form as if you were {form.feeds === 'intake' ? 'a prospective client' : 'the person asking'}, and press {form.submitLabel}. Then pick what happens next and press Watch the Automations run, which appears once you submit, to see what {feedsName} does with your answers. Nothing is sent or stored.</p>
+      <FormDemo caseId={w.id} form={form} feedsName={feedsName} where={where} />
+      <div class="gx-landing-notes">
+        <details class="gx-notes-more">
+          <summary>How the Form is set up in ClickUp’s Form view <span class="g-count">({form.notes.length} notes for builders)</span></summary>
+          <ul class="gx-note-grid">
+            {form.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
+          </ul>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="section gx-workflows" id={`${w.id}-workflows`}>
+    <div class="container">
+      <span class="eyebrow">The processes</span>
+      <h3 class="gx-h3">Pick a process, pick a sample task, press Run</h3>
+      <p class="lede">Each tab below is one List and its Automations. Read The problem and What I built for the short version. Then pick a sample task and press Run it: the activity log lists what people do and every Automation that fires, with the time it would happen, and the Automation cards tick off as they fire.</p>
+      <p class="gx-builder-note">For ClickUp builders: each card reads as it does in the Automations manager. The simulator follows ClickUp’s rules: Conditions must all be true, Actions run top to bottom, date Triggers fire at 4 AM, and Every… skips tasks in a Done or Closed status. No Action here starts another Automation, so nothing depends on chaining. <a href="#decoder">New to the words? Open the decoder.</a></p>
+      <div class="gx-tabs" role="tablist" aria-label={`${w.name} processes`} data-case-tabs={w.id}>
+        {processes.map((p, i) => (
+          <button class="gx-tab" role="tab" type="button" id={`tab-${w.id}-${p.id}`} aria-controls={`${w.id}-${p.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={p.id}>
+            <span class="gx-tab-num">{p.number}</span>
+            <span class="gx-tab-name">{p.name}</span>
+            <span class="gx-tab-kicker">{p.kicker}</span>
+          </button>
+        ))}
+      </div>
+      {processes.map((p, i) => <ProcessPanel process={p} caseId={w.id} names={names} hidden={i !== 0} />)}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,352 @@
+/**
+ * Wires up /clickup/: the case-study switcher, each case's process tabs, the
+ * simulators, copy buttons and the Form demos that turn the visitor's answers
+ * into the task for a case's first process. Same behaviour as /ghl/.
+ *
+ * Deep links: #agency opens a case; #agency-intake opens a case and one of
+ * its processes; #agency-demo scrolls to a case's Form.
+ *
+ * A case's data loads when the case is first shown (or its card is hovered),
+ * and only then do its simulators and Form demo start.
+ */
+import { loadCase } from './load-case';
+import { formatDay, formatTime, useWeekOf } from './engine';
+import type { CaseStudy, FieldValue } from './types';
+import { Simulator } from './ui';
+
+const DAY = 1440;
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scrollTo = (el: Element | null | undefined) => el?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+
+/** Moves keyboard focus to an element without scrolling it (the smooth scroll is already under way). */
+function focusQuietly(el: HTMLElement | null | undefined) {
+  if (!el) return;
+  if (!el.hasAttribute('tabindex') && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+  el.focus({ preventScroll: true });
+}
+
+/** One shared polite live region for small confirmations like "Copied". */
+function announcer() {
+  let el = document.getElementById('gx-announce');
+  if (!el) {
+    el = document.createElement('p');
+    el.id = 'gx-announce';
+    el.className = 'sr-only';
+    el.setAttribute('role', 'status');
+    document.body.append(el);
+  }
+  return el;
+}
+
+/** Roving-focus tablist: click, arrow keys, Home and End. */
+function tablist(tabs: HTMLButtonElement[], key: string, onSelect: (id: string, focus: boolean) => void) {
+  const ids = tabs.map((t) => t.dataset[key]!);
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => onSelect(ids[i], false));
+    t.addEventListener('keydown', (e) => {
+      const move = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (move) {
+        e.preventDefault();
+        onSelect(ids[(i + move + ids.length) % ids.length], true);
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        onSelect(ids[e.key === 'Home' ? 0 : ids.length - 1], true);
+      }
+    });
+  });
+  return ids;
+}
+
+function mark(tabs: HTMLButtonElement[], key: string, id: string, focus: boolean) {
+  tabs.forEach((t) => {
+    const on = t.dataset[key] === id;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+    if (on && focus) t.focus();
+    // On phones the workflow tabs are a swipeable strip; keep the selected one visible.
+    const strip = t.parentElement;
+    if (on && strip && strip.scrollWidth > strip.clientWidth) {
+      const pad = parseFloat(getComputedStyle(strip).scrollPaddingInlineStart) || 16;
+      strip.scrollTo({ left: Math.max(0, t.offsetLeft - strip.offsetLeft - pad) });
+    }
+  });
+}
+
+export function initClickUpPage() {
+  // Dates in the log and in messages follow the visitor's own week.
+  useWeekOf(new Date());
+  const sims = new Map<string, Simulator>();
+  const loading = new Map<string, Promise<void>>();
+  /** Loads a case's data once, then starts its simulators and its landing demo. */
+  const ensureCase = (caseId: string) => {
+    if (!loading.has(caseId)) {
+      loading.set(
+        caseId,
+        loadCase(caseId).then((study) => {
+          if (!study) return;
+          document.querySelectorAll<HTMLElement>(`[data-sim][data-case="${caseId}"]`).forEach((root) => sims.set(`${caseId}-${root.dataset.sim}`, new Simulator(root, study)));
+          document.querySelectorAll<HTMLElement>(`[data-demo="${caseId}"]`).forEach((demo) => initFormDemo(demo, study, sims, (id) => openAutomation.get(caseId)?.(id)));
+        }),
+      );
+    }
+    return loading.get(caseId)!;
+  };
+
+  // Workflow tabs inside each case.
+  const openAutomation = new Map<string, (id: string, focus?: boolean) => void>();
+  document.querySelectorAll<HTMLElement>('[data-case-tabs]').forEach((list) => {
+    const caseId = list.dataset.caseTabs!;
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...document.querySelectorAll<HTMLElement>(`[data-case-panel="${caseId}"] [data-panel]`)];
+    const select = (id: string, focus = false) => {
+      mark(tabs, 'tab', id, focus);
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+      history.replaceState(null, '', `#${caseId}-${id}`);
+    };
+    tablist(tabs, 'tab', (id, focus) => select(id, focus));
+    openAutomation.set(caseId, select);
+  });
+
+  // Build-note tabs inside each workflow panel.
+  document.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((list) => {
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-note-tab]')];
+    const panels = [...(list.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])];
+    tablist(tabs, 'noteTab', (id, focus) => {
+      mark(tabs, 'noteTab', id, focus);
+      panels.forEach((p) => (p.hidden = p.dataset.notePanel !== id));
+    });
+  });
+
+  // The case switcher.
+  const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
+  const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
+  const selectCase = (id: string, focus = false, hash = true) => {
+    void ensureCase(id);
+    mark(caseTabs, 'caseTab', id, focus);
+    casePanels.forEach((p) => (p.hidden = p.dataset.casePanel !== id));
+    if (hash) history.replaceState(null, '', `#${id}`);
+  };
+  const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
+  // On phones the case opens below the cards, out of sight: bring its heading up after a tap.
+  // Start loading a case as soon as the pointer reaches its card.
+  caseTabs.forEach((t) => t.addEventListener('pointerenter', () => void ensureCase(t.dataset.caseTab!), { once: true }));
+  caseTabs.forEach((t) =>
+    t.addEventListener('click', () => {
+      const panel = document.getElementById(t.dataset.caseTab!);
+      if (panel && panel.getBoundingClientRect().top > window.innerHeight * 0.8) scrollTo(panel);
+    }),
+  );
+
+  /**
+   * Resolves "#case", "#case-automation" and "#case-section" to the right view.
+   * With `focus`, keyboard focus follows (the workflow's heading, or the section).
+   */
+  function go(target: string, scroll: boolean, focus = false) {
+    const caseId = caseIds.find((c) => target === c || target.startsWith(`${c}-`));
+    if (!caseId) return false;
+    selectCase(caseId, false, false);
+    const rest = target.slice(caseId.length + 1);
+    const isAutomation = !!rest && !!document.querySelector(`[data-case-panel="${caseId}"] [data-panel="${CSS.escape(rest)}"]`);
+    if (isAutomation) openAutomation.get(caseId)?.(rest);
+    else history.replaceState(null, '', `#${target}`);
+    const el = document.getElementById(target);
+    if (scroll) scrollTo(el);
+    if (focus) focusQuietly(isAutomation ? el?.querySelector<HTMLElement>('[data-panel-heading]') : el);
+    return true;
+  }
+
+  // Each diagram is capped to one screen; its button opens the whole thing. Short ones need no button.
+  document.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
+    const canvas = btn.closest<HTMLElement>('.g-canvas')!;
+    const body = canvas.querySelector<HTMLElement>('.g-canvas-body')!;
+    btn.addEventListener('click', () => {
+      const open = canvas.classList.toggle('is-expanded');
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Show less' : btn.dataset.more!;
+      if (!open && canvas.getBoundingClientRect().top < 0) scrollTo(canvas);
+    });
+    // Sizes are only known once a panel is shown, so check whenever the body's box changes.
+    new ResizeObserver(() => {
+      if (!canvas.classList.contains('is-expanded') && body.clientHeight > 0) btn.hidden = body.scrollHeight <= body.clientHeight + 4;
+    }).observe(body);
+  });
+
+  // The decoder in the hero opens itself when a link points at it.
+  document.querySelectorAll<HTMLAnchorElement>('a[href="#decoder"]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const d = document.getElementById('decoder');
+      if (d instanceof HTMLDetailsElement) d.open = true;
+    }),
+  );
+
+  // Copy buttons on snippets.
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
+    btn.addEventListener('click', async () => {
+      const code = btn.closest('.g-snippet')?.querySelector('pre')?.textContent ?? '';
+      const label = btn.querySelector('span');
+      try {
+        await navigator.clipboard.writeText(code);
+        if (label) label.textContent = 'Copied';
+        announcer().textContent = 'Copied to the clipboard.';
+      } catch {
+        if (label) label.textContent = 'Select and copy';
+        announcer().textContent = 'Copying was blocked. Select the code and copy it.';
+      }
+      window.setTimeout(() => label && (label.textContent = 'Copy'), 1600);
+    }),
+  );
+
+  // Links last, so a bad hash can never stop the rest of the page from working.
+  type Saved = { gxCase: string; y: number };
+  const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];
+  document.querySelectorAll<HTMLAnchorElement>('[data-open-auto]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      const target = a.dataset.openAuto!;
+      if (!caseIds.some((c) => target === c || target.startsWith(`${c}-`))) return;
+      e.preventDefault();
+      // Remember where the reader is, then give the jump its own history entry so Back returns here.
+      history.replaceState({ gxCase: shownCase(), y: window.scrollY } satisfies Saved, '');
+      if (location.hash !== `#${target}`) history.pushState(null, '', `#${target}`);
+      go(target, true, true);
+    }),
+  );
+  const fromHash = () => {
+    let target = location.hash.slice(1);
+    try {
+      target = decodeURIComponent(target);
+    } catch {
+      // Not a valid escape sequence; use it as written.
+    }
+    const saved = history.state as Saved | null;
+    if (saved?.gxCase) {
+      // Back or Forward onto a spot this page saved: show the same case and put the scroll back.
+      if (!go(target, false)) selectCase(saved.gxCase, false, false);
+      history.replaceState(saved, ''); // go() may have cleared it
+      window.scrollTo({ top: saved.y, behavior: 'instant' }); // html has scroll-behavior: smooth
+      return;
+    }
+    go(target, true);
+  };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+  // Without a hash naming a case, the case shown by default still needs its data.
+  void ensureCase(shownCase());
+}
+
+function initFormDemo(demo: HTMLElement, study: CaseStudy, sims: Map<string, Simulator>, openProcess: (id: string) => void) {
+  const f = study.form;
+  const caseId = study.workspace.id;
+  const formEl = demo.querySelector<HTMLFormElement>('[data-cu-form]')!;
+  const thanks = demo.querySelector<HTMLElement>('[data-cu-thanks]')!;
+  const error = demo.querySelector<HTMLElement>('[data-cu-error]')!;
+  const captured = demo.querySelector<HTMLElement>('[data-captured]')!;
+  const list = demo.querySelector<HTMLElement>('[data-captured-list]')!;
+  const when = demo.querySelector<HTMLElement>('[data-captured-when]')!;
+  const sim = () => sims.get(`${caseId}-${f.feeds}`);
+  let answers: { name: string; fields: Record<string, FieldValue> } | undefined;
+
+  formEl.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(formEl);
+    const get = (k: string) => String(data.get(k) ?? '').trim();
+    const missing: string[] = [];
+    const invalid: HTMLElement[] = [];
+    formEl.querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+    for (const q of f.fields) {
+      const v = get(q.name);
+      const input = formEl.elements.namedItem(q.name) as HTMLElement | null;
+      const label = q.label.replace(/\?$/, '');
+      const problem = q.required && !v ? label : q.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v) ? `${label} (check the address)` : '';
+      if (problem) {
+        missing.push(problem);
+        if (input) {
+          input.setAttribute('aria-invalid', 'true');
+          invalid.push(input);
+        }
+      }
+    }
+    if (missing.length) {
+      error.textContent = `Please fill in: ${missing.join(', ')}.`;
+      error.hidden = false;
+      invalid[0]?.focus();
+      return;
+    }
+    error.hidden = true;
+    const fields: Record<string, FieldValue> = {};
+    let name = '';
+    const rows: [string, string][] = [];
+    for (const q of f.fields) {
+      const v = get(q.name);
+      if (q.maps === 'name') {
+        name = v;
+        rows.push(['Task name', v]);
+      } else if (q.maps === 'description') rows.push(['Description', v || '(left blank)']);
+      else {
+        if (v) fields[q.maps.field] = v;
+        rows.push([q.maps.field, v || '(left blank)']);
+      }
+    }
+    answers = { name, fields };
+    list.replaceChildren(
+      ...rows.map(([k, v]) => {
+        const d = document.createElement('div');
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = k;
+        dd.textContent = v;
+        d.append(dt, dd);
+        return d;
+      }),
+    );
+    const now = new Date();
+    useWeekOf(now);
+    const start = ((now.getDay() + 6) % 7) * DAY + now.getHours() * 60 + now.getMinutes();
+    when.textContent = `Submitted ${formatDay(start).split(',')[0]} at ${formatTime(start)}, your local time. The run below keeps the sample task’s own timing, so its dates are the sample week’s; the task name and fields are yours.`;
+    captured.hidden = false;
+    formEl.hidden = true;
+    thanks.hidden = false;
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      focusQuietly(captured.querySelector<HTMLElement>('.gx-captured-title'));
+      captured.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' });
+    } else {
+      thanks.focus({ preventScroll: true });
+    }
+  });
+
+  const clearFixed = (e: Event) => {
+    const input = e.target as HTMLInputElement | HTMLSelectElement;
+    const v = input.value?.trim() ?? '';
+    if (input.getAttribute('aria-invalid') !== 'true' || !v || (input.type === 'email' && !/^\S+@\S+\.\S+$/.test(v))) return;
+    input.removeAttribute('aria-invalid');
+    if (!formEl.querySelector('[aria-invalid="true"]')) error.hidden = true;
+  };
+  formEl.addEventListener('input', clearFixed);
+  formEl.addEventListener('change', clearFixed);
+
+  demo.querySelector('[data-cu-again]')?.addEventListener('click', () => {
+    formEl.reset();
+    formEl.querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+    formEl.hidden = false;
+    thanks.hidden = true;
+    captured.hidden = true;
+    answers = undefined;
+    sim()?.useTask(undefined);
+    formEl.querySelector<HTMLElement>('input, select')?.focus();
+  });
+
+  demo.querySelector('[data-run-demo]')?.addEventListener('click', () => {
+    const s = sim();
+    if (!s || !answers) return;
+    const value = demo.querySelector<HTMLInputElement>(`input[name="${caseId}-next"]:checked`)?.value;
+    const behavior = f.behaviors.find((b) => b.value === value) ?? f.behaviors[0];
+    s.selectScenario(behavior.scenario);
+    s.useTask(answers);
+    openProcess(f.feeds);
+    const panel = document.getElementById(`${caseId}-${f.feeds}`);
+    const next = panel?.querySelector('[data-override-next]');
+    if (next) next.textContent = behavior.label;
+    scrollTo(window.matchMedia('(max-width: 960px)').matches ? panel?.querySelector('[data-override]') : panel?.querySelector('.gx-lab'));
+    focusQuietly(s.logElement);
+    s.runLater(reduceMotion() ? 0 : 500);
+  });
+}

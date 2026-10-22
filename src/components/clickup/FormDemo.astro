@@ -1,0 +1,86 @@
+---
+/**
+ * A case's ClickUp Form, rebuilt as a working demo. Submitting turns the
+ * visitor's answers into the task for the process the Form feeds. Nothing is
+ * sent anywhere; src/lib/clickup/page.ts does the wiring.
+ */
+import type { FormDemo as Form } from '@/lib/clickup/types';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  caseId: string;
+  form: Form;
+  /** "01 · Project intake" style name of the process the Form feeds. */
+  feedsName: string;
+  /** "Space › List" where the Form's tasks land. */
+  where: string;
+}
+const { caseId, form: f, feedsName, where } = Astro.props;
+const titleId = `${caseId}-demo-side-title`;
+const err = `${caseId}-cu-error`;
+---
+
+<div class="gx-demo" data-demo={caseId}>
+  <div class="gx-browser">
+    <div class="gx-chrome" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <em>{f.url}</em>
+    </div>
+    <div class="cu-formpage">
+      <div class="cu-formcard">
+        <form data-cu-form method="dialog" novalidate>
+          <p class="cu-form-title">{f.title}</p>
+          <p class="cu-form-desc">{f.description}</p>
+          {f.fields.map((q) => (
+            <label class="cu-q">
+              <span>{q.label}{q.required && <span class="cu-req" aria-hidden="true"> *</span>}</span>
+              {q.type === 'select' ? (
+                <select name={q.name} required={q.required} aria-describedby={err}>
+                  {!q.initial && <option value="">Select an option</option>}
+                  {q.options!.map((o) => <option selected={o === q.initial}>{o}</option>)}
+                </select>
+              ) : q.type === 'textarea' ? (
+                <textarea name={q.name} rows="3" placeholder={q.placeholder} aria-describedby={err}></textarea>
+              ) : (
+                <input name={q.name} type={q.type} autocomplete={q.autocomplete} required={q.required} placeholder={q.placeholder} aria-describedby={err} />
+              )}
+            </label>
+          ))}
+          <p class="cu-fine"><span aria-hidden="true">*</span> Required</p>
+          <p class="cu-error" id={err} data-cu-error role="alert" hidden></p>
+          <button class="cu-submit" type="submit">{f.submitLabel}</button>
+        </form>
+        <div class="cu-thanks" data-cu-thanks hidden tabindex="-1">
+          <span class="cu-thanks-ico" aria-hidden="true"><Icon name="check" size={22} /></span>
+          <p class="cu-form-title">Submitted</p>
+          <p>{f.thanks}</p>
+          <button type="button" class="cu-again" data-cu-again>Submit another response</button>
+        </div>
+        <p class="cu-powered">A ClickUp Form, rebuilt for this page</p>
+      </div>
+    </div>
+  </div>
+
+  <aside class="gx-demo-side" aria-labelledby={titleId}>
+    <h4 id={titleId}>What happens when you submit</h4>
+    <ol class="gx-demo-steps">
+      {f.steps.map((s) => <li>{s}</li>)}
+    </ol>
+    <p class="gx-demo-feeds">The Form feeds <a href={`#${caseId}-${f.feeds}`} data-open-auto={`${caseId}-${f.feeds}`}>{feedsName}</a>.</p>
+
+    <fieldset class="gx-next">
+      <legend>Then what happens to the task?</legend>
+      {f.behaviors.map((b, i) => (
+        <label><input type="radio" name={`${caseId}-next`} value={b.value} checked={i === 0} /> {b.label}</label>
+      ))}
+    </fieldset>
+
+    <div class="gx-captured" data-captured hidden>
+      <p class="gx-captured-title">The task ClickUp created in {where}</p>
+      <dl data-captured-list></dl>
+      <p class="gx-captured-note" data-captured-when></p>
+      <button type="button" class="btn btn-primary" data-run-demo><Icon name="play" size={16} />Watch the Automations run</button>
+    </div>
+    <p class="gx-demo-note">Nothing is sent or stored. The Form and the Automations run in your browser.</p>
+  </aside>
+</div>

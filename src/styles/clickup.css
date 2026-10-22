@@ -1,0 +1,568 @@
+/*
+ * Styles for /clickup/ on top of ghl.css, which the page also loads: the
+ * layout, simulator, log and notes are shared, and only what ClickUp adds
+ * lives here. Every class is prefixed cu-.
+ */
+
+/* Statuses as ClickUp shows them: a coloured dot and the name. */
+.cu-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cu-statuses li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--st) 45%, var(--border));
+  background: color-mix(in srgb, var(--st) 10%, var(--bg-elev));
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.cu-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--st);
+  flex: none;
+}
+.cu-setup {
+  padding: 0.7rem 1rem 0.2rem;
+}
+.cu-setup-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Automation cards: independent rules, so no connector lines between them. */
+.cu-autos {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cu-auto {
+  --g-tone: var(--g-logic);
+  --g-tone-bg: var(--g-logic-bg);
+}
+.cu-auto::before {
+  display: none;
+}
+.cu-auto > .g-card {
+  max-width: none;
+}
+.cu-rule {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.cu-rule > div {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.cu-rule dt {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cu-when dt {
+  color: var(--g-trigger);
+}
+.cu-if dt {
+  color: var(--g-logic);
+}
+.cu-then dt {
+  color: var(--g-crm);
+}
+.cu-rule dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cu-rule ul,
+.cu-rule ol {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.cu-rule li + li {
+  margin-top: 0.15rem;
+}
+.cu-said {
+  color: var(--text-muted);
+}
+
+/* Things besides Automations: templates, recurring tasks, Docs, Forms. */
+.cu-pieces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cu-pieces li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.cu-pieces li > span:last-child {
+  color: var(--text-muted);
+}
+.cu-piece-kind,
+.cu-widget-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--case, var(--accent));
+}
+:root[data-theme='dark'] .cu-piece-kind,
+:root[data-theme='dark'] .cu-widget-type {
+  color: var(--case-dark, var(--accent));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .cu-piece-kind,
+  :root:not([data-theme='light']) .cu-widget-type {
+    color: var(--case-dark, var(--accent));
+  }
+}
+.cu-private {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.cu-views {
+  margin-top: 1rem;
+}
+
+/* The Workspace map: sidebar tree beside the Dashboard, Goals and Docs. */
+.cu-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  align-items: start;
+}
+.cu-tree,
+.cu-box {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 1rem 1.1rem;
+  min-width: 0;
+}
+.cu-tree-ws {
+  margin: 0 0 0.6rem;
+  font-weight: 800;
+}
+.cu-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cu-tree ul ul {
+  margin-left: 0.55rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--border);
+}
+.cu-space + .cu-space {
+  margin-top: 0.9rem;
+}
+.cu-space-name,
+.cu-folder-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.cu-space-name::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 0.45rem;
+  border-radius: 3px;
+  background: var(--case, var(--accent));
+}
+.cu-folder-name {
+  margin-top: 0.35rem;
+  font-weight: 600;
+}
+.cu-tree-note {
+  display: block;
+  margin: 0.1rem 0 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.cu-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  font-size: 0.88rem;
+}
+.cu-tree-proc {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 0.4rem;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.cu-tree-proc:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.cu-side {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.cu-box-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cu-box-title {
+  margin: 0.15rem 0 0;
+  font-weight: 800;
+}
+.cu-box-note {
+  margin: 0.1rem 0 0.5rem;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+.cu-widgets,
+.cu-docs,
+.cu-goal ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.cu-widgets {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.cu-widgets li,
+.cu-docs li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+}
+.cu-widgets li > span:last-child,
+.cu-docs li > span {
+  color: var(--text-muted);
+}
+.cu-goal + .cu-goal {
+  margin-top: 0.9rem;
+}
+.cu-goal li {
+  display: grid;
+  gap: 0.05rem;
+}
+.cu-allstatuses {
+  margin-top: 1.5rem;
+}
+.cu-allstatuses summary {
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.cu-allstatuses dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.5rem 0 0;
+}
+.cu-allstatuses dl > div {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.cu-allstatuses dt {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.cu-allstatuses dd {
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .cu-map {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .cu-allstatuses dl > div,
+  .cu-rule > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
+}
+
+/* The task view in the simulator. */
+.cu-rec-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.cu-rec-head .cu-status-chip {
+  flex: none;
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: var(--st);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: 0 0 2px rgb(0 0 0 / 0.45);
+}
+.cu-rec-head > div {
+  min-width: 0;
+}
+.g-record dd {
+  overflow-wrap: anywhere;
+}
+.cu-rec-items {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+}
+.cu-rec-items li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  padding: 0.15rem 0;
+}
+.cu-rec-items li::before {
+  content: '';
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1.5px solid var(--border-strong);
+  transform: translateY(1px);
+}
+.cu-rec-items li.is-checked {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.cu-rec-items li.is-checked::before {
+  background: var(--g-ok);
+  border-color: var(--g-ok);
+}
+.cu-rec-links li::before {
+  border-radius: 50%;
+}
+.cu-rec-items li.is-new {
+  background: color-mix(in srgb, var(--g-ok) 14%, transparent);
+}
+.cu-archived {
+  font-weight: 700;
+  color: var(--g-warn);
+}
+.cu-payload {
+  margin: 0.3rem 0 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: var(--g-code-bg);
+  color: var(--g-code-fg);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  white-space: pre-wrap;
+}
+
+/* Hero preview: people and Automation steps look different. */
+.cu-peek-person {
+  background: var(--bg-muted);
+  border-style: dashed;
+}
+.cu-peek-action {
+  border-color: color-mix(in srgb, var(--g-ok) 45%, var(--border));
+}
+
+/* The ClickUp Form: a light page in both themes, like a screenshot. */
+.cu-formpage {
+  color-scheme: light;
+  padding: 1.5rem 1rem 1rem;
+  background: linear-gradient(180deg, #7b68ee 0 96px, #f7f8fa 96px);
+  color: #292d34;
+  font-size: 15px;
+}
+.cu-formcard {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 0.75rem;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e4e6ea;
+  box-shadow: 0 10px 28px -18px rgb(30 30 60 / 0.5);
+}
+.cu-formcard form {
+  display: grid;
+  gap: 0.85rem;
+}
+.cu-form-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #292d34;
+}
+.cu-form-desc {
+  margin: -0.4rem 0 0.2rem;
+  font-size: 0.9rem;
+  color: #545a63;
+}
+.cu-q {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #292d34;
+  min-width: 0;
+}
+.cu-req {
+  color: #d33d44;
+}
+.cu-q input,
+.cu-q select,
+.cu-q textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid #cdd1d6;
+  background: #fff;
+  color: #292d34;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+.cu-q textarea {
+  resize: vertical;
+}
+.cu-q input:focus-visible,
+.cu-q select:focus-visible,
+.cu-q textarea:focus-visible {
+  outline: 2px solid #7b68ee;
+  outline-offset: 1px;
+  border-color: #7b68ee;
+}
+.cu-q [aria-invalid='true'] {
+  border-color: #d33d44;
+}
+.cu-fine {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #545a63;
+}
+.cu-error {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #8a1c12;
+  font-size: 0.85rem;
+}
+.cu-submit {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 1.4rem;
+  border: 0;
+  border-radius: 6px;
+  background: #5b4bd6;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cu-submit:hover {
+  background: #4a3bbf;
+}
+.cu-thanks {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+.cu-thanks p {
+  margin: 0;
+  color: #545a63;
+}
+.cu-thanks .cu-form-title {
+  color: #292d34;
+}
+.cu-thanks-ico {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e3f6ea;
+  color: #127a3e;
+}
+.cu-again {
+  min-height: 44px;
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+  border-radius: 6px;
+  border: 1px solid #cdd1d6;
+  background: #fff;
+  color: #292d34;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cu-powered {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #545a63;
+}

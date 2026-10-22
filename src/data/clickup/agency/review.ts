@@ -1,0 +1,183 @@
+import type { Process } from '@/lib/clickup/types';
+
+const D = 1440;
+
+export const review: Process = {
+  id: 'review',
+  number: '02',
+  name: 'Client review rounds',
+  kicker: 'Draft to sign-off',
+  tagline: 'Every deliverable knows whose turn it is, and a client who goes quiet gets a nudge on day three.',
+  problem:
+    'Designs went to clients as email attachments. Feedback came back in three threads, nobody knew which version was approved, and a client who went quiet held up a launch for a week before anyone noticed. Extra revision rounds were done for free because nobody tracked how many there had been.',
+  solution:
+    'Each deliverable is a task that moves through review statuses, and each status hands the task to the right person: the creative director for internal review, the client (a guest) for client review, the designer for changes. The client gets three days, then a reminder. A field records the revision round, and the round past the included two flags the account manager to send a change order.',
+  location: { space: 'Client Delivery', folder: 'Juniper Dental · Website', list: 'Deliverables' },
+  statuses: [
+    { name: 'To do', group: 'not_started', color: '#87909e' },
+    { name: 'In progress', group: 'active', color: '#1090e0' },
+    { name: 'Internal review', group: 'active', color: '#5f55ee' },
+    { name: 'Client review', group: 'active', color: '#e16b16' },
+    { name: 'Changes requested', group: 'active', color: '#d33d44' },
+    { name: 'Approved', group: 'done', color: '#008844' },
+    { name: 'Delivered', group: 'closed', color: '#656f7d' },
+  ],
+  fields: [
+    { name: 'Designer', type: 'People', note: 'Who does the work and the revisions.' },
+    { name: 'Reviewer', type: 'People', note: 'Internal sign-off, usually Priya.' },
+    { name: 'Client approver', type: 'People', note: 'The one client guest who can approve. One name avoids “my boss also has thoughts.”' },
+    { name: 'Revision round', type: 'Dropdown', options: ['Round 1', 'Round 2', 'Out of scope'], note: 'Set by the project manager when changes come back. Two rounds are included in every proposal.' },
+    { name: 'Client approved on', type: 'Date', note: 'Set by Automation; the record of sign-off.' },
+    { name: 'Internal notes', type: 'Text area', private: true, note: 'Private: never visible to the client guest.' },
+  ],
+  views: [
+    { type: 'Board', name: 'Whose turn', note: 'Grouped by status. The stand-up view: the client review column is everything waiting on the client.' },
+    { type: 'List', name: 'Client view', note: 'Shared with the client guest: only tasks shared with them, with Internal notes hidden.' },
+    { type: 'Calendar', name: 'Review dates', note: 'Due dates on a calendar, so the account manager sees which client answers are due when.' },
+  ],
+  pieces: [
+    { kind: 'Template', name: 'Folder template: Website project', note: 'Creates the Folder with Deliverables and Launch plan Lists, statuses, fields and these Automations, for every new client.' },
+    { kind: 'Doc', name: 'Delivery handbook', note: 'What a review round is, how to leave feedback in comments, what counts as a change order. Shared with the client on day one.' },
+    { kind: 'ClickApp', name: 'Multiple Assignees off', note: 'One assignee at a time, so Change assignees replaces and “whose turn” is never two people.' },
+  ],
+  automations: [
+    {
+      id: 'internal',
+      name: 'Internal review: to the reviewer',
+      trigger: { type: 'status_changes', to: ['Internal review'] },
+      actions: [
+        { type: 'change_assignees', mode: 'reassign', to: [{ field: 'Reviewer' }] },
+        { type: 'add_comment', body: '@{{field.Reviewer}} {{task.name}} is ready for internal review. Move it to Client review to send it, or to Changes requested with notes.' },
+      ],
+    },
+    {
+      id: 'client',
+      name: 'Client review: share it and start the clock',
+      trigger: { type: 'status_changes', to: ['Client review'] },
+      actions: [
+        { type: 'share_task', with: 'dana', permission: 'Edit' },
+        { type: 'change_assignees', mode: 'reassign', to: [{ field: 'Client approver' }] },
+        { type: 'change_due_date', daysAfter: 3 },
+        { type: 'add_comment', body: '@{{field.Client approver}} {{task.name}} is ready for you. Leave feedback as comments here, then press Approved or Changes requested. We’d love your answer by {{task.due}}.' },
+      ],
+      note: 'The client guest sees only tasks shared with them, so internal tasks in the same List stay internal. Edit permission lets them comment and change the status themselves; Internal notes is a private field, so they still never see it.',
+    },
+    {
+      id: 'changes',
+      name: 'Changes requested: back to the designer',
+      trigger: { type: 'status_changes', from: ['Internal review', 'Client review'], to: ['Changes requested'] },
+      actions: [
+        { type: 'change_assignees', mode: 'reassign', to: [{ field: 'Designer' }] },
+        { type: 'change_tags', add: ['revision'] },
+        { type: 'change_due_date', daysAfter: 2 },
+      ],
+    },
+    {
+      id: 'out-of-scope',
+      name: 'Past the included rounds: change order',
+      trigger: { type: 'custom_field_changes', field: 'Revision round', to: ['Out of scope'] },
+      actions: [
+        { type: 'change_priority', to: 'High' },
+        { type: 'change_followers', add: ['sam'] },
+        { type: 'add_comment', body: '@Sam Ortiz {{task.name}} is past the two included revision rounds. Send the change order before more design time goes in.' },
+      ],
+      note: 'A person decides when a round starts; the Automation makes sure the money conversation follows.',
+    },
+    {
+      id: 'quiet',
+      name: 'Client has not answered in three days',
+      trigger: { type: 'due_date_arrives' },
+      conditions: [{ type: 'status', is: ['Client review'] }],
+      actions: [
+        { type: 'change_priority', to: 'High' },
+        { type: 'add_comment', body: '@{{field.Client approver}} a gentle nudge on {{task.name}}: the launch date depends on it. Any feedback, even a quick “looks good”, keeps us on schedule. @Sam Ortiz for a call if needed.' },
+        { type: 'send_channel_message', channel: '#client-delivery', body: 'Waiting on the client: {{task.name}}, due {{task.due}}.' },
+      ],
+    },
+    {
+      id: 'approved',
+      name: 'Approved: record the sign-off',
+      trigger: { type: 'status_changes', to: ['Approved'] },
+      actions: [
+        { type: 'update_custom_field', field: 'Client approved on', onTriggerDate: true },
+        { type: 'change_tags', remove: ['revision'] },
+        { type: 'change_assignees', mode: 'reassign', to: ['jo'] },
+        { type: 'change_due_date', remove: true },
+      ],
+      note: 'Jo owns approved work until it is delivered. The date field is the paper trail if scope is ever questioned.',
+    },
+  ],
+  scenarios: [
+    {
+      id: 'first-round',
+      label: 'Approved in the first round',
+      summary: 'The homepage design goes to internal review, then to the client, who approves it the next morning.',
+      start: 540,
+      task: { name: 'Homepage design', status: 'In progress', assignees: ['lena'], dueDay: 4, fields: { Designer: 'lena', Reviewer: 'priya', 'Client approver': 'dana', 'Revision round': 'Round 1' } },
+      events: [
+        { at: 60, type: 'status', to: 'Internal review', by: 'lena' },
+        { at: 300, type: 'status', to: 'Client review', by: 'priya' },
+        { at: D + 75, type: 'comment', body: 'Love it. The photo of the front desk is perfect. Approved!', by: 'dana' },
+        { at: D + 80, type: 'status', to: 'Approved', by: 'dana' },
+      ],
+      until: 4 * D,
+      expect: { status: 'Approved', fires: ['internal', 'client', 'approved'], assignees: ['jo'] },
+    },
+    {
+      id: 'two-rounds',
+      label: 'One round of changes, a slow designer',
+      summary: 'The client asks for changes. Lena takes two days to send them back, then the client approves.',
+      start: 540,
+      task: { name: 'Services page design', status: 'In progress', assignees: ['lena'], fields: { Designer: 'lena', Reviewer: 'priya', 'Client approver': 'dana', 'Revision round': 'Round 1' } },
+      events: [
+        { at: 30, type: 'status', to: 'Internal review', by: 'lena' },
+        { at: 120, type: 'status', to: 'Client review', by: 'priya' },
+        { at: D + 290, type: 'comment', body: 'Can the hero photo show the team instead? And a bigger Book now button.', by: 'dana' },
+        { at: D + 300, type: 'status', to: 'Changes requested', by: 'dana' },
+        { at: D + 320, type: 'field', field: 'Revision round', value: 'Round 2', by: 'jo' },
+        { at: 3 * D + 60, type: 'status', to: 'Internal review', by: 'lena' },
+        { at: 3 * D + 240, type: 'status', to: 'Client review', by: 'priya' },
+        { at: 4 * D + 120, type: 'status', to: 'Approved', by: 'dana' },
+      ],
+      expect: { status: 'Approved', fires: ['internal', 'client', 'changes', 'approved'], blocks: ['quiet'], assignees: ['jo'] },
+    },
+    {
+      id: 'quiet-client',
+      label: 'Client goes quiet, then asks for more',
+      summary: 'No answer for three days. After the nudge, the client asks for a third round of changes.',
+      start: 840,
+      task: { name: 'About page design', status: 'Internal review', assignees: ['priya'], fields: { Designer: 'lena', Reviewer: 'priya', 'Client approver': 'dana', 'Revision round': 'Round 2' } },
+      events: [
+        { at: 30, type: 'status', to: 'Client review', by: 'priya' },
+        { at: 3 * D - 840 + 660, type: 'comment', body: 'Sorry, busy week! Can we try a different layout altogether, and add a section on our new location?', by: 'dana' },
+        { at: 3 * D - 840 + 665, type: 'status', to: 'Changes requested', by: 'dana' },
+        { at: 3 * D - 840 + 720, type: 'field', field: 'Revision round', value: 'Out of scope', by: 'jo' },
+      ],
+      until: 4 * D,
+      expect: { status: 'Changes requested', fires: ['client', 'quiet', 'changes', 'out-of-scope'], priority: 'High', tags: ['revision'], assignees: ['lena'] },
+    },
+  ],
+  build: [
+    { title: 'People fields, not fixed names', body: 'Designer, Reviewer and Client approver are People fields set once per task, so one set of Automations works for every designer and every client. Change assignees can point at a People field.' },
+    { title: 'Statuses say whose turn it is', body: 'Internal review, Client review and Changes requested each have exactly one owner. The Board then reads as a to-do list by person.' },
+    { title: 'Guests on tasks, not Folders', body: 'The client guest gets each deliverable through Share task with Edit permission when it reaches Client review, so drafts in progress and internal tasks stay internal.' },
+    { title: 'One clock, reset on each hand-off', body: 'Client review sets a three-day due date; Changes requested sets two days. Due date arrives only nags when the status is still Client review, so a late designer never triggers a client reminder.' },
+    { title: 'Rounds as a field', body: 'The project manager sets Revision round when feedback comes back. The “Out of scope” value is the Trigger for the change-order Automation, so counting stays a human judgment and the follow-up does not.' },
+    { title: 'Saved in the Folder template', body: 'The whole setup is part of the Website project Folder template, so a new client Folder comes with these Automations already on.' },
+  ],
+  edgeCases: [
+    { title: 'What if the client approves by email instead?', body: 'Sam pastes the email into a comment and moves the task to Approved himself. The Automation still records the date and hands it to Jo.' },
+    { title: 'What if the designer is late with changes?', body: 'The due date arrives while the status is Changes requested, so the client reminder Condition is false and nothing goes to the client. The late task shows on the Board and in Jo’s overdue filter instead.' },
+    { title: 'What if two people at the client want to approve?', body: 'Only the Client approver is assigned and asked. Others can be shared on the task to comment; the handbook says who has the final word.' },
+    { title: 'What if Priya sends it back before the client sees it?', body: 'Internal review to Changes requested is covered by the same Automation: back to the designer, revision tag, two days.' },
+    { title: 'What if the task is reopened after approval?', body: 'Moving it back to Client review shares and assigns it again and sets a new date. The old approval date stays in the field until the new approval overwrites it.' },
+  ],
+  qa: [
+    'A test task through every status, checking the assignee after each move.',
+    'The client guest account: sees the shared task, cannot see Internal notes or unshared tasks, can comment and change the status.',
+    'A task left in Client review over its due date: priority, comment and #client-delivery message at 4 AM.',
+    'A task left in Changes requested over its due date: no client reminder.',
+    'Revision round set to Round 2 does nothing; Out of scope fires the change-order comment.',
+  ],
+  features: ['Custom statuses', 'People Custom Fields', 'Change assignees from a People field', 'Share task with a guest', 'Private Custom Fields', 'Due date arrives with Conditions', 'Folder templates', 'Board and Calendar views'],
+};

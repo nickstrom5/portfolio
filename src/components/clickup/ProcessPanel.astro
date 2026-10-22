@@ -1,0 +1,133 @@
+---
+/** One process: the story, the List setup and simulator side by side, then the build notes. */
+import type { Process } from '@/lib/clickup/types';
+import type { Names } from '@/lib/clickup/engine';
+import ListSetup from './ListSetup.astro';
+import Simulator from './Simulator.astro';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  process: Process;
+  caseId: string;
+  names: Names;
+  hidden?: boolean;
+}
+const { process: p, caseId, names, hidden = false } = Astro.props;
+const uid = `${caseId}-${p.id}`;
+const notes = [
+  { key: 'edges', label: `What if… (${p.edgeCases.length})` },
+  { key: 'build', label: 'How I built it' },
+  { key: 'model', label: 'Fields and views' },
+  { key: 'qa', label: `Test plan (${p.qa.length})` },
+  ...(p.snippets && p.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
+];
+---
+
+<div class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={p.id}>
+  <header class="gx-panel-head">
+    <span class="eyebrow">{p.number} · {p.kicker}</span>
+    <h4 tabindex="-1" data-panel-heading>{p.name}</h4>
+    <p class="gx-tagline">{p.tagline}</p>
+  </header>
+
+  <div class="gx-ps">
+    <div>
+      <h5>The problem</h5>
+      <p>{p.problem}</p>
+    </div>
+    <div>
+      <h5>What I built</h5>
+      <p>{p.solution}</p>
+    </div>
+  </div>
+
+  <ul class="cu-pieces" aria-label="Besides the Automations">
+    {p.pieces.map((x) => (
+      <li><span class="cu-piece-kind">{x.kind}</span><strong>{x.name}</strong><span>{x.note}</span></li>
+    ))}
+  </ul>
+
+  <div class="gx-lab">
+    <div class="gx-lab-canvas">
+      <ListSetup process={p} caseId={caseId} names={names} />
+    </div>
+    <div class="gx-lab-sim">
+      <Simulator process={p} caseId={caseId} />
+    </div>
+  </div>
+
+  <div class="gx-notes">
+    <h5 class="gx-notes-title">Build notes</h5>
+    <p class="gx-notes-intro">The detail a ClickUp admin would check before trusting this setup. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
+    <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${p.name}`} data-note-tabs>
+      {notes.map((n, i) => (
+        <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
+      ))}
+    </div>
+
+    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
+      <ul class="gx-edge-list">
+        {p.edgeCases.map((e) => <li><strong>{e.title}</strong><span>{e.body}</span></li>)}
+      </ul>
+    </div>
+
+    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
+      <ol class="gx-build-list">
+        {p.build.map((b) => <li><strong>{b.title}.</strong> {b.body}</li>)}
+      </ol>
+    </div>
+
+    <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
+      <div class="gx-table-wrap">
+        <table class="gx-table">
+          <caption class="sr-only">Custom Fields on {p.location.list}</caption>
+          <thead><tr><th scope="col">Custom Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
+          <tbody>
+            {p.fields.map((f) => (
+              <tr>
+                <td><strong>{f.name}</strong>{f.private && <span class="cu-private">Private</span>}</td>
+                <td>{f.type}</td>
+                <td>{[f.options && `Options: ${f.options.join(', ')}.`, f.note].filter(Boolean).join(' ')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <dl class="gx-kv cu-views">
+        {p.views.map((v) => (
+          <div><dt><span class="gx-tag">{v.type}</span> {v.name}</dt><dd>{v.note}</dd></div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
+      <ul class="gx-qa-list">
+        {p.qa.map((q) => <li><Icon name="check" size={16} /><span>{q}</span></li>)}
+      </ul>
+    </div>
+
+    {p.snippets && p.snippets.length > 0 && (
+      <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
+        <div class="gx-snip-grid">
+          {p.snippets.map((sn) => (
+            <div class="g-snippet">
+              <div class="g-snippet-head">
+                <h6>{sn.title}</h6>
+                <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
+              </div>
+              <pre data-lang={sn.language}><code>{sn.code}</code></pre>
+              {sn.note && <p>{sn.note}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div class="gx-features">
+      <p class="gx-features-title">ClickUp features in this build</p>
+      <ul class="tags">
+        {p.features.map((f) => <li class="tag">{f}</li>)}
+      </ul>
+    </div>
+  </div>
+</div>

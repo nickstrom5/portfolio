@@ -12,6 +12,7 @@
     "qa": "node scripts/qa.mjs",
     "astro": "astro",
     "ghl:check": "node scripts/ghl-check.mjs",
+    "clickup:check": "node scripts/clickup-check.mjs",
     "n8n:check": "node scripts/n8n-check.mjs",
     "food:add": "node scripts/add-food.mjs",
     "photos:check": "node scripts/check-photo-metadata.mjs",
