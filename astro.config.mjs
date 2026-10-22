@@ -64,6 +64,10 @@ export default defineConfig({
     },
   ],
   build: { format: 'directory', inlineStylesheets: 'always' },
+  // Renamed case studies keep their old URL working.
+  redirects: {
+    '/work/sales-org-zapier-hubspot-automation/': '/work/production-company-operations-lead/',
+  },
   // Content-Security-Policy as a <meta> tag (GitHub Pages cannot send headers).
   // Astro hashes bundled scripts and styles itself; the two is:inline theme
   // scripts are hashed below. They sit early in <head>, before the <meta> policy,
