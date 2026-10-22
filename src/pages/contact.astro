@@ -83,6 +83,11 @@ const linkedinLive = !site.links.linkedin.includes('REPLACE');
           <span class="label">Email</span>
           <a href={`mailto:${site.email}`}>{site.email}</a>
         </li>
+        <li>
+          <span class="label">Book a call</span>
+          <a href={site.links.calendly} target="_blank" rel="me noopener">Book a call on Calendly</a>
+          <span class="muted small">15 or 30 min, pick a time that works.</span>
+        </li>
         {upworkLive && (
           <li>
             <span class="label">Upwork</span>
