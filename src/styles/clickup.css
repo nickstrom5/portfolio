@@ -566,3 +566,60 @@
   font-size: 0.75rem;
   color: #545a63;
 }
+
+/* Real ClickUp screenshots under a process. */
+.cu-real {
+  margin: 1.5rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+.cu-real h5 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+.cu-real > p {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+.cu-real-shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cu-real-shots.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.cu-real-shots li {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.cu-real-shots a {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  /* ClickUp's dark theme in either site theme, like a photo of it. */
+  background: #1b1b1d;
+}
+.cu-real-shots img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cu-real-shots span {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+/* With three (or five) screenshots, the first runs full width so none sits alone. */
+.cu-real-shots li:first-child:nth-last-child(2n + 3) {
+  grid-column: 1 / -1;
+}
