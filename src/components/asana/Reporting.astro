@@ -1,0 +1,102 @@
+---
+/** What leadership reads: the portfolio, the goals it rolls up to, Workload and the latest status update. */
+import type { CaseStudy, Goal } from '@/lib/asana/types';
+import { weekday } from '@/lib/asana/engine';
+
+interface Props {
+  study: CaseStudy;
+}
+const { study } = Astro.props;
+const people = Object.fromEntries(study.org.team.map((p) => [p.key, p]));
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// Portfolio progress is the share of a project's sample tasks marked complete, as Asana computes it from tasks.
+const rows = study.projects.map((p) => {
+  const done = p.tasks.filter((t) => t.completed).length;
+  const dues = p.tasks.map((t) => t.due).filter((d): d is number => d !== undefined);
+  const end = dues.length ? Math.max(...dues) : undefined;
+  return { p, pct: p.tasks.length ? Math.round((done / p.tasks.length) * 100) : 0, end, autos: study.automations.filter((a) => a.automation.project === p.id).length };
+});
+const flatGoals = (gs: Goal[], depth = 0): { g: Goal; depth: number }[] => gs.flatMap((g) => [{ g, depth }, ...flatGoals(g.children ?? [], depth + 1)]);
+const goals = flatGoals(study.goals);
+const max = Math.max(...Object.entries(study.workload.load).flatMap(([k, v]) => [...v, people[k]?.capacity ?? 0]));
+---
+
+<div class="a-report">
+  <div class="a-report-block">
+    <h4 class="a-h4">Portfolio: {study.portfolio.name}</h4>
+    <p class="a-report-note">{study.portfolio.note} Owner: {people[study.portfolio.owner]?.name}.</p>
+    <div class="a-scroll" tabindex="0" role="region" aria-label={`${study.portfolio.name} portfolio`}>
+      <table class="a-list a-port">
+        <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Progress</th><th scope="col">Owner</th><th scope="col">Due</th><th scope="col">Automations</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              <td><strong>{r.p.name}</strong></td>
+              <td><span class={`a-pill a-pill-${slug(r.p.status)}`}>{r.p.status}</span></td>
+              <td><span class="a-meter" role="img" aria-label={`${r.pct}% of tasks complete`}><span style={`--pct: ${r.pct}%`}></span></span><span class="a-meter-n">{r.pct}%</span></td>
+              <td>{people[r.p.owner]?.name.split(' ')[0]}</td>
+              <td>{r.end !== undefined ? `${weekday(r.end).slice(0, 3)} ${r.end + 1}` : 'Ongoing'}</td>
+              <td>{r.autos}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="a-report-grid">
+    <div class="a-report-block">
+      <h4 class="a-h4">Goals</h4>
+      <p class="a-report-note">The company goal at the top; team goals beneath it, each measured by a linked project or portfolio, or a number someone updates.</p>
+      <ul class="a-goals">
+        {goals.map(({ g, depth }) => (
+          <li class={`a-goal a-goal-d${depth}`}>
+            <p class="a-goal-name">{g.name}</p>
+            <p class="a-goal-meta"><span class={`a-pill a-pill-${slug(g.status)}`}>{g.status}</span> {people[g.owner]?.name} · {g.period}</p>
+            <p class="a-goal-bar"><span class="a-meter" role="img" aria-label={`${g.progress}% progress`}><span style={`--pct: ${g.progress}%`}></span></span><span class="a-meter-n">{g.progress}%</span></p>
+            <p class="a-goal-measure">{g.measure}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="a-report-block">
+      <h4 class="a-h4">Workload</h4>
+      <p class="a-report-note">{study.workload.note}</p>
+      <ul class="a-load">
+        {Object.entries(study.workload.load).map(([k, weeks]) => {
+          const cap = people[k]?.capacity ?? 0;
+          return (
+            <li>
+              <p class="a-load-who"><strong>{people[k]?.name}</strong> <span>{people[k]?.role} · capacity {cap} a week</span></p>
+              <div class="a-load-weeks">
+                {weeks.map((n, i) => (
+                  <span class:list={['a-load-bar', { 'is-over': n > cap }]} style={`--h: ${Math.round((n / max) * 100)}%; --cap: ${Math.round((cap / max) * 100)}%`}>
+                    <span class="a-load-n">{n}</span>
+                    <span class="a-load-wk">{study.workload.weeks[i].replace('Week ', 'W')}</span>
+                    <span class="sr-only">{study.workload.weeks[i]}: {n} points{n > cap ? ', over capacity' : ''}</span>
+                  </span>
+                ))}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </div>
+
+  <article class="a-report-block a-status">
+    <p class="a-status-kicker">Status update · {study.status.date}</p>
+    <h4 class="a-h4">{study.status.title}</h4>
+    <p class="a-status-by"><span class={`a-pill a-pill-${slug(study.status.status)}`}>{study.status.status}</span> Posted by {people[study.status.author]?.name}</p>
+    <p class="a-status-sum">{study.status.summary}</p>
+    <div class="a-status-grid">
+      {study.status.sections.map((s) => (
+        <div>
+          <h5>{s.heading}</h5>
+          <ul>{s.items.map((x) => <li>{x}</li>)}</ul>
+        </div>
+      ))}
+    </div>
+  </article>
+</div>

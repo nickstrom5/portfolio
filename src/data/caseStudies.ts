@@ -9,6 +9,7 @@
 import { cases as ghlCases } from './ghl';
 import { cases as n8nCases } from './n8n';
 import { cases as clickupCases } from './clickup';
+import { cases as asanaCases } from './asana';
 import { surface, surfaceDark } from './showcase';
 
 export interface PlatformCase {
@@ -70,6 +71,8 @@ const n8n = toCases(n8nCases);
 // ClickUp cases are Workspaces with processes; the tile lists the processes.
 const clickup = toCases(clickupCases.map((c) => ({ business: c.workspace, automations: c.processes })));
 const clickupAutomations = clickupCases.reduce((n, c) => n + c.processes.reduce((m, p) => m + p.automations.length, 0), 0);
+// Asana cases are organizations, not businesses; the same fields under other names.
+const asana = toCases(asanaCases.map((c) => ({ business: { ...c.org, area: c.org.size }, automations: c.automations })));
 const count = (cases: PlatformCase[]) => cases.reduce((n, c) => n + c.workflows.length, 0);
 
 export const platforms: Platform[] = [
@@ -120,5 +123,21 @@ export const platforms: Platform[] = [
     bgDark: surfaceDark,
     fgDark: '#5fd3c4',
     cases: clickup,
+  },
+  {
+    id: 'asana',
+    name: 'Asana',
+    kicker: 'Asana · automations, forms and portfolios',
+    tileBlurb: `Three sample organizations set up in Asana: intake forms, projects in every view, portfolios, goals and ${count(asana)} automations.`,
+    title: 'Asana: work that routes itself, and reporting nobody has to ask for.',
+    intro: `A marketing team, an accounting firm and a nonprofit program, each with a working intake form, its projects in List, Board, Timeline and Calendar, a portfolio and goals, and ${count(asana)} automations between them: triage, gates, approvals, reminders and escalations. On the full page you can submit a request and run each automation step by step in your browser.`,
+    unit: 'automations',
+    href: '/asana/',
+    cta: 'Open the Asana case studies →',
+    bg: surface,
+    fg: '#c2410c',
+    bgDark: surfaceDark,
+    fgDark: '#fb923c',
+    cases: asana,
   },
 ];

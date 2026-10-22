@@ -1,0 +1,129 @@
+---
+/**
+ * The automation as it reads in Asana's builder: name and settings, the
+ * "What starts this workflow" triggers, actions, then a Check if node with
+ * its paths. Styles come from src/styles/ghl.css (g-*), shared with /ghl/,
+ * plus src/styles/asana.css; the simulator adds state classes at run time.
+ */
+import type { Action, Automation } from '@/lib/asana/types';
+import { countActions, describeAction, describeCondition, describeTrigger } from '@/lib/asana/engine';
+import Icon, { type IconName } from '@/components/ghl/Icon.astro';
+
+interface Props {
+  automation: Automation;
+  caseId: string;
+  people: Record<string, { name: string }>;
+}
+const { automation: a, caseId, people } = Astro.props;
+const def = a.automation;
+const icon: Record<Action['type'], IconName> = {
+  move: 'flow',
+  assign: 'user',
+  unassign: 'user',
+  collaborators: 'user',
+  set_field: 'field',
+  due: 'calendar',
+  comment: 'note',
+  subtasks: 'task',
+  create_task: 'task',
+  add_project: 'flow',
+  complete: 'check',
+  slack: 'slack',
+};
+const tone = (x: Action) => (x.type === 'slack' || x.type === 'comment' ? 'team' : x.type === 'create_task' || x.type === 'subtasks' ? 'comms' : 'crm');
+const settings = [
+  { k: 'Project', v: def.project },
+  { k: 'Runs on', v: def.settings.runsOn === 'tasks' ? 'Tasks' : 'Tasks and subtasks' },
+  { k: 'Triggered by other automations', v: def.settings.triggeredByOthers ? 'Allowed' : 'Off' },
+];
+const total = countActions(a);
+const paths = def.paths ?? [];
+---
+
+<figure class="g-canvas" data-canvas={`${caseId}:${a.id}`} aria-label={`Automation: ${def.name}, ${total} actions`}>
+  <div class="g-canvas-bar">
+    <span class="g-folder">{def.project} › Automations /</span>
+    <span class="g-wfname">{def.name}</span>
+    <span class="g-pub">Active</span>
+  </div>
+  <dl class="g-settings" aria-label="Automation settings">
+    {settings.map((x) => <div><dt>{x.k}</dt><dd>{x.v}</dd></div>)}
+  </dl>
+  {def.settings.notes && def.settings.notes.length > 0 && (
+    <details class="g-settings-more">
+      <summary>Why it’s set up this way <span class="g-count">({def.settings.notes.length})</span></summary>
+      <ul class="g-settings-notes">{def.settings.notes.map((n) => <li>{n}</li>)}</ul>
+    </details>
+  )}
+  <p class="g-canvas-hint">The automation as it reads in Asana’s builder (Customize › Automations). Each step gets a green tick when the run reaches it.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Steps of ${def.name}`} tabindex="0">
+    <div class="g-triggers" data-node="trigger">
+      <span class="g-kind">What starts this workflow{def.triggers.length > 1 ? ' (any of these)' : ''}</span>
+      <ul>
+        {def.triggers.map((t) => {
+          const d = describeTrigger(t);
+          return <li><Icon name="bolt" size={16} /><strong>{d.title}</strong>{d.detail && <span>{d.detail}</span>}</li>;
+        })}
+      </ul>
+    </div>
+    <ol class="g-steps g-root">
+      {def.actions.map((x, i) => {
+        const d = describeAction(x, people);
+        return (
+          <li class={`g-step g-tone-${tone(x)}`} data-node={`a${i}`}>
+            <div class="g-card">
+              <span class="g-ico"><Icon name={icon[x.type]} /></span>
+              <div class="g-txt">
+                <span class="g-kind">{d.kind}</span>
+                <p class="g-sum">{d.summary}</p>
+              </div>
+              <span class="g-state" aria-hidden="true"></span>
+            </div>
+          </li>
+        );
+      })}
+      {paths.length > 0 && (
+        <li class="g-step g-has-branches g-tone-logic" data-node="check">
+          <div class="g-card g-card-logic">
+            <span class="g-ico"><Icon name="split" /></span>
+            <div class="g-txt">
+              <span class="g-kind">Check if</span>
+              <span class="g-name">{paths.length} {paths.length === 1 ? 'path' : 'paths'}</span>
+            </div>
+            <span class="g-state" aria-hidden="true"></span>
+          </div>
+          <div class="g-branches" style={`--n: ${paths.length}`} data-n={paths.length}>
+            {paths.map((p) => (
+              <div class="g-branch" data-branch={p.id}>
+                <div class="g-branch-head">
+                  <span class="g-b-label">{p.label}</span>
+                  <span class="g-b-cond">{p.when.length ? p.when.map((c) => describeCondition(c)).join(' and ') : 'No other path is matching'}</span>
+                </div>
+                <ol class="g-steps">
+                  {p.actions.map((x, i) => {
+                    const d = describeAction(x, people);
+                    return (
+                      <li class={`g-step g-tone-${tone(x)}`} data-node={`${p.id}:${i}`}>
+                        <div class="g-card">
+                          <span class="g-ico"><Icon name={icon[x.type]} /></span>
+                          <div class="g-txt">
+                            <span class="g-kind">{d.kind}</span>
+                            <p class="g-sum">{d.summary}</p>
+                          </div>
+                          <span class="g-state" aria-hidden="true"></span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                  <li class="g-endcap" aria-label="End of path"><span>End</span></li>
+                </ol>
+              </div>
+            ))}
+          </div>
+        </li>
+      )}
+      {paths.length === 0 && <li class="g-endcap" aria-label="End"><span>End</span></li>}
+    </ol>
+  </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole automation (${total} actions)`}>Show the whole automation ({total} actions)</button>
+</figure>

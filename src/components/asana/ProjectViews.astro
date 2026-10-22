@@ -1,0 +1,188 @@
+---
+/**
+ * A case's projects, each drawn in the views it uses: List, Board, Timeline,
+ * Calendar and Workflow, all rendered from the same sample tasks. Tabs are
+ * wired by src/lib/asana/page.ts.
+ */
+import type { CaseStudy, Project, SampleTask, ViewName } from '@/lib/asana/types';
+import { describeTrigger, weekday } from '@/lib/asana/engine';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+}
+const { study } = Astro.props;
+const id = study.org.id;
+const people = Object.fromEntries(study.org.team.map((p) => [p.key, p]));
+const drawn: ViewName[] = ['List', 'Board', 'Timeline', 'Calendar', 'Workflow'];
+const initials = (k?: string) => (k && people[k] ? people[k].name.split(' ').map((w) => w[0]).join('') : '');
+const first = (k?: string) => (k && people[k] ? people[k].name.split(' ')[0] : 'Unassigned');
+const due = (d?: number) => (d === undefined ? '' : `${weekday(d).slice(0, 3)} ${d + 1}`);
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const views = (p: Project) => drawn.filter((v) => p.views.includes(v) || v === 'Workflow');
+const kind = (t: SampleTask) => (t.milestone ? 'milestone' : t.approval ? 'approval' : 'task');
+
+/** Timeline span: whole weeks covering every dated task. */
+const span = (p: Project) => {
+  const days = p.tasks.flatMap((t) => [t.start ?? t.due, t.due]).filter((d): d is number => d !== undefined);
+  const lo = Math.floor(Math.min(0, ...days) / 7) * 7;
+  const hi = Math.max(...days, 6);
+  return { lo, days: Math.ceil((hi - lo + 1) / 7) * 7 };
+};
+/** Automations attached to each section, for the Workflow view. */
+const autosFor = (p: Project) => study.automations.filter((a) => a.automation.project === p.id);
+const sectionAutos = (p: Project, s: string) =>
+  autosFor(p).filter((a) => a.automation.triggers.some((t) => t.type === 'moved' && t.section === s) || a.automation.paths?.some((x) => x.when.some((c) => c.type === 'section' && c.is === s)) || (s === study.form.section && p.id === study.form.project && a.automation.triggers.some((t) => t.type === 'added')));
+const projectWide = (p: Project) => autosFor(p).filter((a) => !p.sections.some((s) => sectionAutos(p, s).includes(a)));
+---
+
+<div class="a-projects" data-projects={id}>
+  <div class="a-proj-tabs" role="tablist" aria-label={`${study.org.name} projects`}>
+    {study.projects.map((p, i) => (
+      <button type="button" role="tab" class="a-proj-tab" id={`ptab-${id}-${slug(p.id)}`} aria-controls={`proj-${id}-${slug(p.id)}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-proj-tab={slug(p.id)}>
+        <span class="a-proj-tab-name">{p.name}</span>
+        <span class="a-proj-tab-meta">{p.defaultView} · {autosFor(p).length} {autosFor(p).length === 1 ? 'automation' : 'automations'}</span>
+      </button>
+    ))}
+  </div>
+  {study.projects.map((p, i) => {
+    const vs = views(p);
+    const pid = `${id}-${slug(p.id)}`;
+    const start = vs.includes(p.defaultView) ? p.defaultView : vs[0];
+    const tl = span(p);
+    const fieldCols = p.fields.filter((f) => f !== 'Effort' && f !== 'Blocker').slice(0, 3);
+    return (
+      <div class="a-proj" id={`proj-${pid}`} role="tabpanel" aria-labelledby={`ptab-${pid}`} hidden={i !== 0} data-proj={slug(p.id)}>
+        <div class="a-proj-head">
+          <div>
+            <p class="a-proj-purpose">{p.purpose}</p>
+            {p.template && <p class="a-proj-template"><Icon name="copy" size={14} />{p.template}</p>}
+          </div>
+          <p class="a-proj-owner">Owner <strong>{people[p.owner]?.name}</strong> · <span class={`a-pill a-pill-${slug(p.status)}`}>{p.status}</span></p>
+        </div>
+        <div class="a-view-tabs" role="tablist" aria-label={`${p.name} views`}>
+          {vs.map((v) => (
+            <button type="button" role="tab" class="a-view-tab" id={`vtab-${pid}-${slug(v)}`} aria-controls={`view-${pid}-${slug(v)}`} aria-selected={v === start ? 'true' : 'false'} tabindex={v === start ? 0 : -1} data-view-tab={slug(v)}>{v}</button>
+          ))}
+          {p.views.filter((v) => !drawn.includes(v)).length > 0 && <span class="a-view-more">Also: {p.views.filter((v) => !drawn.includes(v)).join(', ')}</span>}
+        </div>
+
+        {vs.includes('List') && (
+          <div class="a-view" id={`view-${pid}-list`} role="tabpanel" aria-labelledby={`vtab-${pid}-list`} hidden={start !== 'List'} data-view="list">
+            <div class="a-scroll" tabindex="0" role="region" aria-label={`${p.name}, List view`}>
+              <table class="a-list">
+                <thead><tr><th scope="col">Task name</th><th scope="col">Assignee</th><th scope="col">Due date</th>{fieldCols.map((f) => <th scope="col">{f}</th>)}</tr></thead>
+                {p.sections.map((s) => {
+                  const ts = p.tasks.filter((t) => t.section === s);
+                  return (
+                    <tbody>
+                      <tr class="a-list-sec"><th scope="rowgroup" colspan={3 + fieldCols.length}>{s} <span>{ts.length}</span></th></tr>
+                      {ts.map((t) => (
+                        <tr class:list={[{ 'is-done': t.completed }]}>
+                          <td><span class={`a-check a-check-${kind(t)}`} role="img" aria-label={t.milestone ? 'Milestone' : t.approval ? `Approval, ${t.approval}` : t.completed ? 'Complete' : 'Task'}></span>{t.name}{t.subtasks ? <span class="a-sub">{t.subtasks} subtasks</span> : null}</td>
+                          <td>{t.assignee ? <><span class="a-av" aria-hidden="true">{initials(t.assignee)}</span>{first(t.assignee)}</> : <span class="a-faint">—</span>}</td>
+                          <td>{due(t.due) || <span class="a-faint">—</span>}</td>
+                          {fieldCols.map((f) => <td>{t.fields?.[f] !== undefined ? <span class="a-chip">{t.fields[f]}</span> : <span class="a-faint">—</span>}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  );
+                })}
+              </table>
+            </div>
+          </div>
+        )}
+
+        {vs.includes('Board') && (
+          <div class="a-view" id={`view-${pid}-board`} role="tabpanel" aria-labelledby={`vtab-${pid}-board`} hidden={start !== 'Board'} data-view="board">
+            <div class="a-scroll a-board" tabindex="0" role="region" aria-label={`${p.name}, Board view`}>
+              {p.sections.map((s) => (
+                <section class="a-col" aria-label={s}>
+                  <p class="a-col-head">{s}{sectionAutos(p, s).length > 0 && <span class="a-bolt" title="An automation runs here"><Icon name="bolt" size={13} /><span class="sr-only">An automation runs here</span></span>}<span class="a-col-n">{p.tasks.filter((t) => t.section === s).length}</span></p>
+                  {p.tasks.filter((t) => t.section === s).map((t) => (
+                    <div class:list={['a-card', { 'is-done': t.completed }]}>
+                      <p class="a-card-name"><span class={`a-check a-check-${kind(t)}`} aria-hidden="true"></span>{t.name}</p>
+                      {t.fields && <p class="a-card-chips">{Object.entries(t.fields).filter(([k, v]) => p.fields.includes(k) && k !== 'Blocker' && v !== 'No').slice(0, 2).map(([, v]) => <span class="a-chip">{v}</span>)}</p>}
+                      <p class="a-card-foot">{t.assignee && <span class="a-av" aria-hidden="true">{initials(t.assignee)}</span>}<span>{first(t.assignee)}</span>{t.due !== undefined && <span class="a-card-due">{due(t.due)}</span>}</p>
+                    </div>
+                  ))}
+                </section>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {vs.includes('Timeline') && (
+          <div class="a-view" id={`view-${pid}-timeline`} role="tabpanel" aria-labelledby={`vtab-${pid}-timeline`} hidden={start !== 'Timeline'} data-view="timeline">
+            <div class="a-scroll" tabindex="0" role="region" aria-label={`${p.name}, Timeline view`}>
+              <div class="a-tl" style={`--days: ${tl.days}`}>
+                <div class="a-tl-head" aria-hidden="true">
+                  {Array.from({ length: tl.days }, (_, d) => <span class:list={[{ 'is-weekend': (tl.lo + d) % 7 >= 5 }]}>{weekday(tl.lo + d).slice(0, 1)}<br />{tl.lo + d + 1}</span>)}
+                </div>
+                <ol class="a-tl-rows">
+                  {p.tasks.filter((t) => t.due !== undefined).map((t) => {
+                    const s = (t.start ?? t.due!) - tl.lo;
+                    const len = t.due! - (t.start ?? t.due!) + 1;
+                    return (
+                      <li class="a-tl-row">
+                        <span class="a-tl-name">{t.name}</span>
+                        <span class="a-tl-track">
+                          <span class:list={['a-tl-bar', `a-tl-${kind(t)}`, { 'is-done': t.completed }]} style={`--s: ${s}; --l: ${len}`}>
+                            <span class="sr-only">{t.milestone ? 'Milestone' : 'Task'} {due(t.start ?? t.due)}{len > 1 ? ` to ${due(t.due)}` : ''}{t.blockedBy?.length ? `, waits on ${t.blockedBy.join(' and ')}` : ''}</span>
+                          </span>
+                        </span>
+                        {t.blockedBy && t.blockedBy.length > 0 && <span class="a-tl-dep" aria-hidden="true">↳ after {t.blockedBy.join(' · ')}</span>}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            </div>
+            <p class="a-view-note">Bars run from start to due date; diamonds are milestones; “after” lines are dependencies. Move a blocking task in Asana and everything after it can shift with it.</p>
+          </div>
+        )}
+
+        {vs.includes('Calendar') && (
+          <div class="a-view" id={`view-${pid}-calendar`} role="tabpanel" aria-labelledby={`vtab-${pid}-calendar`} hidden={start !== 'Calendar'} data-view="calendar">
+            <div class="a-scroll" tabindex="0" role="region" aria-label={`${p.name}, Calendar view`}>
+              <div class="a-cal">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => <span class="a-cal-dow" aria-hidden="true">{d}</span>)}
+                {Array.from({ length: tl.days }, (_, d) => {
+                  const day = tl.lo + d;
+                  const ts = p.tasks.filter((t) => t.due === day);
+                  return (
+                    <div class:list={['a-cal-day', { 'is-weekend': day % 7 >= 5 }]}>
+                      <span class="a-cal-n">{weekday(day).slice(0, 3)} {day + 1}</span>
+                      {ts.map((t) => <span class:list={['a-cal-task', `a-tl-${kind(t)}`, { 'is-done': t.completed }]}>{t.name}</span>)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div class="a-view" id={`view-${pid}-workflow`} role="tabpanel" aria-labelledby={`vtab-${pid}-workflow`} hidden={start !== 'Workflow'} data-view="workflow">
+          <ol class="a-flow">
+            {p.id === study.form.project && (
+              <li class="a-flow-src"><span class="a-flow-k">Intake</span><strong>Form: {study.form.title}</strong><span>Lands in {study.form.section}</span></li>
+            )}
+            {p.sections.map((s) => (
+              <li class="a-flow-sec">
+                <span class="a-flow-k">Section</span>
+                <strong>{s}</strong>
+                {sectionAutos(p, s).map((a) => (
+                  <a class="a-flow-auto" href={`#${id}-${a.id}`} data-open-auto={`${id}-${a.id}`}><Icon name="bolt" size={13} />{a.number} · {a.name}</a>
+                ))}
+              </li>
+            ))}
+          </ol>
+          {projectWide(p).length > 0 && (
+            <p class="a-view-note">Project-wide: {projectWide(p).map((a, j) => <><a href={`#${id}-${a.id}`} data-open-auto={`${id}-${a.id}`}>{a.number} · {a.name}</a> ({a.automation.triggers.map((t) => describeTrigger(t).title).join(', ')}){j < projectWide(p).length - 1 ? '; ' : ''}</>)}</p>
+          )}
+          {autosFor(p).length === 0 && <p class="a-view-note">No automations here: this project is planned and updated by hand, and reports up through the portfolio.</p>}
+        </div>
+      </div>
+    );
+  })}
+</div>

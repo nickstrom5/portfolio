@@ -1,0 +1,146 @@
+---
+/**
+ * One case study: the organization, how its pieces connect, the working
+ * intake form, its projects in each view, what leadership reads, and every
+ * automation with its simulator and build notes. Ids are prefixed with the
+ * case id so three of these can live on one page.
+ */
+import type { CaseStudy } from '@/lib/asana/types';
+import { countActions, describeTrigger } from '@/lib/asana/engine';
+import FormDemo from './FormDemo.astro';
+import ProjectViews from './ProjectViews.astro';
+import Reporting from './Reporting.astro';
+import AutomationPanel from './AutomationPanel.astro';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+  index: number;
+  hidden?: boolean;
+}
+const { study, index, hidden = false } = Astro.props;
+const { org: o, automations } = study;
+const people = Object.fromEntries(o.team.map((p) => [p.key, { name: p.name }]));
+const actions = automations.reduce((n, a) => n + countActions(a), 0);
+---
+
+<section
+  class="gx-case"
+  id={o.id}
+  role="tabpanel"
+  aria-labelledby={`case-tab-${o.id}`}
+  hidden={hidden}
+  data-case-panel={o.id}
+  style={`--case: ${o.tint.light}; --case-dark: ${o.tint.dark}`}
+>
+  <header class="gx-case-head">
+    <div class="container">
+      <span class="eyebrow gx-case-eyebrow">Case study {index + 1} · {o.industry}</span>
+      <h2>{o.name}</h2>
+      <p class="lede">{o.intro}</p>
+      <dl class="gx-case-facts">
+        <div><dt>Projects</dt><dd>{study.projects.length}</dd></div>
+        <div><dt>Automations</dt><dd>{automations.length}</dd></div>
+        <div><dt>Actions inside them</dt><dd>{actions}</dd></div>
+        <div><dt>Plan</dt><dd class="gx-small">{o.plan}</dd></div>
+      </dl>
+      <div class="gx-team">
+        <p class="gx-team-title">The sample team · {o.size}</p>
+        <ul>
+          {o.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
+        </ul>
+      </div>
+      <p class="gx-disclaimer">{o.disclaimer}</p>
+      <ul class="gx-jump" aria-label={`Jump to a part of the ${o.name} case study`}>
+        <li><a href={`#${o.id}-system`} data-open-auto={`${o.id}-system`}>The system</a></li>
+        <li><a href={`#${o.id}-form`} data-open-auto={`${o.id}-form`}>The intake form</a></li>
+        <li><a href={`#${o.id}-projects`} data-open-auto={`${o.id}-projects`}>The projects</a></li>
+        <li><a href={`#${o.id}-reporting`} data-open-auto={`${o.id}-reporting`}>Reporting</a></li>
+        <li><a href={`#${o.id}-automations`} data-open-auto={`${o.id}-automations`}>The automations</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="section gx-journey-section" id={`${o.id}-system`}>
+    <div class="container">
+      <span class="eyebrow">The system</span>
+      <h3 class="gx-h3">From one goal down to the task in front of you</h3>
+      <p class="lede">Asana stacks up: tasks live in projects, projects roll up into a portfolio, and the portfolio is linked to the goals leadership cares about. Automations do the moving in between. Each card below is one automation: the orange text with the lightning bolt is what starts it. Pick a card to open it.</p>
+      <ol class="a-stack" aria-label="How the pieces connect">
+        <li><span class="a-stack-k">Goal</span><strong>{study.goals[0].name}</strong></li>
+        <li><span class="a-stack-k">Portfolio</span><strong>{study.portfolio.name}</strong></li>
+        <li><span class="a-stack-k">Projects</span><strong>{study.projects.map((p) => p.name).join(' · ')}</strong></li>
+        <li><span class="a-stack-k">Intake</span><strong>Form: {study.form.title}</strong></li>
+      </ol>
+      <ol class="gx-journey" data-count={automations.length}>
+        {automations.map((a) => (
+          <li>
+            <a href={`#${o.id}-${a.id}`} data-open-auto={`${o.id}-${a.id}`} class="gx-j">
+              <span class="gx-j-num">{a.number}</span>
+              <span class="gx-j-name">{a.name}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{describeTrigger(a.automation.triggers[0]).title}</span>
+              <span class="gx-j-out">{o.handoff[a.id] ?? a.kicker}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+
+  <div class="section" id={`${o.id}-form`}>
+    <div class="container">
+      <span class="eyebrow">Live demo</span>
+      <h3 class="gx-h3">The intake form, working</h3>
+      <p class="lede">Fill in {o.name}’s form as if you were sending a request, and press Submit. Use any name: nothing is sent or stored. You’ll see the task Asana would create from your answers, and every automation that runs on it, step by step.</p>
+      <FormDemo study={study} />
+      <div class="gx-landing-notes">
+        <p class="gx-notes-plain">{study.form.notesSummary}</p>
+        <details class="gx-notes-more">
+          <summary>How the form is set up in Asana <span class="g-count">({study.form.notes.length} notes for builders)</span></summary>
+          <ul class="gx-note-grid">
+            {study.form.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
+          </ul>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id={`${o.id}-projects`}>
+    <div class="container">
+      <span class="eyebrow">The projects</span>
+      <h3 class="gx-h3">The same tasks, in the view each person needs</h3>
+      <p class="lede">A view is just a way of looking at a project’s tasks: a list, a board of columns, a timeline, a calendar, or the Workflow view that shows where work comes in and which automations run in each section. Pick a project, then a view.</p>
+      <ProjectViews study={study} />
+    </div>
+  </div>
+
+  <div class="section" id={`${o.id}-reporting`}>
+    <div class="container">
+      <span class="eyebrow">Reporting</span>
+      <h3 class="gx-h3">What leadership reads instead of asking</h3>
+      <p class="lede">The portfolio shows every project’s status in one table, goals show whether the work adds up to what matters, Workload shows who is overbooked before they burn out, and a weekly status update says what changed in plain words.</p>
+      <Reporting study={study} />
+    </div>
+  </div>
+
+  <div class="section gx-workflows" id={`${o.id}-automations`}>
+    <div class="container">
+      <span class="eyebrow">The automations</span>
+      <h3 class="gx-h3">Pick an automation, pick a sample task, press Run</h3>
+      <p class="lede">Each tab below is one automation (Asana called these rules until recently). Read The problem and What I built for the short version. Then pick a sample task and press Run automation: the run history shows what people do to the task, which automations run, and every action they take, and the builder card ticks off each step.</p>
+      <p class="gx-builder-note">For Asana admins: the simulator follows the builder’s rules. Any trigger starts the automation, actions run before the Check if, the first matching path runs (or No other path is matching), changes made by an automation start others only where “Can be triggered by other automations” is on, and date triggers fire between midnight and 1 AM for open tasks only. <a href="#decoder">New to the words? Open the decoder.</a></p>
+      <div class="gx-tabs" role="tablist" aria-label={`${o.name} automations`} data-case-tabs={o.id}>
+        {automations.map((a, i) => (
+          <button class="gx-tab" role="tab" type="button" id={`tab-${o.id}-${a.id}`} aria-controls={`${o.id}-${a.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={a.id}>
+            <span class="gx-tab-num">{a.number}</span>
+            <span class="gx-tab-name">{a.name}</span>
+            <span class="gx-tab-kicker">{a.kicker}</span>
+          </button>
+        ))}
+      </div>
+      {automations.map((a, i) => (
+        <AutomationPanel automation={a} caseId={o.id} fields={study.fields} project={study.projects.find((p) => p.id === a.automation.project)} people={people} hidden={i !== 0} />
+      ))}
+    </div>
+  </div>
+</section>
