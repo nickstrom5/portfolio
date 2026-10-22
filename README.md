@@ -26,7 +26,7 @@ code or dependencies with the portfolio.
 ## Run it
 
 ```bash
-npm install
+npm install      # Node 22 (see .nvmrc)
 npm run dev      # http://localhost:4321
 npm run build    # type-checks, then outputs ./dist
 npm run preview  # serves ./dist
@@ -74,10 +74,31 @@ submissions in your inbox without a backend, create a free form at
 endpoint URL into `contactEndpoint`, and rebuild. The `_gotcha` honeypot field
 is already wired for Formspree's spam filter.
 
-### Social preview image
+With an endpoint set, a small script on `/contact/` sends the form in the
+background. Success goes to `/thanks/`. If Formspree is down or the visitor is
+offline, they stay on the page with their message intact and an error box
+with an email link. If Formspree rejects the post itself (its spam check,
+say), the browser falls back to a normal post so Formspree can explain why.
+Without JavaScript it is a normal post. The Content-Security-Policy allows the
+background request with `connect-src https://formspree.io` in
+`astro.config.mjs`.
 
-Add a 1200×630 PNG at `public/og.png`. Until then link previews on LinkedIn
-and Upwork messages will show no image.
+### Social preview images
+
+Every indexable page has a 1200×630 share card, the picture LinkedIn, Slack and
+email show for a link:
+
+- `public/og.png` is the home page's card and the fallback for every other
+  page. It is made by hand; no script writes it.
+- `public/og/<path>.jpg` is a page's own card, with slashes as hyphens
+  (`public/og/work-barbri-video-production.jpg`). `src/lib/share-card.ts`
+  picks it up at build time. `npm run og` (`scripts/make-og.mjs`) renders them
+  from the built pages in `og.png`'s layout: the page's eyebrow and heading,
+  the name and role, the round photo and the domain. After changing a
+  heading or adding a page, run `npm run build && npm run og && npm run build`.
+- Case studies with a cover screenshot share the top of that screenshot
+  instead, cropped to 1200×630 at build time. Their `cover` must be a file in
+  `src/assets/showcase/`, written `/showcase/<file>`.
 
 ## Personal photos (About page)
 
@@ -104,7 +125,9 @@ photo in by hand.
 ## Deploying
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
-to GitHub Pages on every push to `main`.
+to GitHub Pages on every push to `main`. Every pull request first runs
+`.github/workflows/ci.yml`: the build, `ghl:check`, `n8n:check` and the full
+browser QA (`npm run qa`).
 
 Pages is set to **Source: GitHub Actions**. To preview a fork at
 `https://<user>.github.io/portfolio/` before it has a custom domain, set the

@@ -6,10 +6,11 @@
  * Checks every page at phone, tablet and desktop widths in light and dark:
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
- * title length, description length, canonical, robots, Open Graph image,
+ * title length, description length, canonical, robots, Open Graph image
+ * (in the build, with a 1200px width tag),
  * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
  * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
- * and key assets.
+ * (including its failure path) and key assets.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -83,7 +84,15 @@ for (const p of pages) {
   if (noindex && !noindexAllowed.has(p)) findings.push(`${p}: unexpectedly noindex`);
   if (!noindex && !sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: indexable but not in sitemap`);
   if (noindex && sitemap.includes(`<loc>${canonical}</loc>`)) findings.push(`${p}: noindex but listed in sitemap`);
-  if (!noindex && !/<meta property="og:image"/.test(html)) findings.push(`${p}: missing og:image`);
+  const ogImage = (html.match(/<meta property="og:image" content="([^"]*)"/) || [])[1];
+  if (!noindex && !ogImage) findings.push(`${p}: missing og:image`);
+  if (ogImage) {
+    const imgPath = new URL(ogImage).pathname;
+    if (!existsSync(join(dist, imgPath))) findings.push(`${p}: og:image ${imgPath} is not in the build`);
+    // Noindex pages may share a picture of unstated size (/food/ uses its first photo).
+    if (!noindex && !/<meta property="og:image:width" content="1200"/.test(html)) findings.push(`${p}: og:image has no 1200px width tag`);
+    if (!noindex && imgPath === '/og.png' && p !== '/') console.warn(`warning: ${p}: uses the default share card (run \`npm run build && npm run og && npm run build\`)`);
+  }
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch (e) { findings.push(`${p}: invalid JSON-LD (${e.message})`); }
   }
@@ -201,6 +210,16 @@ await page.goto(base + '/contact/', { waitUntil: 'load' });
 const form = await page.evaluate(() => ({ action: document.querySelector('form').action, fields: [...document.querySelectorAll('form [name]')].map((e) => e.name) }));
 if (!/formspree|mailto:/.test(form.action)) findings.push('contact form action unexpected: ' + form.action);
 for (const f of ['name', 'email', 'type', 'budget', 'message', '_gotcha']) if (!form.fields.includes(f)) findings.push('form missing field ' + f);
+// If Formspree fails, the visitor stays on the page with their message.
+await page.route('https://formspree.io/**', (r) => r.fulfill({ status: 503, body: 'down' }));
+await page.fill('input[name=name]', 'QA');
+await page.fill('input[name=email]', 'qa@example.com');
+await page.fill('textarea[name=message]', 'Testing the failure path.');
+await page.tap('[data-send]');
+await page.waitForSelector('[data-form-error]:not([hidden])', { timeout: 5000 }).catch(() => findings.push('contact: no error shown when sending fails'));
+if (!page.url().endsWith('/contact/')) findings.push('contact: a failed send left the page: ' + page.url());
+if ((await page.inputValue('textarea[name=message]')) !== 'Testing the failure path.') findings.push('contact: a failed send lost the message');
+await page.unroute('https://formspree.io/**');
 await ctx.close();
 await browser.close();
 server.close();

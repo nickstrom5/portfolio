@@ -1,7 +1,7 @@
 # Weekly dependency and GitHub Actions updates, opened as pull requests.
-# No workflow runs on pull requests, so before merging one: check out its
-# branch and run `npm ci && npm run build && npm run qa`. For a PR under
-# signalrig/ or yetour/, run `npm ci && npm run build` in that folder instead.
+# .github/workflows/ci.yml builds and tests each root PR; merge when it passes.
+# CI does not build signalrig/ or yetour/, so for a PR there, run
+# `npm ci && npm run build` in that folder before merging.
 # The cooldown holds back versions published in the last week, the window in
 # which compromised npm releases are usually caught; security updates skip it.
 version: 2
