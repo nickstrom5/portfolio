@@ -89,7 +89,7 @@ export default defineConfig({
         "base-uri 'self'",
         "form-action 'self' https://formspree.io",
         // Cloudflare Web Analytics reports page views here (src/components/Analytics.astro).
-        "connect-src 'self' https://cloudflareinsights.com",
+        "connect-src 'self' https://formspree.io https://cloudflareinsights.com",
       ],
       scriptDirective: {
         resources: ["'self'", 'https://static.cloudflareinsights.com'],
