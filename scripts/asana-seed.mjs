@@ -133,6 +133,10 @@ async function api(method, path, data) {
       console.error('Asana rejected the token (401). Check ASANA_TOKEN is your full personal access token, not a placeholder, and hasn’t been revoked.');
       process.exit(1);
     }
+    if (res.status === 402) {
+      console.error(`Asana says this workspace’s plan doesn’t include something the cases use (${method} ${path.split('?')[0]}). Start an Asana Advanced trial for the workspace (the Upgrade button in Asana), then run again; projects already made are skipped.`);
+      process.exit(1);
+    }
     if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${body.errors?.map((e) => e.message).join('; ') ?? res.statusText}`);
     return body.data;
   }
