@@ -26,6 +26,7 @@ export const services: Service[] = [
       { href: '/work/zoho-one-admin-association-chapter', label: 'Zoho One administration case study' },
       { href: '/clickup', label: 'ClickUp case studies' },
       { href: '/asana', label: 'Asana automation case studies' },
+      { href: '/airtable', label: 'Airtable case studies' },
     ],
   },
   {

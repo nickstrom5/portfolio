@@ -1,0 +1,360 @@
+---
+/**
+ * /airtable/ — Airtable case studies: three businesses, each a sample base
+ * with a working form and its automations. Content lives in
+ * src/data/airtable; the simulator is src/lib/airtable. Run
+ * `npm run airtable:check` after editing a base or an automation. The page
+ * shares its layout styles with /ghl/ and /n8n/.
+ */
+import '@/styles/ghl.css';
+import '@/styles/n8n.css';
+import '@/styles/airtable.css';
+import Base from '@/layouts/Base.astro';
+import CaseStudyView from '@/components/airtable/CaseStudy.astro';
+import { cases as allCases } from '@/data/airtable';
+import { hasLoader } from '@/lib/airtable/load-case';
+import { allActions, formatDuration, formatTime, simulate } from '@/lib/airtable/engine';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+// A case appears once it has automations, so a half-finished case never ships as an empty tab.
+const cases = allCases.filter((c) => c.automations.length > 0);
+// The page script loads each case on demand; a case without a loader would never come alive.
+for (const c of cases) if (!hasLoader(c.business.id)) throw new Error(`No loader for Airtable case "${c.business.id}" in src/lib/airtable/load-case.ts`);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Every number in the hero is computed from the data, by running the simulator at build time.
+const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));
+let steps = 0;
+const taken = new Set<string>();
+for (const { c, a } of all) {
+  steps += allActions(a.steps).length + a.steps.filter((s) => s.kind !== 'action').length;
+  for (const s of a.scenarios) simulate(c, a, s).visited.forEach((v) => !v.includes(':') && taken.add(`${c.business.id}/${a.id}/${v}`));
+}
+const stats = [
+  { value: String(all.length), label: 'Automations you can run' },
+  { value: String(cases.reduce((n, c) => n + c.base.tables.length, 0)), label: 'Linked tables behind them' },
+  { value: String(all.reduce((n, { a }) => n + a.scenarios.length, 0)), label: 'Test events to run them on' },
+  { value: `${taken.size}/${steps}`, label: 'Actions and groups, each reached by a test' },
+];
+
+// The hero's preview is one real run of the first case's first automation and first test event.
+const peekCase = cases[0];
+const peekAuto = peekCase.automations[0];
+const peekRun = simulate(peekCase, peekAuto, peekAuto.scenarios[0]);
+const t0 = peekRun.steps.find((s) => s.kind === 'form')?.t ?? peekRun.start;
+const peek = peekRun.steps
+  .flatMap((s) => (s.messages ?? []).map((m) => ({ s, m })))
+  .map(({ s, m }) => {
+    const when = `${formatDuration(s.t - t0)} later`;
+    if (m.channel === 'email') return { when: `${when} · email to the speaker`, cls: 'g-mail', label: undefined, subject: m.subject, body: `${m.body.split('\n\n').slice(0, 2).join('\n\n')} …` };
+    return { when: `${when} · Slack ${m.to}`, cls: 'g-note', label: 'To the team', subject: undefined, body: m.body };
+  });
+const linked = peekRun.steps.find((s) => s.stepId === 'link-new')?.changes?.length ?? 0;
+
+/** Links to automations by "case/automation"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, aid] = ref.split('/');
+  const c = cases.find((x) => x.business.id === cid);
+  const a = c?.automations.find((x) => x.id === aid);
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.business.name} ${a.number} · ${a.name}` } : undefined;
+};
+
+const reliability = [
+  {
+    title: 'The rules live in views and formulas',
+    body: 'Find records reads a view, not a copy of its filters, and dates and thresholds are formula fields. The team sees exactly what the automation will act on, and changing a rule is one edit in one place.',
+    where: ['events/slides-chase', 'recruiting/guarantee-checkins', 'rentals/reorder'],
+  },
+  {
+    title: 'Every run fires once',
+    body: '“Matches conditions” fires when a record starts to match, so each one carries a guard the automation itself switches off: a Welcome sent box, an Open POs count, a Check-in sent box. Moving a record back and forth cannot repeat the work.',
+    where: ['events/pitch-accepted', 'rentals/reorder', 'recruiting/guarantee-checkins'],
+  },
+  {
+    title: 'Links by record ID, never by name',
+    body: 'Automations link records with the IDs that Find records, Create record or a script hand them. Two speakers called Ana, or a tag typed with a space, cannot link the wrong record.',
+    where: ['events/new-pitch', 'recruiting/new-application', 'rentals/damage-report'],
+  },
+  {
+    title: 'The important step first, the fragile one last',
+    body: 'An action that fails stops the run but does not undo earlier steps. So the step that protects the business goes first (pull the damaged light), and the one that depends on an outside connection (Slack) goes last.',
+    where: ['rentals/damage-report', 'events/new-pitch'],
+  },
+  {
+    title: 'Quiet when nothing is wrong',
+    body: 'Digests and alerts sit in conditional groups on a non-empty list or a count above zero. A Monday with every slide in, or a night with no double bookings, ends with a successful run and no email.',
+    where: ['events/slides-chase', 'rentals/conflict-check', 'recruiting/guarantee-checkins'],
+  },
+  {
+    title: 'Scripts only where actions fall short',
+    body: 'Comparing every booking with every other, or matching an email whatever its capitals: these are scripts, short and commented, with inputs and outputs the next step reads. Everything a built-in action can do stays a built-in action.',
+    where: ['rentals/conflict-check', 'recruiting/new-application', 'events/slides-chase'],
+  },
+  {
+    title: 'One owner per fact',
+    body: 'Vendor addresses come from the finance base through a sync, fees come from the client’s agreement through lookups, and nothing is typed twice. When a fact changes in its one home, every email that quotes it changes too.',
+    where: ['rentals/reorder', 'recruiting/stage-change'],
+  },
+  {
+    title: 'People see what they need',
+    body: 'Interface-only collaborators report damage and count stock without seeing prices; reviewers score pitches without seeing the rest of the base. Interfaces are the front door; the grid is for the people who maintain it.',
+    where: ['rentals/damage-report', 'events/new-pitch'],
+  },
+];
+
+const audit = [
+  { title: 'Automations nobody owns', body: 'Built by someone who left, failing quietly, with failure emails going to an old inbox. I list every automation with its owner, last run and failures, and turn off the ones nobody can explain.' },
+  { title: 'Text where a link should be', body: 'Client names typed into a text field in five spellings. I add a linked table, match the text to it, and replace the field, so lookups and rollups can work.' },
+  { title: 'Lookups used as numbers', body: 'A lookup returns a list, so a formula that multiplies it gives odd results or errors. A rollup with SUM, MAX or MIN returns one value and fixes it.' },
+  { title: '“Record created” on a grid', body: 'An automation that fires the moment someone presses + and sends an email with empty fields. Form submissions get the form trigger; everything else gets “matches conditions” with the required fields in the conditions.' },
+  { title: 'Triggers that fire twice', body: '“Matches conditions” automations with no guard, so a record moved back and forth sends everything again. I add a checkbox or a count to the conditions that the automation itself switches off.' },
+  { title: 'One giant table', body: 'Forty columns, half of them empty on any row, because two things were stored as one. I split them into linked tables and keep the old view working while people switch.' },
+  { title: 'Everyone is a creator', body: 'Field types changed by accident, views filtered for one person and broken for the rest. I narrow permissions, lock the views automations read, and give most people an interface instead.' },
+  { title: 'Attachment links in emails', body: 'Airtable’s attachment URLs expire after a few hours, so emailed links break by the next day. The email points people to an interface page or the file is sent another way.' },
+];
+
+const process = [
+  { title: 'Scope', body: 'What the base must answer, who uses it and how, which events need a person to hear about them. Written down before a field is made.' },
+  { title: 'Model the data', body: 'Tables for things, links for relationships, one owner per fact. Sketched on paper first, with the views each person will live in.' },
+  { title: 'Build on sample records', body: 'A dozen realistic records per table, so every lookup, rollup and formula is checked against data that looks like the real thing.' },
+  { title: 'Break it on purpose', body: 'A form with half the answers, a record moved back and forth, a vendor with no email, a disconnected Slack: each test event on this page is one I would run before switching an automation on.' },
+  { title: 'Switch on and hand off', body: 'Automations turned on one at a time, failure emails pointed at the owner. Then a short recorded walkthrough and a one-page guide: what each automation does, which views it reads, what never to rename.' },
+  { title: 'Watch it', body: 'Run history checked daily in the first week, then monthly. Field and view changes go through the owner, because an automation reads them by name.' },
+];
+
+const caseWord = words[cases.length] ?? String(cases.length);
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Plain-English meanings for the Airtable words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['Airtable', 'A database that looks like a spreadsheet. Each table holds one kind of thing, and records in different tables can be linked, so a pitch knows its speaker and a speaker knows all their pitches.'],
+  ['Base', 'One Airtable database: a set of tables that belong together, with their views, interfaces and automations.'],
+  ['Table, record, field', 'A table is like a sheet; a record is a row; a field is a column with a type, such as text, date, single select or attachment.'],
+  ['Link to another record', 'A field that points at records in another table. Airtable keeps both sides: link a pitch to a speaker and the speaker’s record lists the pitch.'],
+  ['Lookup', 'A field that shows a field from linked records, like the speaker’s email on the pitch.'],
+  ['Rollup', 'A field that combines a field from linked records with a formula such as SUM(values), MAX(values) or MIN(values).'],
+  ['Count', 'A field that counts linked records, optionally only those that meet a condition.'],
+  ['Formula', 'A field computed from the record’s other fields, such as DATEADD({Event date}, -7, \'days\').'],
+  ['View', 'A saved way of looking at a table: Grid, Kanban, Calendar, Gallery, Timeline, List or Form, with its own filters, sorting and grouping.'],
+  ['Form view', 'A form that creates a record in its table. It can be shared publicly, and a link can prefill or hide fields.'],
+  ['Interface', 'A simple app built on the base with the Interface Designer: dashboards, record review pages, lists and buttons. People can be invited to an interface only, without access to the rest of the base.'],
+  ['Automation', 'A trigger and a list of actions that run on their own in Airtable, such as “when a form is submitted, create a record and send an email”.'],
+  ['Trigger', 'What starts an automation: a form submission, a record that starts to match conditions, a record that is updated, a schedule, and others.'],
+  ['When a record matches conditions', 'A trigger that fires when a record starts to meet a set of conditions. It does not fire again until the record stops matching and matches again.'],
+  ['Action', 'One step of an automation: Find records, Create record, Update record, Send email, Run a script, Send a Slack message, and others.'],
+  ['Conditional group', 'A set of actions that only runs when its conditions are met, like “if Severity is Unsafe”.'],
+  ['Repeating group', 'A set of actions that runs once for each item in a list, such as each record Find records returned.'],
+  ['Token', 'A value from an earlier step dropped into an action’s setting, like {Trigger › Speaker email}. Shown here in braces.'],
+  ['Run a script', 'An action that runs JavaScript with Airtable’s scripting API, for logic the built-in actions do not cover. It takes input variables and sets outputs.'],
+  ['Run history', 'The list of an automation’s runs, each Successful or Failed, with what every step received and returned.'],
+  ['Synced table', 'A read-only copy of a view from another base (or another app) that stays up to date on its own.'],
+  ['Interface-only collaborator', 'Someone invited to an interface but not to the base behind it.'],
+];
+const title = 'Airtable case studies';
+const description =
+  cases.length === 3
+    ? `Three Airtable case studies you can run: a conference team, an equipment rental house and a recruiting firm, with linked bases and ${all.length} working automations.`
+    : `Airtable case studies you can run: ${plural(all.length, 'working automation', 'working automations')}, linked bases and the build notes behind each.`;
+---
+
+<Base title={title} description={description}>
+  <section class="gx-hero">
+    <div class="container">
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">Airtable · Bases, interfaces and automations</span>
+          <h1>{all.length}&nbsp;Airtable {all.length === 1 ? 'automation' : 'automations'} for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one yourself.</h1>
+          <p class="lede">Airtable is a database that looks like a spreadsheet. Its tables link to each other, so a pitch knows its speaker and a client knows its fees, and lookups, rollups and formulas keep every number current. On top sit forms, interfaces for the people who use it, and automations that act when a form is sent, a record changes or a schedule fires.</p>
+          <p class="gx-hero-sub">
+            {cases.length === 3
+              ? `I built a base and ${all.length} automations for three made-up businesses: a conference team, a film-equipment rental house and a small recruiting firm. Each has a form you can fill in. Everything runs here in your browser, on test events or on your own answers.`
+              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a form. Everything runs here in your browser.`}{' '}
+            Need this for your business, or hiring for Airtable? <a href={url('/contact')}>Get in touch</a>.
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one speaker pitch gets</p>
+          <p class="gx-peek-sub">A first-time speaker sends {peekCase.business.name}’s pitch form at {formatTime(t0)}. Automation {peekAuto.number} · {peekAuto.name} does the rest:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.when}</span>
+                <div class={p.cls}>
+                  {p.label && <span class="g-note-to">{p.label}</span>}
+                  {p.subject && <span class="g-mail-subj">{p.subject}</span>}
+                  {p.body}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">A speaker record is created, the pitch linked to it{linked ? ' and moved into review' : ''}, all in about {formatDuration(peekRun.end - t0)}, with no one at Brightwater touching it.</p>
+          <a class="gx-peek-link" href={`#${peekCase.business.id}-${peekAuto.id}`} data-open-auto={`${peekCase.business.id}-${peekAuto.id}`}>Run it yourself →</a>
+        </aside>
+      </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick a business.</strong> New to Airtable? Start with the conference team, and open The base to see how the tables link.</li>
+          <li><strong>Fill in its form, or pick a test event.</strong> Ready-made ones include “the Slack connection has expired” and “an item with no vendor”.</li>
+          <li><strong>Press Run automation.</strong> Watch every step run, with every field it writes, every rollup and formula that changes with it, and every email and Slack message it sends.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each automation opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The editor, the base and the <strong>Build notes</strong> are the detail an Airtable builder would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
+      <dl class="gx-stats">
+        {stats.map((s) => (
+          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real businesses?</h2>
+          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every base and automation can be shown end to end with its data and tried by anyone. The bases use Airtable’s real field types, views, interfaces, triggers and actions, and the scripts use Airtable’s scripting API, so each one can be rebuilt in a real base. Nothing on this page sends a message or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead who builds the systems teams run on. My client automation work so far has been in GoHighLevel and Zapier (<a href={`${url('/work')}#contracts`}>see recent contracts</a>), and there are <a href={url('/ghl')}>GoHighLevel</a> and <a href={url('/n8n')}>n8n</a> versions of this page. These Airtable cases are not client work: I built them to show how I design, test and hand off an Airtable base. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/case-studies')}>All case studies</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>Airtable words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  </section>
+
+  <div class="gx-switch" id="cases">
+    <div class="container">
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.business.id}`}
+            aria-controls={c.business.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.business.id}`}
+            aria-describedby={`case-blurb-${c.business.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.business.id}
+            style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
+          >
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}><span class="sr-only">{c.business.industry}.</span> {c.business.blurb} <span class="sr-only">{plural(c.base.tables.length, 'table', 'tables')}, {plural(c.automations.length, 'automation', 'automations')} and a form.</span></span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.base.tables.length, 'table', 'tables')} · {plural(c.automations.length, 'automation', 'automations')} · a form</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section" id="reliability" aria-labelledby="reliability-title">
+    <div class="container">
+      <span class="eyebrow">Reliability</span>
+      <div class="section-head">
+        <h2 id="reliability-title">Built so the team can forget about it</h2>
+      </div>
+      <p class="lede">A base that works in a demo is easy. One a team can rely on has to survive records moved back and forth, empty fields, outside connections that expire and people who rename things. These habits are in every case study. In plain words: each event is handled once, the rules are visible, nothing important waits on a fragile step, and nobody is emailed unless they need to act.</p>
+      <ul class="gx-cards">
+        {reliability.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => (
+                    <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>
+                  ))}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit an Airtable base</h2>
+        <p class="lede">Most fragile bases fail in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => (
+          <li><strong>{x.title}</strong><span>{x.body}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From a brief to a base the team trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Tables</dt><dd><code>Sessions</code>, <code>Speakers</code>: plural nouns for the things they hold</dd></div>
+          <div><dt>Fields</dt><dd><code>Slides due</code>, not <code>Date 2</code>: automations and formulas refer to fields by name</dd></div>
+          <div><dt>Views</dt><dd><code>Missing slides · next 14 days</code>: says what it shows, and a view an automation reads is never renamed casually</dd></div>
+          <div><dt>Automations</dt><dd><code>02 · Pitch accepted</code>: numbered in the order a record meets them</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Hiring for Airtable, or need a base built?</h2>
+        <p class="muted">I design, build, fix and document Airtable bases: the data model, the interfaces people work in, the automations around them, and the handoff so a team can run it. If you’re hiring for an operations or systems role or need this for your business, I’d like to hear about it.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initAirtablePage } from '@/lib/airtable/page';
+  initAirtablePage();
+</script>

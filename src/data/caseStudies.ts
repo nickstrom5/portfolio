@@ -10,6 +10,7 @@ import { cases as ghlCases } from './ghl';
 import { cases as n8nCases } from './n8n';
 import { cases as clickupCases } from './clickup';
 import { cases as asanaCases } from './asana';
+import { cases as airtableCases } from './airtable';
 import { surface, surfaceDark } from './showcase';
 
 export interface PlatformCase {
@@ -73,6 +74,7 @@ const clickup = toCases(clickupCases.map((c) => ({ business: c.workspace, automa
 const clickupAutomations = clickupCases.reduce((n, c) => n + c.processes.reduce((m, p) => m + p.automations.length, 0), 0);
 // Asana cases are organizations, not businesses; the same fields under other names.
 const asana = toCases(asanaCases.map((c) => ({ business: { ...c.org, area: c.org.size }, automations: c.automations })));
+const airtable = toCases(airtableCases);
 const count = (cases: PlatformCase[]) => cases.reduce((n, c) => n + c.workflows.length, 0);
 
 export const platforms: Platform[] = [
@@ -139,5 +141,21 @@ export const platforms: Platform[] = [
     bgDark: surfaceDark,
     fgDark: '#fb923c',
     cases: asana,
+  },
+  {
+    id: 'airtable',
+    name: 'Airtable',
+    kicker: 'Airtable · bases, interfaces and automations',
+    tileBlurb: `Three sample businesses, each a linked Airtable base with ${count(airtable)} automations between them: forms, scripts, conditional and repeating groups.`,
+    title: 'Airtable: one linked base, and the follow-up done for you.',
+    intro: `Three sample businesses, each an Airtable base with linked tables, lookups, rollups, views and interfaces, and ${count(airtable)} automations between them: form submissions matched to the right records, stage changes that send the right email, and scheduled checks that stay quiet until something needs a person. On the full page you can run every automation step by step in your browser and watch what it writes to the base.`,
+    unit: 'automations',
+    href: '/airtable/',
+    cta: 'Open the Airtable case studies →',
+    bg: surface,
+    fg: '#1f63c6',
+    bgDark: surfaceDark,
+    fgDark: '#8ab8ff',
+    cases: airtable,
   },
 ];
