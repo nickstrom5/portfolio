@@ -20,7 +20,7 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
       <span class="eyebrow">Case studies</span>
       <h1>Built in the tools you already use.</h1>
       <p class="lede">
-        Sample businesses built end to end in {list}, with the workflows a real client would ask for. The companies are made up; the triggers, actions and logic are the real thing. Pick a platform to see its case studies. Client work is on <a href={url('/work')}>Work</a>.
+        Sample businesses set up end to end in {list}, the tools many teams run on, with the automations a real client asks for: new leads answered, requests sent to the right person, follow-ups done on time. The companies are made up; the setups are real and work the way they would for a client. Pick a tool to see what I built. My client work is on <a href={url('/clients')}>Work</a>.
       </p>
 
       <div class="tiles" role="group" aria-label="Platforms">
@@ -116,13 +116,16 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
   .intro {
     padding-block: clamp(3rem, 8vw, 5.5rem) 1rem;
   }
+  /* Flex, not grid: five tiles fit one row on desktop, and on narrower screens the
+     last row stretches to fill instead of leaving one tile on its own. */
   .tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 2rem;
   }
   .tile {
+    flex: 1 1 190px;
     text-align: left;
     display: flex;
     flex-direction: column;
