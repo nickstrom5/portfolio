@@ -2,13 +2,17 @@
 /**
  * One case study: the client, their journey map, the working landing page
  * and every workflow with its simulator and build notes. Ids are prefixed
- * with the case id so three of these can live on one page.
+ * with the case id so three of these can live on one page. Parts the page
+ * leaves out (src/lib/parts.ts) are slots, filled when the case is opened.
  */
 import type { CaseStudy } from '@/lib/ghl/types';
 import { countSteps } from '@/lib/ghl/engine';
+import { inFull } from '@/lib/parts';
+import { feedsName as fedName } from '@/lib/ghl/parts';
 import LandingDemo from './LandingDemo.astro';
 import AutomationPanel from './AutomationPanel.astro';
 import Icon from './Icon.astro';
+import Part from './Part.astro';
 
 interface Props {
   study: CaseStudy;
@@ -17,8 +21,7 @@ interface Props {
 }
 const { study, index, hidden = false } = Astro.props;
 const { business: b, landing, automations } = study;
-const fed = automations.find((a) => a.id === landing.feeds);
-const feedsName = fed ? `workflow ${fed.number} · ${fed.name}` : 'the first workflow';
+const feedsName = fedName(study);
 const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
 ---
 
@@ -83,7 +86,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The landing page, working</h3>
       <p class="lede">Fill in the form as if you were a customer and press {landing.submitLabel}. Use any name and a made-up number if you like: nothing is sent or stored. Then press Watch the workflow run, which appears once you submit, to see each email, text and task you would get from {feedsName}, and when. {landing.demoNote ?? 'It runs at your local time, so if it is late where you are, you will see texts wait for morning.'}</p>
-      <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} />
+      {inFull(index) ? <LandingDemo caseId={b.id} landing={landing} feedsName={feedsName} /> : <Part id={`${b.id}/demo`} what="the landing page" />}
       <div class="gx-landing-notes">
         <p class="gx-notes-plain">{landing.notesSummary}</p>
         <details class="gx-notes-more">
@@ -120,7 +123,7 @@ const steps = automations.reduce((n, a) => n + countSteps(a.workflow.steps), 0);
           </button>
         ))}
       </div>
-      {automations.map((a, i) => <AutomationPanel automation={a} caseId={b.id} hidden={i !== 0} />)}
+      {automations.map((a, i) => <AutomationPanel automation={a} caseId={b.id} hidden={i !== 0} deferred={!inFull(index, i)} />)}
     </div>
   </div>
 </section>

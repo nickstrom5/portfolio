@@ -1933,6 +1933,16 @@
   }
 }
 
+/* A part that loads when opened (src/lib/parts.ts), until it does. Every platform page uses it. */
+.gx-part {
+  margin: 1.5rem 0 0;
+  padding: 2.5rem 1.25rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .gx-lab {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);

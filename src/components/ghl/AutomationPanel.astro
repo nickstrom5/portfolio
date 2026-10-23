@@ -1,26 +1,22 @@
 ---
-/** One automation: the story, the canvas and simulator side by side, then the build notes. */
+/**
+ * One automation: the story, then its body (the canvas and simulator side by
+ * side, and the build notes). A deferred panel keeps the story in the HTML and
+ * leaves a slot for the body, which loads when the workflow is opened.
+ */
 import type { Automation } from '@/lib/ghl/types';
-import Canvas from './Canvas.astro';
-import Simulator from './Simulator.astro';
-import Icon from './Icon.astro';
+import AutomationBody from './AutomationBody.astro';
+import Part from './Part.astro';
 
 interface Props {
   automation: Automation;
   caseId: string;
   hidden?: boolean;
+  /** Leave the body out of the HTML (src/lib/parts.ts). */
+  deferred?: boolean;
 }
-const { automation: a, caseId, hidden = false } = Astro.props;
-const dm = a.dataModel;
+const { automation: a, caseId, hidden = false, deferred = false } = Astro.props;
 const uid = `${caseId}-${a.id}`;
-// "What if…" leads: the unusual cases in plain words are what most readers want first.
-const notes = [
-  { key: 'edges', label: `What if… (${a.edgeCases.length})` },
-  { key: 'build', label: 'How I built it' },
-  { key: 'model', label: 'Data model' },
-  { key: 'qa', label: `Test plan (${a.qa.length})` },
-  ...(a.snippets && a.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
-];
 ---
 
 <div class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
@@ -47,102 +43,5 @@ const notes = [
     </figure>
   )}
 
-  <div class="gx-lab">
-    <div class="gx-lab-canvas">
-      <Canvas automation={a} caseId={caseId} />
-    </div>
-    <div class="gx-lab-sim">
-      <Simulator automation={a} caseId={caseId} />
-    </div>
-  </div>
-
-  <div class="gx-notes">
-    <h5 class="gx-notes-title">Build notes</h5>
-    <p class="gx-notes-intro">The detail a GoHighLevel admin would check before trusting this workflow. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
-    <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
-      {notes.map((n, i) => (
-        <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
-      ))}
-    </div>
-
-    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
-      <ul class="gx-edge-list">
-        {a.edgeCases.map((e) => (
-          <li><strong>{e.title}</strong><span>{e.body}</span></li>
-        ))}
-      </ul>
-    </div>
-
-    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
-      <ol class="gx-build-list">
-        {a.build.map((b) => (
-          <li><strong>{b.title}.</strong> {b.body}</li>
-        ))}
-      </ol>
-    </div>
-
-    <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
-      {dm.customFields && dm.customFields.length > 0 && (
-        <div class="gx-table-wrap">
-          <table class="gx-table">
-            <caption class="sr-only">Custom fields</caption>
-            <thead><tr><th scope="col">Custom field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
-            <tbody>
-              {dm.customFields.map((f) => (
-                <tr><td><strong>{f.name}</strong><code>{f.key}</code></td><td>{f.type}</td><td>{f.note ?? ''}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {dm.tags && dm.tags.length > 0 && (
-        <dl class="gx-kv">
-          {dm.tags.map((t) => (
-            <div><dt><span class="gx-tag">{t.name}</span></dt><dd>{t.note}</dd></div>
-          ))}
-        </dl>
-      )}
-      {dm.pipeline && (
-        <p class="gx-pipe"><span class="gx-pipe-name">{dm.pipeline.name}</span>{dm.pipeline.stages.map((st) => <span class="gx-stage">{st}</span>)}</p>
-      )}
-      {dm.customValues && dm.customValues.length > 0 && (
-        <p class="gx-values">Custom values: {dm.customValues.map((v, i) => <><code>{`{{custom_values.${v.key}}}`}</code>{i < dm.customValues!.length - 1 ? ' ' : ''}</>)}</p>
-      )}
-    </div>
-
-    <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
-      <ul class="gx-qa-list">
-        {a.qa.map((q) => (
-          <li><Icon name="check" size={16} /><span>{q}</span></li>
-        ))}
-      </ul>
-    </div>
-
-    {a.snippets && a.snippets.length > 0 && (
-      <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
-        <div class="gx-snip-grid">
-          {a.snippets.map((sn) => (
-            <div class="g-snippet">
-              <div class="g-snippet-head">
-                <h6>{sn.title}</h6>
-                <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
-              </div>
-              <pre data-lang={sn.language}><code>{sn.code}</code></pre>
-              {sn.note && <p>{sn.note}</p>}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    <div class="gx-features">
-      <p class="gx-features-title">GHL features in this build</p>
-      <ul class="tags">
-        {a.features.map((f) => <li class="tag">{f}</li>)}
-      </ul>
-      {a.proof && a.proof.length > 0 && (
-        <p class="gx-proof">{a.proof.map((p) => <a href={p.href} target="_blank" rel="noopener">{p.label}</a>)}</p>
-      )}
-    </div>
-  </div>
+  {deferred ? <Part id={`${caseId}/${a.id}`} what="the diagram, simulator and build notes" /> : <AutomationBody automation={a} caseId={caseId} />}
 </div>
