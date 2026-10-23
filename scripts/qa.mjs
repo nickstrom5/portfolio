@@ -10,7 +10,8 @@
  * (in the build, with a 1200px width tag),
  * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
  * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
- * (including its failure path) and key assets.
+ * (including its failure path) and key assets, and opens every case and
+ * workflow on the platform pages so the parts they load get checked too.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -34,7 +35,7 @@ try {
 }
 
 // Static server for dist (mirrors GitHub Pages: /x/ -> /x/index.html).
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.pdf': 'application/pdf', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.pdf': 'application/pdf', '.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2' };
 const server = http.createServer((req, res) => {
   let p = join(dist, decodeURIComponent(new URL(req.url, 'http://x').pathname));
   if (existsSync(p) && statSync(p).isDirectory()) p = join(p, 'index.html');
@@ -128,6 +129,31 @@ for (const u of unlisted) {
 const { findPhotoMetadata } = await import('./check-photo-metadata.mjs');
 findings.push(...(await findPhotoMetadata()));
 
+// What every page is checked for in the browser, at each width and scheme.
+function domChecks({ vpName }) {
+  const out = [];
+  const w = document.documentElement.clientWidth;
+  if (document.documentElement.scrollWidth > w) {
+    const bad = [...document.querySelectorAll('body *')].filter((el) => { const b = el.getBoundingClientRect(); return b.right > w + 1 && b.width > 0; }).slice(0, 3).map((el) => el.tagName + '.' + el.className);
+    out.push('horizontal overflow: ' + bad.join(', '));
+  }
+  const h1 = document.querySelectorAll('h1').length; if (h1 !== 1) out.push(`h1 count ${h1}`);
+  const heads = [...document.querySelectorAll('h1,h2,h3,h4')].map((h) => +h.tagName[1]);
+  for (let i = 1; i < heads.length; i++) if (heads[i] - heads[i - 1] > 1) { out.push(`heading skip h${heads[i - 1]}→h${heads[i]}`); break; }
+  document.querySelectorAll('img').forEach((img) => { if (!img.hasAttribute('alt')) out.push('img missing alt: ' + img.getAttribute('src')); });
+  const ids = [...document.querySelectorAll('[id]')].map((e) => e.id); const dup = ids.filter((id, i) => ids.indexOf(id) !== i); if (dup.length) out.push('duplicate ids: ' + [...new Set(dup)].join(','));
+  document.querySelectorAll('a[href^="#"]').forEach((a) => { const id = a.getAttribute('href').slice(1); if (id && !document.getElementById(id)) out.push('broken anchor #' + id); });
+  document.querySelectorAll('input:not([type=hidden]):not(.honeypot), select, textarea').forEach((el) => { const labelled = el.closest('label') || (el.id && document.querySelector(`label[for="${el.id}"]`)) || el.getAttribute('aria-label'); if (!labelled) out.push('unlabelled field: ' + el.name); });
+  if (vpName === 'phone' && location.pathname !== '/resume/') {
+    const small = [];
+    document.querySelectorAll('a, button').forEach((el) => { const b = el.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return; if (el.closest('.skip')) return; if (el.tagName === 'A' && getComputedStyle(el, '::after').position === 'absolute') return; /* stretched link: the whole card is the target */ if (b.height < 32 && !el.closest('nav, footer, .tags, .foot, .links, .c-meta, .edu, .more, .what, .roles, figcaption, .caption, .note, p')) small.push(`${el.tagName}:${(el.textContent || '').trim().slice(0, 20)} ${Math.round(b.width)}x${Math.round(b.height)}`); });
+    if (small.length) out.push('small tap targets: ' + small.slice(0, 6).join(' | '));
+    const tiny = [...document.querySelectorAll('body *')].filter((el) => el.children.length === 0 && el.textContent.trim() && parseFloat(getComputedStyle(el).fontSize) < 11 && getComputedStyle(el).visibility !== 'hidden');
+    if (tiny.length) out.push('text < 11px: ' + tiny.slice(0, 4).map((el) => el.tagName + '.' + el.className + ' ' + getComputedStyle(el).fontSize).join(' | '));
+  }
+  return out;
+}
+
 // Browser checks.
 for (const [vpName, width, height] of viewports) {
   for (const scheme of ['light', 'dark']) {
@@ -140,35 +166,34 @@ for (const [vpName, width, height] of viewports) {
       errs.length = 0;
       const resp = await page.goto(base + p, { waitUntil: 'load' });
       if (!resp || resp.status() !== 200) { findings.push(`${vpName}/${scheme} ${p}: HTTP ${resp && resp.status()}`); continue; }
-      const r = await page.evaluate(({ vpName }) => {
-        const out = [];
-        const w = document.documentElement.clientWidth;
-        if (document.documentElement.scrollWidth > w) {
-          const bad = [...document.querySelectorAll('body *')].filter((el) => { const b = el.getBoundingClientRect(); return b.right > w + 1 && b.width > 0; }).slice(0, 3).map((el) => el.tagName + '.' + el.className);
-          out.push('horizontal overflow: ' + bad.join(', '));
-        }
-        const h1 = document.querySelectorAll('h1').length; if (h1 !== 1) out.push(`h1 count ${h1}`);
-        const heads = [...document.querySelectorAll('h1,h2,h3,h4')].map((h) => +h.tagName[1]);
-        for (let i = 1; i < heads.length; i++) if (heads[i] - heads[i - 1] > 1) { out.push(`heading skip h${heads[i - 1]}→h${heads[i]}`); break; }
-        document.querySelectorAll('img').forEach((img) => { if (!img.hasAttribute('alt')) out.push('img missing alt: ' + img.getAttribute('src')); });
-        const ids = [...document.querySelectorAll('[id]')].map((e) => e.id); const dup = ids.filter((id, i) => ids.indexOf(id) !== i); if (dup.length) out.push('duplicate ids: ' + [...new Set(dup)].join(','));
-        document.querySelectorAll('a[href^="#"]').forEach((a) => { const id = a.getAttribute('href').slice(1); if (id && !document.getElementById(id)) out.push('broken anchor #' + id); });
-        document.querySelectorAll('input:not([type=hidden]):not(.honeypot), select, textarea').forEach((el) => { const labelled = el.closest('label') || (el.id && document.querySelector(`label[for="${el.id}"]`)) || el.getAttribute('aria-label'); if (!labelled) out.push('unlabelled field: ' + el.name); });
-        if (vpName === 'phone' && location.pathname !== '/resume/') {
-          const small = [];
-          document.querySelectorAll('a, button').forEach((el) => { const b = el.getBoundingClientRect(); if (b.width === 0 || b.height === 0) return; if (el.closest('.skip')) return; if (el.tagName === 'A' && getComputedStyle(el, '::after').position === 'absolute') return; /* stretched link: the whole card is the target */ if (b.height < 32 && !el.closest('nav, footer, .tags, .foot, .links, .c-meta, .edu, .more, .what, .roles, figcaption, .caption, .note, p')) small.push(`${el.tagName}:${(el.textContent || '').trim().slice(0, 20)} ${Math.round(b.width)}x${Math.round(b.height)}`); });
-          if (small.length) out.push('small tap targets: ' + small.slice(0, 6).join(' | '));
-          const tiny = [...document.querySelectorAll('body *')].filter((el) => el.children.length === 0 && el.textContent.trim() && parseFloat(getComputedStyle(el).fontSize) < 11 && getComputedStyle(el).visibility !== 'hidden');
-          if (tiny.length) out.push('text < 11px: ' + tiny.slice(0, 4).map((el) => el.tagName + '.' + el.className + ' ' + getComputedStyle(el).fontSize).join(' | '));
-        }
-        return out;
-      }, { vpName });
+      const r = await page.evaluate(domChecks, { vpName });
       for (const f of r) findings.push(`${vpName}/${scheme} ${p}: ${f}`);
       for (const e of errs) findings.push(`${vpName}/${scheme} ${p}: ${e}`);
       (await page.evaluate(() => [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')))).forEach((l) => seenLinks.add(l));
     }
     await ctx.close();
   }
+}
+// Platform pages leave most of each case out of their HTML and load it when the case or workflow
+// is opened (src/lib/parts.ts). Open every case and workflow, so what loads gets the same checks.
+for (const p of pages.filter((p) => existsSync(join(dist, p, 'parts')))) {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+  await page.goto(base + p, { waitUntil: 'load' });
+  for (const caseTab of await page.$$('[data-case-tab]')) {
+    await caseTab.click();
+    for (const tab of await page.$$('[data-case-panel]:not([hidden]) [data-tab]')) await tab.click();
+    await page.waitForLoadState('networkidle');
+  }
+  const empty = await page.$$eval('[data-part]', (slots) => slots.map((s) => s.dataset.part));
+  if (empty.length) findings.push(`parts ${p}: slots still empty after opening everything: ${empty.join(', ')}`);
+  for (const f of await page.evaluate(domChecks, { vpName: 'desktop' })) findings.push(`parts ${p}: ${f}`);
+  for (const e of errs) findings.push(`parts ${p}: ${e}`);
+  (await page.evaluate(() => [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')))).forEach((l) => seenLinks.add(l));
+  await ctx.close();
 }
 for (const l of seenLinks) {
   const [path0, hash] = l.split('#');

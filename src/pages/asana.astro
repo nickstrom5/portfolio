@@ -12,6 +12,7 @@ import '@/styles/asana.css';
 import Base from '@/layouts/Base.astro';
 import CaseStudyView from '@/components/asana/CaseStudy.astro';
 import { cases } from '@/data/asana';
+import { hasLoader } from '@/lib/asana/load-case';
 import { countActions, describeAction, formatTime, simulate } from '@/lib/asana/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
@@ -19,6 +20,8 @@ import { url } from '@/lib/url';
 const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+// The page script loads each case on demand; a case without a loader would never come alive.
+for (const c of cases) if (!hasLoader(c.org.id)) throw new Error(`No loader for Asana case "${c.org.id}" in src/lib/asana/load-case.ts`);
 
 // Every number in the hero is computed from the data, by running the simulator at build time.
 const all = cases.flatMap((c) => c.automations.map((a) => ({ c, a })));

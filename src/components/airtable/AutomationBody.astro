@@ -1,0 +1,111 @@
+---
+/**
+ * The heavy half of an automation panel: the editor and simulator side by
+ * side, then the build notes. AutomationPanel renders it inline for the first
+ * automation a visitor sees; every other one loads from
+ * /airtable/parts/<case>.json.
+ */
+import type { Automation } from '@/lib/airtable/types';
+import { allActions } from '@/lib/airtable/engine';
+import Editor from './Editor.astro';
+import Simulator from './Simulator.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  automation: Automation;
+  caseId: string;
+}
+const { automation: a, caseId } = Astro.props;
+const uid = `${caseId}-${a.id}`;
+const scripts = allActions(a.steps).filter((x) => x.script);
+// "What if…" leads: the unusual cases in plain words are what most readers want first.
+const notes = [
+  { key: 'edges', label: `What if… (${a.edgeCases.length})` },
+  { key: 'build', label: 'How I built it' },
+  { key: 'model', label: 'Fields it uses' },
+  { key: 'qa', label: `Test plan (${a.qa.length})` },
+  ...(scripts.length ? [{ key: 'snips', label: scripts.length === 1 ? 'The script' : 'The scripts' }] : []),
+];
+---
+
+<div class="gx-lab">
+  <div class="gx-lab-canvas">
+    <Editor automation={a} caseId={caseId} />
+  </div>
+  <div class="gx-lab-sim">
+    <Simulator automation={a} caseId={caseId} />
+  </div>
+</div>
+
+<div class="gx-notes">
+  <h5 class="gx-notes-title">Build notes</h5>
+  <p class="gx-notes-intro">The detail an Airtable builder would check before trusting this automation. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
+  <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
+    {notes.map((n, i) => (
+      <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
+    ))}
+  </div>
+
+  <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
+    <ul class="gx-edge-list">
+      {a.edgeCases.map((e) => (
+        <li><strong>{e.title}</strong><span>{e.body}</span></li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
+    <ol class="gx-build-list">
+      {a.build.map((b) => (
+        <li><strong>{b.title}.</strong> {b.body}</li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
+    <div class="gx-table-wrap">
+      <table class="gx-table">
+        <caption class="sr-only">Fields the automation reads or writes</caption>
+        <thead><tr><th scope="col">Table</th><th scope="col">Field</th><th scope="col">How it is used</th></tr></thead>
+        <tbody>
+          {a.fields.map((f) => (
+            <tr><td>{f.table}</td><td><code>{f.field}</code></td><td>{f.use}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="n-cred-note">Failure emails go to {a.notify}, who owns the automation. Each run is kept in the automation’s Run history with what every step received and returned.</p>
+  </div>
+
+  <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
+    <ul class="gx-qa-list">
+      {a.qa.map((q) => (
+        <li><Icon name="check" size={16} /><span>{q}</span></li>
+      ))}
+    </ul>
+  </div>
+
+  {scripts.length > 0 && (
+    <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
+      <div class="gx-snip-grid">
+        {scripts.map((x) => (
+          <div class="g-snippet">
+            <div class="g-snippet-head">
+              <h6>Run a script · {x.title}</h6>
+              <button type="button" class="g-copy" data-copy aria-label={`Copy the script for ${x.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
+            </div>
+            <pre data-lang="javascript"><code>{x.script!.source}</code></pre>
+            <p>{x.script!.inputs.length ? `Input variables: ${x.script!.inputs.map((i) => `${i.name} = ${i.value}`).join('; ')}.` : 'No input variables: the script reads the table itself.'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <div class="gx-features">
+    <p class="gx-features-title">Airtable features in this build</p>
+    <ul class="tags">
+      {a.features.map((f) => <li class="tag">{f}</li>)}
+    </ul>
+  </div>
+</div>

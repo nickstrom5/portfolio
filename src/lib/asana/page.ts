@@ -5,8 +5,15 @@
  *
  * Deep links: #marketing opens a case; #marketing-request-triage opens a
  * case and one of its automations; #marketing-form scrolls to a section.
+ *
+ * A case's data loads when the case is opened (or its card is hovered, or,
+ * for the case shown first, its form or automations come near the screen),
+ * and only then do its simulators and form demo start. The HTML carries the
+ * first case in full except its later automations; the other parts load from
+ * /asana/parts/<case>.json when opened (src/lib/parts.ts).
  */
-import { cases } from '@/data/asana';
+import { partsLoader } from '@/lib/parts';
+import { loadCase } from './load-case';
 import { DAY, formatDay, simulate } from './engine';
 import type { CaseStudy, Scenario } from './types';
 import { Simulator, el, logLine, peopleOf, plain, renderTask } from './ui';
@@ -60,6 +67,45 @@ function group(scope: ParentNode, tabSel: string, key: string, panels: HTMLEleme
 }
 
 export function initAsanaPage() {
+  const studies = new Map<string, CaseStudy>();
+  const started = new WeakSet<HTMLElement>();
+  /** Starts the simulators and form demo of a case that are on the page and not yet running. */
+  const start = (caseId: string) => {
+    const study = studies.get(caseId);
+    if (!study) return;
+    document.querySelectorAll<HTMLElement>(`[data-sim][data-case="${caseId}"], [data-form-demo="${caseId}"]`).forEach((root) => {
+      if (started.has(root)) return;
+      started.add(root);
+      if (root.dataset.sim) new Simulator(root, study);
+      else initFormDemo(root, study);
+    });
+  };
+  const loading = new Map<string, Promise<void>>();
+  /** Loads a case's data once, then starts what of it is on the page. */
+  const ensureCase = (caseId: string) => {
+    if (!loading.has(caseId)) {
+      loading.set(
+        caseId,
+        loadCase(caseId).then((study) => {
+          if (!study) return;
+          studies.set(caseId, study);
+          start(caseId);
+        }),
+      );
+    }
+    return loading.get(caseId)!;
+  };
+  // Parts arrive with their own tabs, cards and galleries; wire those up, then start them once the data is in.
+  const parts = partsLoader(
+    (caseId) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/asana/parts/${caseId}.json`,
+    (caseId, added) => {
+      added.forEach(wire);
+      start(caseId);
+    },
+  );
+  /** Jumps and tab changes bump this, so a jump still waiting on its parts can tell it was overtaken. */
+  let latest = 0;
+
   // Automation tabs inside each case.
   const openAutomation = new Map<string, (id: string, focus?: boolean) => void>();
   document.querySelectorAll<HTMLElement>('[data-case-tabs]').forEach((list) => {
@@ -67,42 +113,54 @@ export function initAsanaPage() {
     const tabs = [...list.querySelectorAll<HTMLButtonElement>('[data-tab]')];
     const panels = [...document.querySelectorAll<HTMLElement>(`[data-case-panel="${caseId}"] [data-panel]`)];
     const select = (id: string, focus = false) => {
+      latest++;
       mark(tabs, 'tab', id, focus);
       panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
       history.replaceState(history.state, '', `#${caseId}-${id}`);
+      void parts.need(caseId);
     };
     tablist(tabs, 'tab', (id, focus) => select(id, focus));
     openAutomation.set(caseId, select);
   });
 
-  // Build-note tabs.
-  document.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((list) => {
-    group(list, '[data-note-tab]', 'noteTab', [...(list.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])], 'notePanel');
-  });
-
-  // Project tabs, and each project's view tabs.
-  document.querySelectorAll<HTMLElement>('[data-projects]').forEach((wrap) => {
-    group(wrap.querySelector('.a-proj-tabs')!, '[data-proj-tab]', 'projTab', [...wrap.querySelectorAll<HTMLElement>(':scope > [data-proj]')], 'proj');
-    wrap.querySelectorAll<HTMLElement>(':scope > [data-proj]').forEach((proj) => {
-      group(proj.querySelector('.a-view-tabs')!, '[data-view-tab]', 'viewTab', [...proj.querySelectorAll<HTMLElement>(':scope > [data-view]')], 'view');
-    });
-  });
-
-  // Simulators and form demos, one set per case.
-  for (const study of cases) {
-    document.querySelectorAll<HTMLElement>(`[data-sim][data-case="${study.org.id}"]`).forEach((root) => new Simulator(root, study));
-    document.querySelectorAll<HTMLElement>(`[data-form-demo="${study.org.id}"]`).forEach((demo) => initFormDemo(demo, study));
-  }
-
   // The case switcher.
   const caseTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-case-tab]')];
   const casePanels = [...document.querySelectorAll<HTMLElement>('[data-case-panel]')];
   const selectCase = (id: string, focus = false, hash = true) => {
+    latest++;
+    void ensureCase(id);
     mark(caseTabs, 'caseTab', id, focus);
     casePanels.forEach((p) => (p.hidden = p.dataset.casePanel !== id));
     if (hash) history.replaceState(null, '', `#${id}`);
+    void parts.need(id);
   };
   const caseIds = tablist(caseTabs, 'caseTab', (id, focus) => selectCase(id, focus));
+  // Start loading a case as soon as the pointer reaches its card.
+  caseTabs.forEach((t) =>
+    t.addEventListener(
+      'pointerenter',
+      () => {
+        void ensureCase(t.dataset.caseTab!);
+        void parts.ensure(t.dataset.caseTab!);
+      },
+      { once: true },
+    ),
+  );
+  // The case shown first loads its data as its form or automation tabs come within a screen of view, and its
+  // later automations as the tabs do, so both are in by the time a visitor reaches them. Other cases load when opened.
+  const nearby = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        nearby.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const caseId = el.closest<HTMLElement>('[data-case-panel]')!.dataset.casePanel!;
+        void ensureCase(caseId);
+        if (el.dataset.caseTabs) void parts.ensure(caseId);
+      }),
+    { rootMargin: '0px 0px 100% 0px' },
+  );
+  document.querySelectorAll('[data-case-panel] [data-form-demo], [data-case-tabs]').forEach((el) => nearby.observe(el));
   caseTabs.forEach((t) =>
     t.addEventListener('click', () => {
       const panel = document.getElementById(t.dataset.caseTab!);
@@ -110,7 +168,16 @@ export function initAsanaPage() {
     }),
   );
 
-  /** Resolves "#case", "#case-automation" and "#case-section" to the right view. */
+  /** Runs `then` once the parts of a case that are showing have loaded, unless another jump or tab change came first. */
+  const whenReady = (caseId: string, then: () => void) => {
+    const n = ++latest;
+    void parts.need(caseId).then(() => n === latest && then());
+  };
+
+  /**
+   * Resolves "#case", "#case-automation" and "#case-section" to the right view.
+   * Scrolling waits for the parts that are showing, so nothing loads in above the target afterwards.
+   */
   function go(target: string, scroll: boolean, focus = false) {
     const caseId = caseIds.find((c) => target === c || target.startsWith(`${c}-`));
     if (!caseId) return false;
@@ -120,55 +187,78 @@ export function initAsanaPage() {
     if (isAutomation) openAutomation.get(caseId)?.(rest);
     else history.replaceState(history.state, '', `#${target}`);
     const dest = document.getElementById(target);
-    if (scroll) scrollTo(dest);
-    if (focus) focusQuietly(isAutomation ? dest?.querySelector<HTMLElement>('[data-panel-heading]') : dest);
+    whenReady(caseId, () => {
+      if (scroll) scrollTo(dest);
+      if (focus) focusQuietly(isAutomation ? dest?.querySelector<HTMLElement>('[data-panel-heading]') : dest);
+    });
     return true;
   }
 
-  // Each builder card is capped to one screen; its button opens the whole thing. Short ones need no button.
-  document.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
-    const canvas = btn.closest<HTMLElement>('.g-canvas')!;
-    const body = canvas.querySelector<HTMLElement>('.g-canvas-body')!;
-    btn.addEventListener('click', () => {
-      const open = canvas.classList.toggle('is-expanded');
-      btn.setAttribute('aria-expanded', String(open));
-      btn.textContent = open ? 'Show less' : btn.dataset.more!;
-      if (!open && canvas.getBoundingClientRect().top < 0) scrollTo(canvas);
-    });
-    new ResizeObserver(() => {
-      if (!canvas.classList.contains('is-expanded') && body.clientHeight > 0) btn.hidden = body.scrollHeight <= body.clientHeight + 4;
-    }).observe(body);
-  });
+  /** `root` itself if it matches, plus whatever inside it does. */
+  const within = (root: ParentNode, sel: string) => [...(root instanceof Element && root.matches(sel) ? [root as HTMLElement] : []), ...root.querySelectorAll<HTMLElement>(sel)];
 
-  // Screenshot galleries: a thumbnail opens its full-size copy in the gallery's dialog.
-  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((gallery) => {
-    const dialog = gallery.querySelector<HTMLDialogElement>('[data-lightbox]')!;
-    const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!;
-    const caption = dialog.querySelector<HTMLElement>('[data-lightbox-caption]')!;
-    let opener: HTMLElement | null = null;
-    gallery.querySelectorAll<HTMLButtonElement>('[data-shot]').forEach((btn) =>
+  /** Wires up the tabs, builder cards, galleries and decoder links in the page or in a part that just loaded. */
+  function wire(root: ParentNode) {
+    // Build-note tabs.
+    root.querySelectorAll<HTMLElement>('[data-note-tabs]').forEach((list) => {
+      group(list, '[data-note-tab]', 'noteTab', [...(list.parentElement?.querySelectorAll<HTMLElement>(':scope > [data-note-panel]') ?? [])], 'notePanel');
+    });
+
+    // Project tabs, and each project's view tabs.
+    within(root, '[data-projects]').forEach((wrap) => {
+      group(wrap.querySelector('.a-proj-tabs')!, '[data-proj-tab]', 'projTab', [...wrap.querySelectorAll<HTMLElement>(':scope > [data-proj]')], 'proj');
+      wrap.querySelectorAll<HTMLElement>(':scope > [data-proj]').forEach((proj) => {
+        group(proj.querySelector('.a-view-tabs')!, '[data-view-tab]', 'viewTab', [...proj.querySelectorAll<HTMLElement>(':scope > [data-view]')], 'view');
+      });
+    });
+
+    // Each builder card is capped to one screen; its button opens the whole thing. Short ones need no button.
+    root.querySelectorAll<HTMLButtonElement>('[data-canvas-expand]').forEach((btn) => {
+      const canvas = btn.closest<HTMLElement>('.g-canvas')!;
+      const body = canvas.querySelector<HTMLElement>('.g-canvas-body')!;
       btn.addEventListener('click', () => {
-        opener = btn;
-        img.src = btn.dataset.shot!;
-        img.alt = btn.dataset.shotAlt ?? '';
-        caption.textContent = btn.dataset.shotCaption ?? '';
-        dialog.showModal();
+        const open = canvas.classList.toggle('is-expanded');
+        btn.setAttribute('aria-expanded', String(open));
+        btn.textContent = open ? 'Show less' : btn.dataset.more!;
+        if (!open && canvas.getBoundingClientRect().top < 0) scrollTo(canvas);
+      });
+      new ResizeObserver(() => {
+        if (!canvas.classList.contains('is-expanded') && body.clientHeight > 0) btn.hidden = body.scrollHeight <= body.clientHeight + 4;
+      }).observe(body);
+    });
+
+    // Screenshot galleries: a thumbnail opens its full-size copy in the gallery's dialog.
+    within(root, '[data-gallery]').forEach((gallery) => {
+      const dialog = gallery.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+      const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!;
+      const caption = dialog.querySelector<HTMLElement>('[data-lightbox-caption]')!;
+      let opener: HTMLElement | null = null;
+      gallery.querySelectorAll<HTMLButtonElement>('[data-shot]').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          opener = btn;
+          img.src = btn.dataset.shot!;
+          img.alt = btn.dataset.shotAlt ?? '';
+          caption.textContent = btn.dataset.shotCaption ?? '';
+          dialog.showModal();
+        }),
+      );
+      dialog.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dialog.close());
+      // A click on the backdrop (the dialog itself, outside its content) closes it too.
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close();
+      });
+      dialog.addEventListener('close', () => opener?.focus());
+    });
+
+    root.querySelectorAll<HTMLAnchorElement>('a[href="#decoder"]').forEach((a) =>
+      a.addEventListener('click', () => {
+        const d = document.getElementById('decoder');
+        if (d instanceof HTMLDetailsElement) d.open = true;
       }),
     );
-    dialog.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dialog.close());
-    // A click on the backdrop (the dialog itself, outside its content) closes it too.
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) dialog.close();
-    });
-    dialog.addEventListener('close', () => opener?.focus());
-  });
+  }
 
-  document.querySelectorAll<HTMLAnchorElement>('a[href="#decoder"]').forEach((a) =>
-    a.addEventListener('click', () => {
-      const d = document.getElementById('decoder');
-      if (d instanceof HTMLDetailsElement) d.open = true;
-    }),
-  );
+  wire(document);
 
   // In-page links that open a case or an automation. Delegated, so links the form demo adds work too.
   document.addEventListener('click', (e) => {

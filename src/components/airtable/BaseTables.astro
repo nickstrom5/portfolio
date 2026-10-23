@@ -1,0 +1,105 @@
+---
+/**
+ * A base's tables as a builder would review them: every field and how each
+ * computed field is set up, the views, and a grid of sample records computed
+ * by the same engine the simulator uses. BaseView renders it inline for the
+ * case shown first; the other cases' tables load from /airtable/parts/<case>.json.
+ */
+import type { BaseSchema, Field, IconName, ViewType } from '@/lib/airtable/types';
+import { gridRows } from '@/lib/airtable/engine';
+import Icon from './Icon.astro';
+
+interface Props {
+  base: BaseSchema;
+}
+const { base } = Astro.props;
+
+const VIEW_ICON: Record<ViewType, IconName> = { Grid: 'grid', Form: 'form', Calendar: 'calendar', Gallery: 'gallery', Kanban: 'kanban', Timeline: 'timeline', List: 'list' };
+const where = (f: Field) => (f.where ? `, only where ${f.where.text}` : '');
+const setting = (f: Field): { text?: string; code?: string } => {
+  switch (f.type) {
+    case 'Link to another record':
+      return { text: f.mirror ? `Links to ${f.link}; the other side of ${f.link} › ${f.mirror}` : `Links to ${f.link}` };
+    case 'Lookup':
+      return { text: `Looks up ${f.via} › ${f.of}${where(f)}` };
+    case 'Rollup':
+      return { text: `Rolls up ${f.via} › ${f.of}${where(f)}`, code: f.agg!.text };
+    case 'Count':
+      return { text: `Counts linked ${f.via}${where(f)}` };
+    case 'Formula':
+      return { code: f.formula!.text };
+    case 'Single select':
+    case 'Multiple select':
+      return { text: f.options!.join(' · ') };
+    case 'Last modified time':
+      return { text: `Watches ${f.watch!.join(', ')}` };
+    default:
+      return {};
+  }
+};
+// Sample records are computed as of 9 AM on the Monday of the sample week.
+const SAMPLE_MINUTES = 540;
+---
+
+<div class="a-tables">
+  {base.tables.map((t, i) => {
+    const rows = gridRows(base, t.name, SAMPLE_MINUTES);
+    return (
+      <details class="a-table" open={i === 0}>
+        <summary>
+          <Icon name="table" />
+          <span class="a-table-name">{t.name}</span>
+          <span class="a-table-meta">{t.fields.length} fields · {t.views.length} {t.views.length === 1 ? 'view' : 'views'} · {rows.length} sample records</span>
+          {t.synced && <span class="a-badge"><Icon name="sync" size={13} /> Synced</span>}
+        </summary>
+        <p class="a-table-desc">{t.description}{t.synced && <> Source: {t.synced}.</>}</p>
+        <div class="gx-table-wrap">
+          <table class="gx-table a-fields">
+            <caption class="sr-only">Fields in {t.name}</caption>
+            <thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Set up as</th></tr></thead>
+            <tbody>
+              {t.fields.map((f, fi) => {
+                const s = setting(f);
+                return (
+                  <tr>
+                    <td><strong>{f.name}</strong>{fi === 0 && <span class="a-primary">primary</span>}</td>
+                    <td><span class="a-type">{f.type}</span></td>
+                    <td>
+                      {s.text && <span>{s.text}</span>}
+                      {s.code && <code class="a-formula">{s.code}</code>}
+                      {f.note && <span class="a-note">{f.note}</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <h4 class="a-sub">Views</h4>
+        <ul class="a-views">
+          {t.views.map((v) => (
+            <li>
+              <span class="a-view-type"><Icon name={VIEW_ICON[v.type]} size={15} /> {v.type}</span>
+              <strong>{v.name}</strong>
+              <span>{v.purpose}</span>
+              <span class="a-view-setup">{[...v.setup, ...(v.fields ? [`Fields: ${v.fields.join(', ')}`] : [])].join(' · ')}</span>
+            </li>
+          ))}
+        </ul>
+        <details class="a-grid">
+          <summary>Sample records ({rows.length})</summary>
+          <div class="gx-table-wrap a-grid-wrap" tabindex="0" role="region" aria-label={`Sample records in ${t.name}`}>
+            <table class="gx-table">
+              <caption class="sr-only">Sample records in {t.name}</caption>
+              <thead><tr>{t.fields.map((f) => <th scope="col">{f.name}</th>)}</tr></thead>
+              <tbody>
+                {rows.map((r) => <tr>{r.cells.map((c) => <td>{c}</td>)}</tr>)}
+              </tbody>
+            </table>
+          </div>
+          <p class="a-note">Dates are from the sample week; the simulator moves them to the week you are in.</p>
+        </details>
+      </details>
+    );
+  })}
+</div>

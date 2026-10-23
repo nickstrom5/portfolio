@@ -2,10 +2,14 @@
 /**
  * One case study: the Workspace, its sidebar map, the working Form and every
  * process with its simulator and build notes. Ids are prefixed with the case
- * id so three of these can live on one page.
+ * id so three of these can live on one page. Parts the page leaves out
+ * (src/lib/parts.ts) are slots, filled when the case is opened.
  */
 import type { CaseStudy } from '@/lib/clickup/types';
 import { namesOf } from '@/lib/clickup/engine';
+import { fedBy } from '@/lib/clickup/parts';
+import { inFull } from '@/lib/parts';
+import Part from '@/components/ghl/Part.astro';
 import FormDemo from './FormDemo.astro';
 import ProcessPanel from './ProcessPanel.astro';
 import Statuses from './Statuses.astro';
@@ -19,9 +23,7 @@ interface Props {
 const { study, index, hidden = false } = Astro.props;
 const { workspace: w, form, processes } = study;
 const names = namesOf(w);
-const fed = processes.find((p) => p.id === form.feeds);
-const feedsName = fed ? `${fed.number} · ${fed.name}` : 'the first process';
-const where = fed ? `${fed.location.space} › ${fed.location.list}` : 'a List';
+const { feedsName, where } = fedBy(study);
 const automations = processes.reduce((n, p) => n + p.automations.length, 0);
 /** Which process lives in a List, by its name. */
 const inList = (name: string) => processes.filter((p) => p.location.list === name);
@@ -150,7 +152,7 @@ const inList = (name: string) => processes.filter((p) => p.location.list === nam
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The Form, working</h3>
       <p class="lede">Fill in {w.name}’s ClickUp Form as if you were {form.feeds === 'intake' ? 'a prospective client' : 'the person asking'}, and press {form.submitLabel}. Then pick what happens next and press Watch the Automations run, which appears once you submit, to see what {feedsName} does with your answers. Nothing is sent or stored.</p>
-      <FormDemo caseId={w.id} form={form} feedsName={feedsName} where={where} />
+      {inFull(index) ? <FormDemo caseId={w.id} form={form} feedsName={feedsName} where={where} /> : <Part id={`${w.id}/demo`} what="the Form" />}
       <div class="gx-landing-notes">
         <details class="gx-notes-more">
           <summary>How the Form is set up in ClickUp’s Form view <span class="g-count">({form.notes.length} notes for builders)</span></summary>
@@ -177,7 +179,7 @@ const inList = (name: string) => processes.filter((p) => p.location.list === nam
           </button>
         ))}
       </div>
-      {processes.map((p, i) => <ProcessPanel process={p} caseId={w.id} names={names} hidden={i !== 0} />)}
+      {processes.map((p, i) => <ProcessPanel process={p} caseId={w.id} names={names} hidden={i !== 0} deferred={!inFull(index, i)} />)}
     </div>
   </div>
 </section>

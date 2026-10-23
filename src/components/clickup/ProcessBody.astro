@@ -1,0 +1,134 @@
+---
+/**
+ * The heavy half of a process panel: the List setup and simulator side by
+ * side, the same setup in ClickUp, then the build notes. ProcessPanel renders
+ * it inline for the first process a visitor sees; every other one loads from
+ * /clickup/parts/<case>.json.
+ */
+import type { Process } from '@/lib/clickup/types';
+import type { Names } from '@/lib/clickup/engine';
+import ListSetup from './ListSetup.astro';
+import Simulator from './Simulator.astro';
+import Icon from '@/components/ghl/Icon.astro';
+import { Image } from 'astro:assets';
+import { screenshots } from '@/data/clickup/screenshots';
+
+interface Props {
+  process: Process;
+  caseId: string;
+  names: Names;
+}
+const { process: p, caseId, names } = Astro.props;
+const uid = `${caseId}-${p.id}`;
+// The same setup rebuilt in a real ClickUp Workspace and captured there (captions in src/data/clickup/screenshots.ts).
+const files = import.meta.glob<{ default: ImageMetadata }>('/src/assets/clickup/*.jpg', { eager: true });
+const shots = (screenshots[uid] ?? []).map((s, i) => ({ ...s, img: files[`/src/assets/clickup/${uid}-${i + 1}.jpg`]?.default })).filter((s) => s.img);
+const notes = [
+  { key: 'edges', label: `What if… (${p.edgeCases.length})` },
+  { key: 'build', label: 'How I built it' },
+  { key: 'model', label: 'Fields and views' },
+  { key: 'qa', label: `Test plan (${p.qa.length})` },
+  ...(p.snippets && p.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
+];
+---
+
+<div class="gx-lab">
+  <div class="gx-lab-canvas">
+    <ListSetup process={p} caseId={caseId} names={names} />
+  </div>
+  <div class="gx-lab-sim">
+    <Simulator process={p} caseId={caseId} />
+  </div>
+</div>
+
+{shots.length > 0 && (
+  <figure class="cu-real">
+    <h5>The same setup in ClickUp</h5>
+    <p>Real screenshots, not mock-ups: this process rebuilt in a ClickUp Workspace (Free plan) from the data on this page, with the same statuses, fields and sample tasks. The company is still fictional, and the sample team are not Workspace members, so tasks show no assignees.</p>
+    <ul class:list={['cu-real-shots', { 'is-single': shots.length === 1 }]}>
+      {shots.map((s) => (
+        <li>
+          <a href={s.img!.src} target="_blank" rel="noopener" aria-label={`Open “${s.caption}” full size`}>
+            <Image src={s.img!} alt={s.alt} widths={[700, 1100, 1512]} sizes={shots.length === 1 ? '(max-width: 1200px) 100vw, 1150px' : '(max-width: 900px) 100vw, 560px'} loading="lazy" />
+          </a>
+          <span>{s.caption}</span>
+        </li>
+      ))}
+    </ul>
+  </figure>
+)}
+
+<div class="gx-notes">
+  <h5 class="gx-notes-title">Build notes</h5>
+  <p class="gx-notes-intro">The detail a ClickUp admin would check before trusting this setup. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
+  <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${p.name}`} data-note-tabs>
+    {notes.map((n, i) => (
+      <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
+    ))}
+  </div>
+
+  <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
+    <ul class="gx-edge-list">
+      {p.edgeCases.map((e) => <li><strong>{e.title}</strong><span>{e.body}</span></li>)}
+    </ul>
+  </div>
+
+  <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
+    <ol class="gx-build-list">
+      {p.build.map((b) => <li><strong>{b.title}.</strong> {b.body}</li>)}
+    </ol>
+  </div>
+
+  <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
+    <div class="gx-table-wrap">
+      <table class="gx-table">
+        <caption class="sr-only">Custom Fields on {p.location.list}</caption>
+        <thead><tr><th scope="col">Custom Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
+        <tbody>
+          {p.fields.map((f) => (
+            <tr>
+              <td><strong>{f.name}</strong>{f.private && <span class="cu-private">Private</span>}</td>
+              <td>{f.type}</td>
+              <td>{[f.options && `Options: ${f.options.join(', ')}.`, f.note].filter(Boolean).join(' ')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <dl class="gx-kv cu-views">
+      {p.views.map((v) => (
+        <div><dt><span class="gx-tag">{v.type}</span> {v.name}</dt><dd>{v.note}</dd></div>
+      ))}
+    </dl>
+  </div>
+
+  <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
+    <ul class="gx-qa-list">
+      {p.qa.map((q) => <li><Icon name="check" size={16} /><span>{q}</span></li>)}
+    </ul>
+  </div>
+
+  {p.snippets && p.snippets.length > 0 && (
+    <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
+      <div class="gx-snip-grid">
+        {p.snippets.map((sn) => (
+          <div class="g-snippet">
+            <div class="g-snippet-head">
+              <h6>{sn.title}</h6>
+              <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
+            </div>
+            <pre data-lang={sn.language}><code>{sn.code}</code></pre>
+            {sn.note && <p>{sn.note}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <div class="gx-features">
+    <p class="gx-features-title">ClickUp features in this build</p>
+    <ul class="tags">
+      {p.features.map((f) => <li class="tag">{f}</li>)}
+    </ul>
+  </div>
+</div>
