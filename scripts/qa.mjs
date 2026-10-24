@@ -12,6 +12,8 @@
  * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
  * (including its failure path) and key assets, and opens every case and
  * workflow on the platform pages so the parts they load get checked too.
+ * On each platform page it follows a link into another case and checks that
+ * Back returns to the earlier case and scroll, and Forward to the jump.
  *
  * Exits 1 with a findings list if anything fails. Needs Playwright with
  * Chromium (`npm i -D playwright && npx playwright install chromium`) or
@@ -246,6 +248,54 @@ if (!page.url().endsWith('/contact/')) findings.push('contact: a failed send lef
 if ((await page.inputValue('textarea[name=message]')) !== 'Testing the failure path.') findings.push('contact: a failed send lost the message');
 await page.unroute('https://formspree.io/**');
 await ctx.close();
+
+// Platform case-study pages: a link into another case, then Back, returns to the earlier
+// case at the same scroll, and Forward returns to the jump. html scrolls smoothly, so every
+// position is read once scrolling has stopped.
+const desk = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+const deskPage = await desk.newPage();
+deskPage.on('pageerror', (e) => findings.push('back/forward error: ' + e.message));
+const settled = async () => {
+  let last = -1;
+  for (let i = 0; i < 40; i++) {
+    const y = Math.round(await deskPage.evaluate(() => scrollY));
+    if (y === last) return y;
+    last = y;
+    await deskPage.waitForTimeout(100);
+  }
+  return last;
+};
+const shownCase = () => deskPage.evaluate(() => [...document.querySelectorAll('[data-case-panel]')].find((p) => !p.hidden)?.dataset.casePanel);
+for (const p of ['ghl', 'n8n', 'clickup', 'asana', 'airtable']) {
+  await deskPage.goto(`${base}/${p}/`, { waitUntil: 'networkidle' });
+  const start = await shownCase();
+  // The first visible link in the shown case that opens a different case.
+  const link = await deskPage.evaluateHandle((start) => {
+    const others = [...document.querySelectorAll('[data-case-panel]')].map((x) => x.dataset.casePanel).filter((c) => c !== start);
+    return [...document.querySelectorAll('a[data-open-auto], a[href^="#"]')].find((a) => {
+      const h = a.dataset.openAuto || a.getAttribute('href').slice(1);
+      return others.some((c) => h === c || h.startsWith(`${c}-`)) && a.getBoundingClientRect().height > 0 && !a.closest('[hidden]');
+    });
+  }, start);
+  if (!(await link.evaluate((a) => !!a))) { findings.push(`/${p}/ back/forward: no link from ${start} into another case`); continue; }
+  await link.evaluate((a) => window.scrollTo({ top: a.getBoundingClientRect().top + scrollY - 400, behavior: 'instant' }));
+  const before = await settled();
+  await link.click();
+  await settled();
+  const jumped = await shownCase();
+  await deskPage.goBack();
+  await deskPage.waitForTimeout(300);
+  const after = await settled();
+  const back = await shownCase();
+  await deskPage.goForward();
+  await deskPage.waitForTimeout(300);
+  await settled();
+  const forward = await shownCase();
+  if (jumped === start) findings.push(`/${p}/ back/forward: the link from ${start} did not open another case`);
+  else if (back !== start || Math.abs(after - before) > 8) findings.push(`/${p}/ back/forward: Back showed ${back} at ${after}px, expected ${start} at ${before}px`);
+  else if (forward !== jumped) findings.push(`/${p}/ back/forward: Forward showed ${forward}, expected ${jumped}`);
+}
+await desk.close();
 await browser.close();
 server.close();
 
