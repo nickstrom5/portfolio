@@ -161,7 +161,7 @@ const description =
     : `Airtable case studies you can run: ${plural(all.length, 'working automation', 'working automations')}, linked bases and the build notes behind each.`;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} breadcrumbs={[{ name: 'Case studies', path: '/case-studies/' }, { name: 'Airtable', path: '/airtable/' }]}>
   <section class="gx-hero">
     <div class="container">
       <div class="gx-hero-grid">

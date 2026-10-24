@@ -549,7 +549,7 @@ export const projects: Project[] = [
     ],
     links: [
       { label: 'getclam.app', href: 'https://getclam.app', primary: true },
-      { label: 'Source on GitHub', href: 'https://github.com/nickstrom5/Claude' },
+      { label: 'Site source on GitHub', href: 'https://github.com/nickstrom5/clam-site' },
     ],
     status: 'In development · App Store link goes live with the listing',
     caseStudy: 'clam-focus-blocker',
