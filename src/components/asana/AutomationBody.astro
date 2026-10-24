@@ -1,0 +1,100 @@
+---
+/**
+ * The heavy half of an automation panel: the builder card and simulator side
+ * by side, then the build notes. AutomationPanel renders it inline for the
+ * first automation a visitor sees; every other one loads from
+ * /asana/parts/<case>.json.
+ */
+import type { Automation, CustomField, Project } from '@/lib/asana/types';
+import Canvas from './Canvas.astro';
+import Simulator from './Simulator.astro';
+import Icon from '@/components/ghl/Icon.astro';
+
+interface Props {
+  automation: Automation;
+  caseId: string;
+  fields: CustomField[];
+  project?: Project;
+  people: Record<string, { name: string }>;
+}
+const { automation: a, caseId, fields, project, people } = Astro.props;
+const uid = `${caseId}-${a.id}`;
+const def = a.automation;
+
+// The custom fields this automation reads or writes, so the data model tab shows only what matters here.
+const keys = new Set<string>();
+for (const t of def.triggers) if (t.type === 'field') keys.add(t.key);
+for (const x of [...def.actions, ...(def.paths ?? []).flatMap((p) => p.actions)]) if (x.type === 'set_field') keys.add(x.key);
+for (const p of def.paths ?? []) for (const c of p.when) if (c.type === 'field') keys.add(c.key);
+const used = fields.filter((f) => keys.has(f.key));
+
+const notes = [
+  { key: 'edges', label: `What if… (${a.edgeCases.length})` },
+  { key: 'build', label: 'How I built it' },
+  { key: 'model', label: 'Fields and sections' },
+  { key: 'qa', label: `Test plan (${a.qa.length})` },
+];
+---
+
+<div class="gx-lab">
+  <div class="gx-lab-canvas">
+    <Canvas automation={a} caseId={caseId} people={people} />
+  </div>
+  <div class="gx-lab-sim">
+    <Simulator automation={a} caseId={caseId} />
+  </div>
+</div>
+
+<div class="gx-notes">
+  <h5 class="gx-notes-title">Build notes</h5>
+  <p class="gx-notes-intro">The detail an Asana admin would check before trusting this automation. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
+  <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
+    {notes.map((n, i) => (
+      <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
+    ))}
+  </div>
+
+  <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
+    <ul class="gx-edge-list">
+      {a.edgeCases.map((e) => <li><strong>{e.title}</strong><span>{e.body}</span></li>)}
+    </ul>
+  </div>
+
+  <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
+    <ol class="gx-build-list">
+      {a.build.map((b) => <li><strong>{b.title}.</strong> {b.body}</li>)}
+    </ol>
+  </div>
+
+  <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
+    {used.length > 0 && (
+      <div class="gx-table-wrap">
+        <table class="gx-table">
+          <caption class="sr-only">Custom fields this automation uses</caption>
+          <thead><tr><th scope="col">Custom field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
+          <tbody>
+            {used.map((f) => (
+              <tr><td><strong>{f.name}</strong>{f.options && <code>{f.options.join(' · ')}</code>}</td><td>{f.type}</td><td>{f.note ?? ''}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+    {project && (
+      <p class="gx-pipe"><span class="gx-pipe-name">{project.name}</span>{project.sections.map((st) => <span class="gx-stage">{st}</span>)}</p>
+    )}
+  </div>
+
+  <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
+    <ul class="gx-qa-list">
+      {a.qa.map((q) => <li><Icon name="check" size={16} /><span>{q}</span></li>)}
+    </ul>
+  </div>
+
+  <div class="gx-features">
+    <p class="gx-features-title">Asana features in this build</p>
+    <ul class="tags">
+      {a.features.map((f) => <li class="tag">{f}</li>)}
+    </ul>
+  </div>
+</div>

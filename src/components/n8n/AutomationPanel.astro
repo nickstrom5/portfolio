@@ -1,35 +1,23 @@
 ---
-/** One workflow: the story, the canvas and simulator side by side, then the build notes. */
+/**
+ * One workflow: the story, then its body (the canvas and simulator, the same
+ * workflow in n8n, and the build notes). A deferred panel keeps the story in
+ * the HTML and leaves a slot for the body, which loads when the workflow is opened.
+ */
 import type { Automation } from '@/lib/n8n/types';
-import Canvas from './Canvas.astro';
-import { url } from '@/lib/url';
-import Simulator from './Simulator.astro';
-import Icon from './Icon.astro';
-import { Image } from 'astro:assets';
+import Part from '@/components/ghl/Part.astro';
+import AutomationBody from './AutomationBody.astro';
 
 interface Props {
   automation: Automation;
   caseId: string;
   names: Record<string, string>;
   hidden?: boolean;
+  /** Leave the body out of the HTML (src/lib/parts.ts). */
+  deferred?: boolean;
 }
-const { automation: a, caseId, names, hidden = false } = Astro.props;
-const dm = a.dataModel;
-/** The n8n version the exports were last imported into and captured from. */
-const N8N_VERSION = '2.43';
+const { automation: a, caseId, names, hidden = false, deferred = false } = Astro.props;
 const uid = `${caseId}-${a.id}`;
-// The same workflow imported into a real n8n and captured from its editor (scripts in README, n8n section).
-const shots = import.meta.glob<{ default: ImageMetadata }>('/src/assets/n8n/*.png', { eager: true });
-const shot = shots[`/src/assets/n8n/${uid}.png`]?.default;
-const jsonHref = url(`/n8n/workflows/${uid}.json`);
-// "What if…" leads: the unusual cases in plain words are what most readers want first.
-const notes = [
-  { key: 'edges', label: `What if… (${a.edgeCases.length})` },
-  { key: 'build', label: 'How I built it' },
-  { key: 'model', label: 'Credentials and data' },
-  { key: 'qa', label: `Test plan (${a.qa.length})` },
-  ...(a.snippets && a.snippets.length ? [{ key: 'snips', label: 'Copy-ready pieces' }] : []),
-];
 ---
 
 <div class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={a.id}>
@@ -50,125 +38,5 @@ const notes = [
     </div>
   </div>
 
-  <div class="gx-lab">
-    <div class="gx-lab-canvas">
-      <Canvas automation={a} caseId={caseId} names={names} />
-    </div>
-    <div class="gx-lab-sim">
-      <Simulator automation={a} caseId={caseId} />
-    </div>
-  </div>
-
-  <figure class="n-real">
-    <div class="n-real-head">
-      <div>
-        <h5>The same workflow in n8n</h5>
-        <p>Exported from this page’s data, imported into n8n {N8N_VERSION} and captured from its editor. Copy it and paste it onto any n8n canvas, or download the file and import it; connect your own credentials before running it.</p>
-      </div>
-      <div class="n-real-actions">
-        <button type="button" class="btn btn-primary" data-copy-n8n={jsonHref}><Icon name="copy" size={16} /><span>Copy for n8n</span></button>
-        <a class="btn btn-secondary" href={jsonHref} download={`${uid}.json`}>Download .json</a>
-      </div>
-    </div>
-    {shot && (
-      <a class="n-real-shot" href={shot.src} target="_blank" rel="noopener" aria-label={`Open the n8n screenshot of ${a.workflow.name} full size`}>
-        <Image src={shot} alt={`${a.workflow.name} on the n8n canvas: every node from the diagram above, connected left to right.`} widths={[800, 1400, 2000]} sizes="(max-width: 1200px) 100vw, 1150px" loading="lazy" />
-      </a>
-    )}
-  </figure>
-
-  <div class="gx-notes">
-    <h5 class="gx-notes-title">Build notes</h5>
-    <p class="gx-notes-intro">The detail an n8n builder would check before trusting this workflow. Start with What if… for the unusual cases in plain words. <a href="#decoder">Words you may not know</a></p>
-    <div class="gx-note-tabs" role="tablist" aria-label={`Build notes for ${a.name}`} data-note-tabs>
-      {notes.map((n, i) => (
-        <button type="button" role="tab" class="gx-note-tab" id={`nt-${uid}-${n.key}`} aria-controls={`np-${uid}-${n.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-note-tab={n.key}>{n.label}</button>
-      ))}
-    </div>
-
-    <div class="gx-note-panel gx-edges" role="tabpanel" id={`np-${uid}-edges`} aria-labelledby={`nt-${uid}-edges`} data-note-panel="edges">
-      <ul class="gx-edge-list">
-        {a.edgeCases.map((e) => (
-          <li><strong>{e.title}</strong><span>{e.body}</span></li>
-        ))}
-      </ul>
-    </div>
-
-    <div class="gx-note-panel gx-build" role="tabpanel" id={`np-${uid}-build`} aria-labelledby={`nt-${uid}-build`} data-note-panel="build" hidden>
-      <ol class="gx-build-list">
-        {a.build.map((b) => (
-          <li><strong>{b.title}.</strong> {b.body}</li>
-        ))}
-      </ol>
-    </div>
-
-    <div class="gx-note-panel gx-model" role="tabpanel" id={`np-${uid}-model`} aria-labelledby={`nt-${uid}-model`} data-note-panel="model" hidden>
-      {dm.credentials && dm.credentials.length > 0 && (
-        <div class="gx-table-wrap">
-          <table class="gx-table">
-            <caption class="sr-only">Credentials</caption>
-            <thead><tr><th scope="col">Credential</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
-            <tbody>
-              {dm.credentials.map((c) => (
-                <tr><td><strong>{c.name}</strong></td><td>{c.type}</td><td>{c.note}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {dm.fields && dm.fields.length > 0 && (
-        <div class="gx-table-wrap">
-          <table class="gx-table">
-            <caption class="sr-only">Fields</caption>
-            <thead><tr><th scope="col">Field</th><th scope="col">Where</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead>
-            <tbody>
-              {dm.fields.map((f) => (
-                <tr><td><code>{f.name}</code></td><td>{f.where}</td><td>{f.type}</td><td>{f.note ?? ''}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {dm.variables && dm.variables.length > 0 && (
-        <dl class="gx-kv">
-          {dm.variables.map((v) => (
-            <div><dt><code>{v.key}</code></dt><dd>{v.value}{v.note ? ` (${v.note})` : ''}</dd></div>
-          ))}
-        </dl>
-      )}
-      <p class="n-cred-note">Credentials are saved once in n8n, encrypted, and picked by name in each node. Nothing secret is typed into a node or an expression.</p>
-    </div>
-
-    <div class="gx-note-panel gx-qa" role="tabpanel" id={`np-${uid}-qa`} aria-labelledby={`nt-${uid}-qa`} data-note-panel="qa" hidden>
-      <ul class="gx-qa-list">
-        {a.qa.map((q) => (
-          <li><Icon name="check" size={16} /><span>{q}</span></li>
-        ))}
-      </ul>
-    </div>
-
-    {a.snippets && a.snippets.length > 0 && (
-      <div class="gx-note-panel gx-snips" role="tabpanel" id={`np-${uid}-snips`} aria-labelledby={`nt-${uid}-snips`} data-note-panel="snips" hidden>
-        <div class="gx-snip-grid">
-          {a.snippets.map((sn) => (
-            <div class="g-snippet">
-              <div class="g-snippet-head">
-                <h6>{sn.title}</h6>
-                <button type="button" class="g-copy" data-copy aria-label={`Copy ${sn.title}`}><Icon name="copy" size={15} /><span aria-hidden="true">Copy</span></button>
-              </div>
-              <pre data-lang={sn.language}><code>{sn.code}</code></pre>
-              {sn.note && <p>{sn.note}</p>}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    <div class="gx-features">
-      <p class="gx-features-title">n8n features in this build</p>
-      <ul class="tags">
-        {a.features.map((f) => <li class="tag">{f}</li>)}
-      </ul>
-    </div>
-  </div>
+  {deferred ? <Part id={`${caseId}/${a.id}`} what="the diagram, simulator and build notes" /> : <AutomationBody automation={a} caseId={caseId} names={names} />}
 </div>

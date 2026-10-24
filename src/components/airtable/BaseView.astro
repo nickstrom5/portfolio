@@ -1,45 +1,24 @@
 ---
 /**
- * A case's base as a builder would review it: every table with its fields
- * and how each computed field is set up, its views, a grid of sample records
- * computed by the same engine the simulator uses, the interfaces and syncs.
+ * A case's base as a builder would review it: how its tables link, every
+ * table with its fields, views and sample records (BaseTables), the
+ * interfaces and syncs. A deferred base leaves a slot for the tables, which
+ * load when the case is opened (src/lib/parts.ts).
  */
-import type { BaseSchema, Field, IconName, ViewType } from '@/lib/airtable/types';
-import { gridRows } from '@/lib/airtable/engine';
+import type { BaseSchema } from '@/lib/airtable/types';
+import Part from '@/components/ghl/Part.astro';
+import BaseTables from './BaseTables.astro';
 import Icon from './Icon.astro';
 
 interface Props {
   caseId: string;
   base: BaseSchema;
+  /** Leave the tables out of the HTML. */
+  deferred?: boolean;
 }
-const { caseId, base } = Astro.props;
+const { caseId, base, deferred = false } = Astro.props;
 
-const VIEW_ICON: Record<ViewType, IconName> = { Grid: 'grid', Form: 'form', Calendar: 'calendar', Gallery: 'gallery', Kanban: 'kanban', Timeline: 'timeline', List: 'list' };
-const where = (f: Field) => (f.where ? `, only where ${f.where.text}` : '');
-const setting = (f: Field): { text?: string; code?: string } => {
-  switch (f.type) {
-    case 'Link to another record':
-      return { text: f.mirror ? `Links to ${f.link}; the other side of ${f.link} › ${f.mirror}` : `Links to ${f.link}` };
-    case 'Lookup':
-      return { text: `Looks up ${f.via} › ${f.of}${where(f)}` };
-    case 'Rollup':
-      return { text: `Rolls up ${f.via} › ${f.of}${where(f)}`, code: f.agg!.text };
-    case 'Count':
-      return { text: `Counts linked ${f.via}${where(f)}` };
-    case 'Formula':
-      return { code: f.formula!.text };
-    case 'Single select':
-    case 'Multiple select':
-      return { text: f.options!.join(' · ') };
-    case 'Last modified time':
-      return { text: `Watches ${f.watch!.join(', ')}` };
-    default:
-      return {};
-  }
-};
 const links = base.tables.flatMap((t) => t.fields.filter((f) => f.type === 'Link to another record' && !f.mirror).map((f) => `${t.name} › ${f.name} → ${f.link}`));
-// Sample records are computed as of 9 AM on the Monday of the sample week.
-const SAMPLE_MINUTES = 540;
 ---
 
 <div class="section a-base-section" id={`${caseId}-base`}>
@@ -49,68 +28,7 @@ const SAMPLE_MINUTES = 540;
     <p class="lede">Every table, field and view the automations rely on. Links are what make it a database rather than a spreadsheet: a lookup reads a field through a link, a rollup adds up or picks from linked records, a count counts them, and a formula works from the record’s own fields. The sample records below are computed by the same code as the simulator.</p>
     <p class="a-links" aria-label="Links between tables">{links.map((l) => <span class="gx-stage"><Icon name="link" size={13} /> {l}</span>)}</p>
 
-    <div class="a-tables">
-      {base.tables.map((t, i) => {
-        const rows = gridRows(base, t.name, SAMPLE_MINUTES);
-        return (
-          <details class="a-table" open={i === 0}>
-            <summary>
-              <Icon name="table" />
-              <span class="a-table-name">{t.name}</span>
-              <span class="a-table-meta">{t.fields.length} fields · {t.views.length} {t.views.length === 1 ? 'view' : 'views'} · {rows.length} sample records</span>
-              {t.synced && <span class="a-badge"><Icon name="sync" size={13} /> Synced</span>}
-            </summary>
-            <p class="a-table-desc">{t.description}{t.synced && <> Source: {t.synced}.</>}</p>
-            <div class="gx-table-wrap">
-              <table class="gx-table a-fields">
-                <caption class="sr-only">Fields in {t.name}</caption>
-                <thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Set up as</th></tr></thead>
-                <tbody>
-                  {t.fields.map((f, fi) => {
-                    const s = setting(f);
-                    return (
-                      <tr>
-                        <td><strong>{f.name}</strong>{fi === 0 && <span class="a-primary">primary</span>}</td>
-                        <td><span class="a-type">{f.type}</span></td>
-                        <td>
-                          {s.text && <span>{s.text}</span>}
-                          {s.code && <code class="a-formula">{s.code}</code>}
-                          {f.note && <span class="a-note">{f.note}</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <h4 class="a-sub">Views</h4>
-            <ul class="a-views">
-              {t.views.map((v) => (
-                <li>
-                  <span class="a-view-type"><Icon name={VIEW_ICON[v.type]} size={15} /> {v.type}</span>
-                  <strong>{v.name}</strong>
-                  <span>{v.purpose}</span>
-                  <span class="a-view-setup">{[...v.setup, ...(v.fields ? [`Fields: ${v.fields.join(', ')}`] : [])].join(' · ')}</span>
-                </li>
-              ))}
-            </ul>
-            <details class="a-grid">
-              <summary>Sample records ({rows.length})</summary>
-              <div class="gx-table-wrap a-grid-wrap" tabindex="0" role="region" aria-label={`Sample records in ${t.name}`}>
-                <table class="gx-table">
-                  <caption class="sr-only">Sample records in {t.name}</caption>
-                  <thead><tr>{t.fields.map((f) => <th scope="col">{f.name}</th>)}</tr></thead>
-                  <tbody>
-                    {rows.map((r) => <tr>{r.cells.map((c) => <td>{c}</td>)}</tr>)}
-                  </tbody>
-                </table>
-              </div>
-              <p class="a-note">Dates are from the sample week; the simulator moves them to the week you are in.</p>
-            </details>
-          </details>
-        );
-      })}
-    </div>
+    {deferred ? <Part id={`${caseId}/base`} what="the tables" /> : <BaseTables base={base} />}
 
     <h4 class="a-sub">Interfaces</h4>
     <div class="a-interfaces">

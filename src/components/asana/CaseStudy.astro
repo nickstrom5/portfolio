@@ -3,10 +3,14 @@
  * One case study: the organization, how its pieces connect, the working
  * intake form, its projects in each view, what leadership reads, and every
  * automation with its simulator and build notes. Ids are prefixed with the
- * case id so three of these can live on one page.
+ * case id so three of these can live on one page. Parts the page leaves out
+ * (src/lib/parts.ts) are slots, filled when the case is opened.
  */
 import type { CaseStudy } from '@/lib/asana/types';
 import { countActions, describeTrigger } from '@/lib/asana/engine';
+import { bodyProps } from '@/lib/asana/parts';
+import { inFull } from '@/lib/parts';
+import Part from '@/components/ghl/Part.astro';
 import FormDemo from './FormDemo.astro';
 import ProjectViews from './ProjectViews.astro';
 import Reporting from './Reporting.astro';
@@ -22,7 +26,6 @@ interface Props {
 }
 const { study, index, hidden = false } = Astro.props;
 const { org: o, automations } = study;
-const people = Object.fromEntries(o.team.map((p) => [p.key, { name: p.name }]));
 const actions = automations.reduce((n, a) => n + countActions(a), 0);
 const shots = screenshots[o.id] ?? [];
 ---
@@ -96,7 +99,7 @@ const shots = screenshots[o.id] ?? [];
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">The intake form, working</h3>
       <p class="lede">Fill in {o.name}’s form as if you were sending a request, and press Submit. Use any name: nothing is sent or stored. You’ll see the task Asana would create from your answers, and every automation that runs on it, step by step.</p>
-      <FormDemo study={study} />
+      {inFull(index) ? <FormDemo study={study} /> : <Part id={`${o.id}/form`} what="the form" />}
       <div class="gx-landing-notes">
         <p class="gx-notes-plain">{study.form.notesSummary}</p>
         <details class="gx-notes-more">
@@ -114,7 +117,7 @@ const shots = screenshots[o.id] ?? [];
       <span class="eyebrow">The projects</span>
       <h3 class="gx-h3">The same tasks, in the view each person needs</h3>
       <p class="lede">A view is just a way of looking at a project’s tasks: a list, a board of columns, a timeline, a calendar, or the Workflow view that shows where work comes in and which automations run in each section. Pick a project, then a view.</p>
-      <ProjectViews study={study} />
+      {inFull(index) ? <ProjectViews study={study} /> : <Part id={`${o.id}/projects`} what="the projects" />}
     </div>
   </div>
 
@@ -123,7 +126,7 @@ const shots = screenshots[o.id] ?? [];
       <span class="eyebrow">Reporting</span>
       <h3 class="gx-h3">What leadership reads instead of asking</h3>
       <p class="lede">The portfolio shows every project’s status in one table, goals show whether the work adds up to what matters, Workload shows who is overbooked before they burn out, and a weekly status update says what changed in plain words.</p>
-      <Reporting study={study} />
+      {inFull(index) ? <Reporting study={study} /> : <Part id={`${o.id}/reporting`} what="the reports" />}
     </div>
   </div>
 
@@ -133,7 +136,7 @@ const shots = screenshots[o.id] ?? [];
         <span class="eyebrow">In Asana itself</span>
         <h3 class="gx-h3">The same setup, built in a real workspace</h3>
         <p class="lede">These are screenshots of {o.name}’s projects, portfolio and goals in an actual Asana Advanced workspace, created from the same data this page draws with an API script. Every task is assigned to me there, so the avatars all read NS; the fictional owners are named in each task’s description. Select a screenshot to see it full size.</p>
-        <Gallery caseId={o.id} shots={shots} />
+        {inFull(index) ? <Gallery caseId={o.id} shots={shots} /> : <Part id={`${o.id}/in-asana`} what="the screenshots" />}
       </div>
     </div>
   )}
@@ -154,7 +157,7 @@ const shots = screenshots[o.id] ?? [];
         ))}
       </div>
       {automations.map((a, i) => (
-        <AutomationPanel automation={a} caseId={o.id} fields={study.fields} project={study.projects.find((p) => p.id === a.automation.project)} people={people} hidden={i !== 0} />
+        <AutomationPanel automation={a} caseId={o.id} {...bodyProps(study, a)} hidden={i !== 0} deferred={!inFull(index, i)} />
       ))}
     </div>
   </div>

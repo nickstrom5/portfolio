@@ -209,6 +209,7 @@ case's landing-page form. Nothing is sent anywhere.
 | Data model (triggers, steps, settings, scenarios) | `src/lib/ghl/types.ts` |
 | The simulator (waits, branches, goals, DND, time windows) | `src/lib/ghl/engine.ts` |
 | Case view, canvas, simulator panel, landing demo | `src/components/ghl/` |
+| What loads when opened: the rule and loader, this page's parts, their files | `src/lib/parts.ts`, `src/lib/ghl/parts.ts`, `src/pages/ghl/parts/[case].json.ts` |
 | Page, compliance and troubleshooting copy | `src/pages/ghl.astro` |
 | Styles | `src/styles/ghl.css` |
 
@@ -235,6 +236,14 @@ attach proof of a live build (a Loom or screenshots of a real sub-account),
 add a `proof` array to that workflow's file. The page is linked from its
 AI Projects tile and the Work page, not from the nav or footer; to add it,
 put it in `footerNav` in `src/data/site.ts`.
+
+Only one case shows at a time, so the page's HTML carries the first case in
+full except its later workflows. Every other workflow's diagram, simulator and
+build notes, and the other cases' landing pages, are slots filled from
+`/ghl/parts/<case>.json` when the case or workflow is opened (by a tab, a link
+or a deep link); names, intros and workflow summaries stay in the HTML. Each
+case's data also loads only when needed. The n8n, ClickUp, Asana and Airtable
+pages work the same way, each with its own `src/lib/<platform>/parts.ts`.
 
 ## n8n case studies (`/n8n/`)
 

@@ -1,0 +1,17 @@
+---
+/**
+ * An empty slot for a part of a case-study page that loads when it is opened.
+ * src/lib/parts.ts fills it from <page>/parts/<case>.json, which
+ * src/lib/parts-render.ts builds with the same component the page would have
+ * used. Shared by every platform page, like ghl.css.
+ */
+interface Props {
+  /** "<case>/<part>": the part's key in its case's parts file. */
+  id: string;
+  /** What loads here, for the line shown until it does: "the landing page". */
+  what: string;
+}
+const { id, what } = Astro.props;
+---
+
+<p class="gx-part" data-part={id}>Loading {what}…</p>

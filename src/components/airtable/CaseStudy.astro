@@ -2,10 +2,14 @@
 /**
  * One case study: the business, its base, the working form and every
  * automation with its simulator and build notes. Ids are prefixed with the
- * case id so three of these can live on one page.
+ * case id so three of these can live on one page. Parts the page leaves out
+ * (src/lib/parts.ts) are slots, filled when the case is opened.
  */
 import type { CaseStudy } from '@/lib/airtable/types';
 import { countSteps } from '@/lib/airtable/engine';
+import { fedBy } from '@/lib/airtable/parts';
+import { inFull } from '@/lib/parts';
+import Part from '@/components/ghl/Part.astro';
 import BaseView from './BaseView.astro';
 import DemoForm from './DemoForm.astro';
 import AutomationPanel from './AutomationPanel.astro';
@@ -18,8 +22,7 @@ interface Props {
 }
 const { study, index, hidden = false } = Astro.props;
 const { business: b, base, demo, automations } = study;
-const fed = automations.find((a) => a.id === demo.feeds);
-const feedsName = fed ? `automation ${fed.number} · ${fed.name}` : 'the first automation';
+const { feedsName, triggerType } = fedBy(study);
 const fields = base.tables.reduce((n, t) => n + t.fields.length, 0);
 ---
 
@@ -65,7 +68,7 @@ const fields = base.tables.reduce((n, t) => n + t.fields.length, 0);
     </div>
   </header>
 
-  <BaseView caseId={b.id} base={base} />
+  <BaseView caseId={b.id} base={base} deferred={!inFull(index)} />
 
   <div class="section gx-journey-section" id={`${b.id}-journey`}>
     <div class="container">
@@ -92,7 +95,7 @@ const fields = base.tables.reduce((n, t) => n + t.fields.length, 0);
       <span class="eyebrow">Live demo</span>
       <h3 class="gx-h3">Fill in the base’s form yourself</h3>
       <p class="lede">This is the base’s form view. Fill it in and press {demo.submitLabel}. Use any name and a made-up email: nothing is sent or stored. Then press Watch the automation run, which appears once you submit, to see every step {feedsName} takes on your record, what it writes to the base and what each person would receive.</p>
-      <DemoForm caseId={b.id} demo={demo} feedsName={feedsName} triggerType={fed?.trigger.type ?? 'form'} />
+      {inFull(index) ? <DemoForm caseId={b.id} demo={demo} feedsName={feedsName} triggerType={triggerType} /> : <Part id={`${b.id}/demo`} what="the form" />}
       <div class="gx-landing-notes">
         <p class="gx-notes-plain">How the form is set up in Airtable, and the settings that matter.</p>
         <details class="gx-notes-more">
@@ -129,7 +132,7 @@ const fields = base.tables.reduce((n, t) => n + t.fields.length, 0);
           </button>
         ))}
       </div>
-      {automations.map((a, i) => <AutomationPanel automation={a} caseId={b.id} hidden={i !== 0} />)}
+      {automations.map((a, i) => <AutomationPanel automation={a} caseId={b.id} hidden={i !== 0} deferred={!inFull(index, i)} />)}
     </div>
   </div>
 </section>
