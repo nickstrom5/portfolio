@@ -50,11 +50,17 @@ export function personNode() {
       'CRM automation',
       'GoHighLevel',
       'HubSpot',
+      'Keap',
       'Zapier',
+      'n8n',
+      'ClickUp',
+      'Asana',
+      'Airtable',
       'Zoho One',
       'Microsoft 365',
       'Webinar production',
       'AI-assisted software development',
+      'Python',
     ],
   };
 }

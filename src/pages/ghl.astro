@@ -176,7 +176,7 @@ const description =
     : `GoHighLevel automation case studies you can test: ${plural(all.length, 'working workflow', 'working workflows')}, working landing pages and the build notes behind each.`;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} breadcrumbs={[{ name: 'Case studies', path: '/case-studies/' }, { name: 'GoHighLevel', path: '/ghl/' }]}>
   <section class="gx-hero">
     <div class="container">
       <div class="gx-hero-grid">

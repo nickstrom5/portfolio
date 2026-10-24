@@ -163,7 +163,7 @@ const description =
     : `ClickUp case studies you can test: ${plural(automations.length, 'Automation', 'Automations')}, working Forms and the build notes behind each.`;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} breadcrumbs={[{ name: 'Case studies', path: '/case-studies/' }, { name: 'ClickUp', path: '/clickup/' }]}>
   <section class="gx-hero">
     <div class="container">
       <div class="gx-hero-grid">
