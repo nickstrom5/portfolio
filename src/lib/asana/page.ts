@@ -260,6 +260,8 @@ export function initAsanaPage() {
 
   wire(document);
 
+  type Saved = { gxCase: string; y: number };
+  const shownCase = () => casePanels.find((p) => !p.hidden)?.dataset.casePanel ?? caseIds[0];
   // In-page links that open a case or an automation. Delegated, so links the form demo adds work too.
   document.addEventListener('click', (e) => {
     const a = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[data-open-auto]');
@@ -267,6 +269,8 @@ export function initAsanaPage() {
     const target = a.dataset.openAuto!;
     if (!caseIds.some((c) => target === c || target.startsWith(`${c}-`))) return;
     e.preventDefault();
+    // Remember where the reader is, then give the jump its own history entry so Back returns here.
+    history.replaceState({ gxCase: shownCase(), y: window.scrollY } satisfies Saved, '');
     if (location.hash !== `#${target}`) history.pushState(null, '', `#${target}`);
     go(target, true, true);
   });
@@ -276,6 +280,14 @@ export function initAsanaPage() {
       target = decodeURIComponent(target);
     } catch {
       // Not a valid escape sequence; use it as written.
+    }
+    const saved = history.state as Saved | null;
+    if (saved?.gxCase) {
+      // Back or Forward onto a spot this page saved: show the same case and put the scroll back.
+      if (!go(target, false)) selectCase(saved.gxCase, false, false);
+      history.replaceState(saved, ''); // kept for the next Back or Forward onto this entry
+      whenReady(shownCase(), () => window.scrollTo({ top: saved.y, behavior: 'instant' })); // html has scroll-behavior: smooth
+      return;
     }
     go(target, true);
   };
