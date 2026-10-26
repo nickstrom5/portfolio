@@ -55,6 +55,9 @@ export const footerNav = [
   { href: '/about', label: 'About' },
 ] as const;
 
-/** Header/nav: the footer links minus Resume, which stays in the footer only. */
-const footerOnly: string[] = ['/resume'];
+/**
+ * Header/nav: the footer links minus Resume and Case studies, which stay in the
+ * footer only. Case studies is reached from its card on AI Projects.
+ */
+const footerOnly: string[] = ['/resume', '/case-studies'];
 export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));
