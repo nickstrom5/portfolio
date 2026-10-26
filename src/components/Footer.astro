@@ -1,6 +1,5 @@
 ---
 import { site, footerNav } from '@/data/site';
-import { platforms } from '@/data/caseStudies';
 import { url } from '@/lib/url';
 
 const year = new Date().getFullYear();
@@ -22,13 +21,6 @@ const social = [
       <ul>
         {footerNav.map((item) => (
           <li><a href={url(item.href)}>{item.label}</a></li>
-        ))}
-      </ul>
-    </nav>
-    <nav aria-label="Case studies">
-      <ul>
-        {platforms.map((p) => (
-          <li><a href={url(p.href)}>{p.name}</a></li>
         ))}
       </ul>
     </nav>
@@ -54,7 +46,7 @@ const social = [
   }
   .footer-inner {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr;
     gap: 2rem;
   }
   .footer-name {
