@@ -40,7 +40,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 // The page's own share card (npm run og), or the site-wide default; both are 1200×630.
 const card = shareCard(Astro.url.pathname);
 const ogImage = new URL(card, Astro.site).href;
-const ogAlt = card === '/og.png' ? `${site.name}, ${site.role}` : pageTitle;
+const ogAlt = card.endsWith('/og.png') ? `${site.name}, ${site.role}` : pageTitle;
 const ld = {
   '@context': 'https://schema.org',
   '@graph': [

@@ -51,7 +51,7 @@ const card = image ? undefined : shareCard(Astro.url.pathname);
 const ogImage = new URL(image ?? card!, Astro.site);
 // Share cards (public/og.png and public/og/*.jpg) are 1200×630; a custom image states its size only when the page knows it.
 const ogSize = card ? { width: 1200, height: 630 } : imageSize;
-const ogAlt = imageAlt ?? (card && card !== '/og.png' ? fullTitle : `${site.name}, ${site.role}`);
+const ogAlt = imageAlt ?? (card && !card.endsWith('/og.png') ? fullTitle : `${site.name}, ${site.role}`);
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const crumbs = breadcrumbs && [{ name: 'Home', path: '/' }, ...breadcrumbs];
 

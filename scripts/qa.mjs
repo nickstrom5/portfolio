@@ -7,7 +7,7 @@
  * JS errors, horizontal overflow, heading outline, alt text, labels, tap
  * targets and tiny text on phones, internal links and anchors, plus SEO:
  * title length, description length, canonical, robots, Open Graph image
- * (in the build, with a 1200px width tag),
+ * (in the build, with a 1200px width tag that matches the file),
  * JSON-LD validity, sitemap coverage, CSP placement and photo metadata.
  * Exercises the menu, theme toggle, work filters, Apps tiles, contact form
  * (including its failure path) and key assets, and opens every case and
@@ -22,6 +22,7 @@
 import http from 'node:http';
 import { createReadStream, existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
+import sharp from 'sharp';
 
 const dist = new URL('../dist/', import.meta.url).pathname;
 if (!existsSync(join(dist, 'index.html'))) {
@@ -91,7 +92,12 @@ for (const p of pages) {
   if (!noindex && !ogImage) findings.push(`${p}: missing og:image`);
   if (ogImage) {
     const imgPath = new URL(ogImage).pathname;
-    if (!existsSync(join(dist, imgPath))) findings.push(`${p}: og:image ${imgPath} is not in the build`);
+    const imgFile = join(dist, decodeURIComponent(imgPath));
+    const meta = existsSync(imgFile) && statSync(imgFile).isFile() ? await sharp(imgFile).metadata().catch(() => null) : null;
+    const tagW = (html.match(/<meta property="og:image:width" content="(\d+)"/) || [])[1];
+    const tagH = (html.match(/<meta property="og:image:height" content="(\d+)"/) || [])[1];
+    if (!meta) findings.push(`${p}: og:image ${imgPath} is not an image in the build`);
+    else if (tagW && (+tagW !== meta.width || +tagH !== meta.height)) findings.push(`${p}: og:image ${imgPath} is ${meta.width}×${meta.height} but its tags say ${tagW}×${tagH}`);
     // Noindex pages may share a picture of unstated size (/food/ uses its first photo).
     if (!noindex && !/<meta property="og:image:width" content="1200"/.test(html)) findings.push(`${p}: og:image has no 1200px width tag`);
     if (!noindex && imgPath === '/og.png' && p !== '/') console.warn(`warning: ${p}: uses the default share card (run \`npm run build && npm run og && npm run build\`)`);
@@ -245,7 +251,10 @@ await page.fill('textarea[name=message]', 'Testing the failure path.');
 await page.tap('[data-send]');
 await page.waitForSelector('[data-form-error]:not([hidden])', { timeout: 5000 }).catch(() => findings.push('contact: no error shown when sending fails'));
 if (!page.url().endsWith('/contact/')) findings.push('contact: a failed send left the page: ' + page.url());
-if ((await page.inputValue('textarea[name=message]')) !== 'Testing the failure path.') findings.push('contact: a failed send lost the message');
+else {
+  if ((await page.inputValue('textarea[name=message]', { timeout: 2000 }).catch(() => null)) !== 'Testing the failure path.') findings.push('contact: a failed send lost the message');
+  if (!(await page.isEnabled('[data-send]', { timeout: 2000 }).catch(() => false))) findings.push('contact: after a failed send the Send button stays disabled, so the visitor cannot retry');
+}
 await page.unroute('https://formspree.io/**');
 await ctx.close();
 
