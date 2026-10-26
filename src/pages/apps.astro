@@ -6,7 +6,8 @@ import Duo from '@/components/showcase/Duo.astro';
 import Shot from '@/components/showcase/Shot.astro';
 import CtaBand from '@/components/CtaBand.astro';
 import { execFileSync } from 'node:child_process';
-import { projects, type StoryProject } from '@/data/showcase';
+import { projects, surface, surfaceDark, type StoryProject } from '@/data/showcase';
+import { platforms } from '@/data/caseStudies';
 import { url } from '@/lib/url';
 
 // Commits to the site itself (not the separate signalrig/ and yetour/ apps), counted
@@ -21,6 +22,9 @@ function siteCommits(): string | undefined {
   }
 }
 const live = { commits: siteCommits() };
+
+const names = platforms.map((p) => p.name);
+const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
 ---
 
 <Base title="AI-built apps and websites" description="What Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site.">
@@ -79,6 +83,18 @@ const live = { commits: siteCommits() };
             <span class="t-cta">View story →</span>
           </button>
         ))}
+        {/* The platform case studies live on their own page; this card links there. */}
+        <a
+          class="tile page"
+          href={url('/case-studies')}
+          data-tone="light"
+          style={`--tile-bg: ${surface}; --tile-fg: #6a3fc0; --tile-bg-dark: ${surfaceDark}; --tile-fg-dark: #b79bff`}
+        >
+          <span class="t-kicker">Platform builds · sample businesses</span>
+          <span class="t-name">Case studies</span>
+          <span class="t-blurb">{`Sample businesses built end to end in ${platformList}, runnable in your browser.`}</span>
+          <span class="t-cta">View case studies →</span>
+        </a>
       </div>
     </div>
   </section>
@@ -400,6 +416,9 @@ const live = { commits: siteCommits() };
   .tile.soon.linked:hover {
     opacity: 0.9;
     transform: translateY(-2px);
+  }
+  .tile.page {
+    text-decoration: none;
   }
   .tile.active,
   .tile[aria-pressed='true'] {
