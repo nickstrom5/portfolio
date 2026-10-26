@@ -13,8 +13,6 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
       <span class="brand-name">{site.name}</span>
     </a>
 
-    {/* On phones the menu is collapsed, so Hire me also sits in the bar. */}
-    <a class="btn btn-primary hire-bar" href={url('/contact')}>Hire me</a>
     <button class="menu-btn" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
       <span class="sr-only">Toggle menu</span>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -40,10 +38,6 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
             <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
           </svg>
         </button>
-        <a class="btn btn-primary hire" href={url('/contact')}>
-          <span class="hire-text">Hire me</span>{' '}
-          <span class="hire-please" aria-hidden="true">Please?</span>
-        </a>
       </div>
     </nav>
   </div>
@@ -116,35 +110,6 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     height: 32px;
     border-radius: 50%;
     background: var(--accent-btn);
-  }
-  /* On hover the button asks nicely. Both labels share one grid cell, so the width
-     never changes, and screen readers only hear "Hire me". */
-  .hire {
-    display: inline-grid;
-  }
-  .hire > span {
-    grid-area: 1 / 1;
-    text-align: center;
-    transition: opacity 0.15s ease;
-  }
-  .hire-please {
-    opacity: 0;
-  }
-  @media (hover: hover) {
-    .hire:hover .hire-text {
-      opacity: 0;
-    }
-    .hire:hover .hire-please {
-      opacity: 1;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hire > span {
-      transition: none;
-    }
-  }
-  .hire-bar {
-    display: none;
   }
   .menu-btn {
     display: none;
@@ -226,19 +191,7 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     .menu-btn {
       display: inline-flex;
     }
-    .hire-bar {
-      display: inline-flex;
-      margin-left: auto;
-      margin-right: -0.4rem;
-      padding: 0.45rem 0.95rem;
-      font-size: 0.9rem;
-    }
-    /* The bar already has it; no second Hire me in the open menu. */
-    .menu .hire {
-      display: none;
-    }
-    .brand-name,
-    .hire-bar {
+    .brand-name {
       white-space: nowrap;
     }
     .menu {
@@ -267,15 +220,6 @@ const isActive = (href: string) => current === url(href).replace(/\/$/, '') || c
     }
     .menu-actions {
       justify-content: space-between;
-    }
-  }
-  /* Narrowest phones: drop the dot so the name and Hire me stay on one line. */
-  @media (max-width: 359px) {
-    .brand-mark {
-      display: none;
-    }
-    .hire-bar {
-      padding: 0.4rem 0.8rem;
     }
   }
 </style>
