@@ -127,7 +127,8 @@ photo in by hand.
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and publishes
 to GitHub Pages on every push to `main`. Every pull request first runs
-`.github/workflows/ci.yml`: the build, `ghl:check`, `n8n:check` and the full
+`.github/workflows/ci.yml`: the build, the five case-study checks (`ghl:check`,
+`n8n:check`, `clickup:check`, `asana:check`, `airtable:check`) and the full
 browser QA (`npm run qa`).
 
 Pages is set to **Source: GitHub Actions**. To preview a fork at
