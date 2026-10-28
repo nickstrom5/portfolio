@@ -2,6 +2,7 @@
 import { execFileSync } from 'node:child_process';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import Base from '@/layouts/Base.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import Testimonial from '@/components/Testimonial.astro';
@@ -26,10 +27,12 @@ const d = project.data;
 const quotes = testimonials.filter((t) => 'slug' in t && t.slug === project.id);
 const coverAlt = `Screenshot of ${d.shortTitle ?? d.title}`;
 // Link previews want 1200×630: the top of the cover screenshot, cropped to fit. Never read .src or
-// .width on the asset itself, or Astro also publishes the untouched original.
+// .width on the asset itself, or Astro also publishes the untouched original (.clone is safe).
 const coverAsset = d.cover ? showcaseAsset(d.cover) : undefined;
 if (d.cover && !coverAsset) throw new Error(`${project.id}: cover ${d.cover} is not in src/assets/showcase/`);
-const shareImage = coverAsset
+const coverSize = coverAsset && ((coverAsset as ImageMetadata & { clone?: ImageMetadata }).clone ?? coverAsset);
+// Astro never enlarges, so a smaller cover would give a smaller crop than the tags state: use the page's card instead.
+const shareImage = coverAsset && coverSize && coverSize.width >= 1200 && coverSize.height >= 630
   ? (await getImage({ src: coverAsset, width: 1200, height: 630, fit: 'cover', position: 'top', format: 'jpg' })).src
   : undefined;
 
