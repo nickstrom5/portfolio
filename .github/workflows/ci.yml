@@ -33,5 +33,8 @@ jobs:
       - run: npm run build
       - run: npm run ghl:check
       - run: npm run n8n:check
+      - run: npm run clickup:check
+      - run: npm run asana:check
+      - run: npm run airtable:check
       - run: npx playwright install --with-deps chromium
       - run: npm run qa
