@@ -113,7 +113,7 @@ export const projects: Project[] = [
       screen: 'image',
       image: '/showcase/eatsranked-guides.jpg',
       frame: 'laptop',
-      alt: 'eatsranked.com, Restaurant guides by state: the cards for Chicago Restaurants: Ranked, Wisconsin Eats, Colorado Eats and Washington Eats, each with its icon, its tagline, a link to its website and “Coming soon to the App Store”',
+      alt: 'eatsranked.com, Restaurant guides by state: the cards for Chicago Restaurants: Ranked, Wisconsin Eats, Colorado Eats and Washington Eats, each with its icon, its tagline and a link to its website; Chicago’s card links to the App Store and the others say “Coming soon to the App Store”',
     },
     siteShot: {
       desktop: '/showcase/eatsranked-site.jpg',
