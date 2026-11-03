@@ -101,7 +101,7 @@ export const projects: Project[] = [
     id: 'eatsranked',
     name: 'Eats Ranked',
     kicker: 'iPhone apps + web · restaurant guides',
-    tileBlurb: 'Restaurants, ranked state by state. Twelve states live on the web.',
+    tileBlurb: 'Restaurants, ranked state by state. 21 states live on the web, and the Chicago app is on the App Store.',
     bg: surface,
     fg: '#ba3441',
     bgDark: surfaceDark,
@@ -109,7 +109,7 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Where to eat, from the public record.',
-      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. Twelve states are live on the web, and the first app, Wisconsin Eats, has been submitted to Apple.',
+      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. 21 states are live on the web, and Chicago Restaurants: Ranked is the first app on the App Store.',
       screen: 'image',
       image: '/showcase/eatsranked-guides.jpg',
       frame: 'laptop',
@@ -142,7 +142,7 @@ export const projects: Project[] = [
       {
         eyebrow: 'One state at a time',
         title: 'Five more states live in four days.',
-        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. Maine, Idaho, New York, Hawaii and Texas have followed since, for twelve states on the web.',
+        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. Fourteen more have followed since, from Maine and Texas to Pennsylvania and New Jersey, for 21 states on the web.',
         screen: 'image',
         image: '/showcase/eatsranked-connecticut-site.jpg',
         alt: 'The Connecticut Eats website, one of the five: its own navy and tomato-red palette, its apizza icon, links to its Apizza, Lobster rolls, Hot dogs and Diners guides, and counts of 27 apizza places, 58 lobster roll and clam shack stops, 45 diners and dairy bars and 9,358 restaurants statewide',
@@ -167,13 +167,14 @@ export const projects: Project[] = [
     steps: [
       { title: 'Start with one city', ai: 'Turned Chicago’s inspection records into a score and an A–F grade, built the iPhone app and wrote an App Review and legal-risk audit before launch.', me: 'Set the app’s rules: no Google data, no customer reviews or star ratings, no Yelp.' },
       { title: 'Then a second state', ai: 'Built Wisconsin Eats from the Chicago app’s structure, with research agents checking each fish fry and supper club against a 2025–26 source.', me: 'Decided the name should cover restaurants in general, with fish fry and supper clubs as the tagline, and chose one domain with a site per state instead of buying wisconsineats.com.' },
-      { title: 'A hub and ten more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, and later Maine, Idaho, New York, Hawaii and Texas, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
-      { title: 'Ship and keep it current', ai: 'Set up the weekly Chicago data refresh with its checks, and wrote the App Store listings and review replies.', me: 'Submitted the first app, Wisconsin Eats, for App Review on September 28; Apple asked for more information. None of the apps is on the App Store yet.' },
+      { title: 'A hub and nineteen more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, and fourteen more states after them, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
+      { title: 'Ship and keep it current', ai: 'Set up the weekly Chicago data refresh with its checks, and wrote the App Store listings and review replies.', me: 'Submitted the first app, Wisconsin Eats, for App Review on September 28; Apple asked for more information. Chicago Restaurants: Ranked became the first app on the App Store on November 2.' },
     ],
     links: [
       { label: 'Visit eatsranked.com', href: 'https://eatsranked.com', primary: true },
+      { label: 'Chicago app on the App Store', href: 'https://apps.apple.com/us/app/chicago-restaurants-ranked/id6816931379' },
     ],
-    status: 'Live on the web in twelve states · iPhone and iPad apps coming soon',
+    status: 'Live on the web in 21 states · Chicago app on the App Store, more coming',
   },
   {
     id: 'goodwalk',
