@@ -43,6 +43,8 @@ const connect = [
   site.links.github && { label: 'GitHub', value: 'See the code behind my apps', href: site.links.github, mark: '{}' },
 ].filter(Boolean) as { label: string; value: string; href: string; mark: string }[];
 const photos = personal.photos as { src: string; alt: string; caption?: string }[];
+// Search results show the plain square headshot; left to itself, Google cropped the round photo out of the share card.
+const primaryImageOfPage = `${site.url}${site.photo}`;
 // Last change to the profile, from git (same sources as the sitemap's lastmod for /about/).
 let dateModified: string | undefined;
 try {
@@ -55,7 +57,7 @@ try {
   description="Nick (Nicholas) Soderstrom, Chicago-based senior project manager and operations lead, open to full-time and freelance roles: background, skills and contact."
   ogType="profile"
   pageType="ProfilePage"
-  pageProps={{ mainEntity: { '@id': ids.person }, dateCreated: '2026-09-18T02:46:17Z', ...(dateModified ? { dateModified } : {}) }}
+  pageProps={{ mainEntity: { '@id': ids.person }, primaryImageOfPage, dateCreated: '2026-09-18T02:46:17Z', ...(dateModified ? { dateModified } : {}) }}
 >
   <section class="section">
     <div class="container about">
