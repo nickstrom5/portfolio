@@ -1,10 +1,8 @@
 import type { Automation, Item, Json } from '@/lib/n8n/types';
 import { dayKey, item } from '@/lib/n8n/engine';
-import { business } from '../business';
 
 const DAY = 1440;
 const at = (day: number, h: number, m = 0) => day * DAY + h * 60 + m;
-const vars = business.env.vars;
 
 /** Open searches in the Jobs table, one per role, with the client's contact. */
 const JOBS: Json[] = [

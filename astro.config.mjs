@@ -71,6 +71,8 @@ export default defineConfig({
     },
   ],
   build: { format: 'directory', inlineStylesheets: 'always' },
+  // No page shows code blocks, so Shiki (which warns that its inline styles clash with the CSP below) stays off.
+  markdown: { syntaxHighlight: false },
   // Renamed case studies keep their old URL working.
   redirects: {
     '/work/sales-org-zapier-hubspot-automation/': '/work/production-company-operations-lead/',
