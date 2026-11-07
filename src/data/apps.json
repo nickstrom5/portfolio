@@ -16,7 +16,7 @@
     "appStore": "https://apps.apple.com/us/app/chicago-restaurants-ranked/id6816931379",
     "playStore": "",
     "website": "https://eatsranked.com",
-    "status": "iPhone and iPad apps coming soon",
+    "status": "Live on the web in 21 states · Chicago app on the App Store, more coming",
     "icon": "ER",
     "iconImage": "/app-icons/eatsranked.webp",
     "placeholder": false
@@ -82,10 +82,10 @@
     ],
     "client": "Solo build",
     "year": 2026,
-    "appStore": "",
+    "appStore": "https://apps.apple.com/us/app/cartworth-grocery-prices/id6816954374",
     "playStore": "",
     "website": "https://cartworth.app",
-    "status": "In development",
+    "status": "Live on the App Store and at cartworth.app",
     "icon": "CW",
     "iconImage": "/app-icons/cartworth.webp",
     "placeholder": false

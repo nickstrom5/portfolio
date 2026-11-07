@@ -2,6 +2,9 @@
  * Single source of truth for identity, links and copy that appears on every page.
  * Edit this file first when personalizing the site.
  */
+/** Completed contracts on Upwork (the profile's "Total jobs"), quoted across the site. */
+const upworkJobs = 258;
+
 export const site = {
   name: 'Nick Soderstrom',
   firstName: 'Nick',
@@ -18,12 +21,13 @@ export const site = {
     linkedin: 'https://www.linkedin.com/in/nick-soderstrom/',
     github: 'https://github.com/nickstrom5',
     calendly: 'https://calendly.com/nickstrom5',
-    appStoreDeveloper: '',
+    appStoreDeveloper: 'https://apps.apple.com/us/developer/nicholas-d-soderstrom/id6814555256',
     playStoreDeveloper: '',
   },
-  /** Headline numbers shown in the hero. Taken from the Upwork profile, October 2026. */
+  upworkJobs,
+  /** Headline numbers shown in the hero. Taken from the Upwork profile, November 2026. */
   stats: [
-    { value: '300+', label: 'Client contracts', note: '257 on Upwork' },
+    { value: '300+', label: 'Client contracts', note: `${upworkJobs} on Upwork` },
     { value: '18,000+', label: 'Freelance hours billed' },
     { value: '100%', label: 'Job success score' },
     { value: 'Top 1%', label: 'Top Rated Plus on Upwork' },
