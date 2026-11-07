@@ -60,7 +60,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <a href={url('/clients')}>Featured clients →</a>
       </div>
       <p class="lede">
-        Freelancing since 2015, with 300+ contracts lasting from a few days to several years, 257 of them on Upwork. Below are key client roles{staffJob && `, plus a staff job at ${staffJob.company}`}.
+        Freelancing since 2015, with 300+ contracts lasting from a few days to several years, {site.upworkJobs} of them on Upwork. Below are key client roles{staffJob && `, plus a staff job at ${staffJob.company}`}.
       </p>
       <ol class="roles">
         {roles.map((r) => (
@@ -87,7 +87,7 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
         <h2>Recent contracts</h2>
         {upworkLive && <a href={site.links.upwork} target="_blank" rel="noopener">Full history on Upwork →</a>}
       </div>
-      <p class="lede">A sample of contract titles since 2024, out of 257 completed on Upwork and 300+ overall. Client names are kept private.</p>
+      <p class="lede">A sample of contract titles since 2024, out of {site.upworkJobs} completed on Upwork and 300+ overall. Client names are kept private.</p>
       <ul class="contracts">
         {contracts.map((c) => (
           <li>
