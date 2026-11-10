@@ -169,11 +169,12 @@ const decoder: [string, string][] = [
   ['Execution log', 'GoHighLevel’s step-by-step record of what a workflow did for one contact, with times. The simulator here shows the same kind of log.'],
   ['Custom Code, webhook', 'Custom Code runs a short script inside a workflow, here to score leads. A webhook is an automatic message from one app to another, like “trial started.”'],
 ];
-const title = 'GoHighLevel automation case studies';
+// The search result leads with what a searcher is after (workflow examples to try) and the count.
+const title = `GoHighLevel workflow examples: ${all.length} you can test`;
 const description =
   cases.length === 3
-    ? `Three GoHighLevel automation case studies you can test: a local roofer, a SaaS company and an online coach, with ${all.length} working workflows and their landing pages.`
-    : `GoHighLevel automation case studies you can test: ${plural(all.length, 'working workflow', 'working workflows')}, working landing pages and the build notes behind each.`;
+    ? `${all.length} GoHighLevel workflows for a roofer, a software company and an online coach: speed to lead, missed-call text-back, follow-up and reviews. Test each one.`
+    : `GoHighLevel workflow examples you can test: ${plural(all.length, 'working workflow', 'working workflows')}, working landing pages and the build notes behind each.`;
 ---
 
 <Base title={title} description={description} breadcrumbs={[{ name: 'Case studies', path: '/case-studies/' }, { name: 'GoHighLevel', path: '/ghl/' }]}>

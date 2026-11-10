@@ -14,9 +14,6 @@ export type Screen =
   | 'lume-scan'
   | 'lume-score'
   | 'lume-ritual'
-  | 'goodwalk-home'
-  | 'goodwalk-reminder'
-  | 'goodwalk-photo'
   | 'image';
 
 export interface Feature {
@@ -189,7 +186,9 @@ export const projects: Project[] = [
     hero: {
       title: 'Every dog deserves a good walk.',
       sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. On the App Store since November 8.',
-      screen: 'goodwalk-home',
+      screen: 'image',
+      image: '/showcase/goodwalk-iphone-home.jpg',
+      alt: 'Good Walk on iPhone, the home screen: “Rex wants more. 35 min to fill today’s ring”, a ring around the dog’s picture at 25 of 60 minutes, a 30-day streak, the Start a walk and Quick log a walk buttons, and this week’s bars',
     },
     siteShot: {
       desktop: '/showcase/goodwalk-site.jpg',
@@ -198,16 +197,20 @@ export const projects: Project[] = [
     },
     features: [
       {
-        eyebrow: 'One tap from the reminder',
-        title: 'Answer from the lock screen.',
-        body: 'The whole app is one question a day: has your dog had a walk? A reminder lands at the time you pick and “Walked” is right there on the notification. Tap it and the streak carries on. Miss it and the app says so, kindly.',
-        screen: 'goodwalk-reminder',
+        eyebrow: 'One tap a day',
+        title: 'Log the walk in one tap.',
+        body: 'The whole app is one question a day: has your dog had a walk? A reminder lands at the time you pick, and “Walked” is right there on the notification. In the app, Quick log asks how long the walk was: pick 10, 20, 30, 45 or 60 minutes and tap once. Or start the timer, which counts the minutes and estimates the distance.',
+        screen: 'image',
+        image: '/showcase/goodwalk-iphone-log.jpg',
+        alt: 'Good Walk’s quick log sheet: “How long did Rex walk?”, with 10, 20, 30, 45 and 60 minute choices, 20 selected, and a “Log 20 min” button',
       },
       {
         eyebrow: 'The month view',
         title: 'Every walk, on the calendar.',
-        body: 'Each day you walk fills in a dot. The month view shows the run you are on, the days you missed and the total so far, at a glance. No stats to dig through, no charts. A glance tells you whether this was a good month for your dog.',
-        screen: 'goodwalk-photo',
+        body: 'Each day you walk gets a ring on the calendar: filled when you met the target, outlined for a shorter walk. Above it are the walks so far, the streak you are on and your longest; below it, the miles, the time together and the full days. One screen tells you whether this was a good month for your dog.',
+        screen: 'image',
+        image: '/showcase/goodwalk-iphone-stats.jpg',
+        alt: 'Good Walk’s Stats screen: 30 walks with Rex, a 30-day streak, and the September 2026 calendar with filled days where the target was met and outlined days for shorter walks; 47 miles and 23 hours 30 minutes together',
         flip: true,
       },
     ],
@@ -215,14 +218,14 @@ export const projects: Project[] = [
       ai: 95,
       aiLabel: 'Claude Code',
       meLabel: 'Nick',
-      aiDid: 'App concept write-up, screens, streak and reminder logic, the landing site with its guides, FAQ, privacy and terms pages, and a local preview server to review it all.',
+      aiDid: 'The concept write-up, the SwiftUI app with its widget, reminders and streak logic, the test suite, the landing site with its guides, FAQ, privacy and terms pages, and the App Store listing and screenshots.',
       meDid: 'The idea, the “no collar, no map, no account” rule, the launch plan, the domain, and every yes or no along the way.',
     },
     steps: [
       { title: 'Pick the idea', ai: 'Turned one sentence into a concept: a daily walk streak for your dog, nothing else.', me: '“A dog walk tracker. Keep it simple.”' },
       { title: 'Design the loop', ai: 'Worked out the reminder, the one-tap answer and what the streak screen shows.', me: 'Insisted on no collar, no map and no account.' },
       { title: 'Build the site first', ai: 'Wrote the landing page, three guides, FAQ, privacy and terms, then served a preview from the Mac.', me: 'Reviewed it in the browser pane, bought getgoodwalk.app and set the prices.' },
-      { title: 'Launch', ai: 'Prepared the App Store listing and the launch checklist.', me: 'Shipped the app. Good Walk went live on the App Store on November 8.' },
+      { title: 'Build the app and launch', ai: 'Wrote the SwiftUI app, its widget and its tests, then prepared the App Store listing and the launch checklist.', me: 'Shipped the app. Good Walk went live on the App Store on November 8.' },
     ],
     links: [
       { label: 'Get Good Walk on the App Store', href: 'https://apps.apple.com/us/app/good-walk-dog-walk-streak/id6814555254', primary: true },
