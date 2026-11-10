@@ -108,14 +108,14 @@ export const projects: Project[] = [
       title: 'Where to eat, from the public record.',
       sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. All 50 states and DC are live on the web, and Chicago Restaurants: Ranked is the first app on the App Store.',
       screen: 'image',
-      image: '/showcase/eatsranked-guides.jpg',
+      image: '/showcase/eatsranked-map.jpg',
       frame: 'laptop',
-      alt: 'eatsranked.com, Restaurant guides by state: an A-to-Z list of all 50 states and the District of Columbia in three columns, from Alabama to Wyoming, each row with its app’s icon',
+      alt: 'eatsranked.com, the map: “All 50 states and DC.” above a hex-tile map of the United States, in which every state and the District of Columbia shows its guide’s app icon',
     },
     siteShot: {
       desktop: '/showcase/eatsranked-site.jpg',
       desktopDark: '/showcase/eatsranked-site-dark.jpg',
-      caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a state picker and a map of all 50 states and DC; picking a state shows its website and app. Further down are an A-to-Z list of the guides, each row opening that state’s card, and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
+      caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a state picker and the map of all 50 states and DC; picking a state shows its website and app. Further down are this A-to-Z list of the guides, where each row opens that state’s card, and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
       url: 'https://eatsranked.com',
     },
     features: [
