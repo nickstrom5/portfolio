@@ -10,6 +10,7 @@ import '@/styles/ghl.css';
 import '@/styles/n8n.css';
 import '@/styles/airtable.css';
 import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
 import CaseStudyView from '@/components/airtable/CaseStudy.astro';
 import { cases as allCases } from '@/data/airtable';
 import { hasLoader } from '@/lib/airtable/load-case';
@@ -353,6 +354,7 @@ const description =
         <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
       </div>
     </div>
+    <MoreCaseStudies current="airtable" />
   </section>
 </Base>
 
