@@ -101,7 +101,7 @@ export const projects: Project[] = [
     id: 'eatsranked',
     name: 'Eats Ranked',
     kicker: 'iPhone apps + web · restaurant guides',
-    tileBlurb: 'Restaurants, ranked state by state. 21 states live on the web, and the Chicago app is on the App Store.',
+    tileBlurb: 'Restaurants, ranked state by state. All 50 states and DC are live on the web, and the Chicago app is on the App Store.',
     bg: surface,
     fg: '#ba3441',
     bgDark: surfaceDark,
@@ -109,16 +109,16 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Where to eat, from the public record.',
-      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. 21 states are live on the web, and Chicago Restaurants: Ranked is the first app on the App Store.',
+      sub: 'Eats Ranked is a family of free restaurant guides, one per state, built from public records, open map data and cited public sources. Each state gets its own iPhone and iPad app, a website and a web version, with local favorites checked one place at a time, from Wisconsin fish fries to New Haven apizza. All 50 states and DC are live on the web, and Chicago Restaurants: Ranked is the first app on the App Store.',
       screen: 'image',
       image: '/showcase/eatsranked-guides.jpg',
       frame: 'laptop',
-      alt: 'eatsranked.com, Restaurant guides by state: the cards for Chicago Restaurants: Ranked, Wisconsin Eats, Colorado Eats and Washington Eats, each with its icon, its tagline and a link to its website; Chicago’s card links to the App Store and the others say “Coming soon to the App Store”',
+      alt: 'eatsranked.com, Restaurant guides by state: an A-to-Z list of all 50 states and the District of Columbia in three columns, from Alabama to Wyoming, each row with its app’s icon',
     },
     siteShot: {
       desktop: '/showcase/eatsranked-site.jpg',
       desktopDark: '/showcase/eatsranked-site-dark.jpg',
-      caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a map of the live states, and each state’s icon links to its site; further down are a card for each app and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
+      caption: 'eatsranked.com: one static page generated from a single data file of states and prices. It opens with a state picker and a map of all 50 states and DC; picking a state shows its website and app. Further down are an A-to-Z list of the guides, each row opening that state’s card, and a restaurant-prices section built from Bureau of Labor Statistics data. No cookies, no analytics, no requests to other sites.',
       url: 'https://eatsranked.com',
     },
     features: [
@@ -142,7 +142,7 @@ export const projects: Project[] = [
       {
         eyebrow: 'One state at a time',
         title: 'Five more states live in four days.',
-        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. Fourteen more have followed since, from Maine and Texas to Pennsylvania and New Jersey, for 21 states on the web.',
+        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. The rest of the country followed, and on November 9 the last three, Minnesota, Iowa and Nebraska, went live: all 50 states and DC.',
         screen: 'image',
         image: '/showcase/eatsranked-connecticut-site.jpg',
         alt: 'The Connecticut Eats website, one of the five: its own navy and tomato-red palette, its apizza icon, links to its Apizza, Lobster rolls, Hot dogs and Diners guides, and counts of 27 apizza places, 58 lobster roll and clam shack stops, 45 diners and dairy bars and 9,358 restaurants statewide',
@@ -167,20 +167,20 @@ export const projects: Project[] = [
     steps: [
       { title: 'Start with one city', ai: 'Turned Chicago’s inspection records into a score and an A–F grade, built the iPhone app and wrote an App Review and legal-risk audit before launch.', me: 'Set the app’s rules: no Google data, no customer reviews or star ratings, no Yelp.' },
       { title: 'Then a second state', ai: 'Built Wisconsin Eats from the Chicago app’s structure, with research agents checking each fish fry and supper club against a 2025–26 source.', me: 'Decided the name should cover restaurants in general, with fish fry and supper clubs as the tagline, and chose one domain with a site per state instead of buying wisconsineats.com.' },
-      { title: 'A hub and nineteen more', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, and fourteen more states after them, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
+      { title: 'A hub and the rest of the country', ai: 'Built eatsranked.com from one data file, then Colorado, Washington, Connecticut, Florida and California, and every other state and DC after them, each fitted to whatever inspection data its state or local health agencies publish.', me: 'Chose each state’s icon (a Pueblo green chile, not a peach) and made the licensing calls.' },
       { title: 'Ship and keep it current', ai: 'Set up the weekly Chicago data refresh with its checks, and wrote the App Store listings and review replies.', me: 'Submitted the first app, Wisconsin Eats, for App Review on September 28; Apple asked for more information. Chicago Restaurants: Ranked became the first app on the App Store on November 2.' },
     ],
     links: [
       { label: 'Visit eatsranked.com', href: 'https://eatsranked.com', primary: true },
       { label: 'Chicago app on the App Store', href: 'https://apps.apple.com/us/app/chicago-restaurants-ranked/id6816931379' },
     ],
-    status: 'Live on the web in 21 states · Chicago app on the App Store, more coming',
+    status: 'Live on the web in all 50 states and DC · Chicago app on the App Store, more coming',
   },
   {
     id: 'goodwalk',
     name: 'Good Walk',
     kicker: 'iPhone app · dog walk tracker',
-    tileBlurb: 'Your dog needs a walk every day. Good Walk makes it a streak.',
+    tileBlurb: 'Your dog needs a walk every day. Good Walk makes it a streak. Now on the App Store.',
     bg: surface,
     fg: '#ab4804',
     bgDark: surfaceDark,
@@ -188,7 +188,7 @@ export const projects: Project[] = [
     tone: 'light',
     hero: {
       title: 'Every dog deserves a good walk.',
-      sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. Coming soon to the App Store.',
+      sub: 'Good Walk is a dog walking app for iPhone. A daily walk target for your dog, one tap from the reminder, and their photo on everything. No collar, no map, no account. On the App Store since November 8.',
       screen: 'goodwalk-home',
     },
     siteShot: {
@@ -222,13 +222,14 @@ export const projects: Project[] = [
       { title: 'Pick the idea', ai: 'Turned one sentence into a concept: a daily walk streak for your dog, nothing else.', me: '“A dog walk tracker. Keep it simple.”' },
       { title: 'Design the loop', ai: 'Worked out the reminder, the one-tap answer and what the streak screen shows.', me: 'Insisted on no collar, no map and no account.' },
       { title: 'Build the site first', ai: 'Wrote the landing page, three guides, FAQ, privacy and terms, then served a preview from the Mac.', me: 'Reviewed it in the browser pane, bought getgoodwalk.app and set the prices.' },
-      { title: 'Prepare the launch', ai: 'Prepares the App Store listing and the launch checklist.', me: 'Sets the App Store launch date.' },
+      { title: 'Launch', ai: 'Prepared the App Store listing and the launch checklist.', me: 'Shipped the app. Good Walk went live on the App Store on November 8.' },
     ],
     links: [
-      { label: 'getgoodwalk.app', href: 'https://getgoodwalk.app', primary: true },
+      { label: 'Get Good Walk on the App Store', href: 'https://apps.apple.com/us/app/good-walk-dog-walk-streak/id6814555254', primary: true },
+      { label: 'getgoodwalk.app', href: 'https://getgoodwalk.app' },
       { label: 'Source on GitHub', href: 'https://github.com/nickstrom5/goodwalk' },
     ],
-    status: 'In development · App Store launch coming soon',
+    status: 'Live on the App Store and at getgoodwalk.app',
     caseStudy: 'goodwalk-dog-walk-tracker',
   },
   {

@@ -2,7 +2,7 @@
 title: 'Founder, Good Walk: a dog walk tracker with a daily streak'
 shortTitle: 'Good Walk dog walk tracker'
 client: 'Solo build · getgoodwalk.app'
-summary: 'An iPhone app in development: a daily walk target for your dog, one tap from the reminder, and a streak. No collar, no map, no account.'
+summary: 'An iPhone app on the App Store: a daily walk target for your dog, one tap from the reminder, and a streak. No collar, no map, no account.'
 category: 'development'
 platforms: ['iOS']
 stack: ['SwiftUI', 'Notifications', 'Streaks', 'Claude Code']
@@ -11,10 +11,11 @@ featured: false
 source: 'personal'
 links:
   live: 'https://getgoodwalk.app'
+  appStore: 'https://apps.apple.com/us/app/good-walk-dog-walk-streak/id6814555254'
 cover: '/showcase/goodwalk-site.jpg'
 placeholder: false
 published: 2026-09-20
-updated: 2026-10-09
+updated: 2026-11-09
 ---
 
 ## The idea
@@ -25,7 +26,7 @@ Your dog needs a walk every day. Good Walk turns that into a streak: a daily tar
 
 - Set the concept and the constraints, then directed Claude Code through the screens, the reminder and streak logic, and the launch plan.
 - Had the landing site built first: how it works, pricing, an FAQ, three guides on how long and how often to walk a dog, plus privacy and terms.
-- Registered getgoodwalk.app and wrote the launch plan.
+- Registered getgoodwalk.app, wrote the launch plan and shipped the app: Good Walk went live on the App Store on November 8, 2026.
 
 ## Why it matters
 
