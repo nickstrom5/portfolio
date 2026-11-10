@@ -9,6 +9,7 @@
 import '@/styles/ghl.css';
 import '@/styles/clickup.css';
 import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
 import CaseStudyView from '@/components/clickup/CaseStudy.astro';
 import { cases as allCases } from '@/data/clickup';
 import { hasLoader } from '@/lib/clickup/load-case';
@@ -351,6 +352,7 @@ const description =
         <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
       </div>
     </div>
+    <MoreCaseStudies current="clickup" />
   </section>
 </Base>
 

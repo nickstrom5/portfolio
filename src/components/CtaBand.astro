@@ -9,8 +9,9 @@ interface Props {
   href?: string;
 }
 const {
-  title = 'Have a project in mind?',
-  text = "Tell me what needs to run better and I'll reply within one business day with next steps.",
+  // The site is for hiring teams as well as project clients, so the default speaks to both.
+  title = 'Hiring, or have a project in mind?',
+  text = "Tell me about the role or what needs to run better, and I'll reply within one business day.",
   label = 'Get in touch',
   href = '/contact',
 } = Astro.props;

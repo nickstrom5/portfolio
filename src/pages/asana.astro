@@ -10,6 +10,7 @@
 import '@/styles/ghl.css';
 import '@/styles/asana.css';
 import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
 import CaseStudyView from '@/components/asana/CaseStudy.astro';
 import { cases } from '@/data/asana';
 import { hasLoader } from '@/lib/asana/load-case';
@@ -324,6 +325,7 @@ const description = `Three Asana case studies you can test: a marketing team, an
         <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
       </div>
     </div>
+    <MoreCaseStudies current="asana" />
   </section>
 </Base>
 

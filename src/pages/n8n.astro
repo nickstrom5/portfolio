@@ -8,6 +8,7 @@
 import '@/styles/ghl.css';
 import '@/styles/n8n.css';
 import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
 import CaseStudyView from '@/components/n8n/CaseStudy.astro';
 import { cases as allCases } from '@/data/n8n';
 import { hasLoader } from '@/lib/n8n/load-case';
@@ -332,6 +333,7 @@ const description =
         <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
       </div>
     </div>
+    <MoreCaseStudies current="n8n" />
   </section>
 </Base>
 

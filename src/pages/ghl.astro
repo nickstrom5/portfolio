@@ -7,6 +7,7 @@
  */
 import '@/styles/ghl.css';
 import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
 import CaseStudyView from '@/components/ghl/CaseStudy.astro';
 import { cases as allCases } from '@/data/ghl';
 import { hasLoader } from '@/lib/ghl/load-case';
@@ -369,6 +370,7 @@ const description =
         <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
       </div>
     </div>
+    <MoreCaseStudies current="ghl" />
   </section>
 </Base>
 
