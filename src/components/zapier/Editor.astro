@@ -1,0 +1,60 @@
+---
+/**
+ * The Zap as it reads in Zapier's editor: the trigger, then numbered steps top
+ * to bottom, ending in Paths or a loop when there is one. Styles come from
+ * src/styles/ghl.css, n8n.css and zapier.css, since the simulator adds state
+ * classes at run time.
+ */
+import type { Zap } from '@/lib/zapier/types';
+import { countSteps, stepNumbers } from '@/lib/zapier/engine';
+import Icon from './Icon.astro';
+import Steps from './Steps.astro';
+
+interface Props {
+  zap: Zap;
+  caseId: string;
+}
+const { zap: z, caseId } = Astro.props;
+const t = z.trigger;
+const total = countSteps(z);
+const numbers = stepNumbers(z);
+const kind = { instant: 'Instant', polling: 'Polling', schedule: 'Schedule' }[t.type];
+---
+
+<figure class="g-canvas n-canvas z-editor" data-canvas={`${caseId}:${z.id}`} aria-label={`Zap: ${z.name}, ${total} steps`}>
+  <div class="g-canvas-bar">
+    <span class="g-folder">{z.folder} /</span>
+    <span class="g-wfname">{z.number} · {z.name}</span>
+    <span class="g-pub">On</span>
+  </div>
+  <dl class="g-settings" aria-label="Zap settings">
+    <div><dt>Trigger</dt><dd>{kind}</dd></div>
+    <div><dt>Autoreplay</dt><dd>{z.autoreplay ? 'On' : 'Off'}</dd></div>
+    <div><dt>Owner</dt><dd>{z.owner}</dd></div>
+  </dl>
+  <p class="g-canvas-hint">The Zap as it reads in Zapier’s editor. Each step gets a green tick when the run reaches it; paths that did not run fade. Open a step for its settings. The numbered pills are values mapped from an earlier step.</p>
+  <div class="g-canvas-body" role="region" aria-label={`Steps of ${z.name}`} tabindex="0">
+    <ol class="g-steps g-root">
+      <li class="g-step n-tone-trigger n-trigger" data-node="trigger">
+        <div class="g-card">
+          <span class="g-ico"><Icon name={t.icon} /></span>
+          <div class="g-txt">
+            <span class="g-kind"><Icon name="bolt" size={12} /> 1. Trigger · {kind}</span>
+            <span class="g-name">{t.app} · {t.event}</span>
+            <p class="g-sum">{t.summary}</p>
+            <details class="g-code">
+              <summary>Settings</summary>
+              <dl class="n-params">
+                {t.params.map((p) => <div><dt>{p.k}</dt><dd>{p.v}</dd></div>)}
+              </dl>
+            </details>
+            <span class="z-task z-free">No task</span>
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+      </li>
+      <Steps steps={z.steps} numbers={numbers} />
+    </ol>
+  </div>
+  <button type="button" class="g-canvas-more" data-canvas-expand aria-expanded="false" data-more={`Show the whole Zap (${total} steps)`}>Show the whole Zap ({total} steps)</button>
+</figure>

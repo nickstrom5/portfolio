@@ -1,0 +1,41 @@
+---
+/**
+ * One Zap: the story, then its body (the editor and simulator, and the build
+ * notes). A deferred panel keeps the story in the HTML and leaves a slot for
+ * the body, which loads when the Zap is opened.
+ */
+import type { Zap } from '@/lib/zapier/types';
+import Part from '@/components/ghl/Part.astro';
+import ZapBody from './ZapBody.astro';
+
+interface Props {
+  zap: Zap;
+  caseId: string;
+  hidden?: boolean;
+  /** Leave the body out of the HTML (src/lib/parts.ts). */
+  deferred?: boolean;
+}
+const { zap: z, caseId, hidden = false, deferred = false } = Astro.props;
+const uid = `${caseId}-${z.id}`;
+---
+
+<div class="gx-panel" id={uid} role="tabpanel" aria-labelledby={`tab-${uid}`} hidden={hidden} data-panel={z.id}>
+  <header class="gx-panel-head">
+    <span class="eyebrow">{z.number} · {z.kicker}</span>
+    <h4 tabindex="-1" data-panel-heading>{z.name}</h4>
+    <p class="gx-tagline">{z.tagline}</p>
+  </header>
+
+  <div class="gx-ps">
+    <div>
+      <h5>The problem</h5>
+      <p>{z.problem}</p>
+    </div>
+    <div>
+      <h5>What I built</h5>
+      <p>{z.solution}</p>
+    </div>
+  </div>
+
+  {deferred ? <Part id={`${caseId}/${z.id}`} what="the editor, simulator and build notes" /> : <ZapBody zap={z} caseId={caseId} />}
+</div>

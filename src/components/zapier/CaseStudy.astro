@@ -1,0 +1,164 @@
+---
+/**
+ * One case study: the business, its connected apps, the working form and
+ * every Zap with its simulator and build notes. Ids are prefixed with the
+ * case id so three of these can live on one page. Parts the page leaves out
+ * (src/lib/parts.ts) are slots, filled when the case is opened.
+ */
+import type { CaseStudy } from '@/lib/zapier/types';
+import { countSteps } from '@/lib/zapier/engine';
+import { fedBy } from '@/lib/zapier/parts';
+import { inFull } from '@/lib/parts';
+import Part from '@/components/ghl/Part.astro';
+import DemoForm from './DemoForm.astro';
+import ZapPanel from './ZapPanel.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  study: CaseStudy;
+  index: number;
+  hidden?: boolean;
+}
+const { study, index, hidden = false } = Astro.props;
+const { business: b, connections, demo, zaps } = study;
+const { feedsName, triggerName } = fedBy(study);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const kind = { instant: 'Instant', polling: `Polling, every ${b.pollMinutes} min`, schedule: 'On a schedule' };
+---
+
+<section
+  class="gx-case"
+  id={b.id}
+  role="tabpanel"
+  aria-labelledby={`case-tab-${b.id}`}
+  hidden={hidden}
+  data-case-panel={b.id}
+  style={`--case: ${b.tint.light}; --case-dark: ${b.tint.dark}`}
+>
+  <header class="gx-case-head">
+    <div class="container">
+      <span class="eyebrow gx-case-eyebrow">Case study {index + 1} · {b.industry}</span>
+      <h2>{b.name}</h2>
+      <p class="lede">{b.intro}</p>
+      <dl class="gx-case-facts">
+        <div><dt>Zaps</dt><dd>{zaps.length}</dd></div>
+        <div><dt>Steps</dt><dd>{zaps.reduce((n, z) => n + countSteps(z), 0)}</dd></div>
+        <div><dt>Apps connected</dt><dd>{connections.length}</dd></div>
+        <div><dt>Test events</dt><dd>{zaps.reduce((n, z) => n + z.scenarios.length, 0)}</dd></div>
+        <div><dt>Where</dt><dd class="gx-small">{b.area}</dd></div>
+      </dl>
+      <div class="gx-team">
+        <p class="gx-team-title">The sample team</p>
+        <ul>
+          {b.team.map((m) => <li><strong>{m.name}</strong> <span>{m.role}</span></li>)}
+        </ul>
+      </div>
+      <div class="gx-team n-host">
+        <p class="gx-team-title">How the Zapier account is set up</p>
+        <p>{b.setup}</p>
+        <p class="n-stack" aria-label="Apps it connects">{b.stack.map((s) => <span class="gx-stage">{s}</span>)}</p>
+      </div>
+      <p class="gx-disclaimer">{b.disclaimer}</p>
+      <ul class="gx-jump" aria-label={`Jump to a part of the ${b.name} case study`}>
+        <li><a href={`#${b.id}-journey`} data-open-auto={`${b.id}-journey`}>The system</a></li>
+        <li><a href={`#${b.id}-apps`} data-open-auto={`${b.id}-apps`}>Connected apps</a></li>
+        <li><a href={`#${b.id}-demo`} data-open-auto={`${b.id}-demo`}>The form</a></li>
+        <li><a href={`#${b.id}-workflows`} data-open-auto={`${b.id}-workflows`}>The Zaps</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="section gx-journey-section" id={`${b.id}-journey`}>
+    <div class="container">
+      <span class="eyebrow">The system</span>
+      <h3 class="gx-h3">{words[zaps.length] ?? zaps.length} Zaps, one way of working</h3>
+      <p class="lede">Each Zap does one job. The line with the lightning bolt on each card is its trigger: the event in another app that starts it. Pick a card to open that Zap below.</p>
+      <ol class="gx-journey" data-count={zaps.length}>
+        {zaps.map((z) => (
+          <li>
+            <a href={`#${b.id}-${z.id}`} data-open-auto={`${b.id}-${z.id}`} class="gx-j n-j">
+              <span class="gx-j-num">{z.number}</span>
+              <span class="gx-j-name">{z.name}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{z.trigger.app} · {z.trigger.event}</span>
+              <span class="gx-j-out">{b.handoff[z.id] ?? z.kicker}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+
+  <div class="section" id={`${b.id}-apps`}>
+    <div class="container">
+      <span class="eyebrow">Connected apps</span>
+      <h3 class="gx-h3">{connections.length} apps, each connected once</h3>
+      <p class="lede">Zapier does not replace these apps. It signs in to each one, as the person named, and passes information between them. Each Zap’s trigger is listed with how fast it reacts.</p>
+      <ul class="gx-note-grid z-apps">
+        {connections.map((c) => (
+          <li>
+            <strong><Icon name={c.icon} size={16} /> {c.app}</strong>
+            <span>{c.use}</span>
+            <span class="z-account">Connection: {c.account}</span>
+          </li>
+        ))}
+      </ul>
+      <div class="gx-table-wrap z-triggers">
+        <table class="gx-table">
+          <caption class="sr-only">What starts each Zap</caption>
+          <thead><tr><th scope="col">Zap</th><th scope="col">Starts when</th><th scope="col">How fast</th></tr></thead>
+          <tbody>
+            {zaps.map((z) => (
+              <tr><td>{z.number} · {z.name}</td><td>{z.trigger.app} · {z.trigger.event}</td><td>{kind[z.trigger.type]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section gx-journey-section" id={`${b.id}-demo`}>
+    <div class="container">
+      <span class="eyebrow">Live demo</span>
+      <h3 class="gx-h3">Fill in the form yourself</h3>
+      <p class="lede">This is the form the business’s customers use. Fill it in and press {demo.submitLabel}. Use any name and a made-up email: nothing is sent or stored. Then press Watch the Zap run, which appears once you submit, to see every step {feedsName} takes on your answers and what each person would receive.</p>
+      {inFull(index) ? <DemoForm caseId={b.id} demo={demo} feedsName={feedsName} triggerName={triggerName} /> : <Part id={`${b.id}/demo`} what="the form" />}
+      <div class="gx-landing-notes">
+        <p class="gx-notes-plain">How the form reaches Zapier, and the settings that matter.</p>
+        <details class="gx-notes-more">
+          <summary>How it is set up <span class="g-count">({demo.notes.length} notes for builders)</span></summary>
+          <ul class="gx-note-grid">
+            {demo.notes.map((n) => <li><strong>{n.title}</strong><span>{n.body}</span></li>)}
+          </ul>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="section gx-workflows" id={`${b.id}-workflows`}>
+    <div class="container">
+      <span class="eyebrow">The Zaps</span>
+      <h3 class="gx-h3">Pick a Zap, pick a test event, press Run</h3>
+      <p class="lede">Each tab below is one Zap. Read The problem and What I built for the short version. Then pick a test event and press Run Zap: the log lists every step in order, with the time it ran and what it did in each app, and the editor ticks off each step as it runs.</p>
+      <p class="gx-builder-note">For Zapier builders: the simulator follows Zapier’s rules. A polling trigger starts the run at the next check, an instant one at once. A filter that does not pass ends the run as Filtered; a search that finds nothing ends it as Safely halted unless the step says otherwise. Paths runs every path whose rules are met, left to right, the fallback only when none is, and nothing follows it. Every step after a loop runs once per value, each iteration as its own run. Tasks are counted the way Zapier bills them: one per successful action or search, none for triggers, Filter, Paths, Formatter, Delay, Looping or Digest. This case has {zaps.reduce((n, z) => n + countSteps(z), 0)} steps across its Zaps, triggers included. <a href="#decoder">New to the words? Open the decoder.</a></p>
+      <div class="gx-tabs" role="tablist" aria-label={`${b.name} Zaps`} data-case-tabs={b.id}>
+        {zaps.map((z, i) => (
+          <button
+            class="gx-tab"
+            role="tab"
+            type="button"
+            id={`tab-${b.id}-${z.id}`}
+            aria-controls={`${b.id}-${z.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={z.id}
+          >
+            <span class="gx-tab-num">{z.number}</span>
+            <span class="gx-tab-name">{z.name}</span>
+            <span class="gx-tab-kicker">{z.kicker}</span>
+          </button>
+        ))}
+      </div>
+      {zaps.map((z, i) => <ZapPanel zap={z} caseId={b.id} hidden={i !== 0} deferred={!inFull(index, i)} />)}
+    </div>
+  </div>
+</section>

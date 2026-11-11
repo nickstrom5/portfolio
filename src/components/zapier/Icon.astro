@@ -1,0 +1,48 @@
+---
+/** Small stroke icons for Zap steps and connected apps. 24px grid, currentColor. */
+import type { IconName } from '@/lib/zapier/types';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+}
+const { name, size = 18, class: cls } = Astro.props;
+
+const paths: Record<IconName, string> = {
+  bolt: 'M13 2 4 14h7l-1 8 9-12h-7l1-8z',
+  form: 'M5 3h14v18H5zM8 8h8M8 12h8M8 16h4',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+  code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16',
+  mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  slack: 'M9 3a2 2 0 0 0 0 4h2V5a2 2 0 0 0-2-2zM3 15a2 2 0 0 0 4 0v-2H5a2 2 0 0 0-2 2zM15 21a2 2 0 0 0 0-4h-2v2a2 2 0 0 0 2 2zM21 9a2 2 0 0 0-4 0v2h2a2 2 0 0 0 2-2zM9 9h6v6H9z',
+  sms: 'M4 5h16v11H10l-6 4z',
+  plus: 'M4 4h16v16H4zM12 8v8M8 12h8',
+  pen: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+  branch: 'M4 12h6M10 12l6-6h4M10 12l6 6h4',
+  repeat: 'M4 12a7 7 0 0 1 12-5l2 2M20 12a7 7 0 0 1-12 5l-2-2M18 4v5h-5M6 20v-5h5',
+  filter: 'M3 5h18l-7 8v6l-4 2v-8z',
+  wand: 'M4 20 15 9M13 7l4 4M18 3v3M19.5 4.5h-3M6 4v2M7 5H5M19 14v2M20 15h-2',
+  hourglass: 'M6 3h12M6 21h12M7 3v4l5 5-5 5v4M17 3v4l-5 5 5 5v4',
+  sheet: 'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16',
+  crm: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  card: 'M3 6h18v12H3zM3 10h18M7 15h4',
+  invoice: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6',
+  calendar: 'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',
+  video: 'M3 6h13v12H3zM16 10l5-3v10l-5-3',
+  megaphone: 'M4 10v4h3l7 4V6l-7 4zM17 9a4 4 0 0 1 0 6',
+  digest: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5',
+  alert: 'M12 3l9 16H3zM12 10v4M12 17h.01',
+  check: 'M4 12l5 5L20 6',
+  play: 'M7 4l13 8-13 8z',
+  skip: 'M5 4l10 8-10 8zM19 5v14',
+  reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  plug: 'M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4',
+};
+---
+
+<svg class={cls} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <path d={paths[name]} />
+</svg>
