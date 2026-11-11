@@ -275,7 +275,7 @@ const settled = async () => {
   return last;
 };
 const shownCase = () => deskPage.evaluate(() => [...document.querySelectorAll('[data-case-panel]')].find((p) => !p.hidden)?.dataset.casePanel);
-for (const p of ['ghl', 'n8n', 'clickup', 'asana', 'airtable']) {
+for (const p of ['ghl', 'zapier', 'n8n', 'clickup', 'asana', 'airtable']) {
   await deskPage.goto(`${base}/${p}/`, { waitUntil: 'networkidle' });
   const start = await shownCase();
   // The first visible link in the shown case that opens a different case.

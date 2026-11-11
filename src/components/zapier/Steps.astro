@@ -1,0 +1,134 @@
+---
+/**
+ * A list of Zap steps as Zapier's editor draws them: one numbered card per
+ * step. A Paths step shows its paths side by side, the fallback last; a
+ * Looping step shows the steps that run for each value; a step with an error
+ * handler shows the handler's steps under it. Paths and a loop are always the
+ * last step of their list. Recursive through Astro.self.
+ */
+import type { IconName, Step } from '@/lib/zapier/types';
+import { stepLabel, usesTask } from '@/lib/zapier/engine';
+import Icon from './Icon.astro';
+
+interface Props {
+  steps: Step[];
+  /** Step numbers by id, the trigger being 1. */
+  numbers: Map<string, number>;
+  /** What the list is inside, for its end cap. */
+  inside?: 'path' | 'loop' | 'handler';
+}
+const { steps, numbers, inside } = Astro.props;
+
+const TONE: Record<string, string> = { mail: 'g-tone-comms', slack: 'g-tone-comms', sms: 'g-tone-comms', megaphone: 'g-tone-comms', wand: 'g-tone-dev', code: 'g-tone-dev', digest: 'g-tone-dev', search: 'g-tone-goal' };
+const tone = (icon: IconName, search: boolean) => (search ? 'g-tone-goal' : (TONE[icon] ?? 'g-tone-crm'));
+/** Splits a value into text and {step-id › Field} mapped values. */
+const segments = (v: string) => v.split(/(\{[^{}]*›[^{}]*\})/g).filter(Boolean);
+/** A mapped value as Zapier shows it: the step's number, then the field. */
+const pill = (seg: string) => {
+  const [id, ...field] = seg.slice(1, -1).split(' › ');
+  return `${numbers.get(id) ?? '?'}. ${field.join(' › ')}`;
+};
+const end = inside === 'path' ? 'End of path' : inside === 'loop' ? 'End of loop' : inside === 'handler' ? 'End of error handler' : 'End';
+---
+
+{steps.map((s) => {
+  const n = numbers.get(s.id);
+  if (s.kind === 'paths')
+    return (
+      <li class="g-step g-has-branches g-tone-logic" data-node={s.id}>
+        <div class="g-card g-card-logic">
+          <span class="g-ico"><Icon name="branch" /></span>
+          <div class="g-txt">
+            <span class="g-kind">{n}. Paths by Zapier</span>
+            <span class="g-name">{s.branches.length} paths</span>
+            <p class="g-sum">Every path whose rules are met runs, left to right{s.branches.some((b) => b.fallback) ? '; the fallback runs when none is' : ''}. Nothing comes after a Paths step.</p>
+            <span class="z-task z-free">No task</span>
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+        <div class="g-branches" style={`--n: ${s.branches.length}`} data-n={s.branches.length}>
+          {s.branches.map((b, i) => (
+            <div class="g-branch" data-branch={`${s.id}:${i}`}>
+              <div class="g-branch-head">
+                <span class="g-b-label">{b.fallback ? 'Fallback' : 'Path'} · {b.name}</span>
+                <span class="g-b-cond">{b.fallback ? 'Runs only when no other path does' : b.rules}</span>
+              </div>
+              <ol class="g-steps">
+                <Astro.self steps={b.steps} numbers={numbers} inside="path" />
+              </ol>
+            </div>
+          ))}
+        </div>
+      </li>
+    );
+  const params = (
+    <details class="g-code">
+      <summary>{s.kind === 'action' && s.code ? 'Settings and code' : 'Settings'}</summary>
+      <dl class="n-params">
+        {s.params.map((p) => (
+          <div><dt>{p.k}</dt><dd>{segments(p.v).map((seg) => (/^\{.*›.*\}$/.test(seg) ? <code class="g-merge z-token">{pill(seg)}</code> : seg))}</dd></div>
+        ))}
+      </dl>
+      {s.kind === 'action' && s.code && <pre><code>{s.code.source}</code></pre>}
+    </details>
+  );
+  if (s.kind === 'loop')
+    return (
+      <li class="g-step g-has-branches g-tone-wait" data-node={s.id}>
+        <div class="g-card g-card-logic">
+          <span class="g-ico"><Icon name="repeat" /></span>
+          <div class="g-txt">
+            <span class="g-kind">{n}. {stepLabel(s)}</span>
+            <span class="g-name">{s.title}</span>
+            <p class="g-sum">{s.summary}</p>
+            {params}
+            <span class="z-task z-free">No task</span>
+          </div>
+          <span class="g-state" aria-hidden="true"></span>
+        </div>
+        <div class="g-branches" style="--n: 1" data-n="1">
+          <div class="g-branch" data-branch={`${s.id}:0`}>
+            <div class="g-branch-head">
+              <span class="g-b-label">For each {s.noun}</span>
+              <span class="g-b-cond">Every step after the loop runs once per value</span>
+            </div>
+            <ol class="g-steps">
+              <Astro.self steps={s.steps} numbers={numbers} inside="loop" />
+            </ol>
+          </div>
+        </div>
+      </li>
+    );
+  const icon: IconName = s.kind === 'filter' ? 'filter' : s.kind === 'delay' ? 'hourglass' : s.icon;
+  const cls = s.kind === 'filter' ? 'g-tone-logic' : s.kind === 'delay' ? 'g-tone-wait' : tone(s.icon, !!s.search);
+  const handler = s.kind === 'action' ? s.onError : undefined;
+  return (
+    <li class:list={['g-step', cls, handler && 'g-has-branches']} data-node={s.id}>
+      <div class="g-card">
+        <span class="g-ico"><Icon name={icon} /></span>
+        <div class="g-txt">
+          <span class="g-kind">{n}. {stepLabel(s)}</span>
+          <span class="g-name">{s.title}</span>
+          <p class="g-sum">{s.kind === 'filter' ? `Only continue if ${s.rules}. ${s.summary}` : s.summary}</p>
+          {params}
+          <span class:list={['z-task', !usesTask(s) && 'z-free']}>{usesTask(s) ? '1 task' : 'No task'}</span>
+        </div>
+        <span class="g-state" aria-hidden="true"></span>
+      </div>
+      {handler && (
+        <div class="g-branches" style="--n: 1" data-n="1">
+          <div class="g-branch z-handler" data-branch={`${s.id}:error`}>
+            <div class="g-branch-head">
+              <span class="g-b-label">Error handler</span>
+              <span class="g-b-cond">Runs only if step {n} errors, in place of the steps after it</span>
+            </div>
+            <ol class="g-steps">
+              <Astro.self steps={handler} numbers={numbers} inside="handler" />
+            </ol>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+})}
+{(steps.length === 0 || !['paths', 'loop'].includes(steps[steps.length - 1].kind)) && <li class="g-endcap" aria-label={end}><span>{end}</span></li>}

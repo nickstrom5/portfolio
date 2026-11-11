@@ -1,0 +1,138 @@
+/*
+ * Styles for /zapier/, on top of src/styles/ghl.css and n8n.css, which the
+ * page also imports for the shared case-study layout, editor and simulator.
+ * Only what Zapier adds lives here: the trigger colour, the task badge on
+ * each step, mapped-value pills, the connected-apps list, the changes a run
+ * makes in those apps, and two more run statuses. Every class is prefixed z-.
+ */
+:root {
+  --n-trigger: #b6460e;
+  --n-trigger-bg: #fdefe6;
+  --z-quiet: #5a6270;
+  --z-quiet-bg: #eceef1;
+  --z-handled: #8a5a00;
+  --z-handled-bg: #fdf1d3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --n-trigger: #ffb38a;
+    --n-trigger-bg: #3a2013;
+    --z-quiet: #c3c9d3;
+    --z-quiet-bg: #262b33;
+    --z-handled: #ffd27a;
+    --z-handled-bg: #3a2c0c;
+  }
+}
+:root[data-theme='dark'] {
+  --n-trigger: #ffb38a;
+  --n-trigger-bg: #3a2013;
+  --z-quiet: #c3c9d3;
+  --z-quiet-bg: #262b33;
+  --z-handled: #ffd27a;
+  --z-handled-bg: #3a2c0c;
+}
+
+/* ---------- Task badge: whether a step uses one of the plan's tasks ---------- */
+.z-task {
+  flex: none;
+  align-self: flex-start;
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.z-task.z-free {
+  background: var(--z-quiet-bg);
+  color: var(--z-quiet);
+  font-weight: 600;
+}
+.g-txt > .z-task {
+  margin-top: 0.45rem;
+}
+
+/* A mapped value, "3. Output": wraps like the text around it. */
+.z-token {
+  white-space: normal;
+}
+
+/* An error handler's steps sit under the step they belong to. */
+.z-handler .g-branch-head {
+  border-style: dashed;
+}
+
+/* ---------- Connected apps ---------- */
+.z-apps {
+  margin-top: 1.25rem;
+}
+.z-apps strong {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.z-apps .z-account {
+  font-size: 0.8rem;
+}
+.z-triggers {
+  margin-top: 1.75rem;
+}
+
+/* ---------- What a run did in the connected apps ---------- */
+.z-effect-list {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.z-effect-list li {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: var(--bg-muted);
+}
+.z-effect-what {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.z-effect-list dl {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.z-effect-list dl div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 35%) 1fr;
+  gap: 0.5rem;
+}
+.z-effect-list dt {
+  color: var(--text-muted);
+}
+.z-effect-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.g-record .z-effects {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Run statuses beyond Successful and Errored ---------- */
+.n-status.z-quiet {
+  background: var(--z-quiet-bg);
+  color: var(--z-quiet);
+}
+.n-status.z-handled {
+  background: var(--z-handled-bg);
+  color: var(--z-handled);
+}
+
+/* Form help text, as under a field. */
+.nf-help {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}

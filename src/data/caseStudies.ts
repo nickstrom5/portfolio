@@ -7,6 +7,7 @@
  * To add a platform: build its page and data first, then add one entry here.
  */
 import { cases as ghlCases } from './ghl';
+import { cases as zapierCases } from './zapier';
 import { cases as n8nCases } from './n8n';
 import { cases as clickupCases } from './clickup';
 import { cases as asanaCases } from './asana';
@@ -68,6 +69,8 @@ const toCases = (list: SourceCase[]): PlatformCase[] =>
     }));
 
 const ghl = toCases(ghlCases);
+// Zapier cases list their Zaps.
+const zapier = toCases(zapierCases.map((c) => ({ business: c.business, automations: c.zaps })));
 const n8n = toCases(n8nCases);
 // ClickUp cases are Workspaces with processes; the tile lists the processes.
 const clickup = toCases(clickupCases.map((c) => ({ business: c.workspace, automations: c.processes })));
@@ -93,6 +96,22 @@ export const platforms: Platform[] = [
     bgDark: surfaceDark,
     fgDark: '#a8aaff',
     cases: ghl,
+  },
+  {
+    id: 'zapier',
+    name: 'Zapier',
+    kicker: 'Connects your apps',
+    tileBlurb: `When something happens in one app, the next steps happen in the others: quotes answered, invoices sent and leads routed by ${count(zapier)} Zaps for three sample businesses.`,
+    title: 'Zapier: when one app changes, the others follow.',
+    intro: `Zapier connects the apps a business already uses, so a form, a payment or a booking in one starts the work in the others. I built ${count(zapier)} Zaps for three sample businesses: a quote request answered with a price in a minute, a finished job invoiced the same day, an ad lead handed to the right salesperson, and a paid seat registered in Zoom at once. On the full page you can run each one, see what it does in every app and how many of the plan’s tasks it uses.`,
+    unit: 'Zaps',
+    href: '/zapier/',
+    cta: 'Open the Zapier case studies →',
+    bg: surface,
+    fg: '#b6460e',
+    bgDark: surfaceDark,
+    fgDark: '#ffb38a',
+    cases: zapier,
   },
   {
     id: 'n8n',

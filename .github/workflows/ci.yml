@@ -38,5 +38,6 @@ jobs:
       - run: npm run clickup:check
       - run: npm run asana:check
       - run: npm run airtable:check
+      - run: npm run zapier:check
       - run: npx playwright install --with-deps chromium
       - run: npm run qa

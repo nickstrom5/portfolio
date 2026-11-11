@@ -36,6 +36,7 @@ export const services: Service[] = [
     bullets: ['GoHighLevel, HubSpot, Salesforce, Zoho', 'Zapier and Power Automate', 'AI-assisted workflows and reporting'],
     links: [
       { href: '/ghl', label: 'GoHighLevel automation case studies' },
+      { href: '/zapier', label: 'Zapier automation case studies' },
       { href: '/n8n', label: 'n8n automation case studies' },
     ],
   },
