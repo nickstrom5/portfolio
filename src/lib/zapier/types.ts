@@ -92,6 +92,8 @@ export interface StepResult {
   write?: { collection: string; row: Json }[];
   /** Searches: false when nothing matched. */
   found?: boolean;
+  /** The app refused the step: its error message. The step errors, as it would for a test event's failure. */
+  error?: string;
 }
 
 interface StepBase {

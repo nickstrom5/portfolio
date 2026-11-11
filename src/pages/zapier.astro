@@ -1,0 +1,362 @@
+---
+/**
+ * /zapier/ — Zapier case studies: three businesses, each with its connected
+ * apps, a working form and its Zaps. Content lives in src/data/zapier; the
+ * simulator is src/lib/zapier. Run `npm run zapier:check` after editing a
+ * Zap. The page shares its layout styles with /ghl/ and /n8n/.
+ */
+import '@/styles/ghl.css';
+import '@/styles/n8n.css';
+import '@/styles/zapier.css';
+import Base from '@/layouts/Base.astro';
+import MoreCaseStudies from '@/components/MoreCaseStudies.astro';
+import CaseStudyView from '@/components/zapier/CaseStudy.astro';
+import { cases as allCases } from '@/data/zapier';
+import { hasLoader } from '@/lib/zapier/load-case';
+import { formatDuration, formatTime, outcomes, simulate } from '@/lib/zapier/engine';
+import { site } from '@/data/site';
+import { url } from '@/lib/url';
+
+// A case appears once it has Zaps, so a half-finished case never ships as an empty tab.
+const cases = allCases.filter((c) => c.zaps.length > 0);
+// The page script loads each case on demand; a case without a loader would never come alive.
+for (const c of cases) if (!hasLoader(c.business.id)) throw new Error(`No loader for Zapier case "${c.business.id}" in src/lib/zapier/load-case.ts`);
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// Every number in the hero is computed from the data, by running the simulator at build time.
+const all = cases.flatMap((c) => c.zaps.map((z) => ({ c, z })));
+// Every step, every path of a Paths step and every loop is an outcome a test can reach.
+let steps = 0;
+const taken = new Set<string>();
+for (const { c, z } of all) {
+  const reach = new Set(outcomes(z));
+  steps += reach.size;
+  for (const s of z.scenarios) simulate(c, z, s).visited.forEach((v) => reach.has(v) && taken.add(`${c.business.id}/${z.id}/${v}`));
+}
+const apps = new Set(cases.flatMap((c) => c.connections.map((x) => x.app)));
+const stats = [
+  { value: String(all.length), label: 'Zaps you can run' },
+  { value: String(apps.size), label: 'Apps they connect' },
+  { value: String(all.reduce((n, { z }) => n + z.scenarios.length, 0)), label: 'Test events to run them on' },
+  { value: `${taken.size}/${steps}`, label: 'Steps and paths, each reached by a test' },
+];
+
+// The hero's preview is one real run of the first case's first Zap and first test event.
+const peekCase = cases[0];
+const peekZap = peekCase.zaps[0];
+const peekRun = simulate(peekCase, peekZap, peekZap.scenarios[0]);
+const t0 = peekRun.start;
+const peek = peekRun.steps
+  .flatMap((s) => (s.messages ?? []).map((m) => ({ s, m })))
+  .map(({ s, m }) => {
+    const when = `${formatDuration(s.t - t0)} later`;
+    if (m.channel === 'email') return { when: `${when} · email to the customer`, cls: 'g-mail', label: undefined, subject: m.subject, body: `${m.body.split('\n\n').slice(0, 3).join('\n\n')} …` };
+    return { when: `${when} · Slack ${m.to}`, cls: 'g-note', label: 'To the office', subject: undefined, body: m.body };
+  });
+
+/** Links to Zaps by "case/zap"; missing ones are skipped. */
+const find = (ref: string) => {
+  const [cid, zid] = ref.split('/');
+  const c = cases.find((x) => x.business.id === cid);
+  const z = c?.zaps.find((x) => x.id === zid);
+  return c && z ? { href: `#${cid}-${zid}`, open: `${cid}-${zid}`, label: `${c.business.name} ${z.number} · ${z.name}` } : undefined;
+};
+
+const reliability = [
+  {
+    title: 'Clean the data once, at the top',
+    body: 'Names in capitals and phone numbers in five formats are fixed by Formatter steps right after the trigger. Every later step uses the tidy version, so the CRM, the email and the Slack post all agree.',
+    where: ['cleaning/quote-request', 'solar/lead-routing'],
+  },
+  {
+    title: 'Stop early, for free',
+    body: 'A filter uses no task, and nothing after it runs. So the filter comes before anything is created: a renter, an unpaid checkout or a team meeting ends the run with nothing spent and nothing to clean up.',
+    where: ['solar/lead-routing', 'workshops/paid-seat', 'cleaning/visit-reminder'],
+  },
+  {
+    title: 'Never the same record twice',
+    body: 'Contacts, customers and deals are found before they are created, by email or by a name that can be searched. Someone who comes back is recognized, and a booking that is moved updates the deal it already has.',
+    where: ['solar/lead-routing', 'solar/consult-booked', 'cleaning/job-done'],
+  },
+  {
+    title: 'The important step first, the fragile one last',
+    body: 'A step that fails stops the run but does not undo the steps before it. So the customer’s email, the invoice or the seat comes first, and the Slack post, the step most likely to break, comes last.',
+    where: ['cleaning/quote-request', 'solar/consult-booked', 'workshops/paid-seat'],
+  },
+  {
+    title: 'Quiet when nothing is wrong',
+    body: 'A run that stops at a filter or an empty search is recorded and emails nobody. The daily roundup is sent only on days with something in it. People trust a message more when it only arrives for a reason.',
+    where: ['solar/daily-roundup', 'cleaning/job-done', 'workshops/after-workshop'],
+  },
+  {
+    title: 'A plan for each kind of failure',
+    body: 'A brief outage is retried by Autoreplay and nobody hears about it. A failure that is a fact about the customer, like a landline that cannot take a text, has its own error handler. Anything else emails the Zap’s owner with a run they can replay.',
+    where: ['cleaning/quote-request', 'cleaning/visit-reminder', 'solar/lead-routing'],
+  },
+  {
+    title: 'Rules in one place',
+    body: 'Prices, territories and webinar IDs live in lookup tables, one row each, not spread across branches and email text. When a rule changes, one cell changes.',
+    where: ['cleaning/quote-request', 'solar/lead-routing', 'workshops/paid-seat'],
+  },
+  {
+    title: 'The task count is part of the design',
+    body: 'Every run on this page shows the tasks it used, counted the way Zapier bills them. A lookup table in place of two searches, or a filter moved up a step, is the difference between a plan that fits and one that runs out mid-month.',
+    where: ['solar/lead-routing', 'solar/daily-roundup', 'workshops/after-workshop'],
+  },
+];
+
+const audit = [
+  { title: 'Zaps nobody owns', body: 'Built by someone who has left, running on their personal logins. I list every Zap with its owner, last run and error rate, and move the app connections to shared service logins.' },
+  { title: 'Errors nobody reads', body: 'Error emails going to an old inbox while a Zap fails for weeks. I point notifications at a named person and turn on Autoreplay where trying again can help.' },
+  { title: 'A Zap that triggers itself', body: 'A Zap that edits the very row or record its trigger watches, running in circles and using up tasks. I add a filter that only the first run can pass, or change the trigger column.' },
+  { title: 'Paths used as if-else', body: 'Two paths whose rules overlap, so some runs take both and customers get two emails. I make the rules exclusive, or turn the catch-all into a fallback path.' },
+  { title: 'Searches that stop the run', body: 'A search that finds nothing halts by default, taking the steps after it down too. Where those steps should run anyway, I set the search to continue or to create what it was looking for.' },
+  { title: 'Tasks spent on nothing', body: 'Filters placed after paid steps, and searches doing a job a free lookup table could do. I reorder the steps so the free ones come first.' },
+  { title: 'Raw form data everywhere', body: 'Whatever was typed into a form is mapped straight into the CRM. I add Formatter steps at the top and map their output everywhere below.' },
+  { title: 'Delays on Zaps that get switched off', body: 'A run waiting in a delay only continues if the Zap is on when its time comes. I mark every Zap with a delay as one to edit as a draft, never to turn off.' },
+];
+
+const process = [
+  { title: 'Scope', body: 'What should happen, when, and who needs to hear about it. Which app is the home of each fact. Written down before a Zap is opened.' },
+  { title: 'Map the path', body: 'The trigger, each step, and every place a run could stop. I count the tasks per run and per month before building, so the plan is chosen on purpose.' },
+  { title: 'Build on real test data', body: 'A real form submission, a real test payment, a real calendar event. Every mapped field shows a real value while the steps are built.' },
+  { title: 'Break it on purpose', body: 'A renter, a landline, an archived channel, a payment that has not cleared: each test event on this page is one I would run before switching a Zap on.' },
+  { title: 'Switch on and hand off', body: 'Zaps turned on one at a time, error emails pointed at the owner. Then a short recorded walkthrough and a one-page guide: what each Zap does, which names never to change, what to do when an error email arrives.' },
+  { title: 'Watch it', body: 'Zap history checked daily in the first week, then weekly: errors, runs stuck in Delayed, and tasks used against the plan.' },
+];
+
+const caseWord = words[cases.length] ?? String(cases.length);
+const listOf = (xs: string[]) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Plain-English meanings for the Zapier words the page uses; the decoder in the hero. */
+const decoder: [string, string][] = [
+  ['Zapier', 'A service that connects the apps a business already uses, so that something happening in one starts work in the others. No code is needed.'],
+  ['Zap', 'One automation: a trigger, then the steps that follow it.'],
+  ['Trigger', 'What starts a Zap: an event in another app, such as a form being sent, a payment going through or a row changing. A trigger never uses a task.'],
+  ['Instant and polling triggers', 'With an instant trigger, the app tells Zapier the moment something happens. With a polling trigger, Zapier asks the app for anything new on a schedule: every 15 minutes on the Free plan, every 2 on Professional, every minute on Team and Enterprise.'],
+  ['Action', 'A step that does something in an app: add a row, send an email, create an invoice, update a deal.'],
+  ['Search', 'A step that looks something up in an app. If it finds nothing it can stop the run (the default), carry on anyway, or create the thing it was looking for, which Zapier calls “find or create”.'],
+  ['Mapped value', 'A value from an earlier step used in a later one. Zapier shows it as the step’s number and the field’s name, like “3. Output”. Shown here as a pill.'],
+  ['Task', 'What Zapier’s plans count. One task for each action or search that succeeds. Triggers, filters, paths, formatting, delays, loops and digests use none.'],
+  ['Filter', 'A step with rules. If they are not met, the run stops there on purpose and is recorded as Filtered.'],
+  ['Paths', 'A step that splits a Zap into branches, each with its own rules. Every path whose rules are met runs, one after the other, left to right. Nothing can come after a Paths step.'],
+  ['Fallback path', 'A path that runs only when no other path’s rules are met.'],
+  ['Formatter', 'Zapier’s tool for tidying data: capitalize a name, put a phone number in one format, reword a date, look a value up in a table.'],
+  ['Lookup table', 'A Formatter tool that swaps one value for another, such as a home size for a price or a state for a person, with a fallback for values it does not know.'],
+  ['Delay', 'A step that pauses the run for a set time (Delay For) or until a date (Delay Until), for up to 30 days. The run shows as Delayed until then.'],
+  ['Looping', 'A step that repeats every step after it once for each item in a list, up to 500 items. Each repeat is its own run in Zap history.'],
+  ['Digest', 'A tool that collects entries over time and hands them over as one block of text, for a daily or weekly summary.'],
+  ['Autoreplay', 'A setting that tries a failed step again, up to 5 times over about ten and a half hours, before anyone is emailed.'],
+  ['Error handler', 'Steps attached to one step that run only if that step fails, in place of the rest of the Zap. The run is recorded as Handled error.'],
+  ['Zap history', 'The list of every run, with its status: Successful, Filtered, Safely halted, Handled error or Errored, and others, such as Delayed, while a run is waiting.'],
+  ['Safely halted', 'A run that stopped on purpose, usually because a search found nothing. It is not an error and nobody is emailed.'],
+  ['Classic and Next Gen Zaps', 'These are Classic Zaps, built step by step in the Zap editor. In 2026 Zapier also began offering Next Gen Zaps, in early access, which can be built by describing a workflow to an AI tool.'],
+];
+const title = `Zapier automation examples: ${all.length} Zaps you can run`;
+const description =
+  cases.length === 3
+    ? `${all.length} Zapier automations for a cleaning company, a solar sales team and a workshop business: lead routing, invoices, reminders and follow-up. Run each one.`
+    : `Zapier automation examples you can run: ${plural(all.length, 'working Zap', 'working Zaps')}, working forms and the build notes behind each.`;
+---
+
+<Base title={title} description={description} breadcrumbs={[{ name: 'Case studies', path: '/case-studies/' }, { name: 'Zapier', path: '/zapier/' }]}>
+  <section class="gx-hero">
+    <div class="container">
+      <div class="gx-hero-grid">
+        <div>
+          <span class="eyebrow">Zapier · Zaps, filters, paths and loops</span>
+          <h1>{all.length}&nbsp;Zaps for {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}. Run every one yourself.</h1>
+          <p class="lede">Zapier connects the apps a business already uses. When something happens in one, such as a form being sent, a payment going through or a row changing in a spreadsheet, a Zap does the next steps in the others: add the contact, send the email, create the invoice, tell the team.</p>
+          <p class="gx-hero-sub">
+            {cases.length === 3
+              ? `I built ${all.length} Zaps for three made-up businesses: a home-cleaning company, a solar sales team and a company that runs paid workshops on Zoom. Each has a form you can fill in. Everything runs here in your browser, on test events or on your own answers.`
+              : `I built ${all.length} of them for ${caseWord.toLowerCase()} made-up ${cases.length === 1 ? 'business' : 'businesses'}, each with a form. Everything runs here in your browser.`}{' '}
+            Need this for your business, or hiring for Zapier? <a href={url('/contact')}>Get in touch</a>.
+          </p>
+          <div class="gx-cta">
+            <a class="btn btn-primary" href={`#${cases[0].business.id}-demo`} data-open-auto={`${cases[0].business.id}-demo`}>Try it: fill in a form</a>
+            <a class="btn btn-secondary" href="#cases">See the {caseWord.toLowerCase()} {cases.length === 1 ? 'business' : 'businesses'}</a>
+            <a class="btn btn-secondary" href={url('/contact')}>Get in touch</a>
+          </div>
+        </div>
+        <aside class="gx-peek" aria-labelledby="peek-title">
+          <p class="gx-peek-kicker" id="peek-title">What one quote request gets</p>
+          <p class="gx-peek-sub">Someone sends {peekCase.business.name}’s quote form at {formatTime(t0)}. Zap {peekZap.number} · {peekZap.name} does the rest:</p>
+          <ol class="gx-peek-list">
+            {peek.map((p) => (
+              <li>
+                <span class="gx-peek-when">{p.when}</span>
+                <div class={p.cls}>
+                  {p.label && <span class="g-note-to">{p.label}</span>}
+                  {p.subject && <span class="g-mail-subj">{p.subject}</span>}
+                  {p.body}
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="gx-peek-end">The lead is in the spreadsheet too. All of it took about {formatDuration(peekRun.end - t0)} and {plural(peekRun.tasks, 'task', 'tasks')}, with no one at the office touching it.</p>
+          <a class="gx-peek-link" href={`#${peekCase.business.id}-${peekZap.id}`} data-open-auto={`${peekCase.business.id}-${peekZap.id}`}>Run it yourself →</a>
+        </aside>
+      </div>
+
+      <div class="gx-howto">
+        <h2 class="gx-howto-title">How to use this page</h2>
+        <ol>
+          <li><strong>Pick a business.</strong> New to Zapier? Start with the cleaning company: its three Zaps cover most of what Zapier does.</li>
+          <li><strong>Fill in its form, or pick a test event.</strong> Ready-made ones include “Gmail fails once” and “the number on file is a landline”.</li>
+          <li><strong>Press Run Zap.</strong> Watch every step run, with what it did in each app, every message it sent and how many tasks it used.</li>
+        </ol>
+        <p class="gx-howto-hurry">Short on time? Each Zap opens with <strong>The problem</strong> and <strong>What I built</strong> in plain words. The editor and the <strong>Build notes</strong> are the detail a Zapier builder would check. <a href="#decoder">Words you may not know</a></p>
+      </div>
+
+      <dl class="gx-stats">
+        {stats.map((s) => (
+          <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="gx-real">
+        <div>
+          <h2 class="gx-real-title">Are these real businesses?</h2>
+          <p>No. {listOf(cases.map((c) => c.business.name))}, and everyone who works there, are made up, so every Zap can be shown end to end with its messages and tried by anyone. The Zaps use Zapier’s real triggers, actions and built-in tools, under their real names, and follow its rules for filters, paths, loops, delays and tasks, checked against Zapier’s help center, so each one can be rebuilt step for step in a real account. Nothing on this page sends a message or keeps what you type.</p>
+        </div>
+        <div>
+          <h2 class="gx-real-title">Who built this</h2>
+          <p>I’m {site.name}, a project and operations lead who builds automations. My client automation work so far has been in Zapier and GoHighLevel, including a 2025 Upwork contract for GoHighLevel, Zapier and Slack automations (<a href={`${url('/work')}#contracts`}>see recent contracts</a>). Those Zaps belong to the clients, so the ones here are samples I built to show how I design, test and hand off a Zap. This page and its simulator were built by directing AI, like the projects on my <a href={url('/apps')}>AI Projects page</a>.</p>
+          <p class="gx-real-links"><a href={url('/resume')}>View resume</a> · <a href="#process">How I work</a> · <a href={url('/contact')}>Get in touch</a></p>
+        </div>
+      </div>
+
+      <details class="gx-conventions gx-decoder" id="decoder">
+        <summary>Zapier words in plain English <span class="g-count">({decoder.length})</span></summary>
+        <dl>
+          {decoder.map(([term, meaning]) => (
+            <div><dt>{term}</dt><dd>{meaning}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  </section>
+
+  <div class="gx-switch" id="cases">
+    <div class="container">
+      <div class="gx-switch-grid" role="tablist" aria-label="Case studies">
+        {cases.map((c, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="gx-switch-tab"
+            id={`case-tab-${c.business.id}`}
+            aria-controls={c.business.id}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-labelledby={`case-name-${c.business.id}`}
+            aria-describedby={`case-blurb-${c.business.id}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-case-tab={c.business.id}
+            style={`--case: ${c.business.tint.light}; --case-dark: ${c.business.tint.dark}`}
+          >
+            <span class="gx-switch-state" aria-hidden="true">Showing</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.business.industry}</span>
+            <span class="gx-switch-name" id={`case-name-${c.business.id}`}>{c.business.name}</span>
+            <span class="gx-switch-blurb" id={`case-blurb-${c.business.id}`}><span class="sr-only">{c.business.industry}.</span> {c.business.blurb} <span class="sr-only">{plural(c.zaps.length, 'Zap', 'Zaps')}, {plural(c.connections.length, 'connected app', 'connected apps')} and a form.</span></span>
+            <span class="gx-switch-meta" aria-hidden="true">{plural(c.zaps.length, 'Zap', 'Zaps')} · {plural(c.connections.length, 'app', 'apps')} · a form</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {cases.map((c, i) => <CaseStudyView study={c} index={i} hidden={i !== 0} />)}
+
+  <section class="section" id="reliability" aria-labelledby="reliability-title">
+    <div class="container">
+      <span class="eyebrow">Reliability</span>
+      <div class="section-head">
+        <h2 id="reliability-title">Built so the team can forget about it</h2>
+      </div>
+      <p class="lede">A Zap that works in a demo is easy. One a business can rely on has to cope with messy form answers, people who come back, apps that are down for a minute and channels that get renamed. These habits are in every case study. In plain words: nothing is created twice, the customer is looked after first, failures have a plan, and nobody is told unless they need to act.</p>
+      <ul class="gx-cards">
+        {reliability.map((x) => {
+          const refs = x.where.map(find).filter((r): r is NonNullable<ReturnType<typeof find>> => !!r);
+          return (
+            <li class="card">
+              <h3>{x.title}</h3>
+              <p>{x.body}</p>
+              {refs.length > 0 && (
+                <p class="gx-where">
+                  See{' '}
+                  {refs.map((r, j) => (
+                    <><a href={r.href} data-open-auto={r.open}>{r.label}</a>{j < refs.length - 1 ? ', ' : ''}</>
+                  ))}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="audit" aria-labelledby="audit-title">
+    <div class="container gx-split">
+      <div>
+        <span class="eyebrow">Troubleshooting</span>
+        <h2 id="audit-title">What I check first when I inherit a Zapier account</h2>
+        <p class="lede">Most fragile Zapier accounts fail in the same few ways. This is the order I look in, and what I do about each.</p>
+      </div>
+      <ol class="gx-audit">
+        {audit.map((x) => (
+          <li><strong>{x.title}</strong><span>{x.body}</span></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <span class="eyebrow">How I work</span>
+      <div class="section-head">
+        <h2 id="process-title">From a brief to Zaps the team trusts</h2>
+      </div>
+      <ol class="gx-process">
+        {process.map((p, i) => (
+          <li>
+            <span class="gx-process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="gx-conventions">
+        <h3>Naming, so the next person can find things</h3>
+        <dl>
+          <div><dt>Zaps</dt><dd><code>01 · New quote request</code>: numbered in the order a customer meets them, named for what they do</dd></div>
+          <div><dt>Folders</dt><dd><code>Sales / Leads</code>: one per team or stage, shared, so nothing lives in a personal folder</dd></div>
+          <div><dt>Steps</dt><dd><code>Tidy the name</code>, not <code>Formatter 2</code>: Zap history lists steps by name, so each one says what it does</dd></div>
+          <div><dt>Connections</dt><dd><code>HubSpot · service login</code>: named for whose login they use, never one person’s own</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gx-closing">
+    <div class="container gx-closing-inner">
+      <div>
+        <h2>Hiring for Zapier, or need it built?</h2>
+        <p class="muted">I build, fix and document Zaps: the triggers and steps, the error handling around them, the task budget, and the handoff so a team can run them. If you’re hiring for an operations or automation role or need this for your business, I’d like to hear about it.</p>
+      </div>
+      <div class="gx-cta">
+        <a class="btn btn-primary" href={url('/contact')}>Get in touch</a>
+        <a class="btn btn-secondary" href={url('/resume')}>View resume</a>
+        <a class="btn btn-secondary" href={`mailto:${site.email}`}>Email me</a>
+      </div>
+    </div>
+    <MoreCaseStudies current="zapier" />
+  </section>
+</Base>
+
+<script>
+  import { initZapierPage } from '@/lib/zapier/page';
+  initZapierPage();
+</script>

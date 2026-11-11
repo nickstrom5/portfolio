@@ -199,31 +199,36 @@ export function simulate(study: Pick<CaseStudy, 'business' | 'world'>, zap: Zap,
     const label = stepLabel(s);
     t += defaultMs(s);
     const fail = sc.failures?.[s.id];
-    if (fail) {
+    // A failure Autoreplay recovers: the step errors, waits as Scheduled, and works on the next try.
+    const recovers = !!(fail?.replays && zap.autoreplay);
+    if (fail && recovers) {
       steps.push({ kind: 'error', t, title: `${label}: errored`, detail: fail.message, stepId: s.id });
-      if (fail.replays && zap.autoreplay) {
-        t += REPLAY_FIRST;
-        steps.push({
-          kind: 'replay',
-          t,
-          title: 'Autoreplay: Zapier tries the step again',
-          detail: 'Autoreplay is on for this Zap. The run waited as Scheduled and the failed step was tried again 5 minutes later, from that step on. Nobody is emailed while a replay is pending.',
-          stepId: s.id,
-        });
-        t += defaultMs(s);
-      } else if (s.onError) {
+      t += REPLAY_FIRST;
+      steps.push({
+        kind: 'replay',
+        t,
+        title: 'Autoreplay: Zapier tries the step again',
+        detail: 'Autoreplay is on for this Zap. The run waited as Scheduled and the failed step was tried again 5 minutes later, from that step on. Nobody is emailed while a replay is pending.',
+        stepId: s.id,
+      });
+      t += defaultMs(s);
+    }
+    // Otherwise the step fails because the test event says so, or because the step itself reports an error.
+    const res: StepResult = fail && !recovers ? {} : s.run(ctx(loop));
+    const message = fail && !recovers ? fail.message : res.error;
+    if (message) {
+      steps.push({ kind: 'error', t, title: `${label}: errored`, detail: message, stepId: s.id });
+      if (s.onError) {
         visited.push(`${s.id}:handled`);
         steps.push({ kind: 'handler', t, title: 'Error handler runs', detail: 'This step has its own error handler, so its steps run in place of the rest of the Zap. The run is recorded as Handled error and Zapier sends no error email.', stepId: s.id, branch: `${s.id}:error` });
         cur.status = worse(cur.status, 'Handled error');
         runSteps(s.onError, loop);
         return false;
-      } else {
-        cur.status = 'Errored';
-        error ??= { step: `${label} · ${s.title}`, message: fail.message };
-        return false;
       }
+      cur.status = 'Errored';
+      error ??= { step: `${label} · ${s.title}`, message };
+      return false;
     }
-    const res = s.run(ctx(loop));
     if (s.search && res.found === false && s.search === 'halt') {
       visited.push(`${s.id}:none`);
       steps.push({ kind: 'stop', t, title: `${label}: nothing found`, detail: `${res.log ? `${res.log}. ` : ''}The step is set to stop the run when the search comes back empty, so the run ends here as Safely halted. That is not an error: nobody is emailed and no task is used.`, stepId: s.id });

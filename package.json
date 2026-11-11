@@ -19,6 +19,7 @@
     "asana:check": "node scripts/asana-check.mjs",
     "asana:seed": "node scripts/asana-seed.mjs",
     "airtable:check": "node scripts/airtable-check.mjs",
+    "zapier:check": "node scripts/zapier-check.mjs",
     "food:add": "node scripts/add-food.mjs",
     "photos:check": "node scripts/check-photo-metadata.mjs",
     "prepare": "git config core.hooksPath .githooks || true"
