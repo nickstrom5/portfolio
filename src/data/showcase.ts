@@ -138,11 +138,11 @@ export const projects: Project[] = [
       },
       {
         eyebrow: 'One state at a time',
-        title: 'Five more states live in four days.',
-        body: 'Chicago and Wisconsin came first, in late September. Between October 5 and 8, Colorado, Washington, Connecticut, Florida and California went live on the web, each built from one shared playbook and fitted to what its state, counties and cities publish, with its own name, icon, palette and guides. What one state’s QA round catches goes into the playbook for the next. The rest of the country followed, and on November 9 the last three, Minnesota, Iowa and Nebraska, went live: all 50 states and DC.',
+        title: 'One playbook, fitted to every state.',
+        body: 'Chicago and Wisconsin came first. Every state after them started from the same playbook, fitted to what that state, its counties and its cities publish, and got its own name, icon, colors and local guides. Whatever one state’s QA round caught went into the playbook before the next one started. Five states went live in four days in early October, and on November 9 the last three did: all 50 states and DC.',
         screen: 'image',
         image: '/showcase/eatsranked-connecticut-site.jpg',
-        alt: 'The Connecticut Eats website, one of the five: its own navy and tomato-red palette, its apizza icon, links to its Apizza, Lobster rolls, Hot dogs and Diners guides, and counts of 27 apizza places, 58 lobster roll and clam shack stops, 45 diners and dairy bars and 9,358 restaurants statewide',
+        alt: 'The Connecticut Eats website: its own navy and tomato-red palette, its apizza icon, links to its Apizza, Lobster rolls, Hot dogs and Diners guides, and counts of 27 apizza places, 58 lobster roll and clam shack stops, 45 diners and dairy bars and 9,358 restaurants statewide',
         frame: 'laptop',
       },
       {
