@@ -174,5 +174,50 @@
     "projectSlug": "signalrig-gtm-engineering-showcase",
     "icon": "SR",
     "placeholder": false
+  },
+  {
+    "name": "FoodTrip",
+    "tagline": "Plan where to eat on a trip. Pick a city, your dates, how many meals a day and a budget, and it plans every meal from MICHELIN and James Beard honorees and hand-checked local picks, then adds them to your calendar.",
+    "platforms": [
+      "iOS",
+      "Web"
+    ],
+    "stack": [
+      "SwiftUI",
+      "EventKit",
+      "StoreKit 2",
+      "Eats Ranked data",
+      "Static site"
+    ],
+    "client": "Solo build",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "",
+    "status": "In development",
+    "icon": "FT",
+    "placeholder": false
+  },
+  {
+    "name": "Rummage",
+    "tagline": "Photograph your fridge, freezer and pantry and get five recipes you can cook tonight, mostly from what you already have. Claude reads the photos and lists what it spotted.",
+    "platforms": [
+      "iOS",
+      "Web"
+    ],
+    "stack": [
+      "SwiftUI",
+      "Claude vision",
+      "Node.js",
+      "StoreKit 2"
+    ],
+    "client": "Solo build",
+    "year": 2026,
+    "appStore": "",
+    "playStore": "",
+    "website": "",
+    "status": "In development",
+    "icon": "R",
+    "placeholder": false
   }
 ]

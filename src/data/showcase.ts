@@ -38,7 +38,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked' | 'foodtrip' | 'rummage';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -622,5 +622,30 @@ export const projects: Project[] = [
     ],
     status: 'Live · signalrig.dev',
     caseStudy: 'signalrig-gtm-engineering-showcase',
+  },
+  // In development: tiles only, until there is something to walk through.
+  {
+    id: 'foodtrip',
+    name: 'FoodTrip',
+    kicker: 'iPhone app + web · trip meal planner',
+    tileBlurb: 'Pick a city, your dates and a food budget. Every meal of the trip, planned.',
+    bg: surface,
+    fg: '#9c2a68',
+    bgDark: surfaceDark,
+    fgDark: '#f59ac8',
+    tone: 'light',
+    comingSoon: true,
+  },
+  {
+    id: 'rummage',
+    name: 'Rummage',
+    kicker: 'iPhone app + web · recipes from your kitchen',
+    tileBlurb: 'Photograph your fridge, freezer and pantry. See what you can cook tonight.',
+    bg: surface,
+    fg: '#0a6688',
+    bgDark: surfaceDark,
+    fgDark: '#74d2f4',
+    tone: 'light',
+    comingSoon: true,
   },
 ];

@@ -399,22 +399,21 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
   .tile:hover {
     transform: translateY(-2px);
   }
+  /* Nothing to open yet: a dashed outline and no shadow say so. The tile is not dimmed,
+     because fading it took its kicker, blurb and "Coming soon" line below 4.5:1. */
   .tile.soon {
     cursor: default;
-    opacity: 0.7;
+    border: 2px dashed var(--border-strong);
+    box-shadow: none;
   }
   .tile.soon:hover {
     transform: none;
-  }
-  .tile.soon .t-cta {
-    opacity: 0.8;
   }
   .tile.soon.linked {
     cursor: pointer;
     text-decoration: none;
   }
   .tile.soon.linked:hover {
-    opacity: 0.9;
     transform: translateY(-2px);
   }
   .tile.page {
