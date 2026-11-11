@@ -199,7 +199,7 @@
     "placeholder": false
   },
   {
-    "name": "Rummage",
+    "name": "Scrounge",
     "tagline": "Photograph your fridge, freezer and pantry and get five recipes you can cook tonight, mostly from what you already have. Claude reads the photos and lists what it spotted.",
     "platforms": [
       "iOS",
@@ -217,7 +217,7 @@
     "playStore": "",
     "website": "",
     "status": "In development",
-    "icon": "R",
+    "icon": "S",
     "placeholder": false
   }
 ]

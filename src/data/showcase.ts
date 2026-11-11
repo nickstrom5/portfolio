@@ -38,7 +38,7 @@ export interface Prompt {
 }
 
 export interface StoryProject {
-  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked' | 'foodtrip' | 'rummage';
+  id: 'clam' | 'goodwalk' | 'lume' | 'launchneat' | 'site' | 'signalrig' | 'damp' | 'cartworth' | 'eatsranked' | 'foodtrip' | 'scrounge';
   name: string;
   kicker: string;
   tileBlurb: string;
@@ -637,8 +637,8 @@ export const projects: Project[] = [
     comingSoon: true,
   },
   {
-    id: 'rummage',
-    name: 'Rummage',
+    id: 'scrounge',
+    name: 'Scrounge',
     kicker: 'iPhone app + web · recipes from your kitchen',
     tileBlurb: 'Photograph your fridge, freezer and pantry. See what you can cook tonight.',
     bg: surface,
