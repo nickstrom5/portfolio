@@ -375,6 +375,8 @@ export const projects: Project[] = [
     bgDark: surfaceDark,
     fgDark: '#74d2f4',
     tone: 'light',
+    // The web version is live at a provisional address; the iPhone app is not on the App Store yet.
+    href: 'https://scrounge.fly.dev',
     comingSoon: true,
   },
   {
