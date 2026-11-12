@@ -387,6 +387,8 @@ export const projects: Project[] = [
     bgDark: surfaceDark,
     fgDark: '#f59ac8',
     tone: 'light',
+    // The web version is live; the iPhone app is not on the App Store yet.
+    href: 'https://getfoodtrip.app',
     comingSoon: true,
   },
   {
