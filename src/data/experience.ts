@@ -114,5 +114,5 @@ export const roles: Role[] = experience
 export const staffJob = roles.find((r) => r.staff);
 
 export const education = [
-  { school: 'DePaul University', location: 'Chicago, IL', url: 'https://www.depaul.edu/', sameAs: 'https://en.wikipedia.org/wiki/DePaul_University' },
+  { degree: 'BS, Digital Communication and Media', school: 'DePaul University', location: 'Chicago, IL', url: 'https://www.depaul.edu/', sameAs: 'https://en.wikipedia.org/wiki/DePaul_University' },
 ];
