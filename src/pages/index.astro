@@ -10,6 +10,7 @@ import ClientStrip from '@/components/ClientStrip.astro';
 import CtaBand from '@/components/CtaBand.astro';
 import { site } from '@/data/site';
 import { services } from '@/data/services';
+import { platforms } from '@/data/caseStudies';
 import apps from '@/data/apps.json';
 import { projects as showcase } from '@/data/showcase';
 import testimonials from '@/data/testimonials.json';
@@ -101,6 +102,27 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     </div>
   </section>
 
+  <section class="section" id="demos">
+    <div class="container">
+      <span class="eyebrow">Try it yourself</span>
+      <div class="section-head">
+        <h2>Automations you can run in your browser</h2>
+        <a href={url('/case-studies')}>All case studies →</a>
+      </div>
+      <p class="lede demos-lede">Sample businesses set up end to end in the tools teams already use. Fill in a form as the customer and watch every email, task and hand-off go out.</p>
+      <div class="grid grid-3">
+        {platforms.map((p) => (
+          <article class="card demo">
+            <span class="demo-kicker">{p.kicker}</span>
+            <h3><a href={url(p.href)}>{p.name}</a></h3>
+            <p class="muted">{p.tileBlurb}</p>
+            <span class="demo-cta" aria-hidden="true">Try it →</span>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="apps">
     <div class="container">
       <span class="eyebrow">Builds</span>
@@ -131,6 +153,44 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
 </Base>
 
 <style>
+  .demos-lede {
+    max-width: 60ch;
+    margin-bottom: 1.5rem;
+  }
+  .demo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .demo-kicker {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .demo h3 {
+    margin: 0;
+  }
+  .demo h3 a {
+    color: var(--text);
+  }
+  /* Stretched link: the whole card is the target. */
+  .demo h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .demo p {
+    margin: 0;
+    flex: 1;
+  }
+  .demo-cta {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
   .hero {
     padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(2rem, 4vw, 3rem);
     background:
