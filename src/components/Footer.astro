@@ -37,6 +37,36 @@ const social = [
   <div class="container copy muted">© {year} {site.name}. All rights reserved.</div>
 </footer>
 
+<script>
+  // A mailto: link does nothing visible when the visitor's browser has no mail app set up.
+  // So every email link also copies the address and says so; the mailto still fires for
+  // people who do have one.
+  let toast: HTMLElement | undefined;
+  let timer: number | undefined;
+  function say(text: string) {
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'mail-toast';
+      toast.setAttribute('role', 'status');
+      document.body.append(toast);
+    }
+    toast.textContent = text;
+    toast.classList.add('show');
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => toast?.classList.remove('show'), 4000);
+  }
+  document.addEventListener('click', (e) => {
+    const link = (e.target as Element | null)?.closest?.('a[href^="mailto:"]');
+    if (!link) return;
+    const address = decodeURIComponent((link.getAttribute('href') || '').slice(7).split('?')[0]);
+    if (!address) return;
+    navigator.clipboard?.writeText(address).then(
+      () => say(`Copied ${address}`),
+      () => say(`Email me at ${address}`),
+    ) ?? say(`Email me at ${address}`);
+  });
+</script>
+
 <style>
   .footer {
     border-top: 1px solid var(--border);
@@ -81,5 +111,28 @@ const social = [
       grid-template-columns: 1fr;
       gap: 1.5rem;
     }
+  }
+  :global(.mail-toast) {
+    position: fixed;
+    left: 50%;
+    bottom: 1.25rem;
+    z-index: 60;
+    max-width: calc(100vw - 2rem);
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 0.95rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 0.5rem);
+    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  }
+  :global(.mail-toast.show) {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
   }
 </style>
