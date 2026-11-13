@@ -8,30 +8,13 @@ import { url } from '@/lib/url';
 import { ids } from '@/lib/schema';
 import { execFileSync } from 'node:child_process';
 
+// A short list a hiring manager can scan: the tools behind the work on this site.
+// The longer per-service lists are on the résumé.
 const skills = {
-  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Trello', 'Notion', 'Airtable', 'Confluence', 'Microsoft Project', 'Loom'],
-  'AI & development': [
-    'Claude Code',
-    'ChatGPT',
-    'Grok',
-    'Gemini',
-    'Cursor',
-    'AI agents',
-    'Prompt-directed builds',
-    'SwiftUI & iOS',
-    'Screen Time & StoreKit APIs',
-    'Python data pipelines',
-    'Astro & static sites',
-    'Next.js & TypeScript',
-    'GitHub Actions & Pages',
-    'Vercel',
-    'Cloudflare DNS',
-  ],
-  'Microsoft 365': ['Planner', 'Teams', 'SharePoint Lists', 'Power Automate', 'Forms'],
-  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Keap', 'Zoho One', 'Zapier', 'n8n', 'Google Sheets + AI'],
-  'Operations & finance': ['QuickBooks Online', 'Google Workspace', 'Slack', 'Hubstaff', 'Vendor & billing coordination', 'Hiring & onboarding', 'Client onboarding'],
-  'Events & media': ['Zoom Webinars', 'OBS', 'Wirecast', 'Premiere Pro', 'After Effects', 'Audition', 'Final Cut', 'Photoshop', 'Illustrator', 'InDesign', 'Canva'],
-  'Web & apps': ['WordPress', 'Wix', 'Shopify', 'Ghost', 'React', 'App Store Connect'],
+  'Project management': ['Asana', 'ClickUp', 'Monday', 'Jira', 'Notion', 'Airtable', 'Microsoft 365'],
+  'CRM & automation': ['GoHighLevel', 'HubSpot', 'Salesforce', 'Zoho One', 'Zapier', 'n8n', 'Power Automate'],
+  'Operations': ['Google Workspace', 'Slack', 'QuickBooks Online', 'Zoom Webinars', 'Hiring & onboarding'],
+  'AI & builds': ['Claude Code', 'AI agents', 'SwiftUI & iOS', 'Python data pipelines', 'Astro & Next.js'],
 };
 const linkedinLive = !site.links.linkedin.includes('REPLACE');
 const upworkLive = !site.links.upwork.includes('REPLACE');
@@ -126,6 +109,7 @@ try {
               </ul>
             </div>
           ))}
+          <p class="muted skills-more"><a href={url('/resume')}>Full tool list on the resume →</a></p>
         </div>
       </aside>
     </div>

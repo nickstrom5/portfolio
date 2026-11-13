@@ -60,8 +60,10 @@ export const footerNav = [
 ] as const;
 
 /**
- * Header/nav: the footer links minus Resume and Case studies, which stay in the
- * footer only. Case studies is reached from its card on AI Projects.
+ * Header/nav: the footer links minus Case studies, which stays in the footer
+ * only and is reached from the home page and its card on AI Projects. Resume is
+ * in the header so a recruiter landing on any page is one click from it; the
+ * header also carries a Hire me button (Nav.astro).
  */
-const footerOnly: string[] = ['/resume', '/case-studies'];
+const footerOnly: string[] = ['/case-studies'];
 export const nav = footerNav.filter((item) => !footerOnly.includes(item.href));
