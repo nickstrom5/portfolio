@@ -117,6 +117,8 @@ const social = [
     left: 50%;
     bottom: 1.25rem;
     z-index: 60;
+    /* Centred with left: 50%, a shrink-to-fit box would only have half the screen and wrap the address. */
+    width: max-content;
     max-width: calc(100vw - 2rem);
     padding: 0.6rem 1rem;
     border-radius: 999px;
