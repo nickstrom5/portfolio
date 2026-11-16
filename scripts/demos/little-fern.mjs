@@ -1,5 +1,5 @@
 // Little Fern Playhouse: concept site for a small play studio. Calm and editorial, the opposite of Wiggle Room.
-import { head, conceptNote } from './shared.mjs';
+import { head, conceptNote, target } from './shared.mjs';
 
 const slug = 'little-fern';
 const base = `/demos/${slug}/`;
@@ -175,10 +175,10 @@ function layout(p) {
   return `<!doctype html>
 <html lang="en">
 <head>
-${head({ title: p.title, desc: p.desc, path: here, theme: '#faf5ea', icon: logo, css: `${base}styles.css`, fonts: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&display=swap' })}
+${head({ slug, title: p.title, desc: p.desc, path: here, theme: '#faf5ea', icon: logo, css: `${base}styles.css`, fonts: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&display=swap' })}
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+${target.top}<a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="wrap bar">
 <a class="logo" href="${base}">${logo}Little Fern Playhouse</a>
 <button class="menu" type="button" data-menu aria-expanded="false" aria-controls="nav">Menu</button>
@@ -194,9 +194,9 @@ ${p.body}
 <div><p class="title">Explore</p><ul>${nav.map(([label, path]) => `<li><a href="${base}${path}">${label}</a></li>`).join('')}</ul></div></div>
 <p class="note">${conceptNote('Little Fern Playhouse')}</p>
 </div></footer>
-</body>
+${target.bottom}</body>
 </html>
 `;
 }
 
-export default { slug, pages, layout };
+export default { slug, pages, layout, heroSvg: art.hero, fontFaces: [['Fraunces', 'fraunces', 400, 'normal'], ['Fraunces', 'fraunces', 500, 'normal'], ['Fraunces', 'fraunces', 400, 'italic'], ['DM Sans', 'dm-sans', 400, 'normal'], ['DM Sans', 'dm-sans', 500, 'normal'], ['DM Sans', 'dm-sans', 700, 'normal']] };
