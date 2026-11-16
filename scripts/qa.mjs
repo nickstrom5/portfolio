@@ -72,6 +72,9 @@ const browser = await chromium.launch();
 // SEO checks from the HTML (fast, no browser).
 const sitemap = readFileSync(join(dist, 'sitemap-0.xml'), 'utf8');
 for (const p of pages) {
+  // Concept sites (public/demos/, built by `npm run demos`) are fictional client sites, not
+  // portfolio pages: noindex, own fonts, no CSP or Person JSON-LD. They still get every browser check.
+  if (p.startsWith('/demos/')) continue;
   const html = readFileSync(join(dist, p, 'index.html'), 'utf8');
   const title = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
   const desc = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || '';

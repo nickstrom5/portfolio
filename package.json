@@ -16,6 +16,7 @@
     "n8n:check": "node scripts/n8n-check.mjs",
     "n8n:capture": "node scripts/n8n-capture.mjs",
     "og": "node scripts/make-og.mjs",
+    "demos": "node scripts/demos/build.mjs",
     "asana:check": "node scripts/asana-check.mjs",
     "asana:seed": "node scripts/asana-seed.mjs",
     "airtable:check": "node scripts/airtable-check.mjs",
