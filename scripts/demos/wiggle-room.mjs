@@ -1,5 +1,5 @@
 // Wiggle Room: concept site for an indoor play center. Bright, chunky, built for a parent on a phone.
-import { head, conceptNote } from './shared.mjs';
+import { head, conceptNote, target } from './shared.mjs';
 
 const slug = 'wiggle-room';
 const base = `/demos/${slug}/`;
@@ -198,10 +198,10 @@ function layout(p) {
   return `<!doctype html>
 <html lang="en">
 <head>
-${head({ title: p.title, desc: p.desc, path: here, theme: '#fff8ec', icon: logo, css: `${base}styles.css`, fonts: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap' })}
+${head({ slug, title: p.title, desc: p.desc, path: here, theme: '#fff8ec', icon: logo, css: `${base}styles.css`, fonts: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap' })}
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+${target.top}<a class="skip" href="#main">Skip to content</a>
 <header class="top"><div class="wrap bar">
 <a class="logo" href="${base}">${logo}Wiggle Room</a>
 <button class="menu" type="button" data-menu aria-expanded="false" aria-controls="nav">Menu</button>
@@ -217,9 +217,9 @@ ${p.body}
 <div><p class="title">Explore</p><ul>${nav.map(([label, path]) => `<li><a href="${base}${path}">${label}</a></li>`).join('')}</ul></div></div>
 <p class="note">${conceptNote('Wiggle Room')}</p>
 </div></footer>
-</body>
+${target.bottom}</body>
 </html>
 `;
 }
 
-export default { slug, pages, layout };
+export default { slug, pages, layout, heroSvg: art.hero, fontFaces: [['Fredoka', 'fredoka', 600, 'normal'], ['Nunito', 'nunito', 500, 'normal'], ['Nunito', 'nunito', 700, 'normal'], ['Nunito', 'nunito', 800, 'normal'], ['Nunito', 'nunito', 900, 'normal']] };
