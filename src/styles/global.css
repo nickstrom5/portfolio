@@ -130,6 +130,17 @@ h2 {
 h3 {
   font-size: 1.25rem;
 }
+/* Section headings and the small uppercase labels above titles (.eyebrow, and the *-kicker
+   classes on the AI Projects and case-study pages) balance their lines, so a wrap never leaves
+   one word alone ("…followed / up.", "…RESIDENTIAL SOLAR / SALES"). h1 is left to each page:
+   the home hero balances it on phones only. */
+h2,
+h3,
+h4,
+.eyebrow,
+[class*='kicker'] {
+  text-wrap: balance;
+}
 p {
   margin: 0 0 1em;
 }
