@@ -234,11 +234,9 @@ const contacts = [
         box-shadow: var(--shadow);
         padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 2.75rem);
       }
+      /* Name, role, then the contacts as one row with the location under it. Side by side,
+         the contacts squeezed into a narrow right column and broke mid-address. */
       header.masthead {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 1.5rem;
         padding-bottom: 1.35rem;
         border-bottom: 2px solid var(--ink);
       }
@@ -255,12 +253,25 @@ const contacts = [
         font-weight: 500;
         color: var(--muted);
         letter-spacing: -0.01em;
+        text-wrap: balance;
       }
       .contact {
-        text-align: right;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.15rem 1.4rem;
+        margin: 0.95rem 0 0;
+        padding: 0;
+        list-style: none;
         font-size: 0.95rem;
+        line-height: 1.5;
         color: var(--muted);
-        line-height: 1.7;
+      }
+      .contact li {
+        white-space: nowrap;
+      }
+      .contact .where {
+        flex-basis: 100%;
+        white-space: normal;
       }
       .contact a {
         color: var(--ink);
@@ -464,13 +475,9 @@ const contacts = [
           border-radius: 12px;
           padding: 1.35rem 1.1rem 1.5rem;
         }
-        header.masthead {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.85rem;
-        }
         .contact {
-          text-align: left;
+          flex-direction: column;
+          margin-top: 0.75rem;
         }
         .highlights {
           grid-template-columns: 1fr 1fr;
@@ -499,7 +506,7 @@ const contacts = [
       }
       @page {
         size: Letter;
-        margin: 0.4in 0.6in;
+        margin: 0.35in 0.6in;
       }
       @media print {
         :root {
@@ -534,10 +541,37 @@ const contacts = [
           box-shadow: none;
           padding: 0;
         }
+        /* On paper the page is wide enough for name and contacts side by side, as before:
+           email, then site and LinkedIn, then location, right-aligned. */
         header.masthead {
+          display: grid;
+          grid-template-columns: auto auto;
+          justify-content: space-between;
+          align-items: end;
+          column-gap: 1rem;
           padding-bottom: 0.45rem;
           border-bottom-width: 1.5px;
-          gap: 1rem;
+        }
+        header.masthead h1,
+        header.masthead .role {
+          grid-column: 1;
+        }
+        header.masthead .contact {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+          display: block;
+          margin: 0;
+          text-align: right;
+        }
+        .contact li {
+          display: inline;
+        }
+        .contact li:first-child,
+        .contact .where {
+          display: block;
+        }
+        .contact li:nth-child(3)::before {
+          content: ' · ';
         }
         h1 {
           font-size: 20pt;
@@ -596,7 +630,7 @@ const contacts = [
         }
         .job .sum {
           font-size: 8.7pt;
-          line-height: 1.38;
+          line-height: 1.33;
           margin-top: 0.08rem;
           max-width: none;
         }
@@ -654,21 +688,12 @@ const contacts = [
     <main class="wrap">
       <article class="sheet" id="resume">
         <header class="masthead">
-          <div>
-            <h1>{site.name}</h1>
-            <p class="role">{site.role}</p>
-          </div>
-          <p class="contact">
-            {contacts.map((c, i) => (
-              <>
-                {i === 1 && <br />}
-                {i > 1 && ' · '}
-                <a href={c.href}>{c.label}</a>
-              </>
-            ))}
-            <br />
-            {site.location}
-          </p>
+          <h1>{site.name}</h1>
+          <p class="role">{site.role}</p>
+          <ul class="contact" aria-label="Contact">
+            {contacts.map((c) => <li><a href={c.href}>{c.label}</a></li>)}
+            <li class="where">{site.location}</li>
+          </ul>
         </header>
 
         <ul class="highlights" aria-label="Highlights">

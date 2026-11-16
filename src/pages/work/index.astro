@@ -242,14 +242,12 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
     gap: 0.5rem 2rem;
   }
-  /* Title, then type and year underneath; items in a row share row tracks (subgrid),
-     so every type line in the row sits on the same line. */
+  /* Title, then type and year right under it. Items in a row still share its height,
+     so the dividing lines meet. */
   .contracts li {
-    display: grid;
-    grid-row: span 2;
-    grid-template-rows: subgrid;
-    row-gap: 0.2rem;
-    align-content: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;

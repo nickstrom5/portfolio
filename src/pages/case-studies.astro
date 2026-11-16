@@ -116,16 +116,25 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
   .intro {
     padding-block: clamp(3rem, 8vw, 5.5rem) 1rem;
   }
-  /* Flex, not grid: five tiles fit one row on desktop, and on narrower screens the
-     last row stretches to fill instead of leaving one tile on its own. */
+  /* Six tiles: three to a row on desktop and two on tablets, so no row is left with
+     one tile stretched across it; one column on phones. */
   .tiles {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin-top: 2rem;
   }
+  @media (min-width: 560px) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 900px) {
+    .tiles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
   .tile {
-    flex: 1 1 190px;
     text-align: left;
     display: flex;
     flex-direction: column;

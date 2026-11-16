@@ -242,8 +242,17 @@ const sectors = [
     font-weight: 600;
     white-space: nowrap;
   }
+  /* A wall of reviews: each card is as tall as its own quote, stacked in columns. In
+     rows, a one-line "Great work!" sat in a card as tall as the longest quote beside it. */
   .feedback {
+    display: block;
+    columns: 3 300px;
+    column-gap: 1.25rem;
     margin-top: 1.5rem;
+  }
+  .feedback > :global(figure) {
+    break-inside: avoid;
+    margin-bottom: 1.25rem;
   }
   .band {
     background: var(--bg-muted);
