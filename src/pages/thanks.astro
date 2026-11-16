@@ -21,7 +21,10 @@ import { url } from '@/lib/url';
 </Base>
 
 <style>
+  /* inline-block moves the whole address to the next line instead of splitting it at a hyphen;
+     it only breaks inside on a screen narrower than the address itself. */
   .lede a {
+    display: inline-block;
     overflow-wrap: anywhere;
   }
   .actions {
