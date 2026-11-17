@@ -41,7 +41,7 @@ const sectors = [
         {site.stats.map((s) => (
           <div>
             <dd>{s.value}</dd>
-            <dt>{s.label}{'note' in s && s.note && <span class="note"> · {s.note}</span>}</dt>
+            <dt>{s.label}{'note' in s && s.note && <span class="note"><span class="sep" aria-hidden="true"> · </span>{s.note}</span>}</dt>
           </div>
         ))}
       </dl>
@@ -145,6 +145,16 @@ const sectors = [
   }
   .stats .note {
     color: var(--text-faint);
+    white-space: nowrap;
+  }
+  /* Narrow columns: the note gets its own line, whole, without the dot (as on Home). */
+  @media (max-width: 899px) {
+    .stats .note {
+      display: block;
+    }
+    .stats .note .sep {
+      display: none;
+    }
   }
   .clients {
     list-style: none;
