@@ -13,7 +13,7 @@ import { ids, personNode, websiteNode } from '@/lib/schema';
 import { shareCard } from '@/lib/share-card';
 
 const summary =
-  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I take ownership of the moving parts, projects, timelines, tools, people and processes, so leadership can stay focused on growth. Lately also shipping iPhone apps and websites by directing AI models from brief to production. Freelance since 2015.';
+  'Senior project manager and operations lead with 10+ years across federal research, universities, large corporations, startups and nonprofits. I own the moving parts (projects, timelines, tools, people and processes) so leadership can stay focused on growth. I also ship iPhone apps and websites by directing AI models from brief to production.';
 /** Résumé-only skills, kept off the home page service cards. */
 const resumeExtras: Record<string, string[]> = {
   'Executive assistant support': ['QuickBooks bookkeeping: bills, AP/AR, reports'],
@@ -21,11 +21,10 @@ const resumeExtras: Record<string, string[]> = {
 };
 const skillGroups = services.map((s) => ({ label: s.title, items: [...s.bullets, ...(resumeExtras[s.title] ?? [])] }));
 const domain = site.url.replace(/^https?:\/\//, '');
-const highlights = [
-  // Upwork's own metrics keep the Upwork name; an employer outside Upwork wouldn't know them.
-  ...site.stats.map((s) => ({ value: s.value, label: s.label === 'Job success score' ? 'Upwork Job Success' : s.label })),
-  { value: 'Since 2015', label: 'Freelance' },
-];
+// One quiet line of facts under the masthead, not a band of big numbers. Upwork's own metrics
+// keep the Upwork name; an employer outside Upwork wouldn't know them.
+const highlightLabels = ['contracts', 'freelance hours', 'Job Success', 'Top Rated Plus on Upwork'];
+const highlights = site.stats.map((s, i) => ({ value: s.value, label: highlightLabels[i] ?? s.label }));
 const freelance = {
   title: 'Operations & Project Manager · Chief of Staff',
   company: 'Freelance, mostly via Upwork',
@@ -106,46 +105,43 @@ const contacts = [
       } catch {}
     </script>
     <style>
+      /* The résumé is a sheet of paper in both themes, matching the PDF. Dark mode only
+         darkens the backdrop and the two controls above the sheet. */
       :root {
         --ink: #17181a;
-        --muted: #5b5f66;
-        --faint: #6d727a;
-        --rule: #e3e3dd;
+        --muted: #474b52;
+        --faint: #646970;
+        --rule: #dcdcd6;
         --accent: #1f5fd0;
         --accent-strong: #174aa6;
-        --accent-soft: #e7eefc;
-        --bg: #f4f4f0;
+        --bg: #f1f1ed;
         --sheet: #ffffff;
-        --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 16px 40px -20px rgb(0 0 0 / 0.18);
-        --radius: 16px;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 12px 32px -18px rgb(0 0 0 / 0.2);
+        --radius: 3px;
+        --chrome-ink: #17181a;
+        --chrome-muted: #5b5f66;
+        --chrome-rule: #d5d5cf;
+        --chrome-btn: #ffffff;
         color-scheme: light;
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme='light']) {
-          --ink: #eef0f2;
-          --muted: #a4abb5;
-          --faint: #8b939e;
-          --rule: #262c34;
-          --accent: #6f9cff;
-          --accent-strong: #8fb2ff;
-          --accent-soft: #1a2740;
           --bg: #0f1114;
-          --sheet: #161a1f;
-          --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -18px rgb(0 0 0 / 0.7);
+          --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 16px 40px -18px rgb(0 0 0 / 0.8);
+          --chrome-ink: #eef0f2;
+          --chrome-muted: #a4abb5;
+          --chrome-rule: #2c333c;
+          --chrome-btn: #161a1f;
           color-scheme: dark;
         }
       }
       :root[data-theme='dark'] {
-        --ink: #eef0f2;
-        --muted: #a4abb5;
-        --faint: #8b939e;
-        --rule: #262c34;
-        --accent: #6f9cff;
-        --accent-strong: #8fb2ff;
-        --accent-soft: #1a2740;
         --bg: #0f1114;
-        --sheet: #161a1f;
-        --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -18px rgb(0 0 0 / 0.7);
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 16px 40px -18px rgb(0 0 0 / 0.8);
+        --chrome-ink: #eef0f2;
+        --chrome-muted: #a4abb5;
+        --chrome-rule: #2c333c;
+        --chrome-btn: #161a1f;
         color-scheme: dark;
       }
       * {
@@ -194,8 +190,11 @@ const contacts = [
         margin: 0 auto;
         padding: 1.1rem 1.25rem 0;
       }
+      .chrome :focus-visible {
+        outline-color: var(--chrome-ink);
+      }
       .back {
-        color: var(--muted);
+        color: var(--chrome-muted);
         font-size: 0.92rem;
         font-weight: 500;
         min-height: 44px;
@@ -203,7 +202,7 @@ const contacts = [
         align-items: center;
       }
       .back:hover {
-        color: var(--ink);
+        color: var(--chrome-ink);
       }
       .btn {
         display: inline-flex;
@@ -214,13 +213,13 @@ const contacts = [
         border-radius: 999px;
         font-weight: 600;
         font-size: 0.9rem;
-        border: 1px solid var(--rule);
-        color: var(--ink);
-        background: var(--sheet);
+        border: 1px solid var(--chrome-rule);
+        color: var(--chrome-ink);
+        background: var(--chrome-btn);
       }
       .btn:hover {
-        border-color: var(--faint);
-        color: var(--ink);
+        border-color: var(--chrome-muted);
+        color: var(--chrome-ink);
       }
       .wrap {
         max-width: 820px;
@@ -229,6 +228,8 @@ const contacts = [
       }
       .sheet {
         background: var(--sheet);
+        color: var(--ink);
+        color-scheme: light;
         border: 1px solid var(--rule);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
@@ -237,15 +238,15 @@ const contacts = [
       /* Name, role, then the contacts as one row with the location under it. Side by side,
          the contacts squeezed into a narrow right column and broke mid-address. */
       header.masthead {
-        padding-bottom: 1.35rem;
-        border-bottom: 2px solid var(--ink);
+        padding-bottom: 1.15rem;
+        border-bottom: 1.5px solid var(--ink);
       }
       h1 {
-        font-size: clamp(2rem, 5vw, 2.55rem);
+        font-size: clamp(1.8rem, 4.5vw, 2.2rem);
         margin: 0;
-        letter-spacing: -0.035em;
-        line-height: 1.05;
-        font-weight: 800;
+        letter-spacing: -0.022em;
+        line-height: 1.1;
+        font-weight: 700;
       }
       .role {
         margin: 0.45rem 0 0;
@@ -255,19 +256,30 @@ const contacts = [
         letter-spacing: -0.01em;
         text-wrap: balance;
       }
-      .contact {
+      /* Contact row and facts line: items split by hairlines. Each item's left rule sits just
+         outside the list's clipped edge, so no row ever starts with a divider when it wraps. */
+      .contact,
+      .highlights {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.15rem 1.4rem;
-        margin: 0.95rem 0 0;
+        row-gap: 0.2rem;
+        margin: 0 0 0 -0.8rem;
         padding: 0;
         list-style: none;
-        font-size: 0.95rem;
-        line-height: 1.5;
+        overflow-x: clip;
         color: var(--muted);
       }
-      .contact li {
+      .contact li,
+      .highlights li {
+        margin-left: -1px;
+        padding: 0 0.8rem;
+        border-left: 1px solid var(--rule);
         white-space: nowrap;
+      }
+      .contact {
+        margin-top: 0.85rem;
+        font-size: 0.93rem;
+        line-height: 1.5;
       }
       .contact .where {
         flex-basis: 100%;
@@ -281,31 +293,17 @@ const contacts = [
         color: var(--accent);
       }
       .highlights {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 0.75rem 1rem;
-        margin: 0;
-        padding: 1.25rem 0 1.35rem;
-        list-style: none;
-        border-bottom: 1px solid var(--rule);
+        margin-left: -0.65rem;
+        padding-top: 0.8rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
       }
       .highlights li {
-        min-width: 0;
+        padding: 0 0.65rem;
       }
       .highlights li strong {
-        display: block;
-        font-size: clamp(1.15rem, 2vw, 1.45rem);
-        letter-spacing: -0.03em;
-        line-height: 1.15;
-        font-weight: 800;
-      }
-      .highlights li span {
-        display: block;
-        margin-top: 0.2rem;
-        color: var(--muted);
-        font-size: 0.78rem;
-        line-height: 1.35;
-        font-weight: 500;
+        color: var(--ink);
+        font-weight: 700;
       }
       section {
         padding-top: 1.35rem;
@@ -313,10 +311,12 @@ const contacts = [
       h2 {
         font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--accent);
-        margin: 0 0 0.55rem;
+        color: var(--ink);
+        margin: 0 0 0.7rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid var(--rule);
       }
       p {
         margin: 0;
@@ -324,7 +324,7 @@ const contacts = [
       .summary {
         max-width: 68ch;
         color: var(--ink);
-        font-size: 1.02rem;
+        font-size: 0.98rem;
         line-height: 1.6;
       }
       .jobs {
@@ -335,12 +335,10 @@ const contacts = [
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 0.15rem 1.5rem;
-        padding: 0.85rem 0;
-        border-bottom: 1px solid var(--rule);
+        padding: 0.7rem 0;
         break-inside: avoid;
       }
       .job:last-child {
-        border-bottom: 0;
         padding-bottom: 0;
       }
       .job:first-child {
@@ -441,9 +439,9 @@ const contacts = [
         display: block;
         font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--accent);
+        color: var(--ink);
         margin-bottom: 0.3rem;
       }
       .foot .edu-value {
@@ -456,8 +454,18 @@ const contacts = [
         color: var(--faint);
       }
       @media (max-width: 800px) {
+        /* Too narrow for the four facts on one line: two tidy columns, no dividers. */
         .highlights {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          display: grid;
+          grid-template-columns: auto auto;
+          justify-content: start;
+          column-gap: 2rem;
+          margin-left: 0;
+        }
+        .highlights li {
+          margin-left: 0;
+          padding: 0;
+          border-left: 0;
         }
         .skills {
           grid-template-columns: 1fr 1fr;
@@ -475,13 +483,22 @@ const contacts = [
           border-radius: 12px;
           padding: 1.35rem 1.1rem 1.5rem;
         }
+        .highlights {
+          grid-template-columns: 1fr;
+        }
         .contact {
           flex-direction: column;
-          margin-top: 0.75rem;
+          margin-left: 0;
         }
-        .highlights {
-          grid-template-columns: 1fr 1fr;
-          gap: 0.95rem 0.85rem;
+        .contact li,
+        .highlights li {
+          margin-left: 0;
+          padding: 0;
+          border-left: 0;
+          white-space: normal;
+        }
+        .contact {
+          margin-top: 0.75rem;
         }
         .skills {
           grid-template-columns: 1fr;
@@ -515,7 +532,6 @@ const contacts = [
           --faint: #5c6168;
           --rule: #d8d8d2;
           --accent: #1a4fad;
-          --accent-soft: #fff;
           --bg: #fff;
           --sheet: #fff;
           --shadow: none;
@@ -562,9 +578,13 @@ const contacts = [
           display: block;
           margin: 0;
           text-align: right;
+          overflow: visible;
         }
         .contact li {
           display: inline;
+          margin: 0;
+          padding: 0;
+          border: 0;
         }
         .contact li:first-child,
         .contact .where {
@@ -585,22 +605,16 @@ const contacts = [
           line-height: 1.4;
         }
         .highlights {
-          grid-template-columns: repeat(5, 1fr);
-          gap: 0.45rem;
-          padding: 0.45rem 0 0.5rem;
-        }
-        .highlights li strong {
-          font-size: 11.5pt;
-        }
-        .highlights li span {
-          font-size: 7.6pt;
+          padding-top: 0.5rem;
+          font-size: 8.6pt;
         }
         section {
-          padding-top: 0.42rem;
+          padding-top: 0.6rem;
         }
         h2 {
           font-size: 7.6pt;
-          margin-bottom: 0.22rem;
+          margin-bottom: 0.25rem;
+          padding-bottom: 0.14rem;
         }
         .summary {
           font-size: 9.2pt;
@@ -699,8 +713,7 @@ const contacts = [
         <ul class="highlights" aria-label="Highlights">
           {highlights.map((s) => (
             <li>
-              <strong>{s.value}</strong>
-              <span>{s.label}</span>
+              <strong>{s.value}</strong> {s.label}
             </li>
           ))}
         </ul>
