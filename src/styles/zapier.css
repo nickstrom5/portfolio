@@ -144,8 +144,10 @@
 }
 
 /* Form help text, as under a field. */
+/* The form card stays white in dark mode, so its helper text keeps the light-theme grey
+   (as .nf-desc does) instead of the page's dark-theme muted colour. */
 .nf-help {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--text-muted);
+  color: #5a5d6b;
 }
