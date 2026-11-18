@@ -60,9 +60,11 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
         <ul class="cases">
           {p.cases.map((c) => (
             <li class="card case" style={`--case: ${c.tint.light}; --case-dark: ${c.tint.dark}`}>
-              <h3>{c.name}</h3>
-              <p class="meta muted">{c.industry} · {c.area}</p>
-              <p class="blurb">{c.blurb}</p>
+              <div class="case-head">
+                <h3>{c.name}</h3>
+                <p class="meta muted">{c.industry} · {c.area}</p>
+                <p class="blurb">{c.blurb}</p>
+              </div>
               <p class="count">{c.workflows.length} {p.unit}</p>
               <ul class="flows" aria-label={`${c.name} ${p.unit}`}>
                 {c.workflows.map((w) => <li class="tag">{w}</li>)}
@@ -207,11 +209,18 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
      start on one line across the row however long each blurb or chip list runs. */
   .case {
     display: grid;
-    grid-row: span 6;
+    grid-row: span 4;
     grid-template-rows: subgrid;
     row-gap: 0.4rem;
     align-content: start;
     border-top: 4px solid var(--case-use);
+  }
+  /* Title, meta and blurb share one row, so a title that wraps in one card does not open a
+     gap under the one-line titles beside it. */
+  .case-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
   }
   .case h3 {
     margin: 0;

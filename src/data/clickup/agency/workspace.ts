@@ -9,7 +9,7 @@ export const workspace: Workspace = {
   id: 'agency',
   name: 'Fernhill Studio',
   industry: 'Design agency',
-  area: '11 people in Portland, OR, clients across the US',
+  area: '11 people in Portland,\u00a0OR, clients across the US',
   blurb: 'A brand and web studio: project requests sorted before anyone reads them, client review rounds that cannot stall in silence, and a launch plan that starts itself when the last blocker clears.',
   intro:
     'Fernhill Studio designs brand identities and websites for clinics, restaurants and small B2B companies, usually eight to twelve projects at once. Requests came in by email and Instagram DM, client approvals sat in inboxes for a week, and launches slipped because nobody noticed the one blocker still open. The founder wanted one place for all of it, where a new request, a waiting client or a late launch shows up on its own, without a project manager chasing each one by hand.',

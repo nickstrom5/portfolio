@@ -2294,9 +2294,13 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1.25rem;
 }
-/* Seven cards go four and three, rather than three, three and one alone. */
-.gx-cards:has(> li:nth-child(7):last-child) {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+/* Seven cards: three to a row as usual, and the seventh spans the last row instead of
+   sitting alone in a third of it. Four columns made the cards too narrow to read. */
+.gx-cards > li:nth-child(7):last-child {
+  grid-column: 1 / -1;
+}
+.gx-cards > li:nth-child(7):last-child p {
+  max-width: 70ch;
 }
 .gx-cards h3 {
   font-size: 1.1rem;
@@ -2638,7 +2642,8 @@
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.35;
-  padding-top: 0.35rem;
+  /* 1.92rem (a numeral: 1.6rem x 1.2) minus 1.35rem, so a one-line value is as tall as a number. */
+  padding-top: 0.57rem;
   text-wrap: balance;
 }
 @media (max-width: 640px) {
