@@ -316,17 +316,20 @@
   flex-direction: column;
   min-width: 0;
 }
+/* Step label and name balance their lines, so a wrap never leaves "Numbers" or "base?" alone. */
 .g-kind {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--g-tone, var(--text-muted));
+  text-wrap: balance;
 }
 .g-name {
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1.3;
+  text-wrap: balance;
 }
 .g-sum {
   margin: 0.2rem 0 0;
@@ -1094,15 +1097,18 @@
 
 /* ---------- Page layout ---------- */
 
+/* The first layer fades the tints out over the last 6rem, so the hero ends without a hard edge. */
 .gx-hero {
   padding-block: clamp(2rem, 4vw, 3rem) clamp(2.5rem, 6vw, 4rem);
   background:
+    linear-gradient(to bottom, transparent calc(100% - 6rem), var(--bg)),
     radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
     radial-gradient(40rem 24rem at -10% 110%, color-mix(in srgb, var(--g-trigger) 10%, transparent), transparent 70%);
 }
 .gx-hero h1 {
   max-width: 22ch;
   font-size: clamp(2.1rem, 4.2vw, 3rem);
+  text-wrap: balance;
 }
 .gx-cta {
   display: flex;
@@ -1127,9 +1133,12 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
+/* The number sits above its label; flex-end (the top, in column-reverse) keeps the numbers
+   in a row on one line when one label wraps. */
 .gx-stats div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
 }
 .gx-stats dd {
   margin: 0;
@@ -1142,6 +1151,7 @@
 .gx-stats dt {
   font-size: 0.85rem;
   color: var(--text-muted);
+  text-wrap: balance;
 }
 .gx-disclaimer {
   margin: 1.25rem 0 0;
@@ -1199,6 +1209,10 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
+}
+/* A phone number in a message never splits at its hyphen. */
+.gx-tel {
+  white-space: nowrap;
 }
 .gx-peek-link {
   display: inline-flex;
@@ -1374,9 +1388,11 @@
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+/* Balanced, so a narrow card breaks "Estimate / follow-up", not "Estimate follow- / up". */
 .gx-j-name {
   font-weight: 700;
   line-height: 1.25;
+  text-wrap: balance;
 }
 .gx-j-trigger {
   display: flex;
@@ -1386,6 +1402,7 @@
   color: var(--g-trigger);
   font-weight: 600;
   line-height: 1.35;
+  text-wrap: balance;
 }
 .gx-j-trigger svg {
   flex: none;
@@ -1410,6 +1427,7 @@
 .gx-team-title {
   margin: 0;
   font-weight: 700;
+  text-wrap: balance;
 }
 .gx-team ul {
   display: flex;
@@ -1421,6 +1439,12 @@
 }
 .gx-team span {
   color: var(--text-muted);
+}
+/* One person per line on phones, rather than two short entries sharing a line. */
+@media (max-width: 640px) {
+  .gx-team ul {
+    flex-direction: column;
+  }
 }
 
 /* Landing demo */
@@ -1919,6 +1943,7 @@
   font-size: 1.1rem;
   color: var(--text-muted);
   max-width: 65ch;
+  text-wrap: pretty;
 }
 .gx-ps {
   display: grid;
@@ -2040,16 +2065,21 @@
   margin: 0 0 0.75rem;
   color: var(--text-muted);
 }
+/* Balanced, with the note count kept whole, so a wrap never leaves "connects" or "builders)" alone.
+   A wrapped line hangs past the ▶ marker (about 1.06em wide with its space), not under it. */
 .gx-notes-more > summary {
   cursor: pointer;
   font-weight: 700;
   font-size: 1.05rem;
-  padding: 0.35rem 0;
+  padding: 0.35rem 0 0.35rem 1.06em;
+  text-indent: -1.06em;
+  text-wrap: balance;
 }
 .gx-notes-more > summary .g-count {
   font-weight: 400;
   font-size: 0.9rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 .gx-notes-more > .gx-note-grid {
   margin-top: 0.75rem;
@@ -2215,6 +2245,9 @@
   border: 1px solid var(--border);
   background: var(--bg-elev);
 }
+.gx-edge-list strong {
+  text-wrap: balance;
+}
 .gx-edge-list span {
   color: var(--text-muted);
   font-size: 0.92rem;
@@ -2261,6 +2294,10 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1.25rem;
 }
+/* Seven cards go four and three, rather than three, three and one alone. */
+.gx-cards:has(> li:nth-child(7):last-child) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
 .gx-cards h3 {
   font-size: 1.1rem;
 }
@@ -2305,6 +2342,9 @@
   font-weight: 800;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+}
+.gx-audit strong {
+  text-wrap: balance;
 }
 .gx-audit span {
   color: var(--text-muted);
@@ -2381,10 +2421,13 @@
   margin-top: 1rem;
   padding: 0;
 }
+/* Balanced, and a wrapped line hangs past the ▶ marker, as in .gx-notes-more. */
 .gx-decoder > summary {
   cursor: pointer;
-  padding: 0.85rem 1.25rem;
+  padding: 0.85rem 1.25rem 0.85rem calc(1.25rem + 1.06em);
+  text-indent: -1.06em;
   font-weight: 700;
+  text-wrap: balance;
 }
 .gx-decoder > summary .g-count {
   font-weight: 400;
@@ -2420,6 +2463,12 @@
 }
 .gx-closing .gx-cta {
   margin-top: 0;
+}
+/* The buttons are a flex item here, so on phones they need telling to stack full width like the hero's. */
+@media (max-width: 480px) {
+  .gx-closing .gx-cta {
+    width: 100%;
+  }
 }
 
 /* ---------- Case studies ---------- */
@@ -2473,6 +2522,20 @@
     border-color 0.15s ease,
     box-shadow 0.15s ease;
 }
+/* Side by side, cards with a sector line (below) share their rows, so the titles line up however
+   many lines a sector takes. A one-line title sits at the foot of its row, next to its blurb. */
+@media (min-width: 861px) {
+  @supports (grid-template-rows: subgrid) {
+    .gx-switch-grid:has(.gx-switch-sector) > .gx-switch-tab {
+      display: grid;
+      grid-row: span 4;
+      grid-template-rows: subgrid;
+    }
+    .gx-switch-grid:has(.gx-switch-sector) .gx-switch-name {
+      align-self: end;
+    }
+  }
+}
 .gx-switch-tab:hover {
   transform: translateY(-2px);
 }
@@ -2491,6 +2554,14 @@
   text-transform: uppercase;
   color: var(--case-use);
   padding-right: 4.5rem;
+}
+/* "Case study N" on the first line and the sector under it, so no wrap leaves a dangling "·".
+   The short first line already clears the Showing badge, so the sector can use the full width. */
+.gx-switch-kicker:has(.gx-switch-sector) {
+  padding-right: 0;
+}
+.gx-switch-sector {
+  display: block;
 }
 .gx-switch-name {
   font-size: 1.35rem;
@@ -2537,9 +2608,18 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
+/* Five facts (Zapier, Airtable) share one row rather than leaving Where alone on a second. */
+@media (min-width: 641px) {
+  .gx-case-facts:has(> div:nth-child(5)) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+/* Value above label, held at the top (flex-end, in column-reverse) so the values in a row line up
+   when a long Where wraps. */
 .gx-case-facts div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
   min-width: 0;
 }
 .gx-case-facts dt {
@@ -2559,10 +2639,15 @@
   font-weight: 700;
   line-height: 1.35;
   padding-top: 0.35rem;
+  text-wrap: balance;
 }
 @media (max-width: 640px) {
   .gx-case-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* An odd last fact (Where, of five) takes the whole row rather than half of it. */
+  .gx-case-facts > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 .gx-h3 {
@@ -2625,6 +2710,10 @@
 .gx-note-panel .gx-edge-list,
 .gx-note-panel .gx-qa-list {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+/* Four cases go two by two, rather than three and one alone. */
+.gx-note-panel .gx-edge-list:has(> li:nth-child(4):last-child) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
 }
 .gx-note-panel .gx-build-list {
   max-width: 80ch;
