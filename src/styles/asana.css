@@ -687,7 +687,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* The week label sits by the number at the left, clear of the capacity
+     marker, which always lands past 60% of the bar. */
+  gap: 0.35rem;
   height: 1.6rem;
   padding: 0 0.45rem;
   border-radius: 6px;

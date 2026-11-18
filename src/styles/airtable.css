@@ -51,7 +51,25 @@
   min-height: 52px;
   padding: 0.6rem 0;
   cursor: pointer;
-  color: var(--case, var(--accent));
+  color: var(--case-use, var(--accent));
+}
+/* display: flex drops the native disclosure marker, so draw one; Safari
+   keeps its own, which is hidden so there are not two. */
+.a-table > summary::-webkit-details-marker {
+  display: none;
+}
+.a-table > summary::before {
+  content: '';
+  flex: none;
+  width: 0.5em;
+  height: 0.56em;
+  margin-right: -0.2rem;
+  background: var(--text);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transition: transform 0.15s;
+}
+.a-table[open] > summary::before {
+  transform: rotate(90deg);
 }
 .a-table-name {
   font-weight: 700;
@@ -86,6 +104,10 @@
 .a-fields td > span,
 .a-fields td > code {
   display: block;
+}
+/* ...except the primary chip, which sits beside the field name. */
+.a-fields td > .a-primary {
+  display: inline-block;
 }
 .a-primary {
   display: inline-block;
@@ -139,7 +161,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: var(--case, var(--accent));
+  color: var(--case-use, var(--accent));
   font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -204,7 +226,7 @@
 .a-syncs svg {
   flex: none;
   margin-top: 0.2rem;
-  color: var(--case, var(--accent));
+  color: var(--case-use, var(--accent));
 }
 
 /* ---------- Editor and run log ---------- */
@@ -264,8 +286,10 @@
 }
 
 /* ---------- Form help ---------- */
+/* The form mock stays light in both site themes, so a fixed grey like
+   .nf-desc, not the theme's muted text. */
 .nf-help {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--text-muted);
+  color: #5a5d6b;
 }
