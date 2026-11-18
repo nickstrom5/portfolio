@@ -203,10 +203,14 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: 1.25rem;
   }
+  /* Cards in a row share row tracks (subgrid), so the workflow count, chips and link
+     start on one line across the row however long each blurb or chip list runs. */
   .case {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    row-gap: 0.4rem;
+    align-content: start;
     border-top: 4px solid var(--case-use);
   }
   .case h3 {
@@ -220,7 +224,6 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
   }
   .blurb {
     margin: 0.25rem 0 0;
-    flex: 1;
   }
   .count {
     margin-top: 0.5rem;
@@ -233,6 +236,8 @@ const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at
     padding: 0;
     display: flex;
     flex-wrap: wrap;
+    /* Chip rows stay packed at the top when a longer list in the row sets the track. */
+    align-content: flex-start;
     gap: 0.4rem;
   }
   .open {
