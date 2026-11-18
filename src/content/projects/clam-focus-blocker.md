@@ -2,7 +2,7 @@
 title: 'Founder, Clam: a fold-to-focus app blocker for iPhone'
 shortTitle: 'Clam: fold-to-focus app blocker'
 client: 'Solo build · getclam.app'
-summary: "One-tap screen-time blocker built on Apple's Screen Time API, with a Live Activity countdown, a branded block screen and streaks. No account, no backend."
+summary: "One-tap screen-time blocker built on Apple’s Screen Time API, with a Live Activity countdown, a branded block screen and streaks. No account, no backend."
 category: 'development'
 platforms: ['iOS', 'iPhone Duo']
 stack: ['SwiftUI', 'FamilyControls', 'ManagedSettings', 'DeviceActivity', 'ActivityKit', 'StoreKit 2', 'App Intents']
@@ -29,7 +29,7 @@ It's designed around the iPhone Duo, where the countdown sits on the outer displ
 
 ## What got built
 
-- The SwiftUI app: a nine-step onboarding that sells the habit before the paywall, a StoreKit 2 subscription flow with a lifetime option, the home screen, active session, result and share card, settings, and a Siri and Action Button intent.
+- The SwiftUI app: a nine-step onboarding that sells the habit before the paywall, a StoreKit&nbsp;2 subscription flow with a lifetime option, the home screen, active session, result and share card, settings, and a Siri and Action Button intent.
 - A Shield Configuration extension for the branded block screen, a Device Activity monitor that clears the shield when a session ends even if the app was killed, and a Live Activity plus Home Screen widget.
 - Real blocking through Apple's Screen Time entitlement rather than a Shortcut you can bypass, with everything stored in an App Group and no server anywhere.
 - Records and badges for personal bests and streaks, with Game Center planned for leaderboards so social features never require an account.

@@ -23,11 +23,11 @@ const skillGroups = services.map((s) => ({ label: s.title, items: [...s.bullets,
 const domain = site.url.replace(/^https?:\/\//, '');
 const highlights = [
   // Upwork's own metrics keep the Upwork name; an employer outside Upwork wouldn't know them.
-  ...site.stats.map((s) => ({ value: s.value, label: s.label === 'Job success score' ? 'Upwork Job Success' : s.label })),
+  ...site.stats.map((s) => ({ value: s.value, label: s.label === 'Job success score' ? 'Upwork Job\u00a0Success' : s.label })),
   { value: 'Since 2015', label: 'Freelance' },
 ];
 const freelance = {
-  title: 'Operations & Project Manager · Chief of Staff',
+  title: 'Operations & Project Manager\u00a0· Chief\u00a0of\u00a0Staff',
   company: 'Freelance, mostly via Upwork',
   start: '2015',
   end: 'Present',
@@ -306,6 +306,8 @@ const contacts = [
         font-size: 0.78rem;
         line-height: 1.35;
         font-weight: 500;
+        /* "Freelance / hours billed", not "Freelance hours / billed". */
+        text-wrap: balance;
       }
       section {
         padding-top: 1.35rem;
@@ -401,6 +403,14 @@ const contacts = [
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.15rem 1.35rem;
       }
+      /* Groups in a row share row tracks (subgrid, as on the site's cards), so every list starts
+         on the same line even when one heading wraps. */
+      .skills > div {
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        row-gap: 0;
+      }
       .skills h3 {
         margin: 0 0 0.45rem;
         font-size: 0.92rem;
@@ -449,6 +459,10 @@ const contacts = [
       .foot .edu-value {
         color: var(--ink);
         font-weight: 600;
+      }
+      /* On screen the degree and the school each get a line, so neither breaks mid-name. */
+      .foot .edu-degree {
+        display: block;
       }
       .foot .note {
         text-align: right;
@@ -668,6 +682,13 @@ const contacts = [
           font-size: 7.6pt;
           margin-bottom: 0.1rem;
         }
+        /* The page is wide enough for one line, and the line it saves keeps the PDF to one page. */
+        .foot .edu-degree {
+          display: inline;
+        }
+        .foot .edu-degree::after {
+          content: ',';
+        }
         a {
           color: inherit;
         }
@@ -769,7 +790,7 @@ const contacts = [
           <div>
             <span class="edu-label">Education</span>
             {education.map((e) => (
-              <span class="edu-value">{e.degree}<br />{e.school}, {e.location}</span>
+              <span class="edu-value"><span class="edu-degree">{e.degree}</span> {e.school}, {e.location}</span>
             ))}
           </div>
           <p class="note">Full contract history and client feedback on Upwork. References on request.</p>
