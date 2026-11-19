@@ -234,7 +234,7 @@ const description = `Three Asana case studies you can test: a marketing team, an
             style={`--case: ${c.org.tint.light}; --case-dark: ${c.org.tint.dark}`}
           >
             <span class="gx-switch-state" aria-hidden="true">Showing</span>
-            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1} · {c.org.industry}</span>
+            <span class="gx-switch-kicker" aria-hidden="true">Case study {i + 1}<span class="gx-switch-sector"> {c.org.industry}</span></span>
             <span class="gx-switch-name" id={`case-name-${c.org.id}`}>{c.org.name}</span>
             <span class="gx-switch-blurb" id={`case-blurb-${c.org.id}`}><span class="sr-only">{c.org.industry}.</span> {c.org.blurb} <span class="sr-only">{plural(c.automations.length, 'automation', 'automations')}, an intake form and a portfolio.</span></span>
             <span class="gx-switch-meta" aria-hidden="true">{plural(c.automations.length, 'automation', 'automations')} · {plural(c.projects.length, 'project', 'projects')} · a working form</span>

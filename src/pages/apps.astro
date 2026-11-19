@@ -25,6 +25,10 @@ const live = { commits: siteCommits() };
 
 const names = platforms.map((p) => p.name);
 const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+
+// Tile kickers split at the "·", with the dot kept on the part before it, so a narrow
+// tile breaks between parts, never mid-phrase or just before a dot.
+const kickerParts = (k: string) => k.split(' · ').map((s, i, a) => (i < a.length - 1 ? `${s} ·` : s));
 ---
 
 <Base title="AI-built apps and websites" description="What Nick Soderstrom built by directing AI: Eats Ranked, Good Walk, Cartworth, LaunchNeat, Clam, SignalRig and this site.">
@@ -48,7 +52,7 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
               data-tone={p.tone ?? 'dark'}
               style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
             >
-              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-kicker">{kickerParts(p.kicker).map((s, j) => <>{j > 0 && ' '}<span class="seg">{s}</span></>)}</span>
               <span class="t-name">{p.name}</span>
               <span class="t-blurb">{p.tileBlurb}</span>
               <span class="t-cta">Coming soon · Visit site ↗</span>
@@ -60,7 +64,7 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
               data-tone={p.tone ?? 'dark'}
               style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
             >
-              <span class="t-kicker">{p.kicker}</span>
+              <span class="t-kicker">{kickerParts(p.kicker).map((s, j) => <>{j > 0 && ' '}<span class="seg">{s}</span></>)}</span>
               <span class="t-name">{p.name}</span>
               <span class="t-blurb">{p.tileBlurb}</span>
               <span class="t-cta">Coming soon</span>
@@ -77,7 +81,7 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
             style={`--tile-bg: ${p.bg}; --tile-fg: ${p.fg}; --tile-bg-dark: ${p.bgDark ?? p.bg}; --tile-fg-dark: ${p.fgDark ?? p.fg}`}
             type="button"
           >
-            <span class="t-kicker">{p.kicker}</span>
+            <span class="t-kicker">{kickerParts(p.kicker).map((s, j) => <>{j > 0 && ' '}<span class="seg">{s}</span></>)}</span>
             <span class="t-name">{p.name}</span>
             <span class="t-blurb">{p.tileBlurb}</span>
             <span class="t-cta">View story →</span>
@@ -90,7 +94,7 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
           data-tone="light"
           style={`--tile-bg: ${surface}; --tile-fg: #6a3fc0; --tile-bg-dark: ${surfaceDark}; --tile-fg-dark: #b79bff`}
         >
-          <span class="t-kicker">Platform builds · sample businesses</span>
+          <span class="t-kicker">{kickerParts('Platform builds · sample businesses').map((s, j) => <>{j > 0 && ' '}<span class="seg">{s}</span></>)}</span>
           <span class="t-name">Case studies</span>
           <span class="t-blurb">{`Sample businesses built end to end in ${platformList}, runnable in your browser.`}</span>
           <span class="t-cta">View case studies →</span>
@@ -429,6 +433,10 @@ const platformList = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${
     text-transform: uppercase;
     font-weight: 700;
     color: var(--tile-fg-use);
+  }
+  /* A kicker part wraps inside itself only when it is wider than the tile. */
+  .t-kicker .seg {
+    display: inline-block;
   }
   .t-name {
     font-size: 1.6rem;

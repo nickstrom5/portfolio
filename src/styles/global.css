@@ -176,6 +176,8 @@ p {
   font-size: 1.15rem;
   color: var(--text-muted);
   max-width: 60ch;
+  /* Large intro text: no last line holding one word ("…open neuroscience / platform."). */
+  text-wrap: pretty;
 }
 
 .btn {

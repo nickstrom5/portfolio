@@ -50,7 +50,7 @@ const links = base.tables.flatMap((t) => t.fields.filter((f) => f.type === 'Link
         <h4 class="a-sub">Sync</h4>
         <ul class="a-syncs">
           {base.syncs.map((s) => (
-            <li><Icon name="sync" /> <strong>{s.table}</strong> {s.direction === 'in' ? `synced in from ${s.other}` : `synced out to ${s.other}`}. {s.note}</li>
+            <li><Icon name="sync" /> <span><strong>{s.table}</strong> {s.direction === 'in' ? `synced in from ${s.other}` : `synced out to ${s.other}`}. {s.note}</span></li>
           ))}
         </ul>
       </>

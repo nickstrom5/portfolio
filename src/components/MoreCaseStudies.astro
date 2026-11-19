@@ -16,15 +16,18 @@ const { current } = Astro.props;
 const others = platforms.filter((p) => p.id !== current);
 ---
 
-<nav class="container more-cases" aria-label="More case studies">
-  <span class="more-label">More case studies</span>
-  <ul>
-    {others.map((p) => <li><a href={url(p.href)}>{p.name}</a></li>)}
-    <li><a href={url('/case-studies')}>All case studies</a></li>
-  </ul>
+<nav class="container" aria-label="More case studies">
+  <div class="more-cases">
+    <span class="more-label">More case studies</span>
+    <ul>
+      {others.map((p) => <li><a href={url(p.href)}>{p.name}</a></li>)}
+      <li><a href={url('/case-studies')}>All case studies</a></li>
+    </ul>
+  </div>
 </nav>
 
 <style>
+  /* Inside the .container, so the rule spans the content column, not the gutters too. */
   .more-cases {
     display: flex;
     align-items: center;

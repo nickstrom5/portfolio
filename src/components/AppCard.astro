@@ -28,6 +28,7 @@ const showBadge = import.meta.env.DEV && app.placeholder;
 const hasStore = Boolean(app.appStore || app.playStore);
 const siteLabel = app.website ? app.website.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
 const studyHref = story ? url(`/apps/#${story}`) : app.projectSlug ? url(`/work/${app.projectSlug}`) : '';
+const tags = app.stack.slice(0, 3);
 ---
 
 <article class="card app">
@@ -47,7 +48,7 @@ const studyHref = story ? url(`/apps/#${story}`) : app.projectSlug ? url(`/work/
   <ul class="tags">
     {app.platforms.map((p) => <li class="tag platform">{p}</li>)}
   </ul>
-  <p class="stack muted">{app.stack.slice(0, 3).join(' · ')}</p>
+  <p class="stack muted">{tags.map((s, i) => <><span>{s}{i < tags.length - 1 && ' ·'}</span>{' '}</>)}</p>
   <div class="foot">
     <div class="links">
       {app.appStore && <a class="store" href={app.appStore} target="_blank" rel="noopener">App Store</a>}
@@ -117,6 +118,10 @@ const studyHref = story ? url(`/apps/#${story}`) : app.projectSlug ? url(`/work/
   .stack {
     font-size: 0.85rem;
     margin: 0;
+  }
+  /* Each tag stays whole, with its dot, as on the project cards. */
+  .stack span {
+    white-space: nowrap;
   }
   .links {
     display: flex;

@@ -185,6 +185,20 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
       text-align: right;
     }
   }
+  /* Phones: the case-study link goes under the role, so short titles and companies don't wrap
+     beside a half-empty link column. */
+  @media (max-width: 480px) {
+    .roles li {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+    .detail {
+      text-align: left;
+    }
+    .roles li > span:empty {
+      display: none;
+    }
+  }
   .toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -251,6 +265,9 @@ const upworkLive = !site.links.upwork.includes('REPLACE');
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
     font-size: 0.95rem;
+  }
+  .c-title {
+    text-wrap: balance;
   }
   .c-meta {
     font-size: 0.82rem;

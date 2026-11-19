@@ -1,5 +1,5 @@
 ---
-title: 'Operations lead for a production company'
+title: 'Operations Lead for a production company'
 shortTitle: 'Operations lead, production company'
 client: 'Production company'
 summary: 'Full-time operations lead for a production company, May to September 2026: owning the work between marketing, tech and the other departments.'

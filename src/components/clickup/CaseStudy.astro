@@ -75,7 +75,7 @@ const inList = (name: string) => processes.filter((p) => p.location.list === nam
             <a href={`#${w.id}-${p.id}`} data-open-auto={`${w.id}-${p.id}`} class="gx-j">
               <span class="gx-j-num">{p.number}</span>
               <span class="gx-j-name">{p.name}</span>
-              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{p.automations.length} Automations · {p.location.list}</span>
+              <span class="gx-j-trigger"><Icon name="bolt" size={14} />{p.automations.length} Automations{'\u00a0'}· {p.location.list}</span>
               <span class="gx-j-out">{w.handoff[p.id] ?? p.kicker}</span>
             </a>
           </li>

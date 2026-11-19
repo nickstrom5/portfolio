@@ -8,7 +8,7 @@ import type { Business } from '@/lib/airtable/types';
 export const business: Business = {
   id: 'recruiting',
   name: 'Larkspur Talent',
-  industry: 'Recruiting (finance and operations roles)',
+  industry: 'Recruiting (finance\u00a0and\u00a0operations\u00a0roles)',
   area: 'Denver, Colorado; clients across the Mountain West',
   blurb: 'A four-person search firm: every applicant matched to one candidate record, each stage change sending the right email, and placements turned into invoices, guarantee check-ins and overdue-payment reminders.',
   intro:
