@@ -28,12 +28,12 @@
   "dependencies": {
     "@astrojs/check": "^0.9.12",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.4.7",
+    "astro": "^7.4.11",
     "sharp": "^0.35.5",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
-    "playwright": "1.64.1"
+    "playwright": "1.65.0"
   }
 }
