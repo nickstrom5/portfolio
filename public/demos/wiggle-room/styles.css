@@ -102,7 +102,11 @@ nav .btn:hover { background: var(--coral); }
 .stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding-block: 26px; }
 .stats strong { display: block; font: 600 1.7rem Fredoka, sans-serif; color: var(--sun); }
 .stats span { display: block; font-size: 0.98rem; text-wrap: balance; }
-@media (max-width: 700px) { .stats .wrap { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) {
+  .stats .wrap { grid-template-columns: repeat(2, 1fr); }
+  /* Each stat stays on one line, so the captions in a row line up. 5.5vw fits "Grown-ups free" down to 320px. */
+  .stats strong { font-size: min(1.7rem, 5.5vw); white-space: nowrap; }
+}
 
 /* Zones */
 .zone-art { height: 150px; margin: -28px -28px 6px; border-radius: 25px 25px 0 0; border-bottom: 2.5px solid var(--ink); overflow: hidden; }
@@ -127,7 +131,7 @@ nav .btn:hover { background: var(--coral); }
 
 /* Inner page hero */
 .page-hero { padding: clamp(40px, 7vw, 80px) 0 clamp(24px, 4vw, 40px); }
-.page-hero h1 { max-width: 14em; font-size: clamp(2.4rem, 6vw, 4rem); }
+.page-hero h1 { max-width: 14em; font-size: clamp(2.4rem, 6vw, 4rem); text-wrap: balance; }
 
 /* Pricing */
 .switch { display: inline-flex; gap: 4px; padding: 5px; border: 2.5px solid var(--ink); border-radius: 999px; background: #fff; }
@@ -157,10 +161,11 @@ nav .btn:hover { background: var(--coral); }
 input[type='range'] { width: 100%; height: 32px; accent-color: var(--coral); }
 .total { position: sticky; top: 96px; text-align: center; }
 .total .price { font-size: 4rem; }
+.total p { text-wrap: balance; }
 .total .btn { align-self: center; margin-top: 20px; }
 @media (max-width: 860px) { .estimator { grid-template-columns: 1fr; } .total { position: static; } }
 
-/* Events list */
+/* Events list. The weekday, month and day each take a row of .date, so every tile is the same height. */
 .events li { display: grid; grid-template-columns: 92px 1fr auto; gap: 20px; align-items: center; padding: 20px 0; border-bottom: 2px solid var(--line); }
 .date { display: grid; place-items: center; padding: 10px 6px; border: 2.5px solid var(--ink); border-radius: 18px; background: #fff; font: 600 1.6rem/1.05 Fredoka, sans-serif; text-align: center; }
 .date small { font: 900 0.8rem Nunito, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--coral); }
@@ -187,9 +192,13 @@ input[type='range'] { width: 100%; height: 32px; accent-color: var(--coral); }
 .hours td:last-child { text-align: right; font-weight: 800; }
 .map { border: 2.5px solid var(--ink); border-radius: 28px; overflow: hidden; }
 .map svg { width: 100%; height: auto; }
+/* The map scales down with the screen, so its labels need bigger type on phones to stay readable. */
+@media (max-width: 520px) { .map text { font-size: 20px; } }
 .form { display: grid; gap: 16px; }
 .form label { display: grid; gap: 6px; font-weight: 800; }
-.form input, .form select, .form textarea { width: 100%; padding: 13px 16px; border: 2.5px solid var(--ink); border-radius: 16px; background: #fff; color: var(--ink); font: 500 1rem Nunito, sans-serif; }
+.form input, .form select, .form textarea { width: 100%; padding: 13px 16px; border: 2.5px solid var(--ink); border-radius: 16px; background: #fff; color: var(--ink); font: 500 1rem/1.375 Nunito, sans-serif; }
+/* Our own chevron: the native one sits hard against the thick border. The line height above keeps it as tall as the inputs. */
+.form select { appearance: none; padding-right: 44px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 9'%3E%3Cpath d='M2 2l5 5 5-5' fill='none' stroke='%231d2a4d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center / 14px 9px; cursor: pointer; }
 .thanks { padding: 28px; border: 2.5px solid var(--ink); border-radius: 28px; background: var(--mint); }
 .thanks h2 { margin-bottom: 8px; font-size: 1.8rem; }
 
@@ -201,4 +210,5 @@ input[type='range'] { width: 100%; height: 32px; accent-color: var(--coral); }
 .foot li { margin-top: 6px; }
 .foot a { text-underline-offset: 3px; }
 .foot .note { margin-top: 40px; padding-top: 20px; border-top: 1px solid rgb(255 255 255 / 0.2); color: #c9d0e4; font-size: 0.9rem; }
+.foot .note a { white-space: nowrap; }
 @media (max-width: 860px) { .foot .grid { grid-template-columns: 1fr; } }

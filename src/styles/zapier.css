@@ -80,6 +80,19 @@
 .z-triggers {
   margin-top: 1.75rem;
 }
+/* On phones each Zap stacks: its name, then its trigger, then how fast. The shared two-column
+   phone table would squeeze the name beside a long trigger to one word per line. */
+@media (max-width: 560px) {
+  .z-triggers .gx-table tr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .z-triggers .gx-table td:first-child {
+    font-weight: 600;
+  }
+  .z-triggers .gx-table td:nth-child(2) {
+    padding-top: 0;
+  }
+}
 
 /* ---------- What a run did in the connected apps ---------- */
 .z-effect-list {
@@ -131,8 +144,10 @@
 }
 
 /* Form help text, as under a field. */
+/* The form card stays white in dark mode, so its helper text keeps the light-theme grey
+   (as .nf-desc does) instead of the page's dark-theme muted colour. */
 .nf-help {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--text-muted);
+  color: #5a5d6b;
 }

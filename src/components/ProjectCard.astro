@@ -12,6 +12,9 @@ const { project, level = 3 } = Astro.props;
 const { title, client, summary, stack, year, category, platforms, placeholder } = project.data;
 const showBadge = import.meta.env.DEV && placeholder;
 const Heading = `h${level}` as 'h2' | 'h3';
+// A phrase compound stays whole when the title wraps ("fold-to-focus", not "fold-to- / focus"), as on the case study.
+const shownTitle = title.replace(/\w+(?:-\w+){2,}/g, (w) => w.replaceAll('-', '\u2011'));
+const tags = stack.slice(0, 3);
 ---
 
 <article class="card project">
@@ -20,10 +23,10 @@ const Heading = `h${level}` as 'h2' | 'h3';
     <span class="cat">{categoryLabel(category)}</span>
     <span class="muted">{year}</span>
   </div>
-  <Heading class="title"><a href={url(`/work/${project.id}`)}>{title}</a></Heading>
+  <Heading class="title"><a href={url(`/work/${project.id}`)}>{shownTitle}</a></Heading>
   <p class="muted client">{client}{platforms.length ? ` · ${platforms.join(' / ')}` : ''}</p>
   <p class="summary">{summary}</p>
-  <p class="stack muted">{stack.slice(0, 3).join(' · ')}</p>
+  <p class="stack muted">{tags.map((s, i) => <><span>{s}{i < tags.length - 1 && ' ·'}</span>{' '}</>)}</p>
 </article>
 
 <style>
@@ -74,5 +77,9 @@ const Heading = `h${level}` as 'h2' | 'h3';
   .stack {
     font-size: 0.85rem;
     margin: 0;
+  }
+  /* Each tag stays whole, with its dot: a wrap never splits a tag or starts a line with "·". */
+  .stack span {
+    white-space: nowrap;
   }
 </style>

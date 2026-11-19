@@ -50,7 +50,7 @@ const zoneArt = (key, label) => `<svg viewBox="0 0 320 200" preserveAspectRatio=
 const map = `<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Map showing Wiggle Room on Juniper Street, next to Fountain Park">
 <rect width="600" height="320" fill="#e6f1e0"/><circle cx="470" cy="90" r="80" fill="#bfe3b4"/><rect x="40" y="200" width="150" height="90" rx="14" fill="#d8e6f5"/>
 <path d="M0 170h600M300 0v320M0 60l230 110M410 320l90-150" stroke="#fff" stroke-width="26" fill="none"/>
-<g font-family="Nunito, sans-serif" font-weight="800" font-size="14" fill="#4a5677"><text x="26" y="160">Juniper Street</text><text x="434" y="96">Fountain Park</text><text x="62" y="250">Free parking</text></g>
+<g font-family="Nunito, sans-serif" font-weight="800" font-size="14" fill="#4a5677"><text x="26" y="160">Juniper Street</text><text x="470" y="96" text-anchor="middle">Fountain Park</text><text x="115" y="250" text-anchor="middle">Free parking</text></g>
 <g stroke="${INK}" stroke-width="3"><path d="M300 176c-30-36-44-52-44-74a44 44 0 0 1 88 0c0 22-14 38-44 74Z" fill="#e8452f"/><circle cx="300" cy="102" r="15" fill="#fff"/></g></svg>`;
 
 const zones = [
@@ -66,11 +66,11 @@ const reviews = [
 ];
 
 const events = [
-  ['Fri', 'Nov 20', 'Glow Night', 'Lights down, glow sticks out, music up. 5pm to 8pm, regular entry.', 'All ages'],
-  ['Sun', 'Nov 22', 'Sensory Hour', 'Low lights, no music and a smaller crowd, before we open to everyone. 9am to 10am.', 'Quiet play'],
-  ['Tue', 'Nov 24', 'Toddler Tunes', 'Songs, shakers and bubbles with Miss Jo. 10am, free with entry.', 'Ages 0 to 3'],
-  ['Fri', 'Dec 4', 'Parents’ Night Out', 'Drop the kids for pizza, play and a movie. 5pm to 8pm, $35 per child, booking needed.', 'Ages 4 to 10'],
-  ['Sat', 'Dec 12', 'Winter Wiggle Party', 'Snow machine, hot chocolate bar and cookie decorating all afternoon.', 'All ages'],
+  ['Fri', 'Nov', '20', 'Glow Night', 'Lights down, glow sticks out, music up. 5pm to 8pm, regular entry.', 'All ages'],
+  ['Sun', 'Nov', '22', 'Sensory Hour', 'Low lights, no music and a smaller crowd, before we open to everyone. 9am to 10am.', 'Quiet play'],
+  ['Tue', 'Nov', '24', 'Toddler Tunes', 'Songs, shakers and bubbles with Miss Jo. 10am, free with entry.', 'Ages 0 to 3'],
+  ['Fri', 'Dec', '4', 'Parents’ Night Out', 'Drop the kids for pizza, play and a movie. 5pm to 8pm, $35 per child, booking needed.', 'Ages 4 to 10'],
+  ['Sat', 'Dec', '12', 'Winter Wiggle Party', 'Snow machine, hot chocolate bar and cookie decorating all afternoon.', 'All ages'],
 ];
 
 const band = (title, text, cta, href) => `<section class="band"><div class="wrap"><div><h2>${title}</h2><p>${text}</p></div><a class="btn btn-sun" href="${base}${href}">${cta}</a></div></section>`;
@@ -166,7 +166,7 @@ ${band('Planning a birthday?', 'Party packages start at $289 and members save 10
 <section class="sec bg-mint"><div class="wrap"><div class="sec-head"><p class="eyebrow">Every party includes</p><h2>The boring parts, handled</h2></div>
 <div class="grid g4"><div class="quote"><h3>Setup</h3><p>Table dressed, plates out and candles ready before you arrive.</p></div><div class="quote"><h3>A host</h3><p>One of our team runs the day so you can be in the photos.</p></div><div class="quote"><h3>Invites</h3><p>A printable and a text-ready invite with the waiver link built in.</p></div><div class="quote"><h3>Cleanup</h3><p>Walk out with the presents. We deal with the rest.</p></div></div></div></section>
 <section class="sec"><div class="wrap"><div class="sec-head"><p class="eyebrow">What's on</p><h2>Upcoming events</h2><p>Events are included with entry unless we say otherwise.</p></div>
-<ul class="events">${events.map(([d, date, name, text, tag]) => `<li><p class="date"><small>${d}</small>${date}</p><div><h3>${name}</h3><p>${text}</p></div><span class="tag bg-sun">${tag}</span></li>`).join('')}</ul></div></section>
+<ul class="events">${events.map(([d, month, day, name, text, tag]) => `<li><p class="date"><small>${d}</small> <span>${month}</span> <span>${day}</span></p><div><h3>${name}</h3><p>${text}</p></div><span class="tag bg-sun">${tag}</span></li>`).join('')}</ul></div></section>
 ${band('Got a date in mind?', 'Saturdays book up about six weeks out. Send us a message and we will hold your slot for 48 hours.', 'Ask about a date', 'visit/')}`,
   },
   {

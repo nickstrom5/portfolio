@@ -118,6 +118,9 @@
 }
 .cu-pieces li {
   display: grid;
+  /* Rows stay packed at the top, so a shorter card in the row does not
+     spread out to match the tallest. */
+  align-content: start;
   gap: 0.15rem;
   padding: 0.7rem 0.85rem;
   border-radius: var(--radius-sm);
@@ -303,13 +306,17 @@
 .cu-allstatuses {
   margin-top: 1.5rem;
 }
+/* Left as a list item (not flex) so it keeps the native ▸ marker, like the
+   page's other toggles. */
 .cu-allstatuses summary {
   cursor: pointer;
   font-weight: 700;
   min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  padding-block: 0.55rem;
+}
+.cu-allstatuses summary .g-count {
+  font-weight: 400;
+  color: var(--text-muted);
 }
 .cu-allstatuses dl {
   display: grid;
@@ -587,7 +594,9 @@
 }
 .cu-real-shots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  /* Every track is over a third of the row, so at most two fit and the pair
+     under a full-width first shot fills the row, with no empty third slot. */
+  grid-template-columns: repeat(auto-fit, minmax(max(min(100%, 340px), 34%), 1fr));
   gap: 1rem;
   margin: 1rem 0 0;
   padding: 0;
