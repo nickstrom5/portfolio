@@ -95,7 +95,7 @@ export const experience: Role[] = [
     start: '2017',
     end: '2018',
     location: 'Chicago, IL',
-    summary: 'Staff role on the opening-day team of a restaurant that went on to earn a Michelin Bib Gourmand.',
+    summary: 'Staff role on the opening-day team of a restaurant that went on to earn a Michelin\u00a0Bib\u00a0Gourmand.',
     bullets: ['Managed 20+ people across teams, led front-of-house shifts and coached staff. Previously ServSafe certified.'],
     staff: true,
   },

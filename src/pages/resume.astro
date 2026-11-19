@@ -416,6 +416,12 @@ const contacts = [
         line-height: 1.3;
       }
       /* A dot-separated line, as in print: whole phrases read badly as wrapped pills. */
+      /* No one-word last lines ("…research / platform."). */
+      .job .sum,
+      .job .bullets,
+      .skill-items {
+        text-wrap: pretty;
+      }
       .skill-items {
         display: block;
         margin: 0;

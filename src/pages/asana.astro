@@ -17,6 +17,7 @@ import { hasLoader } from '@/lib/asana/load-case';
 import { countActions, describeAction, formatTime, simulate } from '@/lib/asana/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+import { caseStepLabel } from '@/lib/keep-whole';
 
 const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five'];
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -55,7 +56,7 @@ const find = (ref: string) => {
   const [cid, aid] = ref.split('/');
   const c = cases.find((x) => x.org.id === cid);
   const a = c?.automations.find((x) => x.id === aid);
-  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.org.name} ${a.number} · ${a.name}` } : undefined;
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: caseStepLabel(c.org.name, a.number, a.name) } : undefined;
 };
 
 const principles = [

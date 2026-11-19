@@ -16,6 +16,7 @@ import { hasLoader } from '@/lib/zapier/load-case';
 import { formatDuration, formatTime, outcomes, simulate } from '@/lib/zapier/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+import { caseStepLabel } from '@/lib/keep-whole';
 
 // A case appears once it has Zaps, so a half-finished case never ships as an empty tab.
 const cases = allCases.filter((c) => c.zaps.length > 0);
@@ -60,7 +61,7 @@ const find = (ref: string) => {
   const [cid, zid] = ref.split('/');
   const c = cases.find((x) => x.business.id === cid);
   const z = c?.zaps.find((x) => x.id === zid);
-  return c && z ? { href: `#${cid}-${zid}`, open: `${cid}-${zid}`, label: `${c.business.name} ${z.number} · ${z.name}` } : undefined;
+  return c && z ? { href: `#${cid}-${zid}`, open: `${cid}-${zid}`, label: caseStepLabel(c.business.name, z.number, z.name) } : undefined;
 };
 
 const reliability = [

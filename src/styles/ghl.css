@@ -794,6 +794,7 @@
   font-size: 0.9rem;
   padding: 1.5rem 0.25rem;
   text-align: center;
+  text-wrap: pretty;
 }
 .g-day {
   align-self: center;
@@ -1532,15 +1533,20 @@
 }
 .gx-next label {
   display: flex;
-  align-items: center;
+  /* Two-line options stay readable as separate choices: radio on the first line, a little space between options. */
+  align-items: flex-start;
   gap: 0.55rem;
   min-height: 36px;
+  padding-block: 0.4rem;
   font-size: 0.95rem;
+  line-height: 1.35;
   cursor: pointer;
 }
 .gx-next input {
+  flex: none;
   width: 16px;
   height: 16px;
+  margin: 0.15rem 0 0;
   accent-color: var(--accent);
 }
 .gx-captured {
@@ -2048,6 +2054,11 @@
   font-size: 1.25rem;
   margin-bottom: 0.4rem;
 }
+/* The link to the word decoder ("Words you may not know") moves to the next line whole. */
+.gx-notes-intro a,
+a[href='#decoder'] {
+  white-space: nowrap;
+}
 .gx-notes-intro {
   max-width: 75ch;
   margin: 0 0 0.9rem;
@@ -2460,10 +2471,12 @@
   flex-wrap: wrap;
 }
 .gx-closing h2 {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.6rem;
 }
+/* A readable measure, like the other lead paragraphs on these pages. */
 .gx-closing p {
   margin: 0;
+  max-width: 65ch;
 }
 .gx-closing .gx-cta {
   margin-top: 0;
@@ -2749,4 +2762,15 @@
 }
 .gx-switch-tab:not([aria-selected='true']) .gx-switch-state {
   display: none;
+}
+
+/* Body text in the tool pages' cards, lists and problem/solution blocks ends on at least
+   two words ("…the way / they should." rather than "… / way."). */
+.gx-cards p,
+.gx-audit span,
+.gx-process p,
+.gx-ps p,
+.gx-edge-list span,
+.gx-next label {
+  text-wrap: pretty;
 }
