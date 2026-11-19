@@ -16,6 +16,7 @@ import { hasLoader } from '@/lib/clickup/load-case';
 import { formatDuration, formatTime, simulate } from '@/lib/clickup/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+import { caseStepLabel } from '@/lib/keep-whole';
 
 // A case appears once it has processes, so a half-finished case never ships as an empty tab.
 const cases = allCases.filter((c) => c.processes.length > 0);
@@ -67,7 +68,7 @@ const find = (ref: string) => {
   const [cid, pid] = ref.split('/');
   const c = cases.find((x) => x.workspace.id === cid);
   const p = c?.processes.find((x) => x.id === pid);
-  return c && p ? { href: `#${cid}-${pid}`, open: `${cid}-${pid}`, label: `${c.workspace.name} ${p.number} · ${p.name}` } : undefined;
+  return c && p ? { href: `#${cid}-${pid}`, open: `${cid}-${pid}`, label: caseStepLabel(c.workspace.name, p.number, p.name) } : undefined;
 };
 
 const rules = [

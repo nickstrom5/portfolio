@@ -44,7 +44,7 @@ export const services: Service[] = [
     title: 'Executive assistant support',
     description:
       'Calendar, inbox, expense reporting, research, hiring support and customer service, handled so you never think about them.',
-    bullets: ['Inbox and calendar ownership', 'Hiring pipelines and onboarding', 'Vendor and customer follow-up'],
+    bullets: ['Inbox and calendar ownership', 'Hiring pipelines and onboarding', 'Vendor and customer follow\u2011up'],
     links: [{ href: '/work/data-trust-ceo-executive-assistant', label: 'Executive assistant case study' }],
   },
   {
@@ -58,7 +58,7 @@ export const services: Service[] = [
     title: 'AI-directed builds, web & apps',
     description:
       'Websites, tools and iPhone apps built by directing Claude and Grok from a clear brief, plus content and updates on WordPress, Wix and Shopify.',
-    bullets: ['Claude Code & Grok, prompt to production', 'Astro sites, SwiftUI apps, GitHub Pages', 'WordPress, Wix, Shopify updates'],
+    bullets: ['Claude Code & Grok, prompt to production', 'Astro sites, SwiftUI apps, GitHub\u00a0Pages', 'WordPress, Wix, Shopify updates'],
     links: [{ href: '/apps', label: 'Apps and sites built with AI' }],
   },
 ];

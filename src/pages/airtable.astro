@@ -17,6 +17,7 @@ import { hasLoader } from '@/lib/airtable/load-case';
 import { allActions, allGroups, formatDuration, formatTime, simulate } from '@/lib/airtable/engine';
 import { site } from '@/data/site';
 import { url } from '@/lib/url';
+import { caseStepLabel } from '@/lib/keep-whole';
 
 // A case appears once it has automations, so a half-finished case never ships as an empty tab.
 const cases = allCases.filter((c) => c.automations.length > 0);
@@ -61,7 +62,7 @@ const find = (ref: string) => {
   const [cid, aid] = ref.split('/');
   const c = cases.find((x) => x.business.id === cid);
   const a = c?.automations.find((x) => x.id === aid);
-  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: `${c.business.name} ${a.number} · ${a.name}` } : undefined;
+  return c && a ? { href: `#${cid}-${aid}`, open: `${cid}-${aid}`, label: caseStepLabel(c.business.name, a.number, a.name) } : undefined;
 };
 
 const reliability = [
