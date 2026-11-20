@@ -38,7 +38,7 @@ export const demo: DemoForm = {
   behaviors: [
     { value: 'ok', label: 'Every app is working' },
     { value: 'gmail', label: 'Gmail has a brief outage as the reply goes out', failures: { reply: { message: 'Gmail: “The service is currently unavailable.” (503)', replays: 1 } } },
-    { value: 'slack', label: 'Someone has archived the #new-leads channel', failures: { tell: { message: 'Slack: “is_archived”. The channel #new-leads has been archived.' } } },
+    { value: 'slack', label: 'Someone has archived the #new\u2011leads channel', failures: { tell: { message: 'Slack: “is_archived”. The channel #new-leads has been archived.' } } },
   ],
   note: 'Pick a ZIP code inside the service area with a recurring service and two paths run. Pick Cincinnati and only the fallback does. The two failure choices apply to in-area requests, since those are the ones that send the email and the Slack post.',
   notes: [
